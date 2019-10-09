@@ -1,15 +1,30 @@
 # Sora Unity SDK
 
-**現在開発中で、公開は 2019 年 10 月末を予定しています**
+**現在開発中で、ソースコードの公開は 2019 年 10 月末を予定しています**
 
-Sora Unity SDK は WebRTC SFU Sora の Unity クライアントアプリケーションを開発するためのライブラリです。
+Sora Unity SDK は [WebRTC SFU Sora](https://sora.shiguredo.jp/) の Unity クライアントアプリケーションを開発するためのライブラリです。
+
+## About Support
+
+Support for Sora Unity SDK by Shiguredo Inc. are limited **ONLY in JAPANESE** through GitHub Issues and there is no guarantee such as response time or resolution.
+
+## サポートについて
+
+Sora Unity SDK に関する質問・要望・バグなどの報告は Issues の利用をお願いします。
+ただし、 Sora のライセンス契約の有無に関わらず、 Issue への応答時間と問題の解決を保証しませんのでご了承ください。
+
+Sora Unity SDK に対する有償のサポートについては現在提供しておりません。
 
 ## 対応予定機能
 
-- カメラから映像を取得し Sora で配信
+- カメラから映像を取得し Sora で送信
 - カメラから映像を取得し Unity アプリに出力
-- マイクから音声を取得し Sora で配信
+- マイクから音声を取得し Sora で送信
 - マイクから音声を取得し Unity アプリに出力
+- Unity アプリで Sora からの音声を受信
+- Unity アプリで Sora からの映像を受信
+- Sora から受信した音声を Unity アプリに出力
+- Sora から受信した映像を Unity アプリに出力
 - マルチストリームへの対応
 - シグナリング通知への対応
 - サイマルキャスト対応
@@ -47,19 +62,6 @@ Sora Unity SDK は WebRTC SFU Sora の Unity クライアントアプリケー�
 ### iOS 対応
 
 ### Android 対応
-
-## About Support
-
-Support for Sora Unity SDK by Shiguredo Inc. are limited
-**ONLY in JAPANESE** through GitHub issues and there is no guarantee such
-as response time or resolution.
-
-## サポートについて
-
-Sora Unity SDK に関する質問・要望・バグなどの報告は Issues の利用をお願いします。
-ただし、 Sora のライセンス契約の有無に関わらず、 Issue への応答時間と問題の解決を保証しませんのでご了承ください。
-
-Sora Unity SDK に対する有償のサポートについては現在提供しておりません。
 
 ## ライセンス
 
