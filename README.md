@@ -8,6 +8,10 @@ Sora Unity SDK は [WebRTC SFU Sora](https://sora.shiguredo.jp/) の Unity ク�
 
 Support for Sora Unity SDK by Shiguredo Inc. are limited **ONLY in JAPANESE** through GitHub Issues and there is no guarantee such as response time or resolution.
 
+## 進捗
+
+[std::めるぽんさんはTwitterを使っています: 「WebRTC SFU Sora の Unity SDK 開発してるんだけど、無事マルチストリームが動くようになった https://t\.co/fHVEUaEsa7」 / Twitter](https://twitter.com/melponn/status/1185869961811513346?s=20)
+
 ## サポートについて
 
 Sora Unity SDK に関する質問・要望・バグなどの報告は Issues の利用をお願いします。
@@ -20,17 +24,18 @@ Sora Unity SDK に対する有償のサポートについては現在提供し�
 - [x] カメラから映像を取得し Sora で送信
 - [x] カメラから映像を取得し Unity アプリに出力
 - [ ] マイクから音声を取得し Sora で送信
-- [ ] マイクから音声を取得し Unity アプリに出力
-- [ ] Unity アプリで Sora からの音声を受信
+- [x] マイクから音声を取得し Unity アプリに出力
+- [x] Unity アプリで Sora からの音声を受信
 - [x] Unity アプリで Sora からの映像を受信
-- [ ] Sora から受信した音声を Unity アプリに出力
+- [x] Sora から受信した音声を Unity アプリに出力
 - [x] Sora から受信した映像を Unity アプリに出力
-- [ ] マルチストリームへの対応
-- [ ] シグナリング通知への対応
-- [ ] サイマルキャスト対応
+- [x] マルチストリームへの対応
 - [x] ソフトウェアエンコード/デコード VP8 / VP9 への対応
     - ソフトウェアエンコード/デコードの H.264 へは非対応
-- [ ] Opus への対応
+- [x] Opus への対応
+- [ ] シグナリング通知への対応
+- [ ] サイマルキャスト対応
+- [ ] 
 
 ## 対応予定プラットフォーム
 
@@ -51,11 +56,11 @@ Sora Unity SDK に対する有償のサポートについては現在提供し�
 - VP8 のハードウェアデコードへの対応
 - VP9 のハードウェアデコードへの対応
 
-### AMD 対応
+### AMD ハードウェアデコーダ対応
 
 **TBD**
 
-### INTEL 対応
+### INTEL ハードウェアデコーダ対応
 
 **TBD**
 
