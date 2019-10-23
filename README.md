@@ -1,5 +1,7 @@
 # Sora Unity SDK
 
+**正式リリースは 2019 年内を目指しています**
+
 Sora Unity SDK は [WebRTC SFU Sora](https://sora.shiguredo.jp/) の Unity クライアントアプリケーションを開発するためのライブラリです。
 
 ## About Support
@@ -7,9 +9,28 @@ Sora Unity SDK は [WebRTC SFU Sora](https://sora.shiguredo.jp/) の Unity ク�
 We check PRs or Issues only when written in JAPANESE.
 In other languages, we won't be able to deal with them. Thank you for your understanding.
 
-## 進捗
+## 環境構築
 
-[std::めるぽんさんはTwitterを使っています: 「WebRTC SFU Sora の Unity SDK 開発してるんだけど、無事マルチストリームが動くようになった https://t\.co/fHVEUaEsa7」 / Twitter](https://twitter.com/melponn/status/1185869961811513346?s=20)
+### 事前準備
+
+以下のツールをインストールしてください。
+
+- [CMake](https://cmake.org/)
+- Visual Studio 2019 のどのエディションでも問題ないはずです
+- [Docker for Windows](https://docs.docker.com/docker-for-windows/)
+    - Windows コンテナが使えるモードにしておいてください
+
+### 依存ライブラリのビルド
+
+`.\install_tools.bat` をダブルクリックで実行するか、コマンドプロンプトから実行してください。
+
+WebRTC を Windows コンテナ上でソースからビルドしているためすごく時間が掛かります（6時間以上）。
+
+### dll のビルド
+
+`.\cmake.bat` をダブルクリックで実行するか、コマンドプロンプトから実行してください。
+
+うまくいくと `SoraSDK\Assets\Plugins\x86_64\sora_unity.dll` が生成されます。
 
 ## サポートについて
 
