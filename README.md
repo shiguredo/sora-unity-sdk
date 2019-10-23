@@ -1,7 +1,5 @@
 # Sora Unity SDK
 
-**現在開発中で、ソースコードの公開は 2019 年 10 月末を予定しています**
-
 Sora Unity SDK は [WebRTC SFU Sora](https://sora.shiguredo.jp/) の Unity クライアントアプリケーションを開発するためのライブラリです。
 
 ## About Support
