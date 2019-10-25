@@ -1,0 +1,6 @@
+---
+Language:        Cpp
+BasedOnStyle:  Chromium
+DerivePointerAlignment: false
+PointerAlignment: Left
+ReflowComments: false
