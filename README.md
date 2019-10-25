@@ -15,8 +15,10 @@ In other languages, we won't be able to deal with them. Thank you for your under
 
 以下のツールをインストールしてください。
 
+- git
 - [CMake](https://cmake.org/)
-- Visual Studio 2019 のどのエディションでも問題ないはずです
+- Visual Studio 2019
+    - どのエディションでも問題ないはずです
 - [Docker for Windows](https://docs.docker.com/docker-for-windows/)
     - Windows コンテナが使えるモードにしておいてください
 
