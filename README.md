@@ -1,7 +1,5 @@
 # Sora Unity SDK
 
-**正式リリースは 2019 年内を目指しています**
-
 Sora Unity SDK は [WebRTC SFU Sora](https://sora.shiguredo.jp/) の Unity クライアントアプリケーションを開発するためのライブラリです。
 
 ## About Support
@@ -11,14 +9,16 @@ In other languages, we won't be able to deal with them. Thank you for your under
 
 ## 環境構築
 
+ディスク容量が少なくとも 100G 以上余裕がある環境を用意して下さい。
+
 ### 事前準備
 
 以下のツールをインストールしてください。
 
-- git
+- [Git for Windows](https://gitforwindows.org/)
 - [CMake](https://cmake.org/)
-- Visual Studio 2019
-    - どのエディションでも問題ないはずです
+- [Visual Studio 2019 \| Visual Studio](https://visualstudio.microsoft.com/ja/vs/?rr=https%3A%2F%2Fwww.google.com%2F)
+    - 動作確認は Visual Studio 2019 Community で行っています
 - [Docker for Windows](https://docs.docker.com/docker-for-windows/)
     - Windows コンテナが使えるモードにしておいてください
 
@@ -45,7 +45,7 @@ Sora Unity SDK に関する質問・要望・バグなどの報告は Issues の
 
 Sora Unity SDK に対する有償のサポートについては現在提供しておりません。
 
-## 対応予定機能
+## 対応機能
 
 - [x] カメラから映像を取得し Sora で送信
 - [x] カメラから映像を取得し Unity アプリに出力
@@ -62,7 +62,7 @@ Sora Unity SDK に対する有償のサポートについては現在提供し�
 - [ ] シグナリング通知への対応
 - [ ] サイマルキャスト対応
 
-## 対応予定プラットフォーム
+## 対応プラットフォーム
 
 - [x] Windows 10 x86_64
 - [ ] Windows 10 ARM64
