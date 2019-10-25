@@ -32,7 +32,11 @@ WebRTC を Windows コンテナ上でソースからビルドしているため�
 
 `.\cmake.bat` をダブルクリックで実行するか、コマンドプロンプトから実行してください。
 
-うまくいくと `SoraSDK\Assets\Plugins\x86_64\sora_unity.dll` が生成されます。
+うまくいくと `build\Release\sora_unity.dll` が生成されます。
+
+## インストール
+
+`build\Release\sora_unity.dll` と `SoraSDK\Sora.cs` を自身のプロジェクトに追加してください。
 
 ## サポートについて
 

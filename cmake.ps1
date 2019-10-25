@@ -11,6 +11,3 @@ Push-Location build
     -DCMAKE_PREFIX_PATH="$INSTALL_DIR/boost"
   cmake --build . --config Release
 Pop-Location
-
-# Unity にコピー
-Copy-Item build\Release\sora_unity.dll SoraSDK\Assets\Plugins\x86_64\sora_unity.dll -Force
