@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.12)
 
-project(sora_unity_sdk C CXX)
+project(SoraUnitySdk C CXX)
 
 if (MSVC)
   # 文字コードを utf-8 として扱うのと、シンボルテーブル数を増やす
@@ -37,12 +37,12 @@ set(_SOURCES
   src/rtc/scalable_track_source.cpp
 )
 
-add_library(sora_unity SHARED ${_SOURCES})
-set_target_properties(sora_unity PROPERTIES CXX_STANDARD 14 C_STANDARD 99)
+add_library(SoraUnitySdk SHARED ${_SOURCES})
+set_target_properties(SoraUnitySdk PROPERTIES CXX_STANDARD 14 C_STANDARD 99)
 
 if (ENABLE_TSAN)
   # tsan
-  set_target_properties(sora_unity PROPERTIES
+  set_target_properties(SoraUnitySdk PROPERTIES
     COMPILE_OPTIONS "-g;-fsanitize=thread"
     LINK_OPTIONS    "-g;-fsanitize=thread"
     INTERFACE_LINK_OPTIONS    "-g;-fsanitize=thread")
@@ -50,13 +50,13 @@ endif()
 
 if (ENABLE_ASAN)
   # asan
-  set_target_properties(sora_unity PROPERTIES
+  set_target_properties(SoraUnitySdk PROPERTIES
     COMPILE_FLAGS "-g;-fsanitize=address;-fno-omit-frame-pointer"
     LINK_OPTIONS  "-g;-fsanitize=address;-fno-omit-frame-pointer"
     INTERFACE_LINK_OPTIONS  "-g;-fsanitize=address;-fno-omit-frame-pointer")
 endif()
 
-target_link_libraries(sora_unity
+target_link_libraries(SoraUnitySdk
   WebRTC::WebRTC
   Boost::boost
   JSON::JSON
@@ -81,7 +81,7 @@ target_link_libraries(sora_unity
   msdmo.lib
   Secur32.lib
   wmcodecdspuuid.lib)
-target_compile_definitions(sora_unity PRIVATE
+target_compile_definitions(SoraUnitySdk PRIVATE
   NDEBUG
   _CONSOLE
   _WIN32_WINNT=0x0A00

@@ -90,18 +90,18 @@ public class Sora : IDisposable
         sora_dispatch_events(p);
     }
 
-    [DllImport("sora_unity")]
+    [DllImport("SoraUnitySdk")]
     private static extern IntPtr sora_create();
-    [DllImport("sora_unity")]
+    [DllImport("SoraUnitySdk")]
     private static extern void sora_set_on_add_track(IntPtr p, TrackCallbackDelegate on_add_track, IntPtr userdata);
-    [DllImport("sora_unity")]
+    [DllImport("SoraUnitySdk")]
     private static extern void sora_set_on_remove_track(IntPtr p, TrackCallbackDelegate on_remove_track, IntPtr userdata);
-    [DllImport("sora_unity")]
+    [DllImport("SoraUnitySdk")]
     private static extern void sora_dispatch_events(IntPtr p);
-    [DllImport("sora_unity")]
+    [DllImport("SoraUnitySdk")]
     private static extern int sora_connect(IntPtr p, string signaling_url, string channel_id, bool downstream, bool multistream);
-    [DllImport("sora_unity")]
+    [DllImport("SoraUnitySdk")]
     private static extern IntPtr sora_get_texture_update_callback();
-    [DllImport("sora_unity")]
+    [DllImport("SoraUnitySdk")]
     private static extern void sora_destroy(IntPtr p);
 }
