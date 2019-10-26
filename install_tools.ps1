@@ -20,7 +20,7 @@ if (!(Test-Path "$INSTALL_DIR\boost\include\boost\version.hpp")) {
     if (!(Test-Path $_FILE)) {
       Invoke-WebRequest -Uri $_URL -OutFile $_FILE
     }
-    if (!(Test-Path "boost_${_BOOST_UNDERSCORE_VERSION}")) {
+    if (Test-Path "boost_${_BOOST_UNDERSCORE_VERSION}") {
       Remove-Item boost_${_BOOST_UNDERSCORE_VERSION} -Force -Recurse
     }
     Expand-Archive -Path $_FILE -DestinationPath .
