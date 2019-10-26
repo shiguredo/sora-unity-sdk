@@ -4,6 +4,7 @@ $INSTALL_DIR = Join-Path (Resolve-Path ".").Path "_install"
 
 $BOOST_VERSION = "1.71.0"
 $JSON_VERSION = "3.6.1"
+$WEBRTC_VERSION = "m78.8.0"
 
 mkdir $BUILD_DIR -Force
 mkdir $INSTALL_DIR -Force
@@ -19,7 +20,9 @@ if (!(Test-Path "$INSTALL_DIR\boost\include\boost\version.hpp")) {
     if (!(Test-Path $_FILE)) {
       Invoke-WebRequest -Uri $_URL -OutFile $_FILE
     }
-    Remove-Item boost_${_BOOST_UNDERSCORE_VERSION} -Force -Recurse
+    if (!(Test-Path "boost_${_BOOST_UNDERSCORE_VERSION}")) {
+      Remove-Item boost_${_BOOST_UNDERSCORE_VERSION} -Force -Recurse
+    }
     Expand-Archive -Path $_FILE -DestinationPath .
   Pop-Location
   # ビルドとインストール
@@ -59,21 +62,27 @@ if (!(Test-Path "$INSTALL_DIR\json\include\nlohmann\json.hpp")) {
 # WebRTC
 
 if (!(Test-Path "$INSTALL_DIR\webrtc\lib\webrtc.lib")) {
-  # shiguredo-webrtc-windows を使ってライブラリを用意する
+  # shiguredo-webrtc-windows のバイナリをダウンロードする
+  $_URL = "https://github.com/shiguredo/shiguredo-webrtc-windows/releases/download/$WEBRTC_VERSION/webrtc.zip"
+  $_FILE = "$BUILD_DIR\webrtc-$WEBRTC_VERSION.zip"
   Push-Location $BUILD_DIR
-    Remove-Item shiguredo-webrtc-windows -Force
-    git clone https://github.com/shiguredo/shiguredo-webrtc-windows.git
+    if (!(Test-Path $_FILE)) {
+      Invoke-WebRequest -Uri $_URL -OutFile $_FILE
+    }
   Pop-Location
-  # ビルド
-  Push-Location $BUILD_DIR\shiguredo-webrtc-windows
-    & .\build.bat
-  Pop-Location
+  # 展開
+  if (Test-Path "$BUILD_DIR\webrtc") {
+    Remove-Item $BUILD_DIR\webrtc -Recurse -Force
+  }
+  mkdir $BUILD_DIR\webrtc -Force
+  Expand-Archive -Path $_FILE -DestinationPath "$BUILD_DIR\webrtc"
+
   # インストール
+  if (Test-Path "$INSTALL_DIR\webrtc") {
+    Remove-Item $INSTALL_DIR\webrtc -Recurse -Force
+  }
   mkdir $INSTALL_DIR\webrtc -Force
   mkdir $INSTALL_DIR\webrtc\lib -Force
-  Remove-Item $INSTALL_DIR\webrtc\include -Force
-  Push-Location $BUILD_DIR\shiguredo-webrtc-windows
-    Move-Item release\webrtc.lib $INSTALL_DIR\webrtc\lib
-    Move-Item include $INSTALL_DIR\webrtc\include
-  Pop-Location
+  Move-Item $BUILD_DIR\webrtc\release\webrtc.lib $INSTALL_DIR\webrtc\lib
+  Move-Item $BUILD_DIR\webrtc\include $INSTALL_DIR\webrtc\include
 }
