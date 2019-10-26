@@ -9,24 +9,17 @@ In other languages, we won't be able to deal with them. Thank you for your under
 
 ## 環境構築
 
-ディスク容量が少なくとも 100G 以上余裕がある環境を用意して下さい。
-
 ### 事前準備
 
 以下のツールをインストールしてください。
 
-- [Git for Windows](https://gitforwindows.org/)
 - [CMake](https://cmake.org/)
 - [Visual Studio 2019 \| Visual Studio](https://visualstudio.microsoft.com/ja/vs/?rr=https%3A%2F%2Fwww.google.com%2F)
     - 動作確認は Visual Studio 2019 Community で行っています
-- [Docker for Windows](https://docs.docker.com/docker-for-windows/)
-    - Windows コンテナが使えるモードにしておいてください
 
 ### 依存ライブラリのビルド
 
 `.\install_tools.bat` をダブルクリックで実行するか、コマンドプロンプトから実行してください。
-
-WebRTC を Windows コンテナ上でソースからビルドしているためすごく時間が掛かります（6時間以上）。
 
 ### dll のビルド
 
