@@ -3,17 +3,24 @@ using System.Runtime.InteropServices;
 
 public class Sora : IDisposable
 {
+    public enum Mode
+    {
+        P2P_Recvonly,
+        P2P_Sendonly,
+        Multistream_Recvonly,
+        Multistream_Sendrecv,
+    }
     public class Config
     {
         public string SignalingUrl = "";
         public string ChannelId = "";
-        public bool Downstream = false;
-        public bool Multistream = false;
+        public Mode Mode = Sora.Mode.P2P_Recvonly;
     }
 
     IntPtr p;
     GCHandle onAddTrackHandle;
     GCHandle onRemoveTrackHandle;
+    UnityEngine.Rendering.CommandBuffer commandBuffer;
 
     public void Dispose()
     {
@@ -37,11 +44,43 @@ public class Sora : IDisposable
     public Sora()
     {
         p = sora_create();
+        commandBuffer = new UnityEngine.Rendering.CommandBuffer();
     }
 
-    public int Connect(Config config)
+    public bool Connect(Config config)
     {
-        return sora_connect(p, config.SignalingUrl, config.ChannelId, config.Downstream, config.Multistream);
+        bool downstream;
+        bool multistream;
+        switch (config.Mode)
+        {
+            case Mode.P2P_Recvonly:
+                downstream = true;
+                multistream = false;
+                break;
+            case Mode.P2P_Sendonly:
+                downstream = false;
+                multistream = false;
+                break;
+            case Mode.Multistream_Recvonly:
+                downstream = true;
+                multistream = true;
+                break;
+            case Mode.Multistream_Sendrecv:
+                downstream = false;
+                multistream = true;
+                break;
+            default:
+                return false;
+        }
+
+        return sora_connect(p, config.SignalingUrl, config.ChannelId, downstream, multistream) == 0;
+    }
+
+    public void RenderTrackToTexture(uint trackId, UnityEngine.Texture texture)
+    {
+        commandBuffer.IssuePluginCustomTextureUpdateV2(sora_get_texture_update_callback(), texture, trackId);
+        UnityEngine.Graphics.ExecuteCommandBuffer(commandBuffer);
+        commandBuffer.Clear();
     }
 
     private delegate void TrackCallbackDelegate(uint track_id, IntPtr userdata);
@@ -78,11 +117,6 @@ public class Sora : IDisposable
             onRemoveTrackHandle = GCHandle.Alloc(value);
             sora_set_on_remove_track(p, TrackCallback, GCHandle.ToIntPtr(onRemoveTrackHandle));
         }
-    }
-
-    public IntPtr GetTextureUpdateCallback()
-    {
-        return sora_get_texture_update_callback();
     }
 
     public void DispatchEvents()
