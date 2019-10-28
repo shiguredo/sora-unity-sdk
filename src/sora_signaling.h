@@ -29,16 +29,13 @@ struct SoraSignalingConfig {
   std::string channel_id;
 
   nlohmann::json metadata;
-  std::string video_codec = "VP8";
+  std::string video_codec = "VP9";
   int video_bitrate = 0;
 
   std::string audio_codec = "OPUS";
   int audio_bitrate = 0;
 
-  enum class Role {
-      Upstream,
-      Downstream
-  };
+  enum class Role { Upstream, Downstream };
   Role role = Role::Upstream;
   bool multistream = false;
 };
@@ -78,8 +75,8 @@ class SoraSignaling : public std::enable_shared_from_this<SoraSignaling>,
 
  private:
   SoraSignaling(boost::asio::io_context& ioc,
-                      RTCManager* manager,
-                      SoraSignalingConfig config);
+                RTCManager* manager,
+                SoraSignalingConfig config);
   bool Init();
 
  public:
@@ -130,6 +127,6 @@ class SoraSignaling : public std::enable_shared_from_this<SoraSignaling>,
   void doIceConnectionStateChange(
       webrtc::PeerConnectionInterface::IceConnectionState new_state);
 };
-}
+}  // namespace sora
 
-#endif // SORA_SORA_SIGNALING_H_
+#endif  // SORA_SORA_SIGNALING_H_
