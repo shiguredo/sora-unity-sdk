@@ -5,8 +5,8 @@ public class Sora : IDisposable
 {
     public enum Mode
     {
-        P2P_Recvonly,
-        P2P_Sendonly,
+        Pubsub_Recvonly,
+        Pubsub_Sendonly,
         Multistream_Recvonly,
         Multistream_Sendrecv,
     }
@@ -14,7 +14,7 @@ public class Sora : IDisposable
     {
         public string SignalingUrl = "";
         public string ChannelId = "";
-        public Mode Mode = Sora.Mode.P2P_Recvonly;
+        public Mode Mode = Sora.Mode.Pubsub_Recvonly;
     }
 
     IntPtr p;
@@ -53,11 +53,11 @@ public class Sora : IDisposable
         bool multistream;
         switch (config.Mode)
         {
-            case Mode.P2P_Recvonly:
+            case Mode.Pubsub_Recvonly:
                 downstream = true;
                 multistream = false;
                 break;
-            case Mode.P2P_Sendonly:
+            case Mode.Pubsub_Sendonly:
                 downstream = false;
                 multistream = false;
                 break;
