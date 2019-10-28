@@ -3,18 +3,17 @@ using System.Runtime.InteropServices;
 
 public class Sora : IDisposable
 {
-    public enum Mode
+    public enum Role
     {
-        Pubsub_Recvonly,
-        Pubsub_Sendonly,
-        Multistream_Recvonly,
-        Multistream_Sendrecv,
+        Downstream,
+        Upstream,
     }
     public class Config
     {
         public string SignalingUrl = "";
         public string ChannelId = "";
-        public Mode Mode = Sora.Mode.Pubsub_Recvonly;
+        public Role Role = Sora.Role.Downstream;
+        public bool Multistream = false;
     }
 
     IntPtr p;
@@ -49,31 +48,7 @@ public class Sora : IDisposable
 
     public bool Connect(Config config)
     {
-        bool downstream;
-        bool multistream;
-        switch (config.Mode)
-        {
-            case Mode.Pubsub_Recvonly:
-                downstream = true;
-                multistream = false;
-                break;
-            case Mode.Pubsub_Sendonly:
-                downstream = false;
-                multistream = false;
-                break;
-            case Mode.Multistream_Recvonly:
-                downstream = true;
-                multistream = true;
-                break;
-            case Mode.Multistream_Sendrecv:
-                downstream = false;
-                multistream = true;
-                break;
-            default:
-                return false;
-        }
-
-        return sora_connect(p, config.SignalingUrl, config.ChannelId, downstream, multistream) == 0;
+        return sora_connect(p, config.SignalingUrl, config.ChannelId, config.Role == Role.Downstream, config.Multistream) == 0;
     }
 
     public void RenderTrackToTexture(uint trackId, UnityEngine.Texture texture)
