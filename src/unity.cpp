@@ -21,7 +21,7 @@ namespace sora {
 // ID からポインタに変換する仕組みを用意する
 class IdPointer {
   std::mutex mutex_;
-  ptrid_t counter_ = 0;
+  ptrid_t counter_ = 1;
   std::map<ptrid_t, void*> map_;
 
  public:
