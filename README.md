@@ -7,29 +7,9 @@ Sora Unity SDK は [WebRTC SFU Sora](https://sora.shiguredo.jp/) の Unity ク�
 We check PRs or Issues only when written in JAPANESE.
 In other languages, we won't be able to deal with them. Thank you for your understanding.
 
-## 環境構築
-
-### 事前準備
-
-以下のツールをインストールしてください。
-
-- [CMake](https://cmake.org/)
-- [Visual Studio 2019 \| Visual Studio](https://visualstudio.microsoft.com/ja/vs/?rr=https%3A%2F%2Fwww.google.com%2F)
-    - 動作確認は Visual Studio 2019 Community で行っています
-
-### 依存ライブラリのビルド
-
-`.\install_tools.bat` をダブルクリックで実行するか、コマンドプロンプトから実行してください。
-
-### dll のビルド
-
-`.\cmake.bat` をダブルクリックで実行するか、コマンドプロンプトから実行してください。
-
-うまくいくと `build\Release\SoraUnitySdk.dll` が生成されます。
-
 ## インストール
 
-`build\Release\SoraUnitySdk.dll` と `SoraSDK\Sora.cs` を自身のプロジェクトに追加してください。
+リリースページから最新の `SoraUnitySdk.zip` をダウンロードして展開し、`SoraUnitySdk\Plugins\SoraUnitySdk` を `Assets\Plugins\SoraUnitySdk` に、`SoraUnitySdk\SoraUnitySdk` を `Assets/SoraUnitySdk` にコピーしてください。
 
 ## サンプル
 
