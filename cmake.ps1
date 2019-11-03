@@ -1,3 +1,5 @@
+$ErrorActionPreference = 'Stop'
+
 $INSTALL_DIR = (Join-Path (Resolve-Path ".").Path "_install").Replace("\", "/")
 $MODULE_PATH = (Join-Path (Resolve-Path ".").Path "cmake").Replace("\", "/")
 

@@ -1,3 +1,4 @@
+$ErrorActionPreference = 'Stop'
 
 $BUILD_DIR = Join-Path (Resolve-Path ".").Path "_build"
 $INSTALL_DIR = Join-Path (Resolve-Path ".").Path "_install"
