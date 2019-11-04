@@ -42,6 +42,7 @@ Sora Unity SDK に対する有償のサポートについては現在提供し�
 ## 対応プラットフォーム
 
 - [x] Windows 10 x86_64
+- [ ] Windows 10 x86
 - [ ] Windows 10 ARM64
 - [ ] macOS x86_64
 
