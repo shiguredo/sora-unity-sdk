@@ -1,14 +1,18 @@
+#include <boost/asio/io_context.hpp>
 #include <memory>
 #include <string>
 #include <thread>
 
-#include <boost/asio/io_context.hpp>
-
 #include "api/video/i420_buffer.h"
-#include "rtc/device_video_capturer.h"
+#include "libyuv.h"
 #include "rtc/rtc_manager.h"
 #include "rtc_base/log_sinks.h"
-#include "third_party/libyuv/include/libyuv.h"
+
+#if __APPLE__
+#include "mac_helper/mac_capturer.h"
+#else
+#include "rtc/device_video_capturer.h"
+#endif
 
 #include "unity/IUnityRenderingExtensions.h"
 
@@ -252,8 +256,14 @@ class Sora {
 
     if (!downstream) {
       // 送信側は capturer を設定する。playout の設定はしない
+      // TODO(melpon): width, height, framerate をちゃんと設定する
+#ifdef __APPLE__
+      rtc::scoped_refptr<MacCapturer> capturer =
+          MacCapturer::Create(640, 480, 30, "");
+#else
       rtc::scoped_refptr<DeviceVideoCapturer> capturer =
           DeviceVideoCapturer::Create(640, 480, 30);
+#endif
       RTCManagerConfig config;
       config.no_playout = true;
       rtc_manager_.reset(
@@ -348,7 +358,7 @@ int sora_connect(void* p,
 }
 
 void* sora_get_texture_update_callback() {
-  return &sora::UnityRenderer::Sink::TextureUpdateCallback;
+  return (void*)&sora::UnityRenderer::Sink::TextureUpdateCallback;
 }
 
 void sora_destroy(void* sora) {

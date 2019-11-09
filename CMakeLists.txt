@@ -18,6 +18,59 @@ if (MSVC)
   string(REPLACE "/MD" "/MT" CMAKE_CXX_FLAGS_RELEASE        ${CMAKE_CXX_FLAGS_RELEASE})
   string(REPLACE "/MD" "/MT" CMAKE_CXX_FLAGS_RELWITHDEBINFO ${CMAKE_CXX_FLAGS_RELWITHDEBINFO})
 
+  set(_LINK_LIBRARIES
+    dbghelp.lib
+    delayimp.lib
+    dnsapi.lib
+    msimg32.lib
+    oleaut32.lib
+    psapi.lib
+    shell32.lib
+    shlwapi.lib
+    usp10.lib
+    version.lib
+    wininet.lib
+    winmm.lib
+    ws2_32.lib
+    amstrmid.lib
+    Strmiids.lib
+    crypt32.lib
+    dmoguids.lib
+    iphlpapi.lib
+    msdmo.lib
+    Secur32.lib
+    wmcodecdspuuid.lib)
+
+  set(_COMPILE_DEFINITIONS
+    _CONSOLE
+    _WIN32_WINNT=0x0A00
+    WEBRTC_WIN
+    NOMINMAX
+    WIN32_LEAN_AND_MEAN)
+
+elseif (APPLE)
+
+  set(_LINK_LIBRARIES
+    "-framework Foundation"
+    "-framework AVFoundation"
+    "-framework CoreServices"
+    "-framework CoreFoundation"
+    "-framework AudioUnit"
+    "-framework AudioToolbox"
+    "-framework CoreAudio"
+    "-framework CoreGraphics"
+    "-framework CoreMedia"
+    "-framework CoreVideo"
+    "-framework VideoToolbox"
+    "-framework AppKit"
+    "-framework Metal"
+    "-framework MetalKit"
+    "-framework OpenGL")
+
+  set(_COMPILE_DEFINITIONS
+    WEBRTC_POSIX
+    WEBRTC_MAC)
+
 endif ()
 
 set(Boost_USE_STATIC_LIBS ON)
@@ -37,7 +90,24 @@ set(_SOURCES
   src/rtc/scalable_track_source.cpp
 )
 
-add_library(SoraUnitySdk SHARED ${_SOURCES})
+if (WIN32)
+  add_library(SoraUnitySdk SHARED ${_SOURCES})
+elseif (APPLE)
+  list(APPEND _SOURCES
+    src/mac_helper/mac_capturer.mm
+    src/mac_helper/objc_codec_factory_helper.mm)
+
+  # Objective-C++ の設定
+  set_source_files_properties(src/mac_helper/mac_capturer.mm PROPERTIES
+    COMPILE_OPTIONS "-x;objective-c++;-fmodules;-fcxx-modules")
+  set_source_files_properties(src/mac_helper/objc_codec_factory_helper.mm PROPERTIES
+    COMPILE_OPTIONS "-x;objective-c++;-fmodules;-fcxx-modules")
+
+  add_library(SoraUnitySdk MODULE ${_SOURCES})
+  set_target_properties(SoraUnitySdk PROPERTIES BUNDLE TRUE)
+  set_target_properties(SoraUnitySdk PROPERTIES CXX_VISIBILITY_PRESET hidden)
+endif ()
+
 set_target_properties(SoraUnitySdk PROPERTIES CXX_STANDARD 14 C_STANDARD 99)
 
 if (ENABLE_TSAN)
@@ -60,32 +130,8 @@ target_link_libraries(SoraUnitySdk
   WebRTC::WebRTC
   Boost::boost
   JSON::JSON
-  dbghelp.lib
-  delayimp.lib
-  dnsapi.lib
-  msimg32.lib
-  oleaut32.lib
-  psapi.lib
-  shell32.lib
-  shlwapi.lib
-  usp10.lib
-  version.lib
-  wininet.lib
-  winmm.lib
-  ws2_32.lib
-  amstrmid.lib
-  Strmiids.lib
-  crypt32.lib
-  dmoguids.lib
-  iphlpapi.lib
-  msdmo.lib
-  Secur32.lib
-  wmcodecdspuuid.lib)
+  ${_LINK_LIBRARIES})
+
 target_compile_definitions(SoraUnitySdk PRIVATE
   NDEBUG
-  _CONSOLE
-  _WIN32_WINNT=0x0A00
-  WEBRTC_WIN
-  NOMINMAX
-  WIN32_LEAN_AND_MEAN
-)
+  ${_COMPILE_DEFINITIONS})
