@@ -42,9 +42,9 @@ Sora Unity SDK に対する有償のサポートについては現在提供し�
 ## 対応プラットフォーム
 
 - [x] Windows 10 x86_64
-- [ ] Windows 10 x86
 - [ ] Windows 10 ARM64
-- [ ] macOS x86_64
+    - Hololens 2 向け
+- [x] macOS x86_64
 
 ## オープンソースでの公開を前提とした有償による機能追加
 
