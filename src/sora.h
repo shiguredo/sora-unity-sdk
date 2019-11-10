@@ -113,8 +113,8 @@ class Sora {
 
     RTC_LOG(LS_INFO) << "Log initialized";
 
-    RTC_LOG(LS_INFO) << "Sora::Connect signaling_url=" << signaling_url
-                     << " channel_id=" << channel_id
+    RTC_LOG(LS_INFO) << "Sora::Connect signaling_url=" << signaling_url_
+                     << " channel_id=" << channel_id_
                      << " downstream=" << downstream
                      << " multistream=" << multistream
                      << " capturer_type=" << capturer_type
