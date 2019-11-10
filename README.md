@@ -15,6 +15,11 @@ In other languages, we won't be able to deal with them. Thank you for your under
 
 [shiguredo/sora\-unity\-sdk\-samples: WebRTC SFU Sora Unity SDK サンプル集](https://github.com/shiguredo/sora-unity-sdk-samples)
 
+### サンプル動作例
+
+- [「こんな感じに Unity のカメラ映像を WebRTC で配信できるようになりました https://t\.co/R98ZmZTFOK」 / Twitter](https://twitter.com/melponn/status/1193406538494275592?s=20)
+- [「ちゃんとリアルタイムで配信してます（モーション作るのが面倒だったのでシーンエディタから動かしてる）。Unity 側が配信で、ブラウザ（右上）で受信してる。 https://t\.co/TIL7NYroZm」 / Twitter](https://twitter.com/melponn/status/1193411591183552512?s=20)
+
 ## サポートについて
 
 Sora Unity SDK に関する質問・要望・バグなどの報告は Issues の利用をお願いします。
@@ -24,9 +29,10 @@ Sora Unity SDK に対する有償のサポートについては現在提供し�
 
 ## 対応機能
 
-- [x] カメラから映像を取得し Sora で送信
+- [x] Unity のカメラ映像を取得し Sora で送信
+- [x] カメラから映像を取得し Sora に送信
 - [x] カメラから映像を取得し Unity アプリに出力
-- [x] マイクから音声を取得し Sora で送信
+- [x] マイクから音声を取得し Sora に送信
 - [x] マイクから音声を取得し Unity アプリに出力
 - [x] Unity アプリで Sora からの音声を受信
 - [x] Unity アプリで Sora からの映像を受信
@@ -36,15 +42,21 @@ Sora Unity SDK に対する有償のサポートについては現在提供し�
 - [x] ソフトウェアエンコード/デコード VP8 / VP9 への対応
     - ソフトウェアエンコード/デコードの H.264 へは非対応
 - [x] Opus への対応
+
+### 今後
+
 - [ ] シグナリング通知への対応
 - [ ] サイマルキャスト対応
 
 ## 対応プラットフォーム
 
 - [x] Windows 10 x86_64
+- [x] macOS x86_64
+
+### 今後
+
 - [ ] Windows 10 ARM64
     - Hololens 2 向け
-- [x] macOS x86_64
 
 ## オープンソースでの公開を前提とした有償による機能追加
 
