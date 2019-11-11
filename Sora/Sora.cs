@@ -37,6 +37,7 @@ public class Sora : IDisposable
     IntPtr p;
     GCHandle onAddTrackHandle;
     GCHandle onRemoveTrackHandle;
+    GCHandle onNotifyHandle;
     UnityEngine.Rendering.CommandBuffer commandBuffer;
     UnityEngine.Camera unityCamera;
 
@@ -127,6 +128,29 @@ public class Sora : IDisposable
         }
     }
 
+    private delegate void NotifyCallbackDelegate(string json, int size, IntPtr userdata);
+
+    [AOT.MonoPInvokeCallback(typeof(NotifyCallbackDelegate))]
+    static private void NotifyCallback(string json, int size, IntPtr userdata)
+    {
+        var callback = GCHandle.FromIntPtr(userdata).Target as Action<string>;
+        callback(json);
+    }
+
+    public Action<string> OnNotify
+    {
+        set
+        {
+            if (onNotifyHandle.IsAllocated)
+            {
+                onNotifyHandle.Free();
+            }
+
+            onNotifyHandle = GCHandle.Alloc(value);
+            sora_set_on_notify(p, NotifyCallback, GCHandle.ToIntPtr(onNotifyHandle));
+        }
+    }
+
     public void DispatchEvents()
     {
         sora_dispatch_events(p);
@@ -138,6 +162,8 @@ public class Sora : IDisposable
     private static extern void sora_set_on_add_track(IntPtr p, TrackCallbackDelegate on_add_track, IntPtr userdata);
     [DllImport("SoraUnitySdk")]
     private static extern void sora_set_on_remove_track(IntPtr p, TrackCallbackDelegate on_remove_track, IntPtr userdata);
+    [DllImport("SoraUnitySdk")]
+    private static extern void sora_set_on_notify(IntPtr p, NotifyCallbackDelegate on_notify, IntPtr userdata);
     [DllImport("SoraUnitySdk")]
     private static extern void sora_dispatch_events(IntPtr p);
     [DllImport("SoraUnitySdk")]

@@ -40,6 +40,7 @@ class Sora {
   std::unique_ptr<UnityRenderer> renderer_;
   std::function<void(ptrid_t)> on_add_track_;
   std::function<void(ptrid_t)> on_remove_track_;
+  std::function<void(std::string)> on_notify_;
 
   std::mutex event_mutex_;
   std::deque<std::function<void()>> event_queue_;
@@ -52,6 +53,7 @@ class Sora {
   ~Sora();
   void SetOnAddTrack(std::function<void(ptrid_t)> on_add_track);
   void SetOnRemoveTrack(std::function<void(ptrid_t)> on_remove_track);
+  void SetOnNotify(std::function<void(std::string)> on_notify);
   void DispatchEvents();
 
   bool Connect(std::string signaling_url,

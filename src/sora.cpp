@@ -31,6 +31,10 @@ void Sora::SetOnAddTrack(std::function<void(ptrid_t)> on_add_track) {
 void Sora::SetOnRemoveTrack(std::function<void(ptrid_t)> on_remove_track) {
   on_remove_track_ = on_remove_track;
 }
+void Sora::SetOnNotify(std::function<void(std::string)> on_notify) {
+  on_notify_ = std::move(on_notify);
+}
+
 void Sora::DispatchEvents() {
   while (!event_queue_.empty()) {
     std::function<void()> f;
@@ -150,7 +154,16 @@ bool Sora::Connect(std::string signaling_url,
       }
     }
 
-    signaling_ = SoraSignaling::Create(ioc_, rtc_manager_.get(), config);
+    signaling_ = SoraSignaling::Create(
+        ioc_, rtc_manager_.get(), config, [this](std::string json) {
+          std::lock_guard<std::mutex> guard(event_mutex_);
+          event_queue_.push_back([this, json = std::move(json)]() {
+            // ここは Unity スレッドから呼ばれる
+            if (on_notify_) {
+              on_notify_(std::move(json));
+            }
+          });
+        });
     if (signaling_ == nullptr) {
       return false;
     }

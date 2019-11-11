@@ -29,6 +29,13 @@ void sora_set_on_remove_track(void* p,
   });
 }
 
+void sora_set_on_notify(void* p, notify_cb_t on_notify, void* userdata) {
+  auto sora = (sora::Sora*)p;
+  sora->SetOnNotify([on_notify, userdata](std::string json) {
+    on_notify(json.c_str(), (int)json.size(), userdata);
+  });
+}
+
 void sora_dispatch_events(void* p) {
   auto sora = (sora::Sora*)p;
   sora->DispatchEvents();
