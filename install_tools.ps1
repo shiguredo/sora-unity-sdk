@@ -5,7 +5,7 @@ $INSTALL_DIR = Join-Path (Resolve-Path ".").Path "_install"
 
 $BOOST_VERSION = "1.71.0"
 $JSON_VERSION = "3.6.1"
-$WEBRTC_VERSION = "m78.8.0"
+$WEBRTC_VERSION = "78.8.0"
 
 mkdir $BUILD_DIR -Force
 mkdir $INSTALL_DIR -Force
@@ -64,8 +64,8 @@ if (!(Test-Path "$INSTALL_DIR\json\include\nlohmann\json.hpp")) {
 
 if (!(Test-Path "$INSTALL_DIR\webrtc\lib\webrtc.lib")) {
   # shiguredo-webrtc-windows のバイナリをダウンロードする
-  $_URL = "https://github.com/shiguredo/shiguredo-webrtc-windows/releases/download/$WEBRTC_VERSION/webrtc.zip"
-  $_FILE = "$BUILD_DIR\webrtc-$WEBRTC_VERSION.zip"
+  $_URL = "https://github.com/shiguredo/shiguredo-webrtc-windows/releases/download/m$WEBRTC_VERSION/webrtc.zip"
+  $_FILE = "$BUILD_DIR\webrtc-m$WEBRTC_VERSION.zip"
   Push-Location $BUILD_DIR
     if (!(Test-Path $_FILE)) {
       Invoke-WebRequest -Uri $_URL -OutFile $_FILE

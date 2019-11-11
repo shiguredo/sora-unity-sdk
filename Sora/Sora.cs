@@ -8,18 +8,36 @@ public class Sora : IDisposable
         Downstream,
         Upstream,
     }
+    public enum CapturerType
+    {
+        DeviceCamera = 0,
+        UnityCamera = 1,
+    }
     public class Config
     {
         public string SignalingUrl = "";
         public string ChannelId = "";
         public Role Role = Sora.Role.Downstream;
         public bool Multistream = false;
+        public void SetUnityCamera(UnityEngine.Camera camera, int width, int height)
+        {
+            CapturerType = Sora.CapturerType.UnityCamera;
+            UnityCamera = camera;
+            VideoWidth = width;
+            VideoHeight = height;
+        }
+
+        public CapturerType CapturerType = Sora.CapturerType.DeviceCamera;
+        public UnityEngine.Camera UnityCamera = null;
+        public int VideoWidth = 640;
+        public int VideoHeight = 480;
     }
 
     IntPtr p;
     GCHandle onAddTrackHandle;
     GCHandle onRemoveTrackHandle;
     UnityEngine.Rendering.CommandBuffer commandBuffer;
+    UnityEngine.Camera unityCamera;
 
     public void Dispose()
     {
@@ -48,7 +66,21 @@ public class Sora : IDisposable
 
     public bool Connect(Config config)
     {
-        return sora_connect(p, config.SignalingUrl, config.ChannelId, config.Role == Role.Downstream, config.Multistream) == 0;
+        IntPtr unityCameraTexture = IntPtr.Zero;
+        if (config.CapturerType == CapturerType.UnityCamera)
+        {
+            unityCamera = config.UnityCamera;
+            var texture = new UnityEngine.RenderTexture(config.VideoWidth, config.VideoHeight, 0, UnityEngine.RenderTextureFormat.BGRA32);
+            unityCamera.targetTexture = texture;
+            unityCamera.enabled = true;
+            unityCameraTexture = texture.GetNativeTexturePtr();
+        }
+
+        return sora_connect(p, config.SignalingUrl, config.ChannelId, config.Role == Role.Downstream, config.Multistream, (int)config.CapturerType, unityCameraTexture, config.VideoWidth, config.VideoHeight) == 0;
+    }
+
+    public void OnRender() {
+        UnityEngine.GL.IssuePluginEvent(sora_get_render_callback(), sora_get_render_callback_event_id(p));
     }
 
     public void RenderTrackToTexture(uint trackId, UnityEngine.Texture texture)
@@ -108,9 +140,13 @@ public class Sora : IDisposable
     [DllImport("SoraUnitySdk")]
     private static extern void sora_dispatch_events(IntPtr p);
     [DllImport("SoraUnitySdk")]
-    private static extern int sora_connect(IntPtr p, string signaling_url, string channel_id, bool downstream, bool multistream);
+    private static extern int sora_connect(IntPtr p, string signaling_url, string channel_id, bool downstream, bool multistream, int capturer_type, IntPtr unity_camera_texture, int unity_camera_width, int unity_camera_height);
     [DllImport("SoraUnitySdk")]
     private static extern IntPtr sora_get_texture_update_callback();
     [DllImport("SoraUnitySdk")]
     private static extern void sora_destroy(IntPtr p);
+    [DllImport("SoraUnitySdk")]
+    private static extern IntPtr sora_get_render_callback();
+    [DllImport("SoraUnitySdk")]
+    private static extern int sora_get_render_callback_event_id(IntPtr p);
 }

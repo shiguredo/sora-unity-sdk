@@ -23,9 +23,16 @@ UNITY_INTERFACE_EXPORT int sora_connect(void* p,
                                         const char* signaling_url,
                                         const char* channel_id,
                                         bool downstream,
-                                        bool multistream);
+                                        bool multistream,
+                                        int capturer_type,
+                                        void* unity_camera_texture,
+                                        int video_width,
+                                        int video_height);
 UNITY_INTERFACE_EXPORT void* sora_get_texture_update_callback();
 UNITY_INTERFACE_EXPORT void sora_destroy(void* sora);
+
+UNITY_INTERFACE_EXPORT void* sora_get_render_callback();
+UNITY_INTERFACE_EXPORT int sora_get_render_callback_event_id(void* p);
 
 #ifdef __cplusplus
 }
