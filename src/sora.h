@@ -56,6 +56,7 @@ class Sora {
 
   bool Connect(std::string signaling_url,
                std::string channel_id,
+               std::string metadata,
                bool downstream,
                bool multistream,
                int capturer_type,

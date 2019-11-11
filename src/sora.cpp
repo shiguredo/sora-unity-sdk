@@ -45,6 +45,7 @@ void Sora::DispatchEvents() {
 
 bool Sora::Connect(std::string signaling_url,
                    std::string channel_id,
+                   std::string metadata,
                    bool downstream,
                    bool multistream,
                    int capturer_type,
@@ -72,7 +73,7 @@ bool Sora::Connect(std::string signaling_url,
   RTC_LOG(LS_INFO) << "Log initialized";
 
   RTC_LOG(LS_INFO) << "Sora::Connect signaling_url=" << signaling_url_
-                   << " channel_id=" << channel_id_
+                   << " channel_id=" << channel_id_ << " metadata=" << metadata
                    << " downstream=" << downstream
                    << " multistream=" << multistream
                    << " capturer_type=" << capturer_type
@@ -108,63 +109,72 @@ bool Sora::Connect(std::string signaling_url,
       // 実カメラ（デバイス）を使う
       // TODO(melpon): framerate をちゃんと設定する
 #ifdef __APPLE__
-        capturer = MacCapturer::Create(video_width, video_height, 30, "");
+      capturer = MacCapturer::Create(video_width, video_height, 30, "");
 #else
-        capturer = DeviceVideoCapturer::Create(video_width, video_height, 30);
+      capturer = DeviceVideoCapturer::Create(video_width, video_height, 30);
 #endif
-      } else {
-        // Unity のカメラからの映像を使う
-        unity_camera_capturer_ = UnityCameraCapturer::Create(
-            &UnityContext::Instance(), unity_camera_texture, video_width,
-            video_height);
-        capturer = unity_camera_capturer_;
-      }
-      RTCManagerConfig config;
-      config.no_playout = true;
-      rtc_manager_.reset(
-          new RTCManager(config, std::move(capturer), renderer_.get()));
     } else {
-      // 受信側は capturer を作らず、video, recording の設定もしない
-      RTCManagerConfig config;
-      config.no_recording = true;
-      config.no_video = true;
-      rtc_manager_.reset(new RTCManager(config, nullptr, renderer_.get()));
+      // Unity のカメラからの映像を使う
+      unity_camera_capturer_ = UnityCameraCapturer::Create(
+          &UnityContext::Instance(), unity_camera_texture, video_width,
+          video_height);
+      capturer = unity_camera_capturer_;
+    }
+    RTCManagerConfig config;
+    config.no_playout = true;
+    rtc_manager_.reset(
+        new RTCManager(config, std::move(capturer), renderer_.get()));
+  } else {
+    // 受信側は capturer を作らず、video, recording の設定もしない
+    RTCManagerConfig config;
+    config.no_recording = true;
+    config.no_video = true;
+    rtc_manager_.reset(new RTCManager(config, nullptr, renderer_.get()));
+  }
+
+  {
+    RTC_LOG(LS_INFO) << "Start Signaling: url=" << signaling_url_
+                     << " channel_id=" << channel_id_;
+    SoraSignalingConfig config;
+    config.role = downstream ? SoraSignalingConfig::Role::Downstream
+                             : SoraSignalingConfig::Role::Upstream;
+    config.multistream = multistream;
+    config.signaling_url = signaling_url_;
+    config.channel_id = channel_id_;
+    if (!metadata.empty()) {
+      auto md = nlohmann::json::parse(metadata, nullptr, false);
+      if (md.type() == nlohmann::json::value_t::discarded) {
+        RTC_LOG(LS_WARNING) << "Invalid JSON: metadata=" << metadata;
+      } else {
+        config.metadata = md;
+      }
     }
 
-    {
-      RTC_LOG(LS_INFO) << "Start Signaling: url=" << signaling_url_
-                       << " channel_id=" << channel_id_;
-      SoraSignalingConfig config;
-      config.role = downstream ? SoraSignalingConfig::Role::Downstream
-                               : SoraSignalingConfig::Role::Upstream;
-      config.multistream = multistream;
-      config.signaling_url = signaling_url_;
-      config.channel_id = channel_id_;
-      signaling_ = SoraSignaling::Create(ioc_, rtc_manager_.get(), config);
-      if (signaling_ == nullptr) {
-        return false;
-      }
-      if (!signaling_->connect()) {
-        return false;
-      }
-    }
-
-    thread_ = rtc::Thread::Create();
-    if (!thread_->SetName("Sora IO Thread", nullptr)) {
-      RTC_LOG(LS_INFO) << "Failed to set thread name";
+    signaling_ = SoraSignaling::Create(ioc_, rtc_manager_.get(), config);
+    if (signaling_ == nullptr) {
       return false;
     }
-    if (!thread_->Start()) {
-      RTC_LOG(LS_INFO) << "Failed to start thread";
+    if (!signaling_->connect()) {
       return false;
     }
-    thread_->PostTask(RTC_FROM_HERE, [this]() {
-      RTC_LOG(LS_INFO) << "io_context started";
-      ioc_.run();
-      RTC_LOG(LS_INFO) << "io_context finished";
-    });
+  }
 
-    return true;
+  thread_ = rtc::Thread::Create();
+  if (!thread_->SetName("Sora IO Thread", nullptr)) {
+    RTC_LOG(LS_INFO) << "Failed to set thread name";
+    return false;
+  }
+  if (!thread_->Start()) {
+    RTC_LOG(LS_INFO) << "Failed to start thread";
+    return false;
+  }
+  thread_->PostTask(RTC_FROM_HERE, [this]() {
+    RTC_LOG(LS_INFO) << "io_context started";
+    ioc_.run();
+    RTC_LOG(LS_INFO) << "io_context finished";
+  });
+
+  return true;
 }
 
 void Sora::RenderCallbackStatic(int event_id) {

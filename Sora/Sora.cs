@@ -17,6 +17,7 @@ public class Sora : IDisposable
     {
         public string SignalingUrl = "";
         public string ChannelId = "";
+        public string Metadata = "";
         public Role Role = Sora.Role.Downstream;
         public bool Multistream = false;
         public void SetUnityCamera(UnityEngine.Camera camera, int width, int height)
@@ -76,7 +77,7 @@ public class Sora : IDisposable
             unityCameraTexture = texture.GetNativeTexturePtr();
         }
 
-        return sora_connect(p, config.SignalingUrl, config.ChannelId, config.Role == Role.Downstream, config.Multistream, (int)config.CapturerType, unityCameraTexture, config.VideoWidth, config.VideoHeight) == 0;
+        return sora_connect(p, config.SignalingUrl, config.ChannelId, config.Metadata, config.Role == Role.Downstream, config.Multistream, (int)config.CapturerType, unityCameraTexture, config.VideoWidth, config.VideoHeight) == 0;
     }
 
     public void OnRender() {
@@ -140,7 +141,7 @@ public class Sora : IDisposable
     [DllImport("SoraUnitySdk")]
     private static extern void sora_dispatch_events(IntPtr p);
     [DllImport("SoraUnitySdk")]
-    private static extern int sora_connect(IntPtr p, string signaling_url, string channel_id, bool downstream, bool multistream, int capturer_type, IntPtr unity_camera_texture, int unity_camera_width, int unity_camera_height);
+    private static extern int sora_connect(IntPtr p, string signaling_url, string channel_id, string metadata, bool downstream, bool multistream, int capturer_type, IntPtr unity_camera_texture, int unity_camera_width, int unity_camera_height);
     [DllImport("SoraUnitySdk")]
     private static extern IntPtr sora_get_texture_update_callback();
     [DllImport("SoraUnitySdk")]

@@ -37,6 +37,7 @@ void sora_dispatch_events(void* p) {
 int sora_connect(void* p,
                  const char* signaling_url,
                  const char* channel_id,
+                 const char* metadata,
                  bool downstream,
                  bool multistream,
                  int capturer_type,
@@ -44,9 +45,9 @@ int sora_connect(void* p,
                  int video_width,
                  int video_height) {
   auto sora = (sora::Sora*)p;
-  if (!sora->Connect(signaling_url, channel_id, downstream, multistream,
-                     capturer_type, unity_camera_texture, video_width,
-                     video_height)) {
+  if (!sora->Connect(signaling_url, channel_id, metadata, downstream,
+                     multistream, capturer_type, unity_camera_texture,
+                     video_width, video_height)) {
     return -1;
   }
   return 0;

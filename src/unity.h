@@ -22,6 +22,7 @@ UNITY_INTERFACE_EXPORT void sora_dispatch_events(void* p);
 UNITY_INTERFACE_EXPORT int sora_connect(void* p,
                                         const char* signaling_url,
                                         const char* channel_id,
+                                        const char* metadata,
                                         bool downstream,
                                         bool multistream,
                                         int capturer_type,
