@@ -16,27 +16,10 @@ class IdPointer {
   std::map<ptrid_t, void*> map_;
 
  public:
-  static IdPointer& Instance() {
-    static IdPointer ip;
-    return ip;
-  }
-  ptrid_t Register(void* p) {
-    std::lock_guard<std::mutex> guard(mutex_);
-    map_[counter_] = p;
-    return counter_++;
-  }
-  void Unregister(ptrid_t id) {
-    std::lock_guard<std::mutex> guard(mutex_);
-    map_.erase(id);
-  }
-  void* Lookup(ptrid_t id) {
-    std::lock_guard<std::mutex> guard(mutex_);
-    auto it = map_.find(id);
-    if (it == map_.end()) {
-      return nullptr;
-    }
-    return it->second;
-  }
+  static IdPointer& Instance();
+  ptrid_t Register(void* p);
+  void Unregister(ptrid_t id);
+  void* Lookup(ptrid_t id);
 };
 
 }  // namespace sora
