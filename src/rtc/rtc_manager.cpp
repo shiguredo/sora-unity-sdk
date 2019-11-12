@@ -42,7 +42,10 @@ namespace sora {
 RTCManager::RTCManager(
     RTCManagerConfig config,
     rtc::scoped_refptr<ScalableVideoTrackSource> video_track_source,
-    VideoTrackReceiver* receiver)
+    VideoTrackReceiver* receiver,
+    std::function<rtc::scoped_refptr<webrtc::AudioDeviceModule>(
+        rtc::scoped_refptr<webrtc::AudioDeviceModule>,
+        webrtc::TaskQueueFactory* task_queue_factory)> create_adm)
     : config_(config), receiver_(receiver) {
   rtc::InitializeSSL();
 
@@ -67,30 +70,29 @@ RTCManager::RTCManager(
   cricket::MediaEngineDependencies media_dependencies;
   media_dependencies.task_queue_factory = dependencies.task_queue_factory.get();
 
-#ifdef _WIN32
-  webrtc::AudioDeviceModule::AudioLayer audio_layer =
-      webrtc::AudioDeviceModule::kWindowsCoreAudio2;
-#else
-  webrtc::AudioDeviceModule::AudioLayer audio_layer =
-      webrtc::AudioDeviceModule::kPlatformDefaultAudio;
-#endif
-
+  rtc::scoped_refptr<webrtc::AudioDeviceModule> adm;
   if (config_.no_recording && config_.no_playout) {
-    audio_layer = webrtc::AudioDeviceModule::kDummyAudio;
-  }
-
-#ifdef _WIN32
-  if (audio_layer == webrtc::AudioDeviceModule::kWindowsCoreAudio2) {
-    media_dependencies.adm = webrtc::CreateWindowsCoreAudioAudioDeviceModule(
+    adm = webrtc::AudioDeviceModule::Create(
+        webrtc::AudioDeviceModule::kDummyAudio,
         dependencies.task_queue_factory.get());
   } else {
-    media_dependencies.adm = webrtc::AudioDeviceModule::Create(
-        audio_layer, dependencies.task_queue_factory.get());
-  }
+#ifdef _WIN32
+    adm = webrtc::CreateWindowsCoreAudioAudioDeviceModule(
+        dependencies.task_queue_factory.get());
 #else
-  media_dependencies.adm = webrtc::AudioDeviceModule::Create(
-      audio_layer, dependencies.task_queue_factory.get());
+    adm = webrtc::AudioDeviceModule::Create(
+        webrtc::AudioDeviceModule::kPlatformDefaultAudio,
+        dependencies.task_queue_factory.get());
 #endif
+  }
+
+  if (create_adm) {
+    media_dependencies.adm =
+        create_adm(adm, dependencies.task_queue_factory.get());
+  } else {
+    media_dependencies.adm = adm;
+  }
+
   media_dependencies.audio_encoder_factory =
       webrtc::CreateBuiltinAudioEncoderFactory();
   media_dependencies.audio_decoder_factory =

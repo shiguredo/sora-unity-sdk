@@ -22,6 +22,7 @@
 #include "rtc/rtc_manager.h"
 #include "sora_signaling.h"
 #include "unity.h"
+#include "unity_audio_device.h"
 #include "unity_camera_capturer.h"
 #include "unity_context.h"
 #include "unity_renderer.h"
@@ -48,6 +49,8 @@ class Sora {
   rtc::scoped_refptr<UnityCameraCapturer> unity_camera_capturer_;
   ptrid_t ptrid_;
 
+  rtc::scoped_refptr<sora::UnityAudioDevice> adm_;
+
  public:
   Sora(UnityContext* context);
   ~Sora();
@@ -64,12 +67,15 @@ class Sora {
                int capturer_type,
                void* unity_camera_texture,
                int video_width,
-               int video_height);
+               int video_height,
+               bool unity_audio_input);
 
   static void UNITY_INTERFACE_API RenderCallbackStatic(int event_id);
   int GetRenderCallbackEventID() const;
 
   void RenderCallback();
+
+  void ProcessAudio(const void* p, int offset, int samples);
 };
 
 }  // namespace sora

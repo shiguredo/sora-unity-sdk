@@ -32,6 +32,7 @@ public class Sora : IDisposable
         public UnityEngine.Camera UnityCamera = null;
         public int VideoWidth = 640;
         public int VideoHeight = 480;
+        public bool UnityAudioInput = false;
     }
 
     IntPtr p;
@@ -78,7 +79,18 @@ public class Sora : IDisposable
             unityCameraTexture = texture.GetNativeTexturePtr();
         }
 
-        return sora_connect(p, config.SignalingUrl, config.ChannelId, config.Metadata, config.Role == Role.Downstream, config.Multistream, (int)config.CapturerType, unityCameraTexture, config.VideoWidth, config.VideoHeight) == 0;
+        return sora_connect(
+            p,
+            config.SignalingUrl,
+            config.ChannelId,
+            config.Metadata,
+            config.Role == Role.Downstream,
+            config.Multistream,
+            (int)config.CapturerType,
+            unityCameraTexture,
+            config.VideoWidth,
+            config.VideoHeight,
+            config.UnityAudioInput) == 0;
     }
 
     public void OnRender() {
@@ -156,6 +168,10 @@ public class Sora : IDisposable
         sora_dispatch_events(p);
     }
 
+    public void ProcessAudio(float[] data, int offset, int samples) {
+        sora_process_audio(p, data, offset, samples);
+    }
+
     [DllImport("SoraUnitySdk")]
     private static extern IntPtr sora_create();
     [DllImport("SoraUnitySdk")]
@@ -167,7 +183,7 @@ public class Sora : IDisposable
     [DllImport("SoraUnitySdk")]
     private static extern void sora_dispatch_events(IntPtr p);
     [DllImport("SoraUnitySdk")]
-    private static extern int sora_connect(IntPtr p, string signaling_url, string channel_id, string metadata, bool downstream, bool multistream, int capturer_type, IntPtr unity_camera_texture, int unity_camera_width, int unity_camera_height);
+    private static extern int sora_connect(IntPtr p, string signaling_url, string channel_id, string metadata, bool downstream, bool multistream, int capturer_type, IntPtr unity_camera_texture, int video_width, int video_height, bool unity_audio_input);
     [DllImport("SoraUnitySdk")]
     private static extern IntPtr sora_get_texture_update_callback();
     [DllImport("SoraUnitySdk")]
@@ -176,4 +192,6 @@ public class Sora : IDisposable
     private static extern IntPtr sora_get_render_callback();
     [DllImport("SoraUnitySdk")]
     private static extern int sora_get_render_callback_event_id(IntPtr p);
+    [DllImport("SoraUnitySdk")]
+    private static extern void sora_process_audio(IntPtr p, [In] float[] data, int offset, int samples);
 }

@@ -32,12 +32,18 @@ UNITY_INTERFACE_EXPORT int sora_connect(void* p,
                                         int capturer_type,
                                         void* unity_camera_texture,
                                         int video_width,
-                                        int video_height);
+                                        int video_height,
+                                        bool unity_audio_input);
 UNITY_INTERFACE_EXPORT void* sora_get_texture_update_callback();
 UNITY_INTERFACE_EXPORT void sora_destroy(void* sora);
 
 UNITY_INTERFACE_EXPORT void* sora_get_render_callback();
 UNITY_INTERFACE_EXPORT int sora_get_render_callback_event_id(void* p);
+
+UNITY_INTERFACE_EXPORT void sora_process_audio(void* p,
+                                               const void* buf,
+                                               int offset,
+                                               int samples);
 
 #ifdef __cplusplus
 }

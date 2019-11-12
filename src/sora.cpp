@@ -55,7 +55,8 @@ bool Sora::Connect(std::string signaling_url,
                    int capturer_type,
                    void* unity_camera_texture,
                    int video_width,
-                   int video_height) {
+                   int video_height,
+                   bool unity_audio_input) {
   signaling_url_ = std::move(signaling_url);
   channel_id_ = std::move(channel_id);
 
@@ -105,6 +106,18 @@ bool Sora::Connect(std::string signaling_url,
         });
       }));
 
+  std::function<rtc::scoped_refptr<webrtc::AudioDeviceModule>(
+      rtc::scoped_refptr<webrtc::AudioDeviceModule>,
+      webrtc::TaskQueueFactory * task_queue_factory)>
+      create_adm;
+  if (unity_audio_input) {
+    create_adm = [this](rtc::scoped_refptr<webrtc::AudioDeviceModule> adm,
+                        webrtc::TaskQueueFactory* task_queue_factory) {
+      adm_ = UnityAudioDevice::Create(adm, task_queue_factory);
+      return adm_;
+    };
+  }
+
   if (!downstream) {
     // 送信側は capturer を設定する。playout の設定はしない
     rtc::scoped_refptr<ScalableVideoTrackSource> capturer;
@@ -126,14 +139,15 @@ bool Sora::Connect(std::string signaling_url,
     }
     RTCManagerConfig config;
     config.no_playout = true;
-    rtc_manager_.reset(
-        new RTCManager(config, std::move(capturer), renderer_.get()));
+    rtc_manager_.reset(new RTCManager(config, std::move(capturer),
+                                      renderer_.get(), create_adm));
   } else {
     // 受信側は capturer を作らず、video, recording の設定もしない
     RTCManagerConfig config;
     config.no_recording = true;
     config.no_video = true;
-    rtc_manager_.reset(new RTCManager(config, nullptr, renderer_.get()));
+    rtc_manager_.reset(
+        new RTCManager(config, nullptr, renderer_.get(), create_adm));
   }
 
   {
@@ -207,6 +221,13 @@ void Sora::RenderCallback() {
     return;
   }
   unity_camera_capturer_->OnRender();
+}
+void Sora::ProcessAudio(const void* p, int offset, int samples) {
+  if (!adm_) {
+    return;
+  }
+  // 今のところステレオデータを渡すようにしてるので2倍する
+  adm_->ProcessAudioData((const float*)p + offset, samples * 2);
 }
 
 }  // namespace sora

@@ -50,11 +50,12 @@ int sora_connect(void* p,
                  int capturer_type,
                  void* unity_camera_texture,
                  int video_width,
-                 int video_height) {
+                 int video_height,
+                 bool unity_audio_input) {
   auto sora = (sora::Sora*)p;
   if (!sora->Connect(signaling_url, channel_id, metadata, downstream,
                      multistream, capturer_type, unity_camera_texture,
-                     video_width, video_height)) {
+                     video_width, video_height, unity_audio_input)) {
     return -1;
   }
   return 0;
@@ -74,6 +75,11 @@ void* sora_get_render_callback() {
 int sora_get_render_callback_event_id(void* p) {
   auto sora = (sora::Sora*)p;
   return sora->GetRenderCallbackEventID();
+}
+
+void sora_process_audio(void* p, const void* buf, int offset, int samples) {
+  auto sora = (sora::Sora*)p;
+  sora->ProcessAudio(buf, offset, samples);
 }
 
 void UNITY_INTERFACE_EXPORT UNITY_INTERFACE_API

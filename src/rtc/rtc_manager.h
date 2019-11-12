@@ -33,7 +33,10 @@ class RTCManager {
  public:
   RTCManager(RTCManagerConfig config,
              rtc::scoped_refptr<ScalableVideoTrackSource> video_track_source,
-             VideoTrackReceiver* receiver);
+             VideoTrackReceiver* receiver,
+             std::function<rtc::scoped_refptr<webrtc::AudioDeviceModule>(
+                 rtc::scoped_refptr<webrtc::AudioDeviceModule>,
+                 webrtc::TaskQueueFactory* task_queue_factory)> create_adm);
   ~RTCManager();
   std::shared_ptr<RTCConnection> createConnection(
       webrtc::PeerConnectionInterface::RTCConfiguration rtc_config,
