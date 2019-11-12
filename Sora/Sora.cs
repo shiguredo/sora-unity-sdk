@@ -17,6 +17,7 @@ public class Sora : IDisposable
     {
         public string SignalingUrl = "";
         public string ChannelId = "";
+        public string Metadata = "";
         public Role Role = Sora.Role.Downstream;
         public bool Multistream = false;
         public void SetUnityCamera(UnityEngine.Camera camera, int width, int height)
@@ -31,11 +32,13 @@ public class Sora : IDisposable
         public UnityEngine.Camera UnityCamera = null;
         public int VideoWidth = 640;
         public int VideoHeight = 480;
+        public bool UnityAudioInput = false;
     }
 
     IntPtr p;
     GCHandle onAddTrackHandle;
     GCHandle onRemoveTrackHandle;
+    GCHandle onNotifyHandle;
     UnityEngine.Rendering.CommandBuffer commandBuffer;
     UnityEngine.Camera unityCamera;
 
@@ -76,7 +79,18 @@ public class Sora : IDisposable
             unityCameraTexture = texture.GetNativeTexturePtr();
         }
 
-        return sora_connect(p, config.SignalingUrl, config.ChannelId, config.Role == Role.Downstream, config.Multistream, (int)config.CapturerType, unityCameraTexture, config.VideoWidth, config.VideoHeight) == 0;
+        return sora_connect(
+            p,
+            config.SignalingUrl,
+            config.ChannelId,
+            config.Metadata,
+            config.Role == Role.Downstream,
+            config.Multistream,
+            (int)config.CapturerType,
+            unityCameraTexture,
+            config.VideoWidth,
+            config.VideoHeight,
+            config.UnityAudioInput) == 0;
     }
 
     public void OnRender() {
@@ -126,9 +140,36 @@ public class Sora : IDisposable
         }
     }
 
+    private delegate void NotifyCallbackDelegate(string json, int size, IntPtr userdata);
+
+    [AOT.MonoPInvokeCallback(typeof(NotifyCallbackDelegate))]
+    static private void NotifyCallback(string json, int size, IntPtr userdata)
+    {
+        var callback = GCHandle.FromIntPtr(userdata).Target as Action<string>;
+        callback(json);
+    }
+
+    public Action<string> OnNotify
+    {
+        set
+        {
+            if (onNotifyHandle.IsAllocated)
+            {
+                onNotifyHandle.Free();
+            }
+
+            onNotifyHandle = GCHandle.Alloc(value);
+            sora_set_on_notify(p, NotifyCallback, GCHandle.ToIntPtr(onNotifyHandle));
+        }
+    }
+
     public void DispatchEvents()
     {
         sora_dispatch_events(p);
+    }
+
+    public void ProcessAudio(float[] data, int offset, int samples) {
+        sora_process_audio(p, data, offset, samples);
     }
 
     [DllImport("SoraUnitySdk")]
@@ -138,9 +179,11 @@ public class Sora : IDisposable
     [DllImport("SoraUnitySdk")]
     private static extern void sora_set_on_remove_track(IntPtr p, TrackCallbackDelegate on_remove_track, IntPtr userdata);
     [DllImport("SoraUnitySdk")]
+    private static extern void sora_set_on_notify(IntPtr p, NotifyCallbackDelegate on_notify, IntPtr userdata);
+    [DllImport("SoraUnitySdk")]
     private static extern void sora_dispatch_events(IntPtr p);
     [DllImport("SoraUnitySdk")]
-    private static extern int sora_connect(IntPtr p, string signaling_url, string channel_id, bool downstream, bool multistream, int capturer_type, IntPtr unity_camera_texture, int unity_camera_width, int unity_camera_height);
+    private static extern int sora_connect(IntPtr p, string signaling_url, string channel_id, string metadata, bool downstream, bool multistream, int capturer_type, IntPtr unity_camera_texture, int video_width, int video_height, bool unity_audio_input);
     [DllImport("SoraUnitySdk")]
     private static extern IntPtr sora_get_texture_update_callback();
     [DllImport("SoraUnitySdk")]
@@ -149,4 +192,6 @@ public class Sora : IDisposable
     private static extern IntPtr sora_get_render_callback();
     [DllImport("SoraUnitySdk")]
     private static extern int sora_get_render_callback_event_id(IntPtr p);
+    [DllImport("SoraUnitySdk")]
+    private static extern void sora_process_audio(IntPtr p, [In] float[] data, int offset, int samples);
 }

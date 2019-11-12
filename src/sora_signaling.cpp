@@ -53,9 +53,10 @@ std::shared_ptr<RTCConnection> SoraSignaling::getRTCConnection() const {
 std::shared_ptr<SoraSignaling> SoraSignaling::Create(
     boost::asio::io_context& ioc,
     RTCManager* manager,
-    SoraSignalingConfig config) {
-  auto p =
-      std::shared_ptr<SoraSignaling>(new SoraSignaling(ioc, manager, config));
+    SoraSignalingConfig config,
+    std::function<void(std::string)> on_notify) {
+  auto p = std::shared_ptr<SoraSignaling>(
+      new SoraSignaling(ioc, manager, config, std::move(on_notify)));
   if (!p->Init()) {
     return nullptr;
   }
@@ -64,8 +65,13 @@ std::shared_ptr<SoraSignaling> SoraSignaling::Create(
 
 SoraSignaling::SoraSignaling(boost::asio::io_context& ioc,
                              RTCManager* manager,
-                             SoraSignalingConfig config)
-    : ioc_(ioc), resolver_(ioc), manager_(manager), config_(config) {}
+                             SoraSignalingConfig config,
+                             std::function<void(std::string)> on_notify)
+    : ioc_(ioc),
+      resolver_(ioc),
+      manager_(manager),
+      config_(config),
+      on_notify_(std::move(on_notify)) {}
 
 bool SoraSignaling::Init() {
   if (!URLParts::parse(config_.signaling_url, parts_)) {
@@ -291,6 +297,9 @@ void SoraSignaling::onRead(boost::system::error_code ec,
     const std::string sdp = json_message["sdp"];
     connection_->setOffer(sdp);
   } else if (type == "notify") {
+    if (on_notify_) {
+      on_notify_(text);
+    }
   } else if (type == "ping") {
     if (rtc_state_ != webrtc::PeerConnectionInterface::IceConnectionState::
                           kIceConnectionConnected) {
@@ -339,7 +348,7 @@ void SoraSignaling::doWrite() {
 
 void SoraSignaling::onWrite(boost::system::error_code ec,
                             std::size_t bytes_transferred) {
-  RTC_LOG(LS_INFO) << __FUNCTION__ << ": " << ec.message();
+  RTC_LOG(LS_INFO) << __FUNCTION__;
 
   if (ec == boost::asio::error::operation_aborted) {
     return;
