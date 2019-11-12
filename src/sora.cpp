@@ -22,8 +22,6 @@ Sora::~Sora() {
     thread_->Stop();
   }
   RTC_LOG(LS_INFO) << "Sora object destroy finished";
-  rtc::LogMessage::RemoveLogToStream(log_sink_.get());
-  log_sink_.reset();
 }
 void Sora::SetOnAddTrack(std::function<void(ptrid_t)> on_add_track) {
   on_add_track_ = on_add_track;
@@ -59,23 +57,6 @@ bool Sora::Connect(std::string signaling_url,
                    bool unity_audio_input) {
   signaling_url_ = std::move(signaling_url);
   channel_id_ = std::move(channel_id);
-
-  const size_t kDefaultMaxLogFileSize = 10 * 1024 * 1024;
-  rtc::LogMessage::LogToDebug((rtc::LoggingSeverity)rtc::LS_NONE);
-  rtc::LogMessage::LogTimestamps();
-  rtc::LogMessage::LogThreads();
-
-  log_sink_.reset(new rtc::FileRotatingLogSink("./", "webrtc_logs",
-                                               kDefaultMaxLogFileSize, 10));
-  if (!log_sink_->Init()) {
-    RTC_LOG(LS_ERROR) << __FUNCTION__ << ": Failed to open log file";
-    log_sink_.reset();
-    return false;
-  }
-
-  rtc::LogMessage::AddLogToStream(log_sink_.get(), rtc::LS_INFO);
-
-  RTC_LOG(LS_INFO) << "Log initialized";
 
   RTC_LOG(LS_INFO) << "Sora::Connect signaling_url=" << signaling_url_
                    << " channel_id=" << channel_id_ << " metadata=" << metadata

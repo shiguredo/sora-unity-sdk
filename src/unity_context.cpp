@@ -57,6 +57,24 @@ bool UnityContext::IsInitialized() {
 
 void UnityContext::Init(IUnityInterfaces* ifs) {
   std::lock_guard<std::mutex> guard(mutex_);
+
+  const size_t kDefaultMaxLogFileSize = 10 * 1024 * 1024;
+  rtc::LogMessage::LogToDebug((rtc::LoggingSeverity)rtc::LS_NONE);
+  rtc::LogMessage::LogTimestamps();
+  rtc::LogMessage::LogThreads();
+
+  log_sink_.reset(new rtc::FileRotatingLogSink("./", "webrtc_logs",
+                                               kDefaultMaxLogFileSize, 10));
+  if (!log_sink_->Init()) {
+    RTC_LOG(LS_ERROR) << __FUNCTION__ << ": Failed to open log file";
+    log_sink_.reset();
+    return;
+  }
+
+  rtc::LogMessage::AddLogToStream(log_sink_.get(), rtc::LS_INFO);
+
+  RTC_LOG(LS_INFO) << "Log initialized";
+
   ifs_ = ifs;
   OnGraphicsDeviceEvent(kUnityGfxDeviceEventInitialize);
 }
@@ -65,6 +83,11 @@ void UnityContext::Shutdown() {
   std::lock_guard<std::mutex> guard(mutex_);
   OnGraphicsDeviceEvent(kUnityGfxDeviceEventShutdown);
   ifs_ = nullptr;
+
+  RTC_LOG(LS_INFO) << "Log uninitialized";
+
+  rtc::LogMessage::RemoveLogToStream(log_sink_.get());
+  log_sink_.reset();
 }
 
 #ifdef _WIN32

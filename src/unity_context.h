@@ -3,6 +3,9 @@
 
 #include <mutex>
 
+// webrtc
+#include "rtc_base/log_sinks.h"
+
 #include "unity/IUnityGraphics.h"
 #include "unity/IUnityInterface.h"
 
@@ -14,6 +17,7 @@ namespace sora {
 
 class UnityContext {
   std::mutex mutex_;
+  std::unique_ptr<rtc::FileRotatingLogSink> log_sink_;
   IUnityInterfaces* ifs_ = nullptr;
   IUnityGraphics* graphics_ = nullptr;
 #ifdef _WIN32
