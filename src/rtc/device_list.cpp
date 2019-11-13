@@ -8,10 +8,20 @@
 #include "modules/video_capture/video_capture_factory.h"
 #include "rtc_base/logging.h"
 
+#ifdef __APPLE__
+#include "../mac_helper/mac_capturer.h"
+#endif
+
 namespace sora {
 
 bool DeviceList::EnumVideoCapturer(
     std::function<void(std::string, std::string)> f) {
+#ifdef __APPLE__
+
+  return MacCapturer::EnumVideoDevice(f);
+
+#else
+
   std::unique_ptr<webrtc::VideoCaptureModule::DeviceInfo> info(
       webrtc::VideoCaptureFactory::CreateDeviceInfo());
   if (!info) {
@@ -34,6 +44,8 @@ bool DeviceList::EnumVideoCapturer(
     f(device_name, unique_name);
   }
   return true;
+
+#endif
 }
 
 bool DeviceList::EnumAudioRecording(

@@ -87,6 +87,16 @@ rtc::scoped_refptr<MacCapturer> MacCapturer::Create(
   return new rtc::RefCountedObject<MacCapturer>(width, height, target_fps, device);
 }
 
+bool MacCapturer::EnumVideoDevice(
+    std::function<void(std::string, std::string)> f) {
+  NSArray<AVCaptureDevice*>* devices = [RTCCameraVideoCapturer captureDevices];
+  [devices enumerateObjectsUsingBlock:^(AVCaptureDevice* device, NSUInteger i,
+                                        BOOL* stop) {
+    f([device.localizedName UTF8String], [device.uniqueID UTF8String]);
+  }];
+  return true;
+}
+
 AVCaptureDevice* MacCapturer::FindVideoDevice(const std::string& specifiedVideoDevice) {
   // Device の決定ロジックは ffmpeg の avfoundation と同じ仕様にする
   // https://www.ffmpeg.org/ffmpeg-devices.html#avfoundation
@@ -111,6 +121,12 @@ AVCaptureDevice* MacCapturer::FindVideoDevice(const std::string& specifiedVideoD
       // デバイス名は前方一致検索
       std::string device_name = [device.localizedName UTF8String];
       if (device_name.find(specifiedVideoDevice) == 0) {
+        return YES;
+      }
+
+      // ユニークIDは完全一致
+      std::string unique_id = [device.uniqueID UTF8String];
+      if (specifiedVideoDevice == unique_id) {
         return YES;
       }
 

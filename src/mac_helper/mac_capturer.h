@@ -43,6 +43,8 @@ class MacCapturer : public sora::ScalableVideoTrackSource,
 
   void OnFrame(const webrtc::VideoFrame& frame) override;
 
+  static bool EnumVideoDevice(std::function<void(std::string, std::string)> f);
+
  private:
   void Destroy();
 
