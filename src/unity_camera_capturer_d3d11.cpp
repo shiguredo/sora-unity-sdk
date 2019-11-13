@@ -45,7 +45,7 @@ UnityCameraCapturer::D3D11Impl::Capture() {
   auto dc = context_->GetDeviceContext();
   if (dc == nullptr) {
     RTC_LOG(LS_ERROR) << "ID3D11DeviceContext is null";
-    return;
+    return nullptr;
   }
 
   // ピクセルデータが取れない（と思う）ので、カメラテクスチャから自前のテクスチャにコピーする
@@ -56,7 +56,7 @@ UnityCameraCapturer::D3D11Impl::Capture() {
       dc->Map((ID3D11Resource*)frame_texture_, 0, D3D11_MAP_READ, 0, &resource);
   if (!SUCCEEDED(hr)) {
     RTC_LOG(LS_ERROR) << "ID3D11DeviceContext::Map is failed: hr=" << hr;
-    return;
+    return nullptr;
   }
 
   // Windows の場合は座標系の関係で上下反転してるので、頑張って元の向きに戻す
