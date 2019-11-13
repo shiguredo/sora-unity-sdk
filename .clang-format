@@ -4,3 +4,9 @@ BasedOnStyle:  Chromium
 DerivePointerAlignment: false
 PointerAlignment: Left
 ReflowComments: false
+---
+Language:        ObjC
+BasedOnStyle:  Chromium
+DerivePointerAlignment: false
+PointerAlignment: Left
+ReflowComments: false

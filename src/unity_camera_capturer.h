@@ -18,12 +18,43 @@ namespace sora {
 
 class UnityCameraCapturer : public sora::ScalableVideoTrackSource,
                             public rtc::VideoSinkInterface<webrtc::VideoFrame> {
-  UnityContext* context_;
-  void* camera_texture_;
-  void* frame_texture_;
-  int width_;
-  int height_;
   webrtc::Clock* clock_ = webrtc::Clock::GetRealTimeClock();
+
+#ifdef WIN32
+  class D3D11Impl {
+    UnityContext* context_;
+    void* camera_texture_;
+    void* frame_texture_;
+    int width_;
+    int height_;
+
+   public:
+    bool Init(UnityContext* context,
+              void* camera_texture,
+              int width,
+              int height);
+    rtc::scoped_refptr<webrtc::I420Buffer> Capture();
+  };
+  std::unique_ptr<D3D11Impl> capturer_;
+#endif
+
+#ifdef __APPLE__
+  class MetalImpl {
+    UnityContext* context_;
+    void* camera_texture_;
+    void* frame_texture_;
+    int width_;
+    int height_;
+
+   public:
+    bool Init(UnityContext* context,
+              void* camera_texture,
+              int width,
+              int height);
+    rtc::scoped_refptr<webrtc::I420Buffer> Capture();
+  };
+  std::unique_ptr<MetalImpl> capturer_;
+#endif
 
  public:
   static rtc::scoped_refptr<UnityCameraCapturer> Create(

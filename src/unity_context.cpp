@@ -7,17 +7,48 @@ void UnityContext::OnGraphicsDeviceEventStatic(
   Instance().OnGraphicsDeviceEvent(eventType);
 }
 
+static std::string UnityGfxRendererToString(UnityGfxRenderer renderer) {
+  switch (renderer) {
+    case kUnityGfxRendererD3D11:
+      return "kUnityGfxRendererD3D11";
+    case kUnityGfxRendererNull:
+      return "kUnityGfxRendererNull";
+    case kUnityGfxRendererOpenGLES20:
+      return "kUnityGfxRendererOpenGLES20";
+    case kUnityGfxRendererOpenGLES30:
+      return "kUnityGfxRendererOpenGLES30";
+    case kUnityGfxRendererPS4:
+      return "kUnityGfxRendererPS4";
+    case kUnityGfxRendererXboxOne:
+      return "kUnityGfxRendererXboxOne";
+    case kUnityGfxRendererMetal:
+      return "kUnityGfxRendererMetal";
+    case kUnityGfxRendererOpenGLCore:
+      return "kUnityGfxRendererOpenGLCore";
+    case kUnityGfxRendererD3D12:
+      return "kUnityGfxRendererD3D12";
+    case kUnityGfxRendererVulkan:
+      return "kUnityGfxRendererVulkan";
+    case kUnityGfxRendererNvn:
+      return "kUnityGfxRendererNvn";
+    case kUnityGfxRendererXboxOneD3D12:
+      return "kUnityGfxRendererXboxOneD3D12";
+  }
+}
+
 void UnityContext::OnGraphicsDeviceEvent(UnityGfxDeviceEventType eventType) {
   switch (eventType) {
     case kUnityGfxDeviceEventInitialize: {
       graphics_ = ifs_->Get<IUnityGraphics>();
       auto renderer_type = graphics_->GetRenderer();
-      if (renderer_type == kUnityGfxRendererD3D11) {
+      RTC_LOG(LS_INFO) << "Renderer Type is "
+                       << UnityGfxRendererToString(renderer_type);
 #ifdef _WIN32
+      if (renderer_type == kUnityGfxRendererD3D11) {
         device_ = ifs_->Get<IUnityGraphicsD3D11>()->GetDevice();
         device_->GetImmediateContext(&context_);
-#endif
       }
+#endif
       break;
     }
     case kUnityGfxDeviceEventShutdown:
@@ -50,8 +81,20 @@ bool UnityContext::IsInitialized() {
   std::lock_guard<std::mutex> guard(mutex_);
 #ifdef _WIN32
   return ifs_ != nullptr && device_ != nullptr;
-#else
-  return ifs_ != nullptr;
+#endif
+
+#ifdef __APPLE__
+  if (ifs_ == nullptr || graphics_ == nullptr) {
+    return false;
+  }
+
+  // Metal だけ対応する
+  auto renderer_type = graphics_->GetRenderer();
+  if (renderer_type != kUnityGfxRendererMetal) {
+    return false;
+  }
+
+  return true;
 #endif
 }
 
@@ -88,6 +131,10 @@ void UnityContext::Shutdown() {
 
   rtc::LogMessage::RemoveLogToStream(log_sink_.get());
   log_sink_.reset();
+}
+
+IUnityInterfaces* UnityContext::GetInterfaces() {
+  return ifs_;
 }
 
 #ifdef _WIN32

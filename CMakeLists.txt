@@ -97,13 +97,19 @@ set(_SOURCES
 )
 
 if (WIN32)
+  list(APPEND _SOURCES
+    src/unity_camera_capturer_d3d11.cpp)
+
   add_library(SoraUnitySdk SHARED ${_SOURCES})
 elseif (APPLE)
   list(APPEND _SOURCES
+    src/unity_camera_capturer_metal.mm
     src/mac_helper/mac_capturer.mm
     src/mac_helper/objc_codec_factory_helper.mm)
 
   # Objective-C++ の設定
+  set_source_files_properties(src/unity_camera_capturer.mm PROPERTIES
+    COMPILE_OPTIONS "-x;objective-c++;-fmodules;-fcxx-modules")
   set_source_files_properties(src/mac_helper/mac_capturer.mm PROPERTIES
     COMPILE_OPTIONS "-x;objective-c++;-fmodules;-fcxx-modules")
   set_source_files_properties(src/mac_helper/objc_codec_factory_helper.mm PROPERTIES
