@@ -39,13 +39,31 @@ std::string generateRandomChars() {
 
 namespace sora {
 
-RTCManager::RTCManager(
+std::unique_ptr<RTCManager> RTCManager::Create(
     RTCManagerConfig config,
     rtc::scoped_refptr<ScalableVideoTrackSource> video_track_source,
     VideoTrackReceiver* receiver,
     rtc::scoped_refptr<webrtc::AudioDeviceModule> adm,
-    std::unique_ptr<webrtc::TaskQueueFactory> task_queue_factory)
-    : config_(config), receiver_(receiver) {
+    std::unique_ptr<webrtc::TaskQueueFactory> task_queue_factory) {
+  std::unique_ptr<RTCManager> p(new RTCManager());
+  if (!p->Init(config, video_track_source, receiver, adm,
+               std::move(task_queue_factory))) {
+    return nullptr;
+  }
+  return p;
+}
+
+RTCManager::RTCManager() {}
+
+bool RTCManager::Init(
+    RTCManagerConfig config,
+    rtc::scoped_refptr<ScalableVideoTrackSource> video_track_source,
+    VideoTrackReceiver* receiver,
+    rtc::scoped_refptr<webrtc::AudioDeviceModule> adm,
+    std::unique_ptr<webrtc::TaskQueueFactory> task_queue_factory) {
+  config_ = config;
+  receiver_ = receiver;
+
   rtc::InitializeSSL();
 
   network_thread_ = rtc::Thread::CreateWithSocketServer();
@@ -91,10 +109,13 @@ RTCManager::RTCManager(
   if (!factory_.get()) {
     RTC_LOG(LS_ERROR) << __FUNCTION__
                       << ": Failed to initialize PeerConnectionFactory";
-    exit(1);
+    return false;
   }
 
-  InitADM(adm, config.audio_recording_device, config.audio_playout_device);
+  if (!InitADM(adm, config.audio_recording_device,
+               config.audio_playout_device)) {
+    return false;
+  }
 
   webrtc::PeerConnectionFactoryInterface::Options factory_options;
   factory_options.disable_sctp_data_channels = false;
@@ -118,7 +139,8 @@ RTCManager::RTCManager(
     audio_track_ = factory_->CreateAudioTrack(generateRandomChars(),
                                               factory_->CreateAudioSource(ao));
     if (!audio_track_) {
-      RTC_LOG(LS_WARNING) << __FUNCTION__ << ": Cannot create audio_track";
+      RTC_LOG(LS_ERROR) << __FUNCTION__ << ": Cannot create audio_track";
+      return false;
     }
   }
 
@@ -137,9 +159,11 @@ RTCManager::RTCManager(
         receiver->AddTrack(video_track_.get());
       }
     } else {
-      RTC_LOG(LS_WARNING) << __FUNCTION__ << ": Cannot create video_track";
+      RTC_LOG(LS_ERROR) << __FUNCTION__ << ": Cannot create video_track";
+      return false;
     }
   }
+  return true;
 }
 
 bool RTCManager::InitADM(rtc::scoped_refptr<webrtc::AudioDeviceModule> adm,

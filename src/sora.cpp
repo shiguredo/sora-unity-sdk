@@ -118,9 +118,9 @@ bool Sora::Connect(std::string signaling_url,
     config.no_playout = true;
     config.audio_recording_device = audio_recording_device;
     config.audio_playout_device = audio_playout_device;
-    rtc_manager_.reset(new RTCManager(config, std::move(capturer),
-                                      renderer_.get(), adm,
-                                      std::move(task_queue_factory)));
+    rtc_manager_ =
+        RTCManager::Create(config, std::move(capturer), renderer_.get(), adm,
+                           std::move(task_queue_factory));
   } else {
     // 受信側は capturer を作らず、video, recording の設定もしない
     RTCManagerConfig config;
@@ -128,8 +128,8 @@ bool Sora::Connect(std::string signaling_url,
     config.no_video = true;
     config.audio_recording_device = audio_recording_device;
     config.audio_playout_device = audio_playout_device;
-    rtc_manager_.reset(new RTCManager(config, nullptr, renderer_.get(), adm,
-                                      std::move(task_queue_factory)));
+    rtc_manager_ = RTCManager::Create(config, nullptr, renderer_.get(), adm,
+                                      std::move(task_queue_factory));
   }
 
   {

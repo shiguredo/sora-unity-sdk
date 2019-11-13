@@ -34,11 +34,22 @@ struct RTCManagerConfig {
 
 class RTCManager {
  public:
-  RTCManager(RTCManagerConfig config,
-             rtc::scoped_refptr<ScalableVideoTrackSource> video_track_source,
-             VideoTrackReceiver* receiver,
-             rtc::scoped_refptr<webrtc::AudioDeviceModule> adm,
-             std::unique_ptr<webrtc::TaskQueueFactory> task_queue_factory);
+  static std::unique_ptr<RTCManager> Create(
+      RTCManagerConfig config,
+      rtc::scoped_refptr<ScalableVideoTrackSource> video_track_source,
+      VideoTrackReceiver* receiver,
+      rtc::scoped_refptr<webrtc::AudioDeviceModule> adm,
+      std::unique_ptr<webrtc::TaskQueueFactory> task_queue_factory);
+
+ private:
+  RTCManager();
+  bool Init(RTCManagerConfig config,
+            rtc::scoped_refptr<ScalableVideoTrackSource> video_track_source,
+            VideoTrackReceiver* receiver,
+            rtc::scoped_refptr<webrtc::AudioDeviceModule> adm,
+            std::unique_ptr<webrtc::TaskQueueFactory> task_queue_factory);
+
+ public:
   ~RTCManager();
   std::shared_ptr<RTCConnection> createConnection(
       webrtc::PeerConnectionInterface::RTCConfiguration rtc_config,
