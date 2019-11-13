@@ -56,10 +56,9 @@ class RTCManager {
       RTCMessageSender* sender);
 
  private:
-  static bool RTCManager::InitADM(
-      rtc::scoped_refptr<webrtc::AudioDeviceModule> adm,
-      std::string audio_recording_device,
-      std::string audio_playout_device);
+  static bool InitADM(rtc::scoped_refptr<webrtc::AudioDeviceModule> adm,
+                      std::string audio_recording_device,
+                      std::string audio_playout_device);
 
  private:
   rtc::scoped_refptr<webrtc::PeerConnectionFactoryInterface> factory_;
