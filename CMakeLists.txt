@@ -87,6 +87,7 @@ set(_SOURCES
   src/unity_context.cpp
   src/unity_renderer.cpp
   src/unity_camera_capturer.cpp
+  src/rtc/device_list.cpp
   src/rtc/device_video_capturer.cpp
   src/rtc/native_buffer.cpp
   src/rtc/observer.cpp

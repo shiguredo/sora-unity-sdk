@@ -1,5 +1,8 @@
 #include "sora.h"
 
+#include "api/task_queue/default_task_queue_factory.h"
+#include "modules/audio_device/include/audio_device_factory.h"
+
 namespace sora {
 
 Sora::Sora(UnityContext* context) : ioc_(1), context_(context) {
@@ -52,9 +55,12 @@ bool Sora::Connect(std::string signaling_url,
                    bool multistream,
                    int capturer_type,
                    void* unity_camera_texture,
+                   std::string video_capturer_device,
                    int video_width,
                    int video_height,
-                   bool unity_audio_input) {
+                   bool unity_audio_input,
+                   std::string audio_recording_device,
+                   std::string audio_playout_device) {
   signaling_url_ = std::move(signaling_url);
   channel_id_ = std::move(channel_id);
 
@@ -64,8 +70,12 @@ bool Sora::Connect(std::string signaling_url,
                    << " multistream=" << multistream
                    << " capturer_type=" << capturer_type
                    << " unity_camera_texture=0x" << unity_camera_texture
+                   << " video_capturer_device=" << video_capturer_device
                    << " video_width=" << video_width
-                   << " video_height=" << video_height;
+                   << " video_height=" << video_height
+                   << " unity_audio_input=" << unity_audio_input
+                   << " audio_recording_device=" << audio_recording_device
+                   << " audio_playout_device=" << audio_playout_device;
 
   renderer_.reset(new UnityRenderer(
       [this](ptrid_t track_id) {
@@ -87,48 +97,39 @@ bool Sora::Connect(std::string signaling_url,
         });
       }));
 
-  std::function<rtc::scoped_refptr<webrtc::AudioDeviceModule>(
-      rtc::scoped_refptr<webrtc::AudioDeviceModule>,
-      webrtc::TaskQueueFactory * task_queue_factory)>
-      create_adm;
-  if (unity_audio_input) {
-    create_adm = [this](rtc::scoped_refptr<webrtc::AudioDeviceModule> adm,
-                        webrtc::TaskQueueFactory* task_queue_factory) {
-      adm_ = UnityAudioDevice::Create(adm, task_queue_factory);
-      return adm_;
-    };
+  auto task_queue_factory = webrtc::CreateDefaultTaskQueueFactory();
+  auto adm =
+      CreateADM(task_queue_factory.get(), false, unity_audio_input,
+                audio_recording_device, audio_playout_device, unity_adm_);
+  if (!adm) {
+    return false;
   }
 
   if (!downstream) {
     // 送信側は capturer を設定する。playout の設定はしない
-    rtc::scoped_refptr<ScalableVideoTrackSource> capturer;
-
-    if (capturer_type == 0) {
-      // 実カメラ（デバイス）を使う
-      // TODO(melpon): framerate をちゃんと設定する
-#ifdef __APPLE__
-      capturer = MacCapturer::Create(video_width, video_height, 30, "");
-#else
-      capturer = DeviceVideoCapturer::Create(video_width, video_height, 30);
-#endif
-    } else {
-      // Unity のカメラからの映像を使う
-      unity_camera_capturer_ = UnityCameraCapturer::Create(
-          &UnityContext::Instance(), unity_camera_texture, video_width,
-          video_height);
-      capturer = unity_camera_capturer_;
+    rtc::scoped_refptr<ScalableVideoTrackSource> capturer = CreateVideoCapturer(
+        capturer_type, unity_camera_texture, video_capturer_device, video_width,
+        video_height, unity_camera_capturer_);
+    if (!capturer) {
+      return false;
     }
+
     RTCManagerConfig config;
     config.no_playout = true;
+    config.audio_recording_device = audio_recording_device;
+    config.audio_playout_device = audio_playout_device;
     rtc_manager_.reset(new RTCManager(config, std::move(capturer),
-                                      renderer_.get(), create_adm));
+                                      renderer_.get(), adm,
+                                      std::move(task_queue_factory)));
   } else {
     // 受信側は capturer を作らず、video, recording の設定もしない
     RTCManagerConfig config;
     config.no_recording = true;
     config.no_video = true;
-    rtc_manager_.reset(
-        new RTCManager(config, nullptr, renderer_.get(), create_adm));
+    config.audio_recording_device = audio_recording_device;
+    config.audio_playout_device = audio_playout_device;
+    rtc_manager_.reset(new RTCManager(config, nullptr, renderer_.get(), adm,
+                                      std::move(task_queue_factory)));
   }
 
   {
@@ -204,11 +205,69 @@ void Sora::RenderCallback() {
   unity_camera_capturer_->OnRender();
 }
 void Sora::ProcessAudio(const void* p, int offset, int samples) {
-  if (!adm_) {
+  if (!unity_adm_) {
     return;
   }
   // 今のところステレオデータを渡すようにしてるので2倍する
-  adm_->ProcessAudioData((const float*)p + offset, samples * 2);
+  unity_adm_->ProcessAudioData((const float*)p + offset, samples * 2);
+}
+
+rtc::scoped_refptr<webrtc::AudioDeviceModule> Sora::CreateADM(
+    webrtc::TaskQueueFactory* task_queue_factory,
+    bool dummy_audio,
+    bool unity_audio_input,
+    std::string audio_recording_device,
+    std::string audio_playout_device,
+    rtc::scoped_refptr<UnityAudioDevice>& unity_adm) {
+  rtc::scoped_refptr<webrtc::AudioDeviceModule> adm;
+
+  if (dummy_audio) {
+    adm = webrtc::AudioDeviceModule::Create(
+        webrtc::AudioDeviceModule::kDummyAudio, task_queue_factory);
+  } else {
+#ifdef _WIN32
+    adm = webrtc::CreateWindowsCoreAudioAudioDeviceModule(task_queue_factory);
+#else
+    adm = webrtc::AudioDeviceModule::Create(
+        webrtc::AudioDeviceModule::kPlatformDefaultAudio, task_queue_factory);
+#endif
+  }
+
+  if (unity_audio_input) {
+    unity_adm = UnityAudioDevice::Create(adm, task_queue_factory);
+    return unity_adm;
+  } else {
+    return adm;
+  }
+}
+
+rtc::scoped_refptr<ScalableVideoTrackSource> Sora::CreateVideoCapturer(
+    int capturer_type,
+    void* unity_camera_texture,
+    std::string video_capturer_device,
+    int video_width,
+    int video_height,
+    rtc::scoped_refptr<UnityCameraCapturer>& unity_camera_capturer) {
+  // 送信側は capturer を設定する。playout の設定はしない
+  rtc::scoped_refptr<ScalableVideoTrackSource> capturer;
+
+  if (capturer_type == 0) {
+    // 実カメラ（デバイス）を使う
+    // TODO(melpon): framerate をちゃんと設定する
+#ifdef __APPLE__
+    return capturer = MacCapturer::Create(video_width, video_height, 30,
+                                          video_capturer_device);
+#else
+    return DeviceVideoCapturer::Create(video_width, video_height, 30,
+                                       video_capturer_device);
+#endif
+  } else {
+    // Unity のカメラからの映像を使う
+    unity_camera_capturer = UnityCameraCapturer::Create(
+        &UnityContext::Instance(), unity_camera_texture, video_width,
+        video_height);
+    return unity_camera_capturer;
+  }
 }
 
 }  // namespace sora

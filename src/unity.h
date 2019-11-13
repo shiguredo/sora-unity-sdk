@@ -31,9 +31,12 @@ UNITY_INTERFACE_EXPORT int sora_connect(void* p,
                                         bool multistream,
                                         int capturer_type,
                                         void* unity_camera_texture,
+                                        const char* video_capturer_device,
                                         int video_width,
                                         int video_height,
-                                        bool unity_audio_input);
+                                        bool unity_audio_input,
+                                        const char* audio_recording_device,
+                                        const char* audio_playout_device);
 UNITY_INTERFACE_EXPORT void* sora_get_texture_update_callback();
 UNITY_INTERFACE_EXPORT void sora_destroy(void* sora);
 
@@ -44,6 +47,11 @@ UNITY_INTERFACE_EXPORT void sora_process_audio(void* p,
                                                const void* buf,
                                                int offset,
                                                int samples);
+
+typedef void (*device_enum_cb_t)(const char* device_name, const char* unique_name, void* userdata);
+UNITY_INTERFACE_EXPORT bool sora_device_enum_video_capturer(device_enum_cb_t f, void* userdata);
+UNITY_INTERFACE_EXPORT bool sora_device_enum_audio_recording(device_enum_cb_t f, void* userdata);
+UNITY_INTERFACE_EXPORT bool sora_device_enum_audio_playout(device_enum_cb_t f, void* userdata);
 
 #ifdef __cplusplus
 }

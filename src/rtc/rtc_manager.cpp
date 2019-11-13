@@ -43,9 +43,8 @@ RTCManager::RTCManager(
     RTCManagerConfig config,
     rtc::scoped_refptr<ScalableVideoTrackSource> video_track_source,
     VideoTrackReceiver* receiver,
-    std::function<rtc::scoped_refptr<webrtc::AudioDeviceModule>(
-        rtc::scoped_refptr<webrtc::AudioDeviceModule>,
-        webrtc::TaskQueueFactory* task_queue_factory)> create_adm)
+    rtc::scoped_refptr<webrtc::AudioDeviceModule> adm,
+    std::unique_ptr<webrtc::TaskQueueFactory> task_queue_factory)
     : config_(config), receiver_(receiver) {
   rtc::InitializeSSL();
 
@@ -60,7 +59,7 @@ RTCManager::RTCManager(
   dependencies.network_thread = network_thread_.get();
   dependencies.worker_thread = worker_thread_.get();
   dependencies.signaling_thread = signaling_thread_.get();
-  dependencies.task_queue_factory = webrtc::CreateDefaultTaskQueueFactory();
+  dependencies.task_queue_factory = std::move(task_queue_factory);
   dependencies.call_factory = webrtc::CreateCallFactory();
   dependencies.event_log_factory =
       absl::make_unique<webrtc::RtcEventLogFactory>(
@@ -70,28 +69,7 @@ RTCManager::RTCManager(
   cricket::MediaEngineDependencies media_dependencies;
   media_dependencies.task_queue_factory = dependencies.task_queue_factory.get();
 
-  rtc::scoped_refptr<webrtc::AudioDeviceModule> adm;
-  if (config_.no_recording && config_.no_playout) {
-    adm = webrtc::AudioDeviceModule::Create(
-        webrtc::AudioDeviceModule::kDummyAudio,
-        dependencies.task_queue_factory.get());
-  } else {
-#ifdef _WIN32
-    adm = webrtc::CreateWindowsCoreAudioAudioDeviceModule(
-        dependencies.task_queue_factory.get());
-#else
-    adm = webrtc::AudioDeviceModule::Create(
-        webrtc::AudioDeviceModule::kPlatformDefaultAudio,
-        dependencies.task_queue_factory.get());
-#endif
-  }
-
-  if (create_adm) {
-    media_dependencies.adm =
-        create_adm(adm, dependencies.task_queue_factory.get());
-  } else {
-    media_dependencies.adm = adm;
-  }
+  media_dependencies.adm = adm;
 
   media_dependencies.audio_encoder_factory =
       webrtc::CreateBuiltinAudioEncoderFactory();
@@ -115,6 +93,8 @@ RTCManager::RTCManager(
                       << ": Failed to initialize PeerConnectionFactory";
     exit(1);
   }
+
+  InitADM(adm, config.audio_recording_device, config.audio_playout_device);
 
   webrtc::PeerConnectionFactoryInterface::Options factory_options;
   factory_options.disable_sctp_data_channels = false;
@@ -160,6 +140,87 @@ RTCManager::RTCManager(
       RTC_LOG(LS_WARNING) << __FUNCTION__ << ": Cannot create video_track";
     }
   }
+}
+
+bool RTCManager::InitADM(rtc::scoped_refptr<webrtc::AudioDeviceModule> adm,
+                         std::string audio_recording_device,
+                         std::string audio_playout_device) {
+  // 録音デバイスと再生デバイスを指定する
+  if (!audio_recording_device.empty()) {
+    bool succeeded = false;
+    int devices = adm->RecordingDevices();
+    for (int i = 0; i < devices; i++) {
+      char name[webrtc::kAdmMaxDeviceNameSize];
+      char guid[webrtc::kAdmMaxGuidSize];
+      if (adm->SetRecordingDevice(i) != 0) {
+        RTC_LOG(LS_WARNING) << "Failed to SetRecordingDevice: index=" << i;
+        continue;
+      }
+      bool available = false;
+      if (adm->RecordingIsAvailable(&available) != 0) {
+        RTC_LOG(LS_WARNING) << "Failed to RecordingIsAvailable: index=" << i;
+        continue;
+      }
+
+      if (!available) {
+        continue;
+      }
+      if (adm->RecordingDeviceName(i, name, guid) != 0) {
+        RTC_LOG(LS_WARNING) << "Failed to RecordingDeviceName: index=" << i;
+        continue;
+      }
+      if (audio_recording_device == name || audio_recording_device == guid) {
+        RTC_LOG(LS_INFO) << "Succeeded SetRecordingDevice: index=" << i
+                         << " device_name=" << name << " unique_name=" << guid;
+        succeeded = true;
+        break;
+      }
+    }
+    if (!succeeded) {
+      RTC_LOG(LS_ERROR) << "No recording device found: name="
+                        << audio_recording_device;
+      return false;
+    }
+  }
+
+  if (!audio_playout_device.empty()) {
+    bool succeeded = false;
+    int devices = adm->PlayoutDevices();
+    for (int i = 0; i < devices; i++) {
+      char name[webrtc::kAdmMaxDeviceNameSize];
+      char guid[webrtc::kAdmMaxGuidSize];
+      if (adm->SetPlayoutDevice(i) != 0) {
+        RTC_LOG(LS_WARNING) << "Failed to SetPlayoutDevice: index=" << i;
+        continue;
+      }
+      bool available = false;
+      if (adm->PlayoutIsAvailable(&available) != 0) {
+        RTC_LOG(LS_WARNING) << "Failed to PlayoutIsAvailable: index=" << i;
+        continue;
+      }
+
+      if (!available) {
+        continue;
+      }
+      if (adm->PlayoutDeviceName(i, name, guid) != 0) {
+        RTC_LOG(LS_WARNING) << "Failed to PlayoutDeviceName: index=" << i;
+        continue;
+      }
+      if (audio_playout_device == name || audio_playout_device == guid) {
+        RTC_LOG(LS_INFO) << "Succeeded SetPlayoutDevice: index=" << i
+                         << " device_name=" << name << " unique_name=" << guid;
+        succeeded = true;
+        break;
+      }
+    }
+    if (!succeeded) {
+      RTC_LOG(LS_ERROR) << "No playout device found: name="
+                        << audio_playout_device;
+      return false;
+    }
+  }
+
+  return true;
 }
 
 RTCManager::~RTCManager() {
