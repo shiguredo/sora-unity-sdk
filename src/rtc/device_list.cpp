@@ -47,6 +47,11 @@ bool DeviceList::EnumAudioRecording(
       webrtc::AudioDeviceModule::kPlatformDefaultAudio,
       task_queue_factory.get());
 #endif
+  if (adm->Init() != 0) {
+    RTC_LOG(LS_WARNING) << "Failed to ADM Init";
+    return false;
+  }
+
   int devices = adm->RecordingDevices();
   for (int i = 0; i < devices; i++) {
     char name[webrtc::kAdmMaxDeviceNameSize];
@@ -87,6 +92,11 @@ bool DeviceList::EnumAudioPlayout(
       webrtc::AudioDeviceModule::kPlatformDefaultAudio,
       task_queue_factory.get());
 #endif
+  if (adm->Init() != 0) {
+    RTC_LOG(LS_WARNING) << "Failed to ADM Init";
+    return false;
+  }
+
   int devices = adm->PlayoutDevices();
   for (int i = 0; i < devices; i++) {
     char name[webrtc::kAdmMaxDeviceNameSize];
