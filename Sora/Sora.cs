@@ -28,14 +28,6 @@ public class Sora : IDisposable
         public string Metadata = "";
         public Role Role = Sora.Role.Downstream;
         public bool Multistream = false;
-        public void SetUnityCamera(UnityEngine.Camera camera, int width, int height)
-        {
-            CapturerType = Sora.CapturerType.UnityCamera;
-            UnityCamera = camera;
-            VideoWidth = width;
-            VideoHeight = height;
-        }
-
         public CapturerType CapturerType = Sora.CapturerType.DeviceCamera;
         public UnityEngine.Camera UnityCamera = null;
         public string VideoCapturerDevice = "";
