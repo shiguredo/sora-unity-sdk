@@ -53,15 +53,20 @@ int sora_connect(void* p,
                  const char* video_capturer_device,
                  int video_width,
                  int video_height,
+                 const char* video_codec,
+                 int video_bitrate,
                  bool unity_audio_input,
                  const char* audio_recording_device,
-                 const char* audio_playout_device) {
+                 const char* audio_playout_device,
+                 const char* audio_codec,
+                 int audio_bitrate) {
   auto sora = (sora::Sora*)p;
   if (!sora->Connect(signaling_url, channel_id, metadata, downstream,
                      multistream, capturer_type, unity_camera_texture,
                      video_capturer_device, video_width, video_height,
-                     unity_audio_input, audio_recording_device,
-                     audio_playout_device)) {
+                     video_codec, video_bitrate, unity_audio_input,
+                     audio_recording_device, audio_playout_device, audio_codec,
+                     audio_bitrate)) {
     return -1;
   }
   return 0;

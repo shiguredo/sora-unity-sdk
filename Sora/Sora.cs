@@ -13,6 +13,14 @@ public class Sora : IDisposable
         DeviceCamera = 0,
         UnityCamera = 1,
     }
+    public enum VideoCodec {
+        VP9,
+        VP8,
+        H264,
+    }
+    public enum AudioCodec {
+        OPUS,
+    }
     public class Config
     {
         public string SignalingUrl = "";
@@ -33,9 +41,13 @@ public class Sora : IDisposable
         public string VideoCapturerDevice = "";
         public int VideoWidth = 640;
         public int VideoHeight = 480;
+        public VideoCodec VideoCodec = VideoCodec.VP9;
+        public int VideoBitrate = 0;
         public bool UnityAudioInput = false;
         public string AudioRecordingDevice = "";
         public string AudioPlayoutDevice = "";
+        public AudioCodec AudioCodec = AudioCodec.OPUS;
+        public int AudioBitrate = 0;
     }
 
     IntPtr p;
@@ -94,9 +106,13 @@ public class Sora : IDisposable
             config.VideoCapturerDevice,
             config.VideoWidth,
             config.VideoHeight,
+            config.VideoCodec.ToString(),
+            config.VideoBitrate,
             config.UnityAudioInput,
             config.AudioRecordingDevice,
-            config.AudioPlayoutDevice) == 0;
+            config.AudioPlayoutDevice,
+            config.AudioCodec.ToString(),
+            config.AudioBitrate) == 0;
     }
 
     public void OnRender() {
@@ -275,7 +291,25 @@ public class Sora : IDisposable
     [DllImport("SoraUnitySdk")]
     private static extern void sora_dispatch_events(IntPtr p);
     [DllImport("SoraUnitySdk")]
-    private static extern int sora_connect(IntPtr p, string signaling_url, string channel_id, string metadata, bool downstream, bool multistream, int capturer_type, IntPtr unity_camera_texture, string video_capturer_device, int video_width, int video_height, bool unity_audio_input, string audio_recording_device, string audio_playout_device);
+    private static extern int sora_connect(
+        IntPtr p,
+        string signaling_url,
+        string channel_id,
+        string metadata,
+        bool downstream,
+        bool multistream,
+        int capturer_type,
+        IntPtr unity_camera_texture,
+        string video_capturer_device,
+        int video_width,
+        int video_height,
+        string video_codec,
+        int video_bitrate,
+        bool unity_audio_input,
+        string audio_recording_device,
+        string audio_playout_device,
+        string audio_codec,
+        int audio_bitrate);
     [DllImport("SoraUnitySdk")]
     private static extern IntPtr sora_get_texture_update_callback();
     [DllImport("SoraUnitySdk")]

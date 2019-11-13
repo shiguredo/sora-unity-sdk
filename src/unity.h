@@ -34,9 +34,13 @@ UNITY_INTERFACE_EXPORT int sora_connect(void* p,
                                         const char* video_capturer_device,
                                         int video_width,
                                         int video_height,
+                                        const char* video_codec,
+                                        int video_bitrate,
                                         bool unity_audio_input,
                                         const char* audio_recording_device,
-                                        const char* audio_playout_device);
+                                        const char* audio_playout_device,
+                                        const char* audio_codec,
+                                        int audio_bitrate);
 UNITY_INTERFACE_EXPORT void* sora_get_texture_update_callback();
 UNITY_INTERFACE_EXPORT void sora_destroy(void* sora);
 
@@ -48,10 +52,15 @@ UNITY_INTERFACE_EXPORT void sora_process_audio(void* p,
                                                int offset,
                                                int samples);
 
-typedef void (*device_enum_cb_t)(const char* device_name, const char* unique_name, void* userdata);
-UNITY_INTERFACE_EXPORT bool sora_device_enum_video_capturer(device_enum_cb_t f, void* userdata);
-UNITY_INTERFACE_EXPORT bool sora_device_enum_audio_recording(device_enum_cb_t f, void* userdata);
-UNITY_INTERFACE_EXPORT bool sora_device_enum_audio_playout(device_enum_cb_t f, void* userdata);
+typedef void (*device_enum_cb_t)(const char* device_name,
+                                 const char* unique_name,
+                                 void* userdata);
+UNITY_INTERFACE_EXPORT bool sora_device_enum_video_capturer(device_enum_cb_t f,
+                                                            void* userdata);
+UNITY_INTERFACE_EXPORT bool sora_device_enum_audio_recording(device_enum_cb_t f,
+                                                             void* userdata);
+UNITY_INTERFACE_EXPORT bool sora_device_enum_audio_playout(device_enum_cb_t f,
+                                                           void* userdata);
 
 #ifdef __cplusplus
 }

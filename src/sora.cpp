@@ -58,9 +58,13 @@ bool Sora::Connect(std::string signaling_url,
                    std::string video_capturer_device,
                    int video_width,
                    int video_height,
+                   std::string video_codec,
+                   int video_bitrate,
                    bool unity_audio_input,
                    std::string audio_recording_device,
-                   std::string audio_playout_device) {
+                   std::string audio_playout_device,
+                   std::string audio_codec,
+                   int audio_bitrate) {
   signaling_url_ = std::move(signaling_url);
   channel_id_ = std::move(channel_id);
 
@@ -141,6 +145,10 @@ bool Sora::Connect(std::string signaling_url,
     config.multistream = multistream;
     config.signaling_url = signaling_url_;
     config.channel_id = channel_id_;
+    config.video_codec = video_codec;
+    config.video_bitrate = video_bitrate;
+    config.audio_codec = audio_codec;
+    config.audio_bitrate = audio_bitrate;
     if (!metadata.empty()) {
       auto md = nlohmann::json::parse(metadata, nullptr, false);
       if (md.type() == nlohmann::json::value_t::discarded) {

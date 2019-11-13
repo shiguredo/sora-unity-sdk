@@ -92,9 +92,13 @@ class Sora {
                std::string video_capturer_device,
                int video_width,
                int video_height,
+               std::string video_codec,
+               int video_bitrate,
                bool unity_audio_input,
                std::string audio_recording_device,
-               std::string audio_playout_device);
+               std::string audio_playout_device,
+               std::string audio_codec,
+               int audio_bitrate);
 
   static void UNITY_INTERFACE_API RenderCallbackStatic(int event_id);
   int GetRenderCallbackEventID() const;
