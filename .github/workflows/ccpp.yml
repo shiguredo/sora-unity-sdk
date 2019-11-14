@@ -1,15 +1,60 @@
 name: C/C++ CI
 
-on: [push]
+on:
+  push:
+  schedule:
+  - cron: "0 0 * * *"
 
 jobs:
-  build:
-
+  build-windows:
     runs-on: windows-latest
-    
     steps:
     - uses: actions/checkout@v1
     - name: install_tools.bat
       run: .\install_tools.bat
     - name: cmake.bat
       run: .\cmake.bat
+    - name: Upload Windows Artifact
+      uses: actions/upload-artifact@v1
+      with:
+        name: SoraUnitySdk.dll
+        path: build\Release\SoraUnitySdk.dll
+  build-macos:
+    runs-on: macOS-latest
+    steps:
+    - uses: actions/checkout@v1
+    - name: install_tools.sh
+      run: ./install_tools.sh
+    - name: cmake.sh
+      run: ./cmake.sh
+    - name: Upload macOS Artifact
+      uses: actions/upload-artifact@v1
+      with:
+        name: SoraUnitySdk.bundle
+        path: build/SoraUnitySdk.bundle
+  package:
+    runs-on: macOS-latest
+    needs: [build-windows, build-macos]
+    steps:
+    - name: Download SoraUnitySdk.dll
+      uses: actions/download-artifact@v1
+      with:
+        name: SoraUnitySdk.dll
+    - name: Download SoraUnitySdk.bundle
+      uses: actions/download-artifact@v1
+      with:
+        name: SoraUnitySdk.bundle
+    - name: Packaging
+      run: |
+        set -ex
+        mkdir -p SoraUnitySdk/Plugins/SoraUnitySdk/windows/x86_64
+        mkdir -p SoraUnitySdk/Plugins/SoraUnitySdk/macos
+        mkdir -p SoraUnitySdk/SoraUnitySdk
+        cp Sora/Sora.cs SoraUnitySdk/SoraUnitySdk/
+        cp build/Release/SoraUnitySdk.dll SoraUnitySdk/Plugins/SoraUnitySdk/windows/x86_64/
+        cp -r build/SoraUnitySdk.bundle SoraUnitySdk/Plugins/SoraUnitySdk/macos/
+    - name: Upload SoraUnitySdk
+      uses: actions/upload-artifact@v1
+      with:
+        name: SoraUnitySdk
+        path: SoraUnitySdk
