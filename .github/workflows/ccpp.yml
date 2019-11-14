@@ -36,6 +36,7 @@ jobs:
     runs-on: macOS-latest
     needs: [build-windows, build-macos]
     steps:
+    - uses: actions/checkout@v1
     - name: Download SoraUnitySdk.dll
       uses: actions/download-artifact@v1
       with:
