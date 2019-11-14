@@ -26,20 +26,20 @@ class UnityAudioDevice : public webrtc::AudioDeviceModule {
   }
 
   void ProcessAudioData(const float* data, int32_t size) {
-    if (started && isRecording) {
+    if (started_ && is_recording_) {
       for (int i = 0; i < size; i++) {
 #pragma warning(suppress : 4244)
-        convertedAudioData.push_back(data[i] >= 0 ? data[i] * SHRT_MAX
-                                                  : data[i] * -SHRT_MIN);
+        converted_audio_data_.push_back(data[i] >= 0 ? data[i] * SHRT_MAX
+                                                     : data[i] * -SHRT_MIN);
       }
       //opus supports up to 48khz sample rate, enforce 48khz here for quality
       int chunkSize = 48000 * 2 / 100;
-      while (convertedAudioData.size() > chunkSize) {
-        deviceBuffer->SetRecordedBuffer(convertedAudioData.data(),
-                                        chunkSize / 2);
-        deviceBuffer->DeliverRecordedData();
-        convertedAudioData.erase(convertedAudioData.begin(),
-                                 convertedAudioData.begin() + chunkSize);
+      while (converted_audio_data_.size() > chunkSize) {
+        device_buffer_->SetRecordedBuffer(converted_audio_data_.data(),
+                                          chunkSize / 2);
+        device_buffer_->DeliverRecordedData();
+        converted_audio_data_.erase(converted_audio_data_.begin(),
+                                    converted_audio_data_.begin() + chunkSize);
       }
     }
   }
@@ -54,26 +54,26 @@ class UnityAudioDevice : public webrtc::AudioDeviceModule {
   // Full-duplex transportation of PCM audio
   virtual int32_t RegisterAudioCallback(
       webrtc::AudioTransport* audioCallback) override {
-    deviceBuffer->RegisterAudioCallback(audioCallback);
+    device_buffer_->RegisterAudioCallback(audioCallback);
     adm_->RegisterAudioCallback(audioCallback);
     return 0;
   }
 
   // Main initialization and termination
   virtual int32_t Init() override {
-    deviceBuffer =
+    device_buffer_ =
         std::make_unique<webrtc::AudioDeviceBuffer>(task_queue_factory_);
-    started = true;
+    started_ = true;
     return adm_->Init();
   }
   virtual int32_t Terminate() override {
-    deviceBuffer.reset();
-    started = false;
-    isRecording = false;
+    device_buffer_.reset();
+    started_ = false;
+    is_recording_ = false;
     return adm_->Terminate();
   }
   virtual bool Initialized() const override {
-    return started && adm_->Initialized();
+    return started_ && adm_->Initialized();
   }
 
   // Device enumeration
@@ -114,12 +114,12 @@ class UnityAudioDevice : public webrtc::AudioDeviceModule {
   }
   virtual int32_t RecordingIsAvailable(bool* available) override { return 0; }
   virtual int32_t InitRecording() override {
-    isRecording = true;
-    deviceBuffer->SetRecordingSampleRate(48000);
-    deviceBuffer->SetRecordingChannels(2);
+    is_recording_ = true;
+    device_buffer_->SetRecordingSampleRate(48000);
+    device_buffer_->SetRecordingChannels(2);
     return 0;
   }
-  virtual bool RecordingIsInitialized() const override { return isRecording; }
+  virtual bool RecordingIsInitialized() const override { return is_recording_; }
 
   // Audio transport control
   virtual int32_t StartPlayout() override { return adm_->StartPlayout(); }
@@ -127,7 +127,7 @@ class UnityAudioDevice : public webrtc::AudioDeviceModule {
   virtual bool Playing() const override { return adm_->Playing(); }
   virtual int32_t StartRecording() override { return 0; }
   virtual int32_t StopRecording() override { return 0; }
-  virtual bool Recording() const override { return isRecording; }
+  virtual bool Recording() const override { return is_recording_; }
 
   // Audio mixer initialization
   virtual int32_t InitSpeaker() override { return adm_->InitSpeaker(); }
@@ -225,10 +225,10 @@ class UnityAudioDevice : public webrtc::AudioDeviceModule {
  private:
   rtc::scoped_refptr<webrtc::AudioDeviceModule> adm_;
   webrtc::TaskQueueFactory* task_queue_factory_;
-  std::unique_ptr<webrtc::AudioDeviceBuffer> deviceBuffer;
-  std::atomic<bool> started = false;
-  std::atomic<bool> isRecording = false;
-  std::vector<int16_t> convertedAudioData;
+  std::unique_ptr<webrtc::AudioDeviceBuffer> device_buffer_;
+  std::atomic_bool started_;
+  std::atomic_bool is_recording_;
+  std::vector<int16_t> converted_audio_data_;
 };
 
 }  // namespace sora

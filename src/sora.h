@@ -8,14 +8,16 @@
 // boost
 #include <boost/asio/io_context.hpp>
 
-// webrtc
-#include "rtc_base/log_sinks.h"
-
 #if __APPLE__
 #include "mac_helper/mac_capturer.h"
 #else
 #include "rtc/device_video_capturer.h"
 #endif
+
+// webrtc
+#include "api/scoped_refptr.h"
+#include "api/task_queue/task_queue_factory.h"
+#include "modules/audio_device/include/audio_device.h"
 
 // sora
 #include "id_pointer.h"
@@ -29,6 +31,28 @@
 
 namespace sora {
 
+struct SoraConfig {
+  std::string signaling_url;
+  std::string channel_id;
+  std::string metadata;
+  bool downstream = false;
+  bool multistream = false;
+  int capturer_type = 0;
+  std::string video_capturer_device;
+  void* unity_camera_texture = nullptr;
+  int video_width = 640;
+  int video_height = 480;
+  bool unity_audio_input = false;
+  std::string audio_recording_device = "";
+  std::string audio_playout_device = "";
+
+  bool disable_echo_cancellation = false;
+  bool disable_auto_gain_control = false;
+  bool disable_noise_suppression = false;
+  bool disable_highpass_filter = false;
+  bool disable_typing_detection = false;
+};
+
 class Sora {
   boost::asio::io_context ioc_;
   UnityContext* context_;
@@ -37,7 +61,6 @@ class Sora {
   std::unique_ptr<RTCManager> rtc_manager_;
   std::shared_ptr<SoraSignaling> signaling_;
   std::unique_ptr<rtc::Thread> thread_;
-  std::unique_ptr<rtc::FileRotatingLogSink> log_sink_;
   std::unique_ptr<UnityRenderer> renderer_;
   std::function<void(ptrid_t)> on_add_track_;
   std::function<void(ptrid_t)> on_remove_track_;
@@ -49,7 +72,7 @@ class Sora {
   rtc::scoped_refptr<UnityCameraCapturer> unity_camera_capturer_;
   ptrid_t ptrid_;
 
-  rtc::scoped_refptr<sora::UnityAudioDevice> adm_;
+  rtc::scoped_refptr<sora::UnityAudioDevice> unity_adm_;
 
  public:
   Sora(UnityContext* context);
@@ -66,9 +89,16 @@ class Sora {
                bool multistream,
                int capturer_type,
                void* unity_camera_texture,
+               std::string video_capturer_device,
                int video_width,
                int video_height,
-               bool unity_audio_input);
+               std::string video_codec,
+               int video_bitrate,
+               bool unity_audio_input,
+               std::string audio_recording_device,
+               std::string audio_playout_device,
+               std::string audio_codec,
+               int audio_bitrate);
 
   static void UNITY_INTERFACE_API RenderCallbackStatic(int event_id);
   int GetRenderCallbackEventID() const;
@@ -76,6 +106,23 @@ class Sora {
   void RenderCallback();
 
   void ProcessAudio(const void* p, int offset, int samples);
+
+ private:
+  static rtc::scoped_refptr<webrtc::AudioDeviceModule> CreateADM(
+      webrtc::TaskQueueFactory* task_queue_factory,
+      bool dummy_audio,
+      bool unity_audio_input,
+      std::string audio_recording_device,
+      std::string audio_playout_device,
+      rtc::scoped_refptr<UnityAudioDevice>& unity_adm);
+
+  static rtc::scoped_refptr<ScalableVideoTrackSource> CreateVideoCapturer(
+      int capturer_type,
+      void* unity_camera_texture,
+      std::string video_capturer_device,
+      int video_width,
+      int video_height,
+      rtc::scoped_refptr<UnityCameraCapturer>& unity_camera_capturer);
 };
 
 }  // namespace sora

@@ -23,6 +23,9 @@ struct RTCManagerConfig {
   bool disable_highpass_filter = false;
   bool disable_typing_detection = false;
 
+  std::string audio_recording_device;
+  std::string audio_playout_device;
+
   // webrtc::DegradationPreference::MAINTAIN_RESOLUTION;
   // webrtc::DegradationPreference::MAINTAIN_FRAMERATE;
   webrtc::DegradationPreference priority =
@@ -31,16 +34,31 @@ struct RTCManagerConfig {
 
 class RTCManager {
  public:
-  RTCManager(RTCManagerConfig config,
-             rtc::scoped_refptr<ScalableVideoTrackSource> video_track_source,
-             VideoTrackReceiver* receiver,
-             std::function<rtc::scoped_refptr<webrtc::AudioDeviceModule>(
-                 rtc::scoped_refptr<webrtc::AudioDeviceModule>,
-                 webrtc::TaskQueueFactory* task_queue_factory)> create_adm);
+  static std::unique_ptr<RTCManager> Create(
+      RTCManagerConfig config,
+      rtc::scoped_refptr<ScalableVideoTrackSource> video_track_source,
+      VideoTrackReceiver* receiver,
+      rtc::scoped_refptr<webrtc::AudioDeviceModule> adm,
+      std::unique_ptr<webrtc::TaskQueueFactory> task_queue_factory);
+
+ private:
+  RTCManager();
+  bool Init(RTCManagerConfig config,
+            rtc::scoped_refptr<ScalableVideoTrackSource> video_track_source,
+            VideoTrackReceiver* receiver,
+            rtc::scoped_refptr<webrtc::AudioDeviceModule> adm,
+            std::unique_ptr<webrtc::TaskQueueFactory> task_queue_factory);
+
+ public:
   ~RTCManager();
   std::shared_ptr<RTCConnection> createConnection(
       webrtc::PeerConnectionInterface::RTCConfiguration rtc_config,
       RTCMessageSender* sender);
+
+ private:
+  static bool InitADM(rtc::scoped_refptr<webrtc::AudioDeviceModule> adm,
+                      std::string audio_recording_device,
+                      std::string audio_playout_device);
 
  private:
   rtc::scoped_refptr<webrtc::PeerConnectionFactoryInterface> factory_;

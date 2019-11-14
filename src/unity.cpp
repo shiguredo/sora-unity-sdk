@@ -1,4 +1,5 @@
 #include "unity.h"
+#include "rtc/device_list.h"
 #include "sora.h"
 
 extern "C" {
@@ -49,13 +50,23 @@ int sora_connect(void* p,
                  bool multistream,
                  int capturer_type,
                  void* unity_camera_texture,
+                 const char* video_capturer_device,
                  int video_width,
                  int video_height,
-                 bool unity_audio_input) {
+                 const char* video_codec,
+                 int video_bitrate,
+                 bool unity_audio_input,
+                 const char* audio_recording_device,
+                 const char* audio_playout_device,
+                 const char* audio_codec,
+                 int audio_bitrate) {
   auto sora = (sora::Sora*)p;
   if (!sora->Connect(signaling_url, channel_id, metadata, downstream,
                      multistream, capturer_type, unity_camera_texture,
-                     video_width, video_height, unity_audio_input)) {
+                     video_capturer_device, video_width, video_height,
+                     video_codec, video_bitrate, unity_audio_input,
+                     audio_recording_device, audio_playout_device, audio_codec,
+                     audio_bitrate)) {
     return -1;
   }
   return 0;
@@ -80,6 +91,25 @@ int sora_get_render_callback_event_id(void* p) {
 void sora_process_audio(void* p, const void* buf, int offset, int samples) {
   auto sora = (sora::Sora*)p;
   sora->ProcessAudio(buf, offset, samples);
+}
+
+bool sora_device_enum_video_capturer(device_enum_cb_t f, void* userdata) {
+  return sora::DeviceList::EnumVideoCapturer(
+      [f, userdata](std::string device_name, std::string unique_name) {
+        f(device_name.c_str(), unique_name.c_str(), userdata);
+      });
+}
+bool sora_device_enum_audio_recording(device_enum_cb_t f, void* userdata) {
+  return sora::DeviceList::EnumAudioRecording(
+      [f, userdata](std::string device_name, std::string unique_name) {
+        f(device_name.c_str(), unique_name.c_str(), userdata);
+      });
+}
+bool sora_device_enum_audio_playout(device_enum_cb_t f, void* userdata) {
+  return sora::DeviceList::EnumAudioPlayout(
+      [f, userdata](std::string device_name, std::string unique_name) {
+        f(device_name.c_str(), unique_name.c_str(), userdata);
+      });
 }
 
 void UNITY_INTERFACE_EXPORT UNITY_INTERFACE_API

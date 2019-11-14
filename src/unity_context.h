@@ -3,6 +3,9 @@
 
 #include <mutex>
 
+// webrtc
+#include "rtc_base/log_sinks.h"
+
 #include "unity/IUnityGraphics.h"
 #include "unity/IUnityInterface.h"
 
@@ -14,12 +17,9 @@ namespace sora {
 
 class UnityContext {
   std::mutex mutex_;
+  std::unique_ptr<rtc::FileRotatingLogSink> log_sink_;
   IUnityInterfaces* ifs_ = nullptr;
   IUnityGraphics* graphics_ = nullptr;
-#ifdef _WIN32
-  ID3D11Device* device_ = nullptr;
-  ID3D11DeviceContext* context_ = nullptr;
-#endif
 
  private:
   // Unity のプラグインイベント
@@ -36,7 +36,14 @@ class UnityContext {
   void Init(IUnityInterfaces* ifs);
   void Shutdown();
 
+  IUnityInterfaces* GetInterfaces();
+
 #ifdef _WIN32
+ private:
+  ID3D11Device* device_ = nullptr;
+  ID3D11DeviceContext* context_ = nullptr;
+
+ public:
   ID3D11Device* GetDevice();
   ID3D11DeviceContext* GetDeviceContext();
 #endif

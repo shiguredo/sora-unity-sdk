@@ -64,8 +64,11 @@ bool DeviceVideoCapturer::Init(size_t width,
   return true;
 }
 
-rtc::scoped_refptr<DeviceVideoCapturer>
-DeviceVideoCapturer::Create(size_t width, size_t height, size_t target_fps) {
+rtc::scoped_refptr<DeviceVideoCapturer> DeviceVideoCapturer::Create(
+    size_t width,
+    size_t height,
+    size_t target_fps,
+    std::string device_name) {
   rtc::scoped_refptr<DeviceVideoCapturer> capturer;
   std::unique_ptr<webrtc::VideoCaptureModule::DeviceInfo> info(
       webrtc::VideoCaptureFactory::CreateDeviceInfo());
@@ -73,17 +76,52 @@ DeviceVideoCapturer::Create(size_t width, size_t height, size_t target_fps) {
     RTC_LOG(LS_WARNING) << "Failed to CreateDeviceInfo";
     return nullptr;
   }
-  int num_devices = info->NumberOfDevices();
-  for (int i = 0; i < num_devices; ++i) {
-    capturer = Create(width, height, target_fps, i);
-    if (capturer) {
-      RTC_LOG(LS_WARNING) << "Get Capture";
+  if (device_name.empty()) {
+    // デバイス名の指定が無い場合、全部列挙して使えるのを利用する
+    int num_devices = info->NumberOfDevices();
+    for (int i = 0; i < num_devices; ++i) {
+      capturer = Create(width, height, target_fps, i);
+      if (capturer) {
+        RTC_LOG(LS_WARNING) << "Get Capture";
+        return capturer;
+      }
+    }
+    RTC_LOG(LS_WARNING) << "Failed to create DeviceVideoCapturer";
+
+    return nullptr;
+  } else {
+    // デバイス名の指定がある場合、デバイス名かユニーク名のどちらかにマッチしたものを利用する
+    int num_devices = info->NumberOfDevices();
+    for (int i = 0; i < num_devices; ++i) {
+      char name[256];
+      char unique_name[256];
+      if (info->GetDeviceName(i, name, sizeof(name), unique_name,
+                              sizeof(unique_name)) != 0) {
+        RTC_LOG(LS_WARNING) << "Failed to GetDeviceName: index=" << i;
+        continue;
+      }
+      if (device_name != name && device_name != unique_name) {
+        continue;
+      }
+
+      capturer = Create(width, height, target_fps, i);
+      if (!capturer) {
+        RTC_LOG(LS_WARNING)
+            << "Failed to Create video capturer:"
+            << " specified_device_name=" << device_name
+            << " device_name=" << name << " unique_name=" << unique_name
+            << " width=" << width << " height=" << height
+            << " target_fps=" << target_fps;
+      }
       return capturer;
     }
-  }
-  RTC_LOG(LS_WARNING) << "Failed to create DeviceVideoCapturer";
 
-  return nullptr;
+    RTC_LOG(LS_WARNING) << "No specified video capturer found:"
+                        << " specified_device_name=" << device_name
+                        << " width=" << width << " height=" << height
+                        << " target_fps=" << target_fps;
+    return nullptr;
+  }
 }
 
 rtc::scoped_refptr<DeviceVideoCapturer> DeviceVideoCapturer::Create(
@@ -115,5 +153,4 @@ void DeviceVideoCapturer::Destroy() {
 void DeviceVideoCapturer::OnFrame(const webrtc::VideoFrame& frame) {
   OnCapturedFrame(frame);
 }
-
-}
+}  // namespace sora

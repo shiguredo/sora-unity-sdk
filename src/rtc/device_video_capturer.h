@@ -26,7 +26,8 @@ class DeviceVideoCapturer : public ScalableVideoTrackSource,
  public:
   static rtc::scoped_refptr<DeviceVideoCapturer> Create(size_t width,
                                                         size_t height,
-                                                        size_t target_fps);
+                                                        size_t target_fps,
+                                                        std::string device_name);
   static rtc::scoped_refptr<DeviceVideoCapturer> Create(
       size_t width,
       size_t height,

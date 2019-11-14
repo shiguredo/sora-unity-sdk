@@ -13,6 +13,14 @@ public class Sora : IDisposable
         DeviceCamera = 0,
         UnityCamera = 1,
     }
+    public enum VideoCodec {
+        VP9,
+        VP8,
+        H264,
+    }
+    public enum AudioCodec {
+        OPUS,
+    }
     public class Config
     {
         public string SignalingUrl = "";
@@ -20,19 +28,18 @@ public class Sora : IDisposable
         public string Metadata = "";
         public Role Role = Sora.Role.Downstream;
         public bool Multistream = false;
-        public void SetUnityCamera(UnityEngine.Camera camera, int width, int height)
-        {
-            CapturerType = Sora.CapturerType.UnityCamera;
-            UnityCamera = camera;
-            VideoWidth = width;
-            VideoHeight = height;
-        }
-
         public CapturerType CapturerType = Sora.CapturerType.DeviceCamera;
         public UnityEngine.Camera UnityCamera = null;
+        public string VideoCapturerDevice = "";
         public int VideoWidth = 640;
         public int VideoHeight = 480;
+        public VideoCodec VideoCodec = VideoCodec.VP9;
+        public int VideoBitrate = 0;
         public bool UnityAudioInput = false;
+        public string AudioRecordingDevice = "";
+        public string AudioPlayoutDevice = "";
+        public AudioCodec AudioCodec = AudioCodec.OPUS;
+        public int AudioBitrate = 0;
     }
 
     IntPtr p;
@@ -88,9 +95,16 @@ public class Sora : IDisposable
             config.Multistream,
             (int)config.CapturerType,
             unityCameraTexture,
+            config.VideoCapturerDevice,
             config.VideoWidth,
             config.VideoHeight,
-            config.UnityAudioInput) == 0;
+            config.VideoCodec.ToString(),
+            config.VideoBitrate,
+            config.UnityAudioInput,
+            config.AudioRecordingDevice,
+            config.AudioPlayoutDevice,
+            config.AudioCodec.ToString(),
+            config.AudioBitrate) == 0;
     }
 
     public void OnRender() {
@@ -172,6 +186,92 @@ public class Sora : IDisposable
         sora_process_audio(p, data, offset, samples);
     }
 
+    private delegate void DeviceEnumCallbackDelegate(string device_name, string unique_name, IntPtr userdata);
+
+    [AOT.MonoPInvokeCallback(typeof(DeviceEnumCallbackDelegate))]
+    static private void DeviceEnumCallback(string device_name, string unique_name, IntPtr userdata)
+    {
+        var callback = GCHandle.FromIntPtr(userdata).Target as Action<string, string>;
+        callback(device_name, unique_name);
+    }
+
+    public struct DeviceInfo
+    {
+        public string DeviceName;
+        public string UniqueName;
+    }
+    public static DeviceInfo[] GetVideoCapturerDevices()
+    {
+        var list = new System.Collections.Generic.List<DeviceInfo>();
+        Action<string, string> f = (deviceName, uniqueName) =>
+        {
+            list.Add(new DeviceInfo()
+            {
+                DeviceName = deviceName,
+                UniqueName = uniqueName,
+            });
+        };
+
+        GCHandle handle = GCHandle.Alloc(f);
+        bool result = sora_device_enum_video_capturer(DeviceEnumCallback, GCHandle.ToIntPtr(handle));
+        handle.Free();
+
+        if (!result)
+        {
+            return null;
+        }
+
+        return list.ToArray();
+    }
+
+    public static DeviceInfo[] GetAudioRecordingDevices()
+    {
+        var list = new System.Collections.Generic.List<DeviceInfo>();
+        Action<string, string> f = (deviceName, uniqueName) =>
+        {
+            list.Add(new DeviceInfo()
+            {
+                DeviceName = deviceName,
+                UniqueName = uniqueName,
+            });
+        };
+
+        GCHandle handle = GCHandle.Alloc(f);
+        bool result = sora_device_enum_audio_recording(DeviceEnumCallback, GCHandle.ToIntPtr(handle));
+        handle.Free();
+
+        if (!result)
+        {
+            return null;
+        }
+
+        return list.ToArray();
+    }
+
+    public static DeviceInfo[] GetAudioPlayoutDevices()
+    {
+        var list = new System.Collections.Generic.List<DeviceInfo>();
+        Action<string, string> f = (deviceName, uniqueName) =>
+        {
+            list.Add(new DeviceInfo()
+            {
+                DeviceName = deviceName,
+                UniqueName = uniqueName,
+            });
+        };
+
+        GCHandle handle = GCHandle.Alloc(f);
+        bool result = sora_device_enum_audio_playout(DeviceEnumCallback, GCHandle.ToIntPtr(handle));
+        handle.Free();
+
+        if (!result)
+        {
+            return null;
+        }
+
+        return list.ToArray();
+    }
+
     [DllImport("SoraUnitySdk")]
     private static extern IntPtr sora_create();
     [DllImport("SoraUnitySdk")]
@@ -183,7 +283,25 @@ public class Sora : IDisposable
     [DllImport("SoraUnitySdk")]
     private static extern void sora_dispatch_events(IntPtr p);
     [DllImport("SoraUnitySdk")]
-    private static extern int sora_connect(IntPtr p, string signaling_url, string channel_id, string metadata, bool downstream, bool multistream, int capturer_type, IntPtr unity_camera_texture, int video_width, int video_height, bool unity_audio_input);
+    private static extern int sora_connect(
+        IntPtr p,
+        string signaling_url,
+        string channel_id,
+        string metadata,
+        bool downstream,
+        bool multistream,
+        int capturer_type,
+        IntPtr unity_camera_texture,
+        string video_capturer_device,
+        int video_width,
+        int video_height,
+        string video_codec,
+        int video_bitrate,
+        bool unity_audio_input,
+        string audio_recording_device,
+        string audio_playout_device,
+        string audio_codec,
+        int audio_bitrate);
     [DllImport("SoraUnitySdk")]
     private static extern IntPtr sora_get_texture_update_callback();
     [DllImport("SoraUnitySdk")]
@@ -194,4 +312,10 @@ public class Sora : IDisposable
     private static extern int sora_get_render_callback_event_id(IntPtr p);
     [DllImport("SoraUnitySdk")]
     private static extern void sora_process_audio(IntPtr p, [In] float[] data, int offset, int samples);
+    [DllImport("SoraUnitySdk")]
+    private static extern bool sora_device_enum_video_capturer(DeviceEnumCallbackDelegate f, IntPtr userdata);
+    [DllImport("SoraUnitySdk")]
+    private static extern bool sora_device_enum_audio_recording(DeviceEnumCallbackDelegate f, IntPtr userdata);
+    [DllImport("SoraUnitySdk")]
+    private static extern bool sora_device_enum_audio_playout(DeviceEnumCallbackDelegate f, IntPtr userdata);
 }
