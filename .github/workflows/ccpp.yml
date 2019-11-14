@@ -1,0 +1,15 @@
+name: C/C++ CI
+
+on: [push]
+
+jobs:
+  build:
+
+    runs-on: windows-latest
+    
+    steps:
+    - uses: actions/checkout@v1
+    - name: install_tools.bat
+      run: .\install_tools.bat
+    - name: cmake.bat
+      run: .\cmake.bat
