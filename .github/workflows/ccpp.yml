@@ -52,8 +52,8 @@ jobs:
         mkdir -p SoraUnitySdk/Plugins/SoraUnitySdk/macos
         mkdir -p SoraUnitySdk/SoraUnitySdk
         cp Sora/Sora.cs SoraUnitySdk/SoraUnitySdk/
-        cp build/Release/SoraUnitySdk.dll SoraUnitySdk/Plugins/SoraUnitySdk/windows/x86_64/
-        cp -r build/SoraUnitySdk.bundle SoraUnitySdk/Plugins/SoraUnitySdk/macos/
+        cp SoraUnitySdk.dll SoraUnitySdk/Plugins/SoraUnitySdk/windows/x86_64/
+        cp -r SoraUnitySdk.bundle SoraUnitySdk/Plugins/SoraUnitySdk/macos/
     - name: Upload SoraUnitySdk
       uses: actions/upload-artifact@v1
       with:
