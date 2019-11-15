@@ -1,4 +1,4 @@
-# 開発者向けドキュメント
+# 開発者向けドキュメント (Windows)
 
 ## 環境構築
 
@@ -14,7 +14,7 @@
 
 `.\install_tools.bat` をダブルクリックで実行するか、コマンドプロンプトから実行してください。
 
-### dll のビルド
+### Unity プラグインのビルド
 
 `.\cmake.bat` をダブルクリックで実行するか、コマンドプロンプトから実行してください。
 
@@ -22,4 +22,4 @@
 
 ## インストール
 
-`build\Release\SoraUnitySdk.dll` と `SoraSDK\Sora.cs` を自身のプロジェクトにコピーしてください。
+`build\Release\SoraUnitySdk.dll` と `Sora\Sora.cs` を自身のプロジェクトにコピーしてください。
