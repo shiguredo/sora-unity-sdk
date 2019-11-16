@@ -61,7 +61,7 @@ jobs:
         path: SoraUnitySdk
   release:
     name: Upload Release Asset
-    if: startsWith(${{ github.ref }}, 'v')
+    if: startsWith(github.ref, 'v')
     runs-on: ubuntu-latest
     steps:
     - name: Checkout code
