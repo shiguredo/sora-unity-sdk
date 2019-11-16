@@ -62,6 +62,7 @@ jobs:
   release:
     name: Upload Release Asset
     if: startsWith(github.ref, 'v')
+    needs: [package]
     runs-on: ubuntu-latest
     steps:
     - name: Checkout code
