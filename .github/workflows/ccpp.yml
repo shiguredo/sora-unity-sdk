@@ -2,6 +2,8 @@ name: C/C++ CI
 
 on:
   push:
+    paths-ignore:
+    - 'doc/**'
   schedule:
   - cron: "0 0 * * *"
 
