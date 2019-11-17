@@ -12,7 +12,13 @@ In other languages, we won't be able to deal with them. Thank you for your under
 
 ## インストール
 
+### Windows
+
 リリースページから最新の `SoraUnitySdk.zip` をダウンロードして展開し、`SoraUnitySdk\Plugins\SoraUnitySdk` を `Assets\Plugins\SoraUnitySdk` に、`SoraUnitySdk\SoraUnitySdk` を `Assets/SoraUnitySdk` にコピーしてください。
+
+### macOS
+
+`DEVELOPMENT-MACOS.md` を参照してください。
 
 ## サンプル
 

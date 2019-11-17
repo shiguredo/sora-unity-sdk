@@ -1,0 +1,96 @@
+name: C/C++ CI
+
+on:
+  push:
+  schedule:
+  - cron: "0 0 * * *"
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    steps:
+    - uses: actions/checkout@v1
+    - name: install_tools.bat
+      run: .\install_tools.bat
+    - name: cmake.bat
+      run: .\cmake.bat
+    - name: Upload Windows Artifact
+      uses: actions/upload-artifact@v1
+      with:
+        name: SoraUnitySdk.dll
+        path: build\Release\SoraUnitySdk.dll
+  build-macos:
+    runs-on: macOS-latest
+    steps:
+    - uses: actions/checkout@v1
+    - name: install_tools.sh
+      run: ./install_tools.sh
+    - name: cmake.sh
+      run: ./cmake.sh
+    - name: Upload macOS Artifact
+      uses: actions/upload-artifact@v1
+      with:
+        name: SoraUnitySdk.bundle
+        path: build/SoraUnitySdk.bundle
+  package:
+    runs-on: macOS-latest
+    needs: [build-windows, build-macos]
+    steps:
+    - uses: actions/checkout@v1
+    - name: Download SoraUnitySdk.dll
+      uses: actions/download-artifact@v1
+      with:
+        name: SoraUnitySdk.dll
+    - name: Download SoraUnitySdk.bundle
+      uses: actions/download-artifact@v1
+      with:
+        name: SoraUnitySdk.bundle
+    - name: Packaging
+      run: |
+        set -ex
+        mkdir -p SoraUnitySdk/Plugins/SoraUnitySdk/windows/x86_64
+        mkdir -p SoraUnitySdk/Plugins/SoraUnitySdk/macos
+        mkdir -p SoraUnitySdk/SoraUnitySdk
+        cp Sora/Sora.cs SoraUnitySdk/SoraUnitySdk/
+        cp SoraUnitySdk.dll/SoraUnitySdk.dll SoraUnitySdk/Plugins/SoraUnitySdk/windows/x86_64/
+        cp -r SoraUnitySdk.bundle SoraUnitySdk/Plugins/SoraUnitySdk/macos/
+    - name: Upload SoraUnitySdk
+      uses: actions/upload-artifact@v1
+      with:
+        name: SoraUnitySdk
+        path: SoraUnitySdk
+  release:
+    name: Upload Release Asset
+    if: contains(github.ref, 'tags/v')
+    needs: [package]
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@master
+    - name: Download SoraUnitySdk
+      uses: actions/download-artifact@v1
+      with:
+        name: SoraUnitySdk
+    - name: Archive to zip SoraUnitySdk
+      run: |
+        zip SoraUnitySdk SoraUnitySdk
+    - name: Create Release
+      id: create_release
+      uses: actions/create-release@v1.0.0
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ github.ref }}
+        release_name: Release ${{ github.ref }}
+        draft: false
+        prerelease: false
+    - name: Upload Release Asset
+      id: upload-release-asset 
+      uses: actions/upload-release-asset@v1.0.1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ./SoraUnitySdk.zip
+        asset_name: SoraUnitySdk.zip
+        asset_content_type: application/zip
