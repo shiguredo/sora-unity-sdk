@@ -1,8 +1,6 @@
-# 開発者向けドキュメント (macOS)
+# macOS x86_64 向け Sora Unity SDK を自前でビルドする
 
-## 環境構築
-
-### 事前準備
+## 事前準備
 
 以下のツールをインストールしてください。
 
@@ -31,3 +29,4 @@ $ sh cmake.sh
 ## インストール
 
 `build/SoraUnitySdk.bundle` と `Sora/Sora.cs` を任意のプロジェクトの Assets にコピーしてください。
+
