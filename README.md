@@ -16,8 +16,8 @@ https://github.com/shiguredo/sora-unity-sdk/releases から から最新の `Sor
 
 ## ビルド方法
 
-- Windows でのビルド方法は [USE_WINDOWS.md](doc/USE_WINDOWS.md) をお読みください
-- macOS でのビルド方法は [USE_MACOS.md](doc/USE_MACOS.md) をお読みください
+- Windows でのビルド方法は [BUILD_WINDOWS.md](doc/BUILD_WINDOWS.md) をお読みください
+- macOS でのビルド方法は [BUILD_MACOS.md](doc/BUILD_MACOS.md) をお読みください
 
 ## サンプル
 
