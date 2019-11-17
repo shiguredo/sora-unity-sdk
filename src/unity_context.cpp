@@ -33,6 +33,8 @@ static std::string UnityGfxRendererToString(UnityGfxRenderer renderer) {
       return "kUnityGfxRendererNvn";
     case kUnityGfxRendererXboxOneD3D12:
       return "kUnityGfxRendererXboxOneD3D12";
+    default:
+      return "Unknown";
   }
 }
 
@@ -113,6 +115,7 @@ void UnityContext::Init(IUnityInterfaces* ifs) {
     log_sink_.reset();
     return;
   }
+  log_sink_->DisableBuffering();
 
   rtc::LogMessage::AddLogToStream(log_sink_.get(), rtc::LS_INFO);
 

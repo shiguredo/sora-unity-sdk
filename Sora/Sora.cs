@@ -36,6 +36,7 @@ public class Sora : IDisposable
         public VideoCodec VideoCodec = VideoCodec.VP9;
         public int VideoBitrate = 0;
         public bool UnityAudioInput = false;
+        public bool UnityAudioOutput = false;
         public string AudioRecordingDevice = "";
         public string AudioPlayoutDevice = "";
         public AudioCodec AudioCodec = AudioCodec.OPUS;
@@ -46,6 +47,7 @@ public class Sora : IDisposable
     GCHandle onAddTrackHandle;
     GCHandle onRemoveTrackHandle;
     GCHandle onNotifyHandle;
+    GCHandle onHandleAudioHandle;
     UnityEngine.Rendering.CommandBuffer commandBuffer;
     UnityEngine.Camera unityCamera;
 
@@ -61,10 +63,22 @@ public class Sora : IDisposable
             onRemoveTrackHandle.Free();
         }
 
+        if (onNotifyHandle.IsAllocated)
+        {
+            onNotifyHandle.Free();
+        }
+
         if (p != IntPtr.Zero)
         {
             sora_destroy(p);
             p = IntPtr.Zero;
+        }
+
+        // Sora が別スレッドからコールバックを呼びまくっているので、
+        // Sora を破棄した後に解放しないとエラーになってしまう。
+        if (onHandleAudioHandle.IsAllocated)
+        {
+            onHandleAudioHandle.Free();
         }
     }
 
@@ -101,6 +115,7 @@ public class Sora : IDisposable
             config.VideoCodec.ToString(),
             config.VideoBitrate,
             config.UnityAudioInput,
+            config.UnityAudioOutput,
             config.AudioRecordingDevice,
             config.AudioPlayoutDevice,
             config.AudioCodec.ToString(),
@@ -184,6 +199,31 @@ public class Sora : IDisposable
 
     public void ProcessAudio(float[] data, int offset, int samples) {
         sora_process_audio(p, data, offset, samples);
+    }
+
+    private delegate void HandleAudioCallbackDelegate(IntPtr buf, int samples, int channels, IntPtr userdata);
+
+    [AOT.MonoPInvokeCallback(typeof(HandleAudioCallbackDelegate))]
+    static private void HandleAudioCallback(IntPtr buf, int samples, int channels, IntPtr userdata)
+    {
+        var callback = GCHandle.FromIntPtr(userdata).Target as Action<short[], int, int>;
+        short[] buf2 = new short[samples * channels];
+        Marshal.Copy(buf, buf2, 0, samples * channels);
+        callback(buf2, samples, channels);
+    }
+
+    public Action<short[], int, int> OnHandleAudio
+    {
+        set
+        {
+            if (onHandleAudioHandle.IsAllocated)
+            {
+                onHandleAudioHandle.Free();
+            }
+
+            onHandleAudioHandle = GCHandle.Alloc(value);
+            sora_set_on_handle_audio(p, HandleAudioCallback, GCHandle.ToIntPtr(onHandleAudioHandle));
+        }
     }
 
     private delegate void DeviceEnumCallbackDelegate(string device_name, string unique_name, IntPtr userdata);
@@ -298,6 +338,7 @@ public class Sora : IDisposable
         string video_codec,
         int video_bitrate,
         bool unity_audio_input,
+        bool unity_audio_output,
         string audio_recording_device,
         string audio_playout_device,
         string audio_codec,
@@ -312,6 +353,8 @@ public class Sora : IDisposable
     private static extern int sora_get_render_callback_event_id(IntPtr p);
     [DllImport("SoraUnitySdk")]
     private static extern void sora_process_audio(IntPtr p, [In] float[] data, int offset, int samples);
+    [DllImport("SoraUnitySdk")]
+    private static extern void sora_set_on_handle_audio(IntPtr p, HandleAudioCallbackDelegate on_handle_audio, IntPtr userdata);
     [DllImport("SoraUnitySdk")]
     private static extern bool sora_device_enum_video_capturer(DeviceEnumCallbackDelegate f, IntPtr userdata);
     [DllImport("SoraUnitySdk")]
