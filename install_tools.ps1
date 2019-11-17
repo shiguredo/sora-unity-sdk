@@ -24,7 +24,8 @@ if (!(Test-Path "$INSTALL_DIR\boost\include\boost\version.hpp")) {
     if (Test-Path "boost_${_BOOST_UNDERSCORE_VERSION}") {
       Remove-Item boost_${_BOOST_UNDERSCORE_VERSION} -Force -Recurse
     }
-    Expand-Archive -Path $_FILE -DestinationPath .
+    # Expand-Archive -Path $_FILE -DestinationPath .
+    7z x $_FILE
   Pop-Location
   # ビルドとインストール
   Push-Location $BUILD_DIR\boost_${_BOOST_UNDERSCORE_VERSION}
@@ -57,7 +58,10 @@ if (!(Test-Path "$INSTALL_DIR\json\include\nlohmann\json.hpp")) {
   Pop-Location
   # 展開(=インストール)
   mkdir "$INSTALL_DIR\json" -Force
-  Expand-Archive -Path $_FILE -DestinationPath "$INSTALL_DIR\json"
+  # Expand-Archive -Path $_FILE -DestinationPath "$INSTALL_DIR\json"
+  Push-Location $INSTALL_DIR\json
+    7z x $_FILE
+  Pop-Location
 }
 
 # WebRTC
@@ -76,7 +80,10 @@ if (!(Test-Path "$INSTALL_DIR\webrtc\lib\webrtc.lib")) {
     Remove-Item $BUILD_DIR\webrtc -Recurse -Force
   }
   mkdir $BUILD_DIR\webrtc -Force
-  Expand-Archive -Path $_FILE -DestinationPath "$BUILD_DIR\webrtc"
+  # Expand-Archive -Path $_FILE -DestinationPath "$BUILD_DIR\webrtc"
+  Push-Location $BUILD_DIR\webrtc
+    7z x $_FILE
+  Pop-Location
 
   # インストール
   if (Test-Path "$INSTALL_DIR\webrtc") {
