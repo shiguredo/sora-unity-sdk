@@ -115,7 +115,7 @@ void UnityContext::Init(IUnityInterfaces* ifs) {
     log_sink_.reset();
     return;
   }
-  log_sink_->DisableBuffering();
+  //log_sink_->DisableBuffering();
 
   rtc::LogMessage::AddLogToStream(log_sink_.get(), rtc::LS_INFO);
 
