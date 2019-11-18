@@ -2,6 +2,7 @@
 
  [![GitHub tag](https://img.shields.io/github/tag/shiguredo/sora-unity-sdk.svg)](https://github.com/shiguredo/sora-unity-sdk)
  [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+ [![Actions Status](https://github.com/shiguredo/sora-unity-sdk/workflows/build/badge.svg)](https://github.com/shiguredo/sora-unity-sdk/actions)
 
 Sora Unity SDK は [WebRTC SFU Sora](https://sora.shiguredo.jp/) の Unity クライアントアプリケーションを開発するためのライブラリです。
 
@@ -44,6 +45,7 @@ Sora Unity SDK に対する有償のサポートについては現在提供し�
 - マイクから音声を取得し Unity アプリに出力
 - Unity アプリで Sora からの音声を受信
 - Unity アプリで Sora からの映像を受信
+- Unity アプリで Sora からの音声を再生
 - Sora から受信した音声を Unity アプリに出力
 - Sora から受信した映像を Unity アプリに出力
 - マルチストリームへの対応
