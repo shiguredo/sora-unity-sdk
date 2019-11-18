@@ -45,6 +45,7 @@ Sora Unity SDK に対する有償のサポートについては現在提供し�
 - マイクから音声を取得し Unity アプリに出力
 - Unity アプリで Sora からの音声を受信
 - Unity アプリで Sora からの映像を受信
+- Unity アプリで Sora からの音声を再生
 - Sora から受信した音声を Unity アプリに出力
 - Sora から受信した映像を Unity アプリに出力
 - マルチストリームへの対応
