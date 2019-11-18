@@ -201,7 +201,8 @@ class UnityAudioDevice : public webrtc::AudioDeviceModule {
     }
   }
   virtual bool PlayoutIsInitialized() const override {
-    auto result = adm_playout_ ? adm_->PlayoutIsInitialized() : is_playing_;
+    auto result =
+        adm_playout_ ? adm_->PlayoutIsInitialized() : (bool)is_playing_;
     RTC_LOG(LS_INFO) << "PlayoutIsInitialized: result=" << result;
     return result;
   }
@@ -224,7 +225,8 @@ class UnityAudioDevice : public webrtc::AudioDeviceModule {
     }
   }
   virtual bool RecordingIsInitialized() const override {
-    return adm_recording_ ? adm_->RecordingIsInitialized() : is_recording_;
+    return adm_recording_ ? adm_->RecordingIsInitialized()
+                          : (bool)is_recording_;
   }
 
   // Audio transport control
@@ -256,8 +258,7 @@ class UnityAudioDevice : public webrtc::AudioDeviceModule {
     }
   }
   virtual bool Playing() const override {
-    return adm_playout_ ? adm_->Playing() : is_playing_;
-    ;
+    return adm_playout_ ? adm_->Playing() : (bool)is_playing_;
   }
   virtual int32_t StartRecording() override {
     return adm_recording_ ? adm_->StartRecording() : 0;
@@ -266,7 +267,7 @@ class UnityAudioDevice : public webrtc::AudioDeviceModule {
     return adm_recording_ ? adm_->StopRecording() : 0;
   }
   virtual bool Recording() const override {
-    return adm_recording_ ? adm_->Recording() : is_recording_;
+    return adm_recording_ ? adm_->Recording() : (bool)is_recording_;
   }
 
   // Audio mixer initialization
@@ -346,7 +347,7 @@ class UnityAudioDevice : public webrtc::AudioDeviceModule {
     } else {
       // 今はステレオには対応しない
       //*available = true;
-      available = false;
+      *available = false;
       return 0;
     }
   }
