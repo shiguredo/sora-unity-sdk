@@ -65,6 +65,7 @@ class Sora {
   std::function<void(ptrid_t)> on_add_track_;
   std::function<void(ptrid_t)> on_remove_track_;
   std::function<void(std::string)> on_notify_;
+  std::function<void(const int16_t*, int, int)> on_handle_audio_;
 
   std::mutex event_mutex_;
   std::deque<std::function<void()>> event_queue_;
@@ -72,7 +73,7 @@ class Sora {
   rtc::scoped_refptr<UnityCameraCapturer> unity_camera_capturer_;
   ptrid_t ptrid_;
 
-  rtc::scoped_refptr<sora::UnityAudioDevice> unity_adm_;
+  rtc::scoped_refptr<UnityAudioDevice> unity_adm_;
 
  public:
   Sora(UnityContext* context);
@@ -95,6 +96,7 @@ class Sora {
                std::string video_codec,
                int video_bitrate,
                bool unity_audio_input,
+               bool unity_audio_output,
                std::string audio_recording_device,
                std::string audio_playout_device,
                std::string audio_codec,
@@ -106,15 +108,17 @@ class Sora {
   void RenderCallback();
 
   void ProcessAudio(const void* p, int offset, int samples);
+  void SetOnHandleAudio(std::function<void(const int16_t*, int, int)> f);
 
  private:
-  static rtc::scoped_refptr<webrtc::AudioDeviceModule> CreateADM(
+  static rtc::scoped_refptr<UnityAudioDevice> CreateADM(
       webrtc::TaskQueueFactory* task_queue_factory,
       bool dummy_audio,
       bool unity_audio_input,
+      bool unity_audio_output,
+      std::function<void(const int16_t*, int, int)> on_handle_audio,
       std::string audio_recording_device,
-      std::string audio_playout_device,
-      rtc::scoped_refptr<UnityAudioDevice>& unity_adm);
+      std::string audio_playout_device);
 
   static rtc::scoped_refptr<ScalableVideoTrackSource> CreateVideoCapturer(
       int capturer_type,

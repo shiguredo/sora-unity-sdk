@@ -1,6 +1,8 @@
 #ifndef SORA_UNITY_H_
 #define SORA_UNITY_H_
 
+#include <stdint.h>
+
 #include "unity/IUnityInterface.h"
 
 #ifdef __cplusplus
@@ -37,6 +39,7 @@ UNITY_INTERFACE_EXPORT int sora_connect(void* p,
                                         const char* video_codec,
                                         int video_bitrate,
                                         bool unity_audio_input,
+                                        bool unity_audio_output,
                                         const char* audio_recording_device,
                                         const char* audio_playout_device,
                                         const char* audio_codec,
@@ -51,6 +54,13 @@ UNITY_INTERFACE_EXPORT void sora_process_audio(void* p,
                                                const void* buf,
                                                int offset,
                                                int samples);
+typedef void (*handle_audio_cb_t)(const int16_t* buf,
+                                  int samples,
+                                  int channels,
+                                  void* userdata);
+UNITY_INTERFACE_EXPORT void sora_set_on_handle_audio(void* p,
+                                                     handle_audio_cb_t f,
+                                                     void* userdata);
 
 typedef void (*device_enum_cb_t)(const char* device_name,
                                  const char* unique_name,

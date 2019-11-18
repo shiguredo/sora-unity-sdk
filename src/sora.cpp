@@ -61,6 +61,7 @@ bool Sora::Connect(std::string signaling_url,
                    std::string video_codec,
                    int video_bitrate,
                    bool unity_audio_input,
+                   bool unity_audio_output,
                    std::string audio_recording_device,
                    std::string audio_playout_device,
                    std::string audio_codec,
@@ -78,6 +79,7 @@ bool Sora::Connect(std::string signaling_url,
                    << " video_width=" << video_width
                    << " video_height=" << video_height
                    << " unity_audio_input=" << unity_audio_input
+                   << " unity_audio_output=" << unity_audio_output
                    << " audio_recording_device=" << audio_recording_device
                    << " audio_playout_device=" << audio_playout_device;
 
@@ -102,10 +104,10 @@ bool Sora::Connect(std::string signaling_url,
       }));
 
   auto task_queue_factory = webrtc::CreateDefaultTaskQueueFactory();
-  auto adm =
-      CreateADM(task_queue_factory.get(), false, unity_audio_input,
-                audio_recording_device, audio_playout_device, unity_adm_);
-  if (!adm) {
+  unity_adm_ = CreateADM(task_queue_factory.get(), false, unity_audio_input,
+                         unity_audio_output, on_handle_audio_,
+                         audio_recording_device, audio_playout_device);
+  if (!unity_adm_) {
     return false;
   }
 
@@ -123,8 +125,8 @@ bool Sora::Connect(std::string signaling_url,
     config.audio_recording_device = audio_recording_device;
     config.audio_playout_device = audio_playout_device;
     rtc_manager_ =
-        RTCManager::Create(config, std::move(capturer), renderer_.get(), adm,
-                           std::move(task_queue_factory));
+        RTCManager::Create(config, std::move(capturer), renderer_.get(),
+                           unity_adm_, std::move(task_queue_factory));
   } else {
     // 受信側は capturer を作らず、video, recording の設定もしない
     RTCManagerConfig config;
@@ -132,8 +134,9 @@ bool Sora::Connect(std::string signaling_url,
     config.no_video = true;
     config.audio_recording_device = audio_recording_device;
     config.audio_playout_device = audio_playout_device;
-    rtc_manager_ = RTCManager::Create(config, nullptr, renderer_.get(), adm,
-                                      std::move(task_queue_factory));
+    rtc_manager_ =
+        RTCManager::Create(config, nullptr, renderer_.get(), unity_adm_,
+                           std::move(task_queue_factory));
   }
 
   {
@@ -219,14 +222,18 @@ void Sora::ProcessAudio(const void* p, int offset, int samples) {
   // 今のところステレオデータを渡すようにしてるので2倍する
   unity_adm_->ProcessAudioData((const float*)p + offset, samples * 2);
 }
+void Sora::SetOnHandleAudio(std::function<void(const int16_t*, int, int)> f) {
+  on_handle_audio_ = f;
+}
 
-rtc::scoped_refptr<webrtc::AudioDeviceModule> Sora::CreateADM(
+rtc::scoped_refptr<UnityAudioDevice> Sora::CreateADM(
     webrtc::TaskQueueFactory* task_queue_factory,
     bool dummy_audio,
     bool unity_audio_input,
+    bool unity_audio_output,
+    std::function<void(const int16_t*, int, int)> on_handle_audio,
     std::string audio_recording_device,
-    std::string audio_playout_device,
-    rtc::scoped_refptr<UnityAudioDevice>& unity_adm) {
+    std::string audio_playout_device) {
   rtc::scoped_refptr<webrtc::AudioDeviceModule> adm;
 
   if (dummy_audio) {
@@ -241,12 +248,8 @@ rtc::scoped_refptr<webrtc::AudioDeviceModule> Sora::CreateADM(
 #endif
   }
 
-  if (unity_audio_input) {
-    unity_adm = UnityAudioDevice::Create(adm, task_queue_factory);
-    return unity_adm;
-  } else {
-    return adm;
-  }
+  return UnityAudioDevice::Create(adm, !unity_audio_input, !unity_audio_output,
+                                  on_handle_audio, task_queue_factory);
 }
 
 rtc::scoped_refptr<ScalableVideoTrackSource> Sora::CreateVideoCapturer(

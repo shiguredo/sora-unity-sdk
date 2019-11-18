@@ -56,6 +56,7 @@ int sora_connect(void* p,
                  const char* video_codec,
                  int video_bitrate,
                  bool unity_audio_input,
+                 bool unity_audio_output,
                  const char* audio_recording_device,
                  const char* audio_playout_device,
                  const char* audio_codec,
@@ -65,8 +66,8 @@ int sora_connect(void* p,
                      multistream, capturer_type, unity_camera_texture,
                      video_capturer_device, video_width, video_height,
                      video_codec, video_bitrate, unity_audio_input,
-                     audio_recording_device, audio_playout_device, audio_codec,
-                     audio_bitrate)) {
+                     unity_audio_output, audio_recording_device,
+                     audio_playout_device, audio_codec, audio_bitrate)) {
     return -1;
   }
   return 0;
@@ -91,6 +92,13 @@ int sora_get_render_callback_event_id(void* p) {
 void sora_process_audio(void* p, const void* buf, int offset, int samples) {
   auto sora = (sora::Sora*)p;
   sora->ProcessAudio(buf, offset, samples);
+}
+void sora_set_on_handle_audio(void* p, handle_audio_cb_t f, void* userdata) {
+  auto sora = (sora::Sora*)p;
+  sora->SetOnHandleAudio(
+      [f, userdata](const int16_t* buf, int samples, int channels) {
+        f(buf, samples, channels, userdata);
+      });
 }
 
 bool sora_device_enum_video_capturer(device_enum_cb_t f, void* userdata) {
