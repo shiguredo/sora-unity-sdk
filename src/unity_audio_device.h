@@ -10,36 +10,56 @@
 #include "modules/audio_device/audio_device_buffer.h"
 #include "modules/audio_device/include/audio_device.h"
 #include "rtc_base/ref_counted_object.h"
+#include "rtc_base/thread.h"
 
 namespace sora {
 
 class UnityAudioDevice : public webrtc::AudioDeviceModule {
  public:
-  UnityAudioDevice(rtc::scoped_refptr<webrtc::AudioDeviceModule> adm,
-                   webrtc::TaskQueueFactory* task_queue_factory)
-      : adm_(adm), task_queue_factory_(task_queue_factory) {}
+  UnityAudioDevice(
+      rtc::scoped_refptr<webrtc::AudioDeviceModule> adm,
+      bool adm_recording,
+      bool adm_playout,
+      std::function<void(const int16_t* p, int samples, int channels)>
+          on_handle_audio,
+      webrtc::TaskQueueFactory* task_queue_factory)
+      : adm_(adm),
+        adm_recording_(adm_recording),
+        adm_playout_(adm_playout),
+        on_handle_audio_(on_handle_audio),
+        task_queue_factory_(task_queue_factory) {}
+
+  ~UnityAudioDevice() override {
+    RTC_LOG(LS_INFO) << "~UnityAudioDevice";
+    Terminate();
+  }
 
   static rtc::scoped_refptr<UnityAudioDevice> Create(
       rtc::scoped_refptr<webrtc::AudioDeviceModule> adm,
+      bool adm_recording,
+      bool adm_playout,
+      std::function<void(const int16_t* p, int samples, int channels)>
+          on_handle_audio,
       webrtc::TaskQueueFactory* task_queue_factory) {
-    return new rtc::RefCountedObject<UnityAudioDevice>(adm, task_queue_factory);
+    return new rtc::RefCountedObject<UnityAudioDevice>(
+        adm, adm_recording, adm_playout, on_handle_audio, task_queue_factory);
   }
 
   void ProcessAudioData(const float* data, int32_t size) {
-    if (started_ && is_recording_) {
+    if (!adm_recording_ && initialized_ && is_recording_) {
       for (int i = 0; i < size; i++) {
 #pragma warning(suppress : 4244)
         converted_audio_data_.push_back(data[i] >= 0 ? data[i] * SHRT_MAX
                                                      : data[i] * -SHRT_MIN);
       }
       //opus supports up to 48khz sample rate, enforce 48khz here for quality
-      int chunkSize = 48000 * 2 / 100;
-      while (converted_audio_data_.size() > chunkSize) {
+      int chunk_size = 48000 * 2 / 100;
+      while (converted_audio_data_.size() > chunk_size) {
         device_buffer_->SetRecordedBuffer(converted_audio_data_.data(),
-                                          chunkSize / 2);
+                                          chunk_size / 2);
         device_buffer_->DeliverRecordedData();
         converted_audio_data_.erase(converted_audio_data_.begin(),
-                                    converted_audio_data_.begin() + chunkSize);
+                                    converted_audio_data_.begin() + chunk_size);
       }
     }
   }
@@ -54,162 +74,322 @@ class UnityAudioDevice : public webrtc::AudioDeviceModule {
   // Full-duplex transportation of PCM audio
   virtual int32_t RegisterAudioCallback(
       webrtc::AudioTransport* audioCallback) override {
-    device_buffer_->RegisterAudioCallback(audioCallback);
-    adm_->RegisterAudioCallback(audioCallback);
-    return 0;
+    RTC_LOG(LS_INFO) << "RegisterAudioCallback";
+    if (!adm_recording_ || !adm_playout_) {
+      device_buffer_->RegisterAudioCallback(audioCallback);
+    }
+    return adm_->RegisterAudioCallback(audioCallback);
   }
 
   // Main initialization and termination
   virtual int32_t Init() override {
+    RTC_LOG(LS_INFO) << "Init";
     device_buffer_ =
         std::make_unique<webrtc::AudioDeviceBuffer>(task_queue_factory_);
-    started_ = true;
+    initialized_ = true;
     return adm_->Init();
   }
   virtual int32_t Terminate() override {
-    device_buffer_.reset();
-    started_ = false;
+    RTC_LOG(LS_INFO) << "Terminate";
+
+    DoStopPlayout();
+
+    initialized_ = false;
     is_recording_ = false;
-    return adm_->Terminate();
+    is_playing_ = false;
+    device_buffer_.reset();
+
+    auto result = adm_->Terminate();
+
+    RTC_LOG(LS_INFO) << "Terminate Completed";
+
+    return result;
   }
   virtual bool Initialized() const override {
-    return started_ && adm_->Initialized();
+    return initialized_ && adm_->Initialized();
   }
 
   // Device enumeration
-  virtual int16_t PlayoutDevices() override { return adm_->PlayoutDevices(); }
-  virtual int16_t RecordingDevices() override { return 0; }
+  virtual int16_t PlayoutDevices() override {
+    RTC_LOG(LS_INFO) << "PlayoutDevices";
+    return adm_playout_ ? adm_->PlayoutDevices() : 0;
+  }
+  virtual int16_t RecordingDevices() override {
+    return adm_recording_ ? adm_->RecordingDevices() : 0;
+  }
   virtual int32_t PlayoutDeviceName(
       uint16_t index,
       char name[webrtc::kAdmMaxDeviceNameSize],
       char guid[webrtc::kAdmMaxGuidSize]) override {
-    return adm_->PlayoutDeviceName(index, name, guid);
+    return adm_playout_ ? adm_->PlayoutDeviceName(index, name, guid) : 0;
   }
   virtual int32_t RecordingDeviceName(
       uint16_t index,
       char name[webrtc::kAdmMaxDeviceNameSize],
       char guid[webrtc::kAdmMaxGuidSize]) override {
-    return 0;
+    return adm_recording_ ? adm_->RecordingDeviceName(index, name, guid) : 0;
   }
 
   // Device selection
   virtual int32_t SetPlayoutDevice(uint16_t index) override {
-    return adm_->SetPlayoutDevice(index);
+    RTC_LOG(LS_INFO) << "SetPlayoutDevice(" << index << ")";
+    return adm_playout_ ? adm_->SetPlayoutDevice(index) : 0;
   }
   virtual int32_t SetPlayoutDevice(WindowsDeviceType device) override {
-    return adm_->SetPlayoutDevice(device);
+    return adm_playout_ ? adm_->SetPlayoutDevice(device) : 0;
   }
-  virtual int32_t SetRecordingDevice(uint16_t index) override { return 0; }
+  virtual int32_t SetRecordingDevice(uint16_t index) override {
+    RTC_LOG(LS_INFO) << "SetRecordingDevice(" << index << ")";
+    return adm_recording_ ? adm_->SetRecordingDevice(index) : 0;
+  }
   virtual int32_t SetRecordingDevice(WindowsDeviceType device) override {
-    return 0;
+    return adm_recording_ ? adm_->SetRecordingDevice(device) : 0;
+  }
+
+  void HandleAudioData() {
+    int channels = stereo_playout_ ? 2 : 1;
+    auto next_at = std::chrono::steady_clock::now();
+    while (!handle_audio_thread_stopped_) {
+      // 10 ミリ秒ごとにオーディオデータを取得する
+      next_at += std::chrono::milliseconds(10);
+      std::this_thread::sleep_until(next_at);
+
+      int chunk_size = 48000 / 100;
+      int samples = device_buffer_->RequestPlayoutData(chunk_size);
+
+      //RTC_LOG(LS_INFO) << "handle audio data: chunk_size=" << chunk_size
+      //                 << " samples=" << samples;
+
+      std::unique_ptr<int16_t[]> audio_buffer(new int16_t[samples * channels]);
+      device_buffer_->GetPlayoutData(audio_buffer.get());
+      if (on_handle_audio_) {
+        on_handle_audio_(audio_buffer.get(), samples, channels);
+      }
+    }
   }
 
   // Audio transport initialization
   virtual int32_t PlayoutIsAvailable(bool* available) override {
-    return adm_->PlayoutIsAvailable(available);
+    RTC_LOG(LS_INFO) << "PlayoutIsAvailable";
+
+    if (adm_playout_) {
+      return adm_->PlayoutIsAvailable(available);
+    } else {
+      *available = true;
+      return 0;
+    }
   }
-  virtual int32_t InitPlayout() override { return adm_->InitPlayout(); }
+  virtual int32_t InitPlayout() override {
+    RTC_LOG(LS_INFO) << "InitPlayout";
+
+    if (adm_playout_) {
+      return adm_->InitPlayout();
+    } else {
+      DoStopPlayout();
+
+      is_playing_ = true;
+      device_buffer_->SetPlayoutSampleRate(48000);
+      device_buffer_->SetPlayoutChannels(stereo_playout_ ? 2 : 1);
+
+      handle_audio_thread_.reset(new std::thread([this]() {
+        RTC_LOG(LS_INFO) << "Sora Audio Playout Thread started";
+        HandleAudioData();
+        RTC_LOG(LS_INFO) << "Sora Audio Playout Thread finished";
+      }));
+
+      return 0;
+    }
+  }
   virtual bool PlayoutIsInitialized() const override {
-    return adm_->PlayoutIsInitialized();
+    auto result =
+        adm_playout_ ? adm_->PlayoutIsInitialized() : (bool)is_playing_;
+    RTC_LOG(LS_INFO) << "PlayoutIsInitialized: result=" << result;
+    return result;
   }
-  virtual int32_t RecordingIsAvailable(bool* available) override { return 0; }
+  virtual int32_t RecordingIsAvailable(bool* available) override {
+    if (adm_recording_) {
+      return adm_->RecordingIsAvailable(available);
+    } else {
+      *available = true;
+      return 0;
+    }
+  }
   virtual int32_t InitRecording() override {
-    is_recording_ = true;
-    device_buffer_->SetRecordingSampleRate(48000);
-    device_buffer_->SetRecordingChannels(2);
-    return 0;
+    if (adm_recording_) {
+      return adm_->InitRecording();
+    } else {
+      is_recording_ = true;
+      device_buffer_->SetRecordingSampleRate(48000);
+      device_buffer_->SetRecordingChannels(2);
+      return 0;
+    }
   }
-  virtual bool RecordingIsInitialized() const override { return is_recording_; }
+  virtual bool RecordingIsInitialized() const override {
+    return adm_recording_ ? adm_->RecordingIsInitialized()
+                          : (bool)is_recording_;
+  }
 
   // Audio transport control
-  virtual int32_t StartPlayout() override { return adm_->StartPlayout(); }
-  virtual int32_t StopPlayout() override { return adm_->StopPlayout(); }
-  virtual bool Playing() const override { return adm_->Playing(); }
-  virtual int32_t StartRecording() override { return 0; }
-  virtual int32_t StopRecording() override { return 0; }
-  virtual bool Recording() const override { return is_recording_; }
+  virtual int32_t StartPlayout() override {
+    RTC_LOG(LS_INFO) << "StartPlayout";
+    if (adm_playout_) {
+      return adm_->StartPlayout();
+    } else {
+      return 0;
+    }
+  }
+  void DoStopPlayout() {
+    if (handle_audio_thread_) {
+      RTC_LOG(LS_INFO) << "Terminating Audio Thread";
+      handle_audio_thread_stopped_ = true;
+      handle_audio_thread_->join();
+      handle_audio_thread_.reset();
+      handle_audio_thread_stopped_ = false;
+      RTC_LOG(LS_INFO) << "Terminated Audio Thread";
+    }
+  }
+  virtual int32_t StopPlayout() override {
+    RTC_LOG(LS_INFO) << "StopPlayout";
+    if (adm_playout_) {
+      return adm_->StopPlayout();
+    } else {
+      DoStopPlayout();
+      return 0;
+    }
+  }
+  virtual bool Playing() const override {
+    return adm_playout_ ? adm_->Playing() : (bool)is_playing_;
+  }
+  virtual int32_t StartRecording() override {
+    return adm_recording_ ? adm_->StartRecording() : 0;
+  }
+  virtual int32_t StopRecording() override {
+    return adm_recording_ ? adm_->StopRecording() : 0;
+  }
+  virtual bool Recording() const override {
+    return adm_recording_ ? adm_->Recording() : (bool)is_recording_;
+  }
 
   // Audio mixer initialization
-  virtual int32_t InitSpeaker() override { return adm_->InitSpeaker(); }
-  virtual bool SpeakerIsInitialized() const override {
-    return adm_->SpeakerIsInitialized();
+  virtual int32_t InitSpeaker() override {
+    return adm_playout_ ? adm_->InitSpeaker() : 0;
   }
-  virtual int32_t InitMicrophone() override { return 0; }
-  virtual bool MicrophoneIsInitialized() const override { return false; }
+  virtual bool SpeakerIsInitialized() const override {
+    return adm_playout_ ? adm_->SpeakerIsInitialized() : false;
+  }
+  virtual int32_t InitMicrophone() override {
+    return adm_recording_ ? adm_->InitMicrophone() : 0;
+  }
+  virtual bool MicrophoneIsInitialized() const override {
+    return adm_recording_ ? adm_->MicrophoneIsInitialized() : false;
+  }
 
   // Speaker volume controls
   virtual int32_t SpeakerVolumeIsAvailable(bool* available) override {
-    return adm_->SpeakerVolumeIsAvailable(available);
+    return adm_playout_ ? adm_->SpeakerVolumeIsAvailable(available) : 0;
   }
   virtual int32_t SetSpeakerVolume(uint32_t volume) override {
-    return adm_->SetSpeakerVolume(volume);
+    return adm_playout_ ? adm_->SetSpeakerVolume(volume) : 0;
   }
   virtual int32_t SpeakerVolume(uint32_t* volume) const override {
-    return adm_->SpeakerVolume(volume);
+    return adm_playout_ ? adm_->SpeakerVolume(volume) : 0;
   }
   virtual int32_t MaxSpeakerVolume(uint32_t* maxVolume) const override {
-    return adm_->MaxSpeakerVolume(maxVolume);
+    return adm_playout_ ? adm_->MaxSpeakerVolume(maxVolume) : 0;
   }
   virtual int32_t MinSpeakerVolume(uint32_t* minVolume) const override {
-    return adm_->MinSpeakerVolume(minVolume);
+    return adm_playout_ ? adm_->MinSpeakerVolume(minVolume) : 0;
   }
 
   // Microphone volume controls
   virtual int32_t MicrophoneVolumeIsAvailable(bool* available) override {
-    return 0;
+    return adm_recording_ ? adm_->MicrophoneVolumeIsAvailable(available) : 0;
   }
-  virtual int32_t SetMicrophoneVolume(uint32_t volume) override { return 0; }
+  virtual int32_t SetMicrophoneVolume(uint32_t volume) override {
+    return adm_recording_ ? adm_->SetMicrophoneVolume(volume) : 0;
+  }
   virtual int32_t MicrophoneVolume(uint32_t* volume) const override {
-    return 0;
+    return adm_recording_ ? adm_->MicrophoneVolume(volume) : 0;
   }
   virtual int32_t MaxMicrophoneVolume(uint32_t* maxVolume) const override {
-    return 0;
+    return adm_recording_ ? adm_->MaxMicrophoneVolume(maxVolume) : 0;
   }
   virtual int32_t MinMicrophoneVolume(uint32_t* minVolume) const override {
-    return 0;
+    return adm_recording_ ? adm_->MinMicrophoneVolume(minVolume) : 0;
   }
 
   // Speaker mute control
   virtual int32_t SpeakerMuteIsAvailable(bool* available) override {
-    return adm_->SpeakerMuteIsAvailable(available);
+    return adm_playout_ ? adm_->SpeakerMuteIsAvailable(available) : 0;
   }
   virtual int32_t SetSpeakerMute(bool enable) override {
-    return adm_->SetSpeakerMute(enable);
+    return adm_playout_ ? adm_->SetSpeakerMute(enable) : 0;
   }
   virtual int32_t SpeakerMute(bool* enabled) const override {
-    return adm_->SpeakerMute(enabled);
+    return adm_playout_ ? adm_->SpeakerMute(enabled) : 0;
   }
 
   // Microphone mute control
   virtual int32_t MicrophoneMuteIsAvailable(bool* available) override {
-    return 0;
+    return adm_recording_ ? adm_->MicrophoneMuteIsAvailable(available) : 0;
   }
-  virtual int32_t SetMicrophoneMute(bool enable) override { return 0; }
-  virtual int32_t MicrophoneMute(bool* enabled) const override { return 0; }
+  virtual int32_t SetMicrophoneMute(bool enable) override {
+    return adm_recording_ ? adm_->SetMicrophoneMute(enable) : 0;
+  }
+  virtual int32_t MicrophoneMute(bool* enabled) const override {
+    return adm_recording_ ? adm_->MicrophoneMute(enabled) : 0;
+  }
 
   // Stereo support
   virtual int32_t StereoPlayoutIsAvailable(bool* available) const override {
-    return adm_->StereoPlayoutIsAvailable(available);
+    if (adm_playout_) {
+      return adm_->StereoPlayoutIsAvailable(available);
+    } else {
+      // 今はステレオには対応しない
+      //*available = true;
+      *available = false;
+      return 0;
+    }
   }
   virtual int32_t SetStereoPlayout(bool enable) override {
-    return adm_->SetStereoPlayout(enable);
+    if (adm_playout_) {
+      return adm_->SetStereoPlayout(enable);
+    } else {
+      stereo_playout_ = enable;
+      return 0;
+    };
   }
   virtual int32_t StereoPlayout(bool* enabled) const override {
-    return adm_->StereoPlayoutIsAvailable(enabled);
+    if (adm_playout_) {
+      return adm_->StereoPlayoutIsAvailable(enabled);
+    } else {
+      *enabled = stereo_playout_;
+      return 0;
+    }
   }
   virtual int32_t StereoRecordingIsAvailable(bool* available) const override {
-    *available = true;
-    return 0;
+    if (adm_recording_) {
+      return adm_->StereoRecordingIsAvailable(available);
+    } else {
+      *available = true;
+      return 0;
+    }
   }
-  virtual int32_t SetStereoRecording(bool enable) override { return 0; }
+  virtual int32_t SetStereoRecording(bool enable) override {
+    return adm_recording_ ? adm_->SetStereoRecording(enable) : 0;
+  }
   virtual int32_t StereoRecording(bool* enabled) const override {
-    *enabled = true;
-    return 0;
+    if (adm_recording_) {
+      return adm_->StereoRecording(enabled);
+    } else {
+      *enabled = true;
+      return 0;
+    }
   }
 
   // Playout delay
   virtual int32_t PlayoutDelay(uint16_t* delayMS) const override {
-    return adm_->PlayoutDelay(delayMS);
+    return adm_playout_ ? adm_->PlayoutDelay(delayMS) : 0;
   }
 
   // Only supported on Android.
@@ -224,12 +404,20 @@ class UnityAudioDevice : public webrtc::AudioDeviceModule {
 
  private:
   rtc::scoped_refptr<webrtc::AudioDeviceModule> adm_;
+  bool adm_recording_;
+  bool adm_playout_;
   webrtc::TaskQueueFactory* task_queue_factory_;
+  std::function<void(const int16_t* p, int samples, int channels)>
+      on_handle_audio_;
+  std::unique_ptr<std::thread> handle_audio_thread_;
+  std::atomic_bool handle_audio_thread_stopped_ = {false};
   std::unique_ptr<webrtc::AudioDeviceBuffer> device_buffer_;
-  std::atomic_bool started_;
-  std::atomic_bool is_recording_;
+  std::atomic_bool initialized_ = {false};
+  std::atomic_bool is_recording_ = {false};
+  std::atomic_bool is_playing_ = {false};
+  std::atomic_bool stereo_playout_ = {false};
   std::vector<int16_t> converted_audio_data_;
-};
+};  // namespace sora
 
 }  // namespace sora
 

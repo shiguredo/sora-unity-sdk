@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -ex
+
 INSTALL_DIR="`pwd`/_install"
 MODULE_PATH="`pwd`/cmake"
 
