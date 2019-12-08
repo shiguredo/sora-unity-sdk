@@ -7,7 +7,7 @@ MODULE_PATH="`pwd`/cmake"
 
 source "$INSTALL_DIR/webrtc/VERSIONS"
 source "`pwd`/VERSIONS"
-SORA_UNITY_SDK_COMMIT = "`git rev-parse HEAD`"
+SORA_UNITY_SDK_COMMIT="`git rev-parse HEAD`"
 
 mkdir -p build
 pushd build
