@@ -2,6 +2,8 @@
 
 ## develop
 
+## 1.0.1
+
 - [ADD] connect 時の文字列に SDK や WebRTC のバージョンを送信する
 
 ## 1.0.0
