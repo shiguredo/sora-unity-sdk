@@ -102,6 +102,7 @@ public class Sora : IDisposable
 
         return sora_connect(
             p,
+            UnityEngine.Application.unityVersion,
             config.SignalingUrl,
             config.ChannelId,
             config.Metadata,
@@ -325,6 +326,7 @@ public class Sora : IDisposable
     [DllImport("SoraUnitySdk")]
     private static extern int sora_connect(
         IntPtr p,
+        string unity_version,
         string signaling_url,
         string channel_id,
         string metadata,

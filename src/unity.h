@@ -26,6 +26,7 @@ UNITY_INTERFACE_EXPORT void sora_set_on_notify(void* p,
                                                void* userdata);
 UNITY_INTERFACE_EXPORT void sora_dispatch_events(void* p);
 UNITY_INTERFACE_EXPORT int sora_connect(void* p,
+                                        const char* unity_version,
                                         const char* signaling_url,
                                         const char* channel_id,
                                         const char* metadata,

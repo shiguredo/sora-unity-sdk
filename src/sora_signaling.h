@@ -25,6 +25,7 @@
 namespace sora {
 
 struct SoraSignalingConfig {
+  std::string unity_version;
   std::string signaling_url;
   std::string channel_id;
 
@@ -80,7 +81,7 @@ class SoraSignaling : public std::enable_shared_from_this<SoraSignaling>,
   SoraSignaling(boost::asio::io_context& ioc,
                 RTCManager* manager,
                 SoraSignalingConfig config,
-      std::function<void(std::string)> on_notify);
+                std::function<void(std::string)> on_notify);
   bool Init();
 
  public:

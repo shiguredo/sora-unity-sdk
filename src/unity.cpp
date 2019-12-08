@@ -43,6 +43,7 @@ void sora_dispatch_events(void* p) {
 }
 
 int sora_connect(void* p,
+                 const char* unity_version,
                  const char* signaling_url,
                  const char* channel_id,
                  const char* metadata,
@@ -62,12 +63,13 @@ int sora_connect(void* p,
                  const char* audio_codec,
                  int audio_bitrate) {
   auto sora = (sora::Sora*)p;
-  if (!sora->Connect(signaling_url, channel_id, metadata, downstream,
-                     multistream, capturer_type, unity_camera_texture,
-                     video_capturer_device, video_width, video_height,
-                     video_codec, video_bitrate, unity_audio_input,
-                     unity_audio_output, audio_recording_device,
-                     audio_playout_device, audio_codec, audio_bitrate)) {
+  if (!sora->Connect(unity_version, signaling_url, channel_id, metadata,
+                     downstream, multistream, capturer_type,
+                     unity_camera_texture, video_capturer_device, video_width,
+                     video_height, video_codec, video_bitrate,
+                     unity_audio_input, unity_audio_output,
+                     audio_recording_device, audio_playout_device, audio_codec,
+                     audio_bitrate)) {
     return -1;
   }
   return 0;

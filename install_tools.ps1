@@ -3,9 +3,11 @@ $ErrorActionPreference = 'Stop'
 $BUILD_DIR = Join-Path (Resolve-Path ".").Path "_build"
 $INSTALL_DIR = Join-Path (Resolve-Path ".").Path "_install"
 
-$BOOST_VERSION = "1.71.0"
-$JSON_VERSION = "3.6.1"
-$WEBRTC_VERSION = "78.8.0"
+$SORA_VERSION_FILE = Join-Path (Resolve-Path ".").Path "VERSIONS"
+Get-Content $SORA_VERSION_FILE | Foreach-Object{
+   $var = $_.Split('=')
+   New-Variable -Name $var[0] -Value $var[1]
+}
 
 mkdir $BUILD_DIR -Force
 mkdir $INSTALL_DIR -Force
@@ -79,9 +81,8 @@ if (!(Test-Path "$INSTALL_DIR\webrtc\lib\webrtc.lib")) {
   if (Test-Path "$BUILD_DIR\webrtc") {
     Remove-Item $BUILD_DIR\webrtc -Recurse -Force
   }
-  mkdir $BUILD_DIR\webrtc -Force
   # Expand-Archive -Path $_FILE -DestinationPath "$BUILD_DIR\webrtc"
-  Push-Location $BUILD_DIR\webrtc
+  Push-Location $BUILD_DIR
     7z x $_FILE
   Pop-Location
 
@@ -93,4 +94,5 @@ if (!(Test-Path "$INSTALL_DIR\webrtc\lib\webrtc.lib")) {
   mkdir $INSTALL_DIR\webrtc\lib -Force
   Move-Item $BUILD_DIR\webrtc\release\webrtc.lib $INSTALL_DIR\webrtc\lib
   Move-Item $BUILD_DIR\webrtc\include $INSTALL_DIR\webrtc\include
+  Move-Item $BUILD_DIR\webrtc\VERSIONS $INSTALL_DIR\webrtc
 }

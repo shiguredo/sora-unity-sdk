@@ -83,7 +83,8 @@ class Sora {
   void SetOnNotify(std::function<void(std::string)> on_notify);
   void DispatchEvents();
 
-  bool Connect(std::string signaling_url,
+  bool Connect(std::string unity_version,
+               std::string signaling_url,
                std::string channel_id,
                std::string metadata,
                bool downstream,

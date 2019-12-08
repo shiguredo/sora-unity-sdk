@@ -5,9 +5,7 @@ set -ex
 BUILD_DIR="`pwd`/_build"
 INSTALL_DIR="`pwd`/_install"
 
-BOOST_VERSION="1.71.0"
-JSON_VERSION="3.6.1"
-WEBRTC_VERSION="78.8.0"
+source `pwd`/VERSIONS
 
 mkdir -p $BUILD_DIR
 mkdir -p $INSTALL_DIR
@@ -38,6 +36,33 @@ if [ ! -e $INSTALL_DIR/webrtc/lib/libwebrtc.a ]; then
   # ヘッダ類
   mkdir -p $INSTALL_DIR/webrtc/include
   rsync -amv --include="*/" --include="*.h" --include="*.hpp" --exclude="*" $BUILD_DIR/momo/build/macos/webrtc/src/. $INSTALL_DIR/webrtc/include/.
+
+  # 各種情報を拾ってくる
+  touch $INSTALL_DIR/webrtc/VERSIONS
+  pushd $BUILD_DIR/momo/build/macos/webrtc/src
+    echo "WEBRTC_SRC_COMMIT=`git rev-parse HEAD`" >> $INSTALL_DIR/webrtc/VERSIONS
+  popd
+  pushd $BUILD_DIR/momo/build/macos/webrtc/src/build
+    echo "WEBRTC_SRC_BUILD_COMMIT=`git rev-parse HEAD`" >> $INSTALL_DIR/webrtc/VERSIONS
+  popd
+  pushd $BUILD_DIR/momo/build/macos/webrtc/src/buildtools
+    echo "WEBRTC_SRC_BUILDTOOLS_COMMIT=`git rev-parse HEAD`" >> $INSTALL_DIR/webrtc/VERSIONS
+  popd
+  pushd $BUILD_DIR/momo/build/macos/webrtc/src/buildtools/third_party/libc++/trunk
+    echo "WEBRTC_SRC_BUILDTOOLS_THIRD_PARTY_LIBCXX_TRUNK=`git rev-parse HEAD`" >> $INSTALL_DIR/webrtc/VERSIONS
+  popd
+  pushd $BUILD_DIR/momo/build/macos/webrtc/src/buildtools/third_party/libc++abi/trunk
+    echo "WEBRTC_SRC_BUILDTOOLS_THIRD_PARTY_LIBCXXABI_TRUNK=`git rev-parse HEAD`" >> $INSTALL_DIR/webrtc/VERSIONS
+  popd
+  pushd $BUILD_DIR/momo/build/macos/webrtc/src/buildtools/third_party/libunwind/trunk
+    echo "WEBRTC_SRC_BUILDTOOLS_THIRD_PARTY_LIBUNWIND_TRUNK=`git rev-parse HEAD`" >> $INSTALL_DIR/webrtc/VERSIONS
+  popd
+  pushd $BUILD_DIR/momo/build/macos/webrtc/src/third_party
+    echo "WEBRTC_SRC_THIRD_PARTY_COMMIT=`git rev-parse HEAD`" >> $INSTALL_DIR/webrtc/VERSIONS
+  popd
+  pushd $BUILD_DIR/momo/build/macos/webrtc/src/tools
+    echo "WEBRTC_SRC_TOOLS_COMMIT=`git rev-parse HEAD`" >> $INSTALL_DIR/webrtc/VERSIONS
+  popd
 fi
 
 # nlohmann/json

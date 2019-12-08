@@ -1,8 +1,10 @@
 #include "sora_signaling.h"
+#include "sora_version.h"
 
 #include <boost/asio/connect.hpp>
 #include <boost/beast/core/buffers_to_string.hpp>
 #include <boost/beast/websocket/stream.hpp>
+#include <boost/preprocessor/stringize.hpp>
 #include <nlohmann/json.hpp>
 
 namespace {
@@ -195,6 +197,12 @@ void SoraSignaling::onHandshake(boost::system::error_code ec) {
   doSendConnect();
 }
 
+#define SORA_CLIENT \
+  "Sora Unity SDK " SORA_UNITY_SDK_VERSION " (" SORA_UNITY_SDK_COMMIT_SHORT ")"
+#define LIBWEBRTC                                                \
+  "Shiguredo-build " WEBRTC_READABLE_VERSION " (" WEBRTC_VERSION \
+  " " WEBRTC_SRC_COMMIT_SHORT ")"
+
 void SoraSignaling::doSendConnect() {
   json json_message = {
       {"type", "connect"},
@@ -203,6 +211,9 @@ void SoraSignaling::doSendConnect() {
                    : "upstream"},
       {"multistream", config_.multistream},
       {"channel_id", config_.channel_id},
+      {"sora_client", SORA_CLIENT},
+      {"libwebrtc", LIBWEBRTC},
+      {"environment", "Unity " + config_.unity_version},
   };
 
   if (!config_.metadata.is_null()) {

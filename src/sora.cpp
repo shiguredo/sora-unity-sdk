@@ -48,7 +48,8 @@ void Sora::DispatchEvents() {
   }
 }
 
-bool Sora::Connect(std::string signaling_url,
+bool Sora::Connect(std::string unity_version,
+                   std::string signaling_url,
                    std::string channel_id,
                    std::string metadata,
                    bool downstream,
@@ -69,7 +70,8 @@ bool Sora::Connect(std::string signaling_url,
   signaling_url_ = std::move(signaling_url);
   channel_id_ = std::move(channel_id);
 
-  RTC_LOG(LS_INFO) << "Sora::Connect signaling_url=" << signaling_url_
+  RTC_LOG(LS_INFO) << "Sora::Connect unity_version=" << unity_version
+                   << " signaling_url =" << signaling_url_
                    << " channel_id=" << channel_id_ << " metadata=" << metadata
                    << " downstream=" << downstream
                    << " multistream=" << multistream
@@ -143,6 +145,7 @@ bool Sora::Connect(std::string signaling_url,
     RTC_LOG(LS_INFO) << "Start Signaling: url=" << signaling_url_
                      << " channel_id=" << channel_id_;
     SoraSignalingConfig config;
+    config.unity_version = unity_version;
     config.role = downstream ? SoraSignalingConfig::Role::Downstream
                              : SoraSignalingConfig::Role::Upstream;
     config.multistream = multistream;

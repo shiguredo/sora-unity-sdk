@@ -73,6 +73,12 @@ elseif (APPLE)
 
 endif ()
 
+string(SUBSTRING ${SORA_UNITY_SDK_COMMIT} 0 8 SORA_UNITY_SDK_COMMIT_SHORT)
+string(SUBSTRING ${WEBRTC_SRC_COMMIT} 0 8 WEBRTC_SRC_COMMIT_SHORT)
+
+configure_file(src/sora_version.h.template ${CMAKE_CURRENT_BINARY_DIR}/sora_version.h)
+set(_INCLUDE_DIRECTORIES ${CMAKE_CURRENT_BINARY_DIR})
+
 set(Boost_USE_STATIC_LIBS ON)
 
 find_package(WebRTC REQUIRED)
@@ -121,6 +127,8 @@ elseif (APPLE)
 endif ()
 
 set_target_properties(SoraUnitySdk PROPERTIES CXX_STANDARD 14 C_STANDARD 99)
+
+target_include_directories(SoraUnitySdk PRIVATE ${_INCLUDE_DIRECTORIES})
 
 if (ENABLE_TSAN)
   # tsan
