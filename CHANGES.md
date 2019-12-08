@@ -2,6 +2,8 @@
 
 ## develop
 
+- [ADD] connect 時の文字列に SDK や WebRTC のバージョンを送信する
+
 ## 1.0.0
 
 - [ADD] Windows 10 x86_64 対応
