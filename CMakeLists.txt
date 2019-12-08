@@ -48,6 +48,8 @@ if (MSVC)
     NOMINMAX
     WIN32_LEAN_AND_MEAN)
 
+  # configure_file で使う
+  set(SORA_UNITY_SDK_PLATFORM Windows)
 elseif (APPLE)
 
   set(_LINK_LIBRARIES
@@ -71,6 +73,8 @@ elseif (APPLE)
     WEBRTC_POSIX
     WEBRTC_MAC)
 
+  # configure_file で使う
+  set(SORA_UNITY_SDK_PLATFORM macOS)
 endif ()
 
 string(SUBSTRING ${SORA_UNITY_SDK_COMMIT} 0 8 SORA_UNITY_SDK_COMMIT_SHORT)
