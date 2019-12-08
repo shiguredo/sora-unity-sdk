@@ -5,8 +5,8 @@ $INSTALL_DIR = Join-Path (Resolve-Path ".").Path "_install"
 
 $SORA_VERSION_FILE = Join-Path (Resolve-Path ".").Path "VERSIONS"
 Get-Content $SORA_VERSION_FILE | Foreach-Object{
-   $var = $_.Split('=')
-   New-Variable -Name $var[0] -Value $var[1]
+  $var = $_.Split('=')
+  New-Variable -Name $var[0] -Value $var[1]
 }
 
 mkdir $BUILD_DIR -Force

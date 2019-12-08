@@ -2,13 +2,13 @@ $ErrorActionPreference = 'Stop'
 
 $WEBRTC_VERSION_FILE = Join-Path (Resolve-Path ".").Path "_install" | Join-Path -ChildPath "webrtc" | Join-Path -ChildPath "VERSIONS"
 Get-Content $WEBRTC_VERSION_FILE | Foreach-Object{
-   $var = $_.Split('=')
-   New-Variable -Name $var[0] -Value $var[1]
+  $var = $_.Split('=')
+  New-Variable -Name $var[0] -Value $var[1]
 }
 $SORA_VERSION_FILE = Join-Path (Resolve-Path ".").Path "VERSIONS"
 Get-Content $SORA_VERSION_FILE | Foreach-Object{
-   $var = $_.Split('=')
-   New-Variable -Name $var[0] -Value $var[1]
+  $var = $_.Split('=')
+  New-Variable -Name $var[0] -Value $var[1]
 }
 
 $SORA_UNITY_SDK_COMMIT = "$(git rev-parse HEAD)"
