@@ -68,9 +68,9 @@ if (!(Test-Path "$INSTALL_DIR\json\include\nlohmann\json.hpp")) {
 
 # WebRTC
 
-if (!(Test-Path "$INSTALL_DIR\webrtc\lib\webrtc.lib")) {
+if (!(Test-Path "$INSTALL_DIR\webrtc\release\webrtc.lib")) {
   # shiguredo-webrtc-windows のバイナリをダウンロードする
-  $_URL = "https://github.com/shiguredo/shiguredo-webrtc-windows/releases/download/m$WEBRTC_VERSION/webrtc.zip"
+  $_URL = "https://github.com/shiguredo-webrtc-build/webrtc-build/releases/download/m$WEBRTC_VERSION/webrtc.windows.zip"
   $_FILE = "$BUILD_DIR\webrtc-m$WEBRTC_VERSION.zip"
   Push-Location $BUILD_DIR
     if (!(Test-Path $_FILE)) {
@@ -90,9 +90,5 @@ if (!(Test-Path "$INSTALL_DIR\webrtc\lib\webrtc.lib")) {
   if (Test-Path "$INSTALL_DIR\webrtc") {
     Remove-Item $INSTALL_DIR\webrtc -Recurse -Force
   }
-  mkdir $INSTALL_DIR\webrtc -Force
-  mkdir $INSTALL_DIR\webrtc\lib -Force
-  Move-Item $BUILD_DIR\webrtc\release\webrtc.lib $INSTALL_DIR\webrtc\lib
-  Move-Item $BUILD_DIR\webrtc\include $INSTALL_DIR\webrtc\include
-  Move-Item $BUILD_DIR\webrtc\VERSIONS $INSTALL_DIR\webrtc
+  Move-Item $BUILD_DIR\webrtc $INSTALL_DIR\webrtc
 }
