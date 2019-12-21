@@ -12,56 +12,15 @@ mkdir -p $INSTALL_DIR
 
 # WebRTC のインストール
 if [ ! -e $INSTALL_DIR/webrtc/lib/libwebrtc.a ]; then
-  # Momo を clone して macOS 用ビルドを行い、その過程で生成された
-  # WebRTC のライブラリをこのプロジェクトにコピーする
-
-  if [ -e $BUILD_DIR/momo ]; then
-    pushd $BUILD_DIR/momo
-      git pull
-    popd
-  else
-    git clone https://github.com/shiguredo/momo.git $BUILD_DIR/momo
-  fi
-
-  pushd $BUILD_DIR/momo/build
-    make macos
+  # shiguredo-webrtc-build からバイナリをダウンロードして配置するだけ
+  pushd $BUILD_DIR
+    rm -rf webrtc.macos.tar.gz
+    curl -LO https://github.com/shiguredo-webrtc-build/webrtc-build/releases/download/m${WEBRTC_VERSION}/webrtc.macos.tar.gz
   popd
 
-  rm -rf $INSTALL_DIR/webrtc
-
-  # libwebrtc.a
-  mkdir -p $INSTALL_DIR/webrtc/lib
-  cp $BUILD_DIR/momo/_build/macos/libwebrtc.a $INSTALL_DIR/webrtc/lib
-
-  # ヘッダ類
-  mkdir -p $INSTALL_DIR/webrtc/include
-  rsync -amv --include="*/" --include="*.h" --include="*.hpp" --exclude="*" $BUILD_DIR/momo/build/macos/webrtc/src/. $INSTALL_DIR/webrtc/include/.
-
-  # 各種情報を拾ってくる
-  touch $INSTALL_DIR/webrtc/VERSIONS
-  pushd $BUILD_DIR/momo/build/macos/webrtc/src
-    echo "WEBRTC_SRC_COMMIT=`git rev-parse HEAD`" >> $INSTALL_DIR/webrtc/VERSIONS
-  popd
-  pushd $BUILD_DIR/momo/build/macos/webrtc/src/build
-    echo "WEBRTC_SRC_BUILD_COMMIT=`git rev-parse HEAD`" >> $INSTALL_DIR/webrtc/VERSIONS
-  popd
-  pushd $BUILD_DIR/momo/build/macos/webrtc/src/buildtools
-    echo "WEBRTC_SRC_BUILDTOOLS_COMMIT=`git rev-parse HEAD`" >> $INSTALL_DIR/webrtc/VERSIONS
-  popd
-  pushd $BUILD_DIR/momo/build/macos/webrtc/src/buildtools/third_party/libc++/trunk
-    echo "WEBRTC_SRC_BUILDTOOLS_THIRD_PARTY_LIBCXX_TRUNK=`git rev-parse HEAD`" >> $INSTALL_DIR/webrtc/VERSIONS
-  popd
-  pushd $BUILD_DIR/momo/build/macos/webrtc/src/buildtools/third_party/libc++abi/trunk
-    echo "WEBRTC_SRC_BUILDTOOLS_THIRD_PARTY_LIBCXXABI_TRUNK=`git rev-parse HEAD`" >> $INSTALL_DIR/webrtc/VERSIONS
-  popd
-  pushd $BUILD_DIR/momo/build/macos/webrtc/src/buildtools/third_party/libunwind/trunk
-    echo "WEBRTC_SRC_BUILDTOOLS_THIRD_PARTY_LIBUNWIND_TRUNK=`git rev-parse HEAD`" >> $INSTALL_DIR/webrtc/VERSIONS
-  popd
-  pushd $BUILD_DIR/momo/build/macos/webrtc/src/third_party
-    echo "WEBRTC_SRC_THIRD_PARTY_COMMIT=`git rev-parse HEAD`" >> $INSTALL_DIR/webrtc/VERSIONS
-  popd
-  pushd $BUILD_DIR/momo/build/macos/webrtc/src/tools
-    echo "WEBRTC_SRC_TOOLS_COMMIT=`git rev-parse HEAD`" >> $INSTALL_DIR/webrtc/VERSIONS
+  pushd $INSTALL_DIR
+    rm -rf webrtc/
+    tar xf $BUILD_DIR/webrtc.macos.tar.gz
   popd
 fi
 

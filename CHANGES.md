@@ -13,6 +13,7 @@
 
 - [UPDATE] WebRTC のバージョンを M79@{#5} に上げた
 - [UPDATE] Windows 版の WebRTC ライブラリを shiguredo-webrtc-build からダウンロードするようにした
+- [UPDATE] macOS 版の WebRTC ライブラリを shiguredo-webrtc-build からダウンロードするようにした
 
 ## 1.0.1
 
