@@ -11,6 +11,9 @@
 
 ## develop
 
+- [UPDATE] Boost のバージョンを 1.72.0 に上げた
+- [UPDATE] WebRTC のバージョンを M80 (3987@{#2}) に上げた
+
 ## 1.0.2
 
 - [UPDATE] WebRTC のバージョンを M79@{#5} に上げた
