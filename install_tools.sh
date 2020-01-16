@@ -15,7 +15,7 @@ if [ ! -e $INSTALL_DIR/webrtc/lib/libwebrtc.a ]; then
   # shiguredo-webrtc-build からバイナリをダウンロードして配置するだけ
   pushd $BUILD_DIR
     rm -rf webrtc.macos.tar.gz
-    curl -LO https://github.com/shiguredo-webrtc-build/webrtc-build/releases/download/m${WEBRTC_VERSION}/webrtc.macos.tar.gz
+    curl -LO https://github.com/shiguredo-webrtc-build/webrtc-build/releases/download/m${WEBRTC_BUILD_VERSION}/webrtc.macos.tar.gz
   popd
 
   pushd $INSTALL_DIR

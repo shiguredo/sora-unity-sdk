@@ -5,6 +5,9 @@ $INSTALL_DIR = Join-Path (Resolve-Path ".").Path "_install"
 
 $SORA_VERSION_FILE = Join-Path (Resolve-Path ".").Path "VERSIONS"
 Get-Content $SORA_VERSION_FILE | Foreach-Object{
+  if (!$_) {
+    continue
+  }
   $var = $_.Split('=')
   New-Variable -Name $var[0] -Value $var[1]
 }
@@ -70,8 +73,8 @@ if (!(Test-Path "$INSTALL_DIR\json\include\nlohmann\json.hpp")) {
 
 if (!(Test-Path "$INSTALL_DIR\webrtc\release\webrtc.lib")) {
   # shiguredo-webrtc-windows のバイナリをダウンロードする
-  $_URL = "https://github.com/shiguredo-webrtc-build/webrtc-build/releases/download/m$WEBRTC_VERSION/webrtc.windows.zip"
-  $_FILE = "$BUILD_DIR\webrtc-m$WEBRTC_VERSION.zip"
+  $_URL = "https://github.com/shiguredo-webrtc-build/webrtc-build/releases/download/m$WEBRTC_BUILD_VERSION/webrtc.windows.zip"
+  $_FILE = "$BUILD_DIR\webrtc-m$WEBRTC_BUILD_VERSION.zip"
   Push-Location $BUILD_DIR
     if (!(Test-Path $_FILE)) {
       Invoke-WebRequest -Uri $_URL -OutFile $_FILE
