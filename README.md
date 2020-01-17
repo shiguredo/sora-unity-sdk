@@ -30,6 +30,13 @@ https://github.com/shiguredo/sora-unity-sdk/releases から から最新の `Sor
 - [「ちゃんとリアルタイムで配信してます（モーション作るのが面倒だったのでシーンエディタから動かしてる）。Unity 側が配信で、ブラウザ（右上）で受信してる。 https://t\.co/TIL7NYroZm」 / Twitter](https://twitter.com/melponn/status/1193411591183552512?s=20)
 - [「Momo (on Jetson Nano) -> Sora-Labo -> Sora-Unity と Sora-Js 同時受信。ここまでがお手軽すぎてやばい。」 / Twitter](https://twitter.com/izmhrats/status/1203299775354851328?s=20)
 
+## 注意
+
+### H.264 の利用について
+
+Sora Unity SDK では現時点で H.264 の利用はできません。
+これは H.264 のソフトウェアエンコーダ/デコーダを含んで配布した場合はライセンス費用が発生するためです。
+
 ## サポートについて
 
 Sora Unity SDK に関する質問・要望・バグなどの報告は Issues の利用をお願いします。
