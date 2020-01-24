@@ -130,7 +130,7 @@ Sora Unity SDK に対する有償のサポートについては現在提供し�
 Apache License 2.0
 
 ```
-Copyright 2018-2019, Shiguredo Inc, melpon and kdxu and tnoho
+Copyright 2019-2020, Shiguredo Inc, melpon and kdxu and tnoho
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
