@@ -5,8 +5,11 @@ public class Sora : IDisposable
 {
     public enum Role
     {
-        Downstream,
         Upstream,
+        Downstream,
+        Sendonly,
+        Recvonly,
+        Sendrecv,
     }
     public enum CapturerType
     {
@@ -26,7 +29,7 @@ public class Sora : IDisposable
         public string SignalingUrl = "";
         public string ChannelId = "";
         public string Metadata = "";
-        public Role Role = Sora.Role.Downstream;
+        public Role Role = Sora.Role.Upstream;
         public bool Multistream = false;
         public CapturerType CapturerType = Sora.CapturerType.DeviceCamera;
         public UnityEngine.Camera UnityCamera = null;
@@ -100,13 +103,18 @@ public class Sora : IDisposable
             unityCameraTexture = texture.GetNativeTexturePtr();
         }
 
+        var role =
+            config.Role == Role.Upstream ? "upstream" :
+            config.Role == Role.Downstream ? "downstream" :
+            config.Role == Role.Sendonly ? "sendonly" :
+            config.Role == Role.Recvonly ? "recvonly" : "sendrecv";
         return sora_connect(
             p,
             UnityEngine.Application.unityVersion,
             config.SignalingUrl,
             config.ChannelId,
             config.Metadata,
-            config.Role == Role.Downstream,
+            role,
             config.Multistream,
             (int)config.CapturerType,
             unityCameraTexture,
@@ -330,7 +338,7 @@ public class Sora : IDisposable
         string signaling_url,
         string channel_id,
         string metadata,
-        bool downstream,
+        string role,
         bool multistream,
         int capturer_type,
         IntPtr unity_camera_texture,

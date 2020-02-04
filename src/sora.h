@@ -87,7 +87,7 @@ class Sora {
                std::string signaling_url,
                std::string channel_id,
                std::string metadata,
-               bool downstream,
+               std::string role,
                bool multistream,
                int capturer_type,
                void* unity_camera_texture,

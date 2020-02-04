@@ -8,7 +8,7 @@ namespace sora {
 /*
 適当な URL パーサ
 
-Boost.Beast の URL パーサはまだ [PR の段階](https://github.com/boostorg/beast/pull/1231) なので、自前で適当に作っておく。
+Boost にはいい感じの URL パーサが無いので適当に作っておく
 */
 struct URLParts {
   std::string scheme;

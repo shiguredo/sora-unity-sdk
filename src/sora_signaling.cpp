@@ -205,11 +205,15 @@ void SoraSignaling::onHandshake(boost::system::error_code ec) {
   " " WEBRTC_SRC_COMMIT_SHORT ")"
 
 void SoraSignaling::doSendConnect() {
+  std::string role =
+    config_.role == SoraSignalingConfig::Role::Upstream ? "upstream" :
+    config_.role == SoraSignalingConfig::Role::Downstream ? "downstream" :
+    config_.role == SoraSignalingConfig::Role::Sendonly ? "sendonly" :
+    config_.role == SoraSignalingConfig::Role::Recvonly ? "recvonly" : "sendrecv";
+
   json json_message = {
       {"type", "connect"},
-      {"role", config_.role == SoraSignalingConfig::Role::Downstream
-                   ? "downstream"
-                   : "upstream"},
+      {"role", role},
       {"multistream", config_.multistream},
       {"channel_id", config_.channel_id},
       {"sora_client", SORA_CLIENT},

@@ -36,7 +36,7 @@ struct SoraSignalingConfig {
   std::string audio_codec = "OPUS";
   int audio_bitrate = 0;
 
-  enum class Role { Upstream, Downstream };
+  enum class Role { Upstream, Downstream, Sendonly, Recvonly, Sendrecv };
   Role role = Role::Upstream;
   bool multistream = false;
 };
