@@ -11,6 +11,11 @@
 
 ## develop
 
+## 1.0.4
+
+- [UPDATE] webrtc-build を 80.3987.2.2 に上げた
+- [CHANGE] Sora への接続時に sendonly, recvonly, sendrecv を指定できるようにした
+
 ## 1.0.3
 
 - [UPDATE] Boost のバージョンを 1.72.0 に上げた
