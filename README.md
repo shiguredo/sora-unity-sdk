@@ -103,6 +103,8 @@ Sora Unity SDK に対する有償のサポートについては現在提供し�
 - H.264 のハードウェアデコーダへの対応
 - VP8 のハードウェアデコードへの対応
 - VP9 のハードウェアデコードへの対応
+- Windows への対応
+- Linux への対応
 
 ### AMD Video Coding Engine 対応
 
@@ -144,3 +146,4 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 ```
+
