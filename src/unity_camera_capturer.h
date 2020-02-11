@@ -20,7 +20,7 @@ class UnityCameraCapturer : public sora::ScalableVideoTrackSource,
                             public rtc::VideoSinkInterface<webrtc::VideoFrame> {
   webrtc::Clock* clock_ = webrtc::Clock::GetRealTimeClock();
 
-#ifdef WIN32
+#ifdef SORA_UNITY_SDK_WINDOWS
   class D3D11Impl {
     UnityContext* context_;
     void* camera_texture_;
@@ -38,7 +38,7 @@ class UnityCameraCapturer : public sora::ScalableVideoTrackSource,
   std::unique_ptr<D3D11Impl> capturer_;
 #endif
 
-#ifdef __APPLE__
+#ifdef SORA_UNITY_SDK_MACOS
   class MetalImpl {
     UnityContext* context_;
     void* camera_texture_;

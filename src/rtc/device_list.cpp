@@ -8,7 +8,7 @@
 #include "modules/video_capture/video_capture_factory.h"
 #include "rtc_base/logging.h"
 
-#ifdef __APPLE__
+#ifdef SORA_UNITY_SDK_MACOS
 #include "../mac_helper/mac_capturer.h"
 #endif
 
@@ -16,7 +16,7 @@ namespace sora {
 
 bool DeviceList::EnumVideoCapturer(
     std::function<void(std::string, std::string)> f) {
-#ifdef __APPLE__
+#ifdef SORA_UNITY_SDK_MACOS
 
   return MacCapturer::EnumVideoDevice(f);
 
@@ -51,7 +51,7 @@ bool DeviceList::EnumVideoCapturer(
 bool DeviceList::EnumAudioRecording(
     std::function<void(std::string, std::string)> f) {
   auto task_queue_factory = webrtc::CreateDefaultTaskQueueFactory();
-#ifdef _WIN32
+#ifdef SORA_UNITY_SDK_WINDOWS
   auto adm =
       webrtc::CreateWindowsCoreAudioAudioDeviceModule(task_queue_factory.get());
 #else
@@ -96,7 +96,7 @@ bool DeviceList::EnumAudioRecording(
 bool DeviceList::EnumAudioPlayout(
     std::function<void(std::string, std::string)> f) {
   auto task_queue_factory = webrtc::CreateDefaultTaskQueueFactory();
-#ifdef _WIN32
+#ifdef SORA_UNITY_SDK_WINDOWS
   auto adm =
       webrtc::CreateWindowsCoreAudioAudioDeviceModule(task_queue_factory.get());
 #else

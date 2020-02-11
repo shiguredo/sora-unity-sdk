@@ -8,7 +8,7 @@
 // boost
 #include <boost/asio/io_context.hpp>
 
-#if __APPLE__
+#if SORA_UNITY_SDK_MACOS
 #include "mac_helper/mac_capturer.h"
 #else
 #include "rtc/device_video_capturer.h"

@@ -41,13 +41,14 @@ namespace sora {
 
 std::unique_ptr<RTCManager> RTCManager::Create(
     RTCManagerConfig config,
-    rtc::scoped_refptr<ScalableVideoTrackSource> video_track_source,
+    rtc::scoped_refptr<rtc::AdaptedVideoTrackSource> video_track_source,
     VideoTrackReceiver* receiver,
     rtc::scoped_refptr<webrtc::AudioDeviceModule> adm,
-    std::unique_ptr<webrtc::TaskQueueFactory> task_queue_factory) {
+    std::unique_ptr<webrtc::TaskQueueFactory> task_queue_factory,
+    std::unique_ptr<rtc::Thread> signaling_thread) {
   std::unique_ptr<RTCManager> p(new RTCManager());
   if (!p->Init(config, video_track_source, receiver, adm,
-               std::move(task_queue_factory))) {
+               std::move(task_queue_factory), std::move(signaling_thread))) {
     return nullptr;
   }
   return p;
@@ -57,10 +58,11 @@ RTCManager::RTCManager() {}
 
 bool RTCManager::Init(
     RTCManagerConfig config,
-    rtc::scoped_refptr<ScalableVideoTrackSource> video_track_source,
+    rtc::scoped_refptr<rtc::AdaptedVideoTrackSource> video_track_source,
     VideoTrackReceiver* receiver,
     rtc::scoped_refptr<webrtc::AudioDeviceModule> adm,
-    std::unique_ptr<webrtc::TaskQueueFactory> task_queue_factory) {
+    std::unique_ptr<webrtc::TaskQueueFactory> task_queue_factory,
+    std::unique_ptr<rtc::Thread> signaling_thread) {
   config_ = config;
   receiver_ = receiver;
 
@@ -70,7 +72,7 @@ bool RTCManager::Init(
   network_thread_->Start();
   worker_thread_ = rtc::Thread::Create();
   worker_thread_->Start();
-  signaling_thread_ = rtc::Thread::Create();
+  signaling_thread_ = std::move(signaling_thread);
   signaling_thread_->Start();
 
   webrtc::PeerConnectionFactoryDependencies dependencies;
