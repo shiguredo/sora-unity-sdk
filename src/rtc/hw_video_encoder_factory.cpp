@@ -11,7 +11,9 @@
 #include "rtc_base/logging.h"
 
 #include "h264_format.h"
+#if defined(_WIN32) || defined(__linux__)
 #include "hwenc_nvcodec/nvcodec_h264_encoder.h"
+#endif
 
 namespace sora {
 
@@ -22,18 +24,22 @@ std::vector<webrtc::SdpVideoFormat> HWVideoEncoderFactory::GetSupportedFormats()
   for (const webrtc::SdpVideoFormat& format : webrtc::SupportedVP9Codecs())
     supported_codecs.push_back(format);
 
-  std::vector<webrtc::SdpVideoFormat> h264_codecs = {
-      CreateH264Format(webrtc::H264::kProfileBaseline, webrtc::H264::kLevel3_1,
-                       "1"),
-      CreateH264Format(webrtc::H264::kProfileBaseline, webrtc::H264::kLevel3_1,
-                       "0"),
-      CreateH264Format(webrtc::H264::kProfileConstrainedBaseline,
-                       webrtc::H264::kLevel3_1, "1"),
-      CreateH264Format(webrtc::H264::kProfileConstrainedBaseline,
-                       webrtc::H264::kLevel3_1, "0")};
+#if defined(_WIN32) || defined(__linux__)
+  if (NvCodecH264Encoder::IsSupported()) {
+    std::vector<webrtc::SdpVideoFormat> h264_codecs = {
+        CreateH264Format(webrtc::H264::kProfileBaseline,
+                         webrtc::H264::kLevel3_1, "1"),
+        CreateH264Format(webrtc::H264::kProfileBaseline,
+                         webrtc::H264::kLevel3_1, "0"),
+        CreateH264Format(webrtc::H264::kProfileConstrainedBaseline,
+                         webrtc::H264::kLevel3_1, "1"),
+        CreateH264Format(webrtc::H264::kProfileConstrainedBaseline,
+                         webrtc::H264::kLevel3_1, "0")};
 
-  for (const webrtc::SdpVideoFormat& format : h264_codecs)
-    supported_codecs.push_back(format);
+    for (const webrtc::SdpVideoFormat& format : h264_codecs)
+      supported_codecs.push_back(format);
+  }
+#endif
 
   return supported_codecs;
 }
@@ -57,12 +63,10 @@ std::unique_ptr<webrtc::VideoEncoder> HWVideoEncoderFactory::CreateVideoEncoder(
   if (absl::EqualsIgnoreCase(format.name, cricket::kVp9CodecName))
     return webrtc::VP9Encoder::Create(cricket::VideoCodec(format));
 
-#ifdef _WIN32
+#if defined(_WIN32) || defined(__linux__)
   if (absl::EqualsIgnoreCase(format.name, cricket::kH264CodecName)) {
-    if (NvCodecH264Encoder::IsSupported()) {
-      return std::unique_ptr<webrtc::VideoEncoder>(
-          absl::make_unique<NvCodecH264Encoder>(cricket::VideoCodec(format)));
-    }
+    return std::unique_ptr<webrtc::VideoEncoder>(
+        absl::make_unique<NvCodecH264Encoder>(cricket::VideoCodec(format)));
   }
 #endif
 
