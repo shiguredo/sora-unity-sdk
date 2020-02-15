@@ -73,8 +73,7 @@ bool Sora::Connect(std::string unity_version,
   RTC_LOG(LS_INFO) << "Sora::Connect unity_version=" << unity_version
                    << " signaling_url =" << signaling_url_
                    << " channel_id=" << channel_id_ << " metadata=" << metadata
-                   << " role=" << role
-                   << " multistream=" << multistream
+                   << " role=" << role << " multistream=" << multistream
                    << " capturer_type=" << capturer_type
                    << " unity_camera_texture=0x" << unity_camera_texture
                    << " video_capturer_device=" << video_capturer_device
@@ -85,7 +84,8 @@ bool Sora::Connect(std::string unity_version,
                    << " audio_recording_device=" << audio_recording_device
                    << " audio_playout_device=" << audio_playout_device;
 
-  if (role != "upstream" && role != "downstream" && role != "sendonly" && role != "recvonly" && role != "sendrecv") {
+  if (role != "upstream" && role != "downstream" && role != "sendonly" &&
+      role != "recvonly" && role != "sendrecv") {
     RTC_LOG(LS_ERROR) << "Invalid role: " << role;
     return false;
   }
@@ -118,6 +118,10 @@ bool Sora::Connect(std::string unity_version,
     return false;
   }
 
+  RTCManagerConfig config;
+  config.audio_recording_device = audio_recording_device;
+  config.audio_playout_device = audio_playout_device;
+
   if (role == "upstream" || role == "sendonly" || role == "sendrecv") {
     // 送信側は capturer を設定する。送信のみの場合は playout の設定はしない
     rtc::scoped_refptr<ScalableVideoTrackSource> capturer = CreateVideoCapturer(
@@ -127,10 +131,7 @@ bool Sora::Connect(std::string unity_version,
       return false;
     }
 
-    RTCManagerConfig config;
     config.no_playout = role == "upstream" || role == "sendonly";
-    config.audio_recording_device = audio_recording_device;
-    config.audio_playout_device = audio_playout_device;
     rtc_manager_ =
         RTCManager::Create(config, std::move(capturer), renderer_.get(),
                            unity_adm_, std::move(task_queue_factory));
@@ -139,8 +140,6 @@ bool Sora::Connect(std::string unity_version,
     RTCManagerConfig config;
     config.no_recording = true;
     config.no_video = true;
-    config.audio_recording_device = audio_recording_device;
-    config.audio_playout_device = audio_playout_device;
     rtc_manager_ =
         RTCManager::Create(config, nullptr, renderer_.get(), unity_adm_,
                            std::move(task_queue_factory));
@@ -151,11 +150,15 @@ bool Sora::Connect(std::string unity_version,
                      << " channel_id=" << channel_id_;
     SoraSignalingConfig config;
     config.unity_version = unity_version;
-    config.role =
-      role == "upstream" ? SoraSignalingConfig::Role::Upstream :
-      role == "downstream" ? SoraSignalingConfig::Role::Downstream :
-      role == "sendonly" ? SoraSignalingConfig::Role::Sendonly :
-      role == "recvonly" ? SoraSignalingConfig::Role::Recvonly : SoraSignalingConfig::Role::Sendrecv;
+    config.role = role == "upstream"
+                      ? SoraSignalingConfig::Role::Upstream
+                      : role == "downstream"
+                            ? SoraSignalingConfig::Role::Downstream
+                            : role == "sendonly"
+                                  ? SoraSignalingConfig::Role::Sendonly
+                                  : role == "recvonly"
+                                        ? SoraSignalingConfig::Role::Recvonly
+                                        : SoraSignalingConfig::Role::Sendrecv;
     config.multistream = multistream;
     config.signaling_url = signaling_url_;
     config.channel_id = channel_id_;
@@ -221,10 +224,9 @@ int Sora::GetRenderCallbackEventID() const {
 }
 
 void Sora::RenderCallback() {
-  if (!unity_camera_capturer_) {
-    return;
+  if (unity_camera_capturer_) {
+    unity_camera_capturer_->OnRender();
   }
-  unity_camera_capturer_->OnRender();
 }
 void Sora::ProcessAudio(const void* p, int offset, int samples) {
   if (!unity_adm_) {

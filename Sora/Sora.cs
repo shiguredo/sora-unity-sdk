@@ -131,10 +131,13 @@ public class Sora : IDisposable
             config.AudioBitrate) == 0;
     }
 
+    // Unity 側でレンダリングが完了した時（yield return new WaitForEndOfFrame() の後）に呼ぶイベント
+    // 指定した Unity カメラの映像を Sora 側のテクスチャにレンダリングしたりする
     public void OnRender() {
         UnityEngine.GL.IssuePluginEvent(sora_get_render_callback(), sora_get_render_callback_event_id(p));
     }
 
+    // trackId で受信した映像を texutre にレンダリングする
     public void RenderTrackToTexture(uint trackId, UnityEngine.Texture texture)
     {
         commandBuffer.IssuePluginCustomTextureUpdateV2(sora_get_texture_update_callback(), texture, trackId);

@@ -34,7 +34,9 @@ if (MSVC)
     iphlpapi.lib
     msdmo.lib
     Secur32.lib
-    wmcodecdspuuid.lib)
+    wmcodecdspuuid.lib
+    dxgi.lib
+    D3D11.lib)
 
   set(_COMPILE_DEFINITIONS
     _CONSOLE
@@ -75,8 +77,14 @@ endif ()
 string(SUBSTRING ${SORA_UNITY_SDK_COMMIT} 0 8 SORA_UNITY_SDK_COMMIT_SHORT)
 string(SUBSTRING ${WEBRTC_SRC_COMMIT} 0 8 WEBRTC_SRC_COMMIT_SHORT)
 
+set(_INCLUDE_DIRECTORIES)
+
 configure_file(src/sora_version.h.template ${CMAKE_CURRENT_BINARY_DIR}/sora_version.h)
-set(_INCLUDE_DIRECTORIES ${CMAKE_CURRENT_BINARY_DIR})
+list(APPEND _INCLUDE_DIRECTORIES ${CMAKE_CURRENT_BINARY_DIR})
+
+list(APPEND _INCLUDE_DIRECTORIES ${CMAKE_CURRENT_SOURCE_DIR}/src)
+list(APPEND _INCLUDE_DIRECTORIES ${CMAKE_CURRENT_SOURCE_DIR}/NvCodec/include)
+list(APPEND _INCLUDE_DIRECTORIES ${CMAKE_CURRENT_SOURCE_DIR}/NvCodec/NvCodec)
 
 set(Boost_USE_STATIC_LIBS ON)
 
@@ -99,11 +107,16 @@ set(_SOURCES
   src/rtc/rtc_connection.cpp
   src/rtc/rtc_manager.cpp
   src/rtc/scalable_track_source.cpp
+  src/rtc/hw_video_encoder_factory.cpp
+  src/rtc/h264_format.cpp
+  src/hwenc_nvcodec/nvcodec_h264_encoder.cpp
 )
 
 if (WIN32)
   list(APPEND _SOURCES
-    src/unity_camera_capturer_d3d11.cpp)
+    src/unity_camera_capturer_d3d11.cpp
+    NvCodec/NvCodec/NvEncoder/NvEncoder.cpp
+    NvCodec/NvCodec/NvEncoder/NvEncoderD3D11.cpp)
 
   add_library(SoraUnitySdk SHARED ${_SOURCES})
 elseif (APPLE)
