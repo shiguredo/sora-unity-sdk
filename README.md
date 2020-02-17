@@ -11,6 +11,17 @@ Sora Unity SDK は [WebRTC SFU Sora](https://sora.shiguredo.jp/) の Unity ク�
 We check PRs or Issues only when written in JAPANESE.
 In other languages, we won't be able to deal with them. Thank you for your understanding.
 
+## Discord
+
+https://discord.gg/pFPQ5pS
+
+Sora Unity SDK に関する質問・要望などの報告は Disocrd へお願いします。
+
+バグに関してもまずは Discord へお願いします。 
+ただし、 Sora のライセンス契約の有無に関わらず、 Issue への応答時間と問題の解決を保証しませんのでご了承ください。
+
+Sora Unity SDK に対する有償のサポートについては提供しておりません。
+
 ## 利用方法
 
 https://github.com/shiguredo/sora-unity-sdk/releases から から最新の `SoraUnitySdk.zip` をダウンロードして展開し、`SoraUnitySdk\Plugins\SoraUnitySdk` を `Assets\Plugins\SoraUnitySdk` に、`SoraUnitySdk\SoraUnitySdk` を `Assets/SoraUnitySdk` にコピーしてください。
@@ -36,13 +47,6 @@ https://github.com/shiguredo/sora-unity-sdk/releases から から最新の `Sor
 
 Sora Unity SDK では現時点で H.264 の利用はできません。
 これは H.264 のソフトウェアエンコーダ/デコーダを含んで配布した場合はライセンス費用が発生するためです。
-
-## サポートについて
-
-Sora Unity SDK に関する質問・要望・バグなどの報告は Issues の利用をお願いします。
-ただし、 Sora のライセンス契約の有無に関わらず、 Issue への応答時間と問題の解決を保証しませんのでご了承ください。
-
-Sora Unity SDK に対する有償のサポートについては現在提供しておりません。
 
 ## 対応機能
 
