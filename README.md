@@ -17,7 +17,7 @@ https://discord.gg/pFPQ5pS
 
 Sora Unity SDK に関する質問・要望などの報告は Disocrd へお願いします。
 
-バグに関してもまずは Discord へお願いします。 
+バグに関してもまずは Discord へお願いします。
 ただし、 Sora のライセンス契約の有無に関わらず、 Issue への応答時間と問題の解決を保証しませんのでご了承ください。
 
 Sora Unity SDK に対する有償のサポートについては提供しておりません。
@@ -93,10 +93,6 @@ Sora Unity SDK では現時点で H.264 の利用はできません。
 - Windows 10 1809 x86_64 以降
 - macOS 10.15 x86_64 以降
 
-### 今後
-
-- [ ] Ubuntu 18.04 x86_64
-
 ## オープンソースでの公開を前提とした有償による機能追加
 
 **これら機能は継続的なメンテナンスの対象外となり、メンテナンスは有償での対応となります**
@@ -105,10 +101,10 @@ Sora Unity SDK では現時点で H.264 の利用はできません。
 
 - H.264 のハードウェアエンコードへの対応
 - H.264 のハードウェアデコーダへの対応
-- VP8 のハードウェアデコードへの対応
-- VP9 のハードウェアデコードへの対応
 - Windows への対応
 - Linux への対応
+- VP8 のハードウェアデコードへの対応
+- VP9 のハードウェアデコードへの対応
 
 ### AMD Video Coding Engine 対応
 
@@ -125,18 +121,19 @@ Sora Unity SDK では現時点で H.264 の利用はできません。
 
 ### iOS 対応
 
-**TBD**
+iOS 10.0 以上への対応
 
 ### Android 対応
 
-**TBD**
+Android 5.0 以上への対応
 
 ## ライセンス
 
 Apache License 2.0
 
 ```
-Copyright 2019-2020, Shiguredo Inc, melpon and kdxu and tnoho
+Copyright 2019-2020, Wandbox LLC (Original Author)
+Copyright 2019-2020, Shiguredo Inc
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -150,4 +147,3 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 ```
-
