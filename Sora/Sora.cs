@@ -324,6 +324,10 @@ public class Sora : IDisposable
         return list.ToArray();
     }
 
+    public static bool IsH264Supported() {
+        return sora_is_h264_supported();
+    }
+
     [DllImport("SoraUnitySdk")]
     private static extern IntPtr sora_create();
     [DllImport("SoraUnitySdk")]
@@ -374,4 +378,6 @@ public class Sora : IDisposable
     private static extern bool sora_device_enum_audio_recording(DeviceEnumCallbackDelegate f, IntPtr userdata);
     [DllImport("SoraUnitySdk")]
     private static extern bool sora_device_enum_audio_playout(DeviceEnumCallbackDelegate f, IntPtr userdata);
+    [DllImport("SoraUnitySdk")]
+    private static extern bool sora_is_h264_supported();
 }
