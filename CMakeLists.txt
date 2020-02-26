@@ -134,6 +134,7 @@ elseif (APPLE)
     COMPILE_OPTIONS "-x;objective-c++;-fmodules;-fcxx-modules")
 
   add_library(SoraUnitySdk MODULE ${_SOURCES})
+  target_link_options(SoraUnitySdk PRIVATE -ObjC)
   set_target_properties(SoraUnitySdk PROPERTIES BUNDLE TRUE)
   set_target_properties(SoraUnitySdk PROPERTIES CXX_VISIBILITY_PRESET hidden)
 endif ()
