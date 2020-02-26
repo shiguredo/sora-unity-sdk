@@ -8,7 +8,7 @@ Sora Unity SDK では、ソフトウェアでの H.264 エンコード/デコー
   - もしこれが利用可能な場合 **H.264 エンコードのみ可能** です。H.264 のデコードはできません。
   - つまりシングルストリームの場合は `Sora.Role.Upstream` または `Sora.Role.Sendonly` のみ、マルチストリームの場合は `Sora.Role.Sendonly` でしか動作しません。
 - macOS 版では [VideoToolbox](https://developer.apple.com/documentation/videotoolbox) を利用します。
-  - これは H.264 エンコード/デコードが可能です。また、VP8/VP9 でも VideoToolbox を利用します。
+  - VideoToolbox によって H.264 エンコード/デコードが可能です。
 
 ## H.264 が利用可能かどうかを調べる
 
