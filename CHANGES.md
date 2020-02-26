@@ -11,6 +11,8 @@
 
 ## develop
 
+- [UPDATE] Windows 版では H.264 エンコードに NVIDIA VIDEO CODEC SDK を利用する（利用可能な場合のみ）
+
 ## 1.0.4
 
 - [UPDATE] webrtc-build を 80.3987.2.2 に上げた
