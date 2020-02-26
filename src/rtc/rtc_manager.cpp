@@ -23,6 +23,10 @@
 #include "rtc_manager.h"
 #include "scalable_track_source.h"
 
+#ifdef __APPLE__
+#include "mac_helper/objc_codec_factory_helper.h"
+#endif
+
 namespace {
 
 std::string generateRandomChars(size_t length) {
@@ -93,10 +97,15 @@ bool RTCManager::Init(
       webrtc::CreateBuiltinAudioEncoderFactory();
   media_dependencies.audio_decoder_factory =
       webrtc::CreateBuiltinAudioDecoderFactory();
+#ifdef __APPLE__
+  media_dependencies.video_encoder_factory = CreateObjCEncoderFactory();
+  media_dependencies.video_decoder_factory = CreateObjCDecoderFactory();
+#else
   media_dependencies.video_encoder_factory =
       absl::make_unique<HWVideoEncoderFactory>();
   media_dependencies.video_decoder_factory =
       webrtc::CreateBuiltinVideoDecoderFactory();
+#endif
   media_dependencies.audio_mixer = nullptr;
   media_dependencies.audio_processing =
       webrtc::AudioProcessingBuilder().Create();
