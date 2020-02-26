@@ -1,7 +1,10 @@
 #include "unity.h"
-#include "hwenc_nvcodec/nvcodec_h264_encoder.h"
 #include "rtc/device_list.h"
 #include "sora.h"
+
+#if defined(_WIN32) || defined(__linux__)
+#include "hwenc_nvcodec/nvcodec_h264_encoder.h"
+#endif
 
 extern "C" {
 
