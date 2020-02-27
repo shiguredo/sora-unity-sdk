@@ -6,6 +6,8 @@
 #include "api/create_peerconnection_factory.h"
 #include "api/rtc_event_log/rtc_event_log_factory.h"
 #include "api/task_queue/default_task_queue_factory.h"
+#include "api/video_codecs/builtin_video_decoder_factory.h"
+#include "api/video_codecs/builtin_video_encoder_factory.h"
 #include "api/video_track_source_proxy.h"
 #include "media/engine/webrtc_media_engine.h"
 #include "modules/audio_device/include/audio_device.h"
@@ -16,12 +18,14 @@
 #include "rtc_base/logging.h"
 #include "rtc_base/ssl_adapter.h"
 
+#include "hw_video_encoder_factory.h"
 #include "observer.h"
 #include "rtc_manager.h"
 #include "scalable_track_source.h"
 
-#include "api/video_codecs/builtin_video_decoder_factory.h"
-#include "api/video_codecs/builtin_video_encoder_factory.h"
+#ifdef __APPLE__
+#include "mac_helper/objc_codec_factory_helper.h"
+#endif
 
 namespace {
 
@@ -93,10 +97,15 @@ bool RTCManager::Init(
       webrtc::CreateBuiltinAudioEncoderFactory();
   media_dependencies.audio_decoder_factory =
       webrtc::CreateBuiltinAudioDecoderFactory();
+#ifdef __APPLE__
+  media_dependencies.video_encoder_factory = CreateObjCEncoderFactory();
+  media_dependencies.video_decoder_factory = CreateObjCDecoderFactory();
+#else
   media_dependencies.video_encoder_factory =
-      webrtc::CreateBuiltinVideoEncoderFactory();
+      absl::make_unique<HWVideoEncoderFactory>();
   media_dependencies.video_decoder_factory =
       webrtc::CreateBuiltinVideoDecoderFactory();
+#endif
   media_dependencies.audio_mixer = nullptr;
   media_dependencies.audio_processing =
       webrtc::AudioProcessingBuilder().Create();

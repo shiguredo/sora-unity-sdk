@@ -131,10 +131,13 @@ public class Sora : IDisposable
             config.AudioBitrate) == 0;
     }
 
+    // Unity 側でレンダリングが完了した時（yield return new WaitForEndOfFrame() の後）に呼ぶイベント
+    // 指定した Unity カメラの映像を Sora 側のテクスチャにレンダリングしたりする
     public void OnRender() {
         UnityEngine.GL.IssuePluginEvent(sora_get_render_callback(), sora_get_render_callback_event_id(p));
     }
 
+    // trackId で受信した映像を texutre にレンダリングする
     public void RenderTrackToTexture(uint trackId, UnityEngine.Texture texture)
     {
         commandBuffer.IssuePluginCustomTextureUpdateV2(sora_get_texture_update_callback(), texture, trackId);
@@ -321,6 +324,10 @@ public class Sora : IDisposable
         return list.ToArray();
     }
 
+    public static bool IsH264Supported() {
+        return sora_is_h264_supported();
+    }
+
     [DllImport("SoraUnitySdk")]
     private static extern IntPtr sora_create();
     [DllImport("SoraUnitySdk")]
@@ -371,4 +378,6 @@ public class Sora : IDisposable
     private static extern bool sora_device_enum_audio_recording(DeviceEnumCallbackDelegate f, IntPtr userdata);
     [DllImport("SoraUnitySdk")]
     private static extern bool sora_device_enum_audio_playout(DeviceEnumCallbackDelegate f, IntPtr userdata);
+    [DllImport("SoraUnitySdk")]
+    private static extern bool sora_is_h264_supported();
 }

@@ -2,6 +2,10 @@
 #include "rtc/device_list.h"
 #include "sora.h"
 
+#if defined(_WIN32) || defined(__linux__)
+#include "hwenc_nvcodec/nvcodec_h264_encoder.h"
+#endif
+
 extern "C" {
 
 void* sora_create() {
@@ -63,13 +67,12 @@ int sora_connect(void* p,
                  const char* audio_codec,
                  int audio_bitrate) {
   auto sora = (sora::Sora*)p;
-  if (!sora->Connect(unity_version, signaling_url, channel_id, metadata,
-                     role, multistream, capturer_type,
-                     unity_camera_texture, video_capturer_device, video_width,
-                     video_height, video_codec, video_bitrate,
-                     unity_audio_input, unity_audio_output,
-                     audio_recording_device, audio_playout_device, audio_codec,
-                     audio_bitrate)) {
+  if (!sora->Connect(unity_version, signaling_url, channel_id, metadata, role,
+                     multistream, capturer_type, unity_camera_texture,
+                     video_capturer_device, video_width, video_height,
+                     video_codec, video_bitrate, unity_audio_input,
+                     unity_audio_output, audio_recording_device,
+                     audio_playout_device, audio_codec, audio_bitrate)) {
     return -1;
   }
   return 0;
@@ -120,6 +123,15 @@ bool sora_device_enum_audio_playout(device_enum_cb_t f, void* userdata) {
       [f, userdata](std::string device_name, std::string unique_name) {
         f(device_name.c_str(), unique_name.c_str(), userdata);
       });
+}
+
+bool sora_is_h264_supported() {
+#if defined(_WIN32) || defined(__linux__)
+  return NvCodecH264Encoder::IsSupported();
+#else
+  // macOS は VideoToolbox が使えるので常に true
+  return true;
+#endif
 }
 
 void UNITY_INTERFACE_EXPORT UNITY_INTERFACE_API

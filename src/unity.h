@@ -72,6 +72,7 @@ UNITY_INTERFACE_EXPORT bool sora_device_enum_audio_recording(device_enum_cb_t f,
                                                              void* userdata);
 UNITY_INTERFACE_EXPORT bool sora_device_enum_audio_playout(device_enum_cb_t f,
                                                            void* userdata);
+UNITY_INTERFACE_EXPORT bool sora_is_h264_supported();
 
 #ifdef __cplusplus
 }
