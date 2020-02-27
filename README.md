@@ -45,8 +45,14 @@ https://github.com/shiguredo/sora-unity-sdk/releases から から最新の `Sor
 
 ### H.264 の利用について
 
-Sora Unity SDK では現時点で H.264 の利用はできません。
+Sora Unity SDK ではソフトウェアでの H.264 エンコード/デコードの利用はできません。
 これは H.264 のソフトウェアエンコーダ/デコーダを含んで配布した場合はライセンス費用が発生するためです。
+
+そのため Windows では NVIDIA VIDEO CODEC SDK 、macOS では VideoToolbox を利用し、H.264 のエンコード/デコードを実現しています。
+
+**NVIDIA VIDEO CODEC SDK を利用した H.264 はデコードは現時点では非対応です**
+
+詳細は H.264 を [USE_H264.md](doc/USE_H264.md) をお読みください
 
 ## 対応機能
 
