@@ -25,6 +25,7 @@
 namespace sora {
 
 struct SoraSignalingConfig {
+  std::string unity_version;
   std::string signaling_url;
   std::string channel_id;
 
@@ -35,7 +36,7 @@ struct SoraSignalingConfig {
   std::string audio_codec = "OPUS";
   int audio_bitrate = 0;
 
-  enum class Role { Upstream, Downstream };
+  enum class Role { Upstream, Downstream, Sendonly, Recvonly, Sendrecv };
   Role role = Role::Upstream;
   bool multistream = false;
 };
@@ -80,7 +81,7 @@ class SoraSignaling : public std::enable_shared_from_this<SoraSignaling>,
   SoraSignaling(boost::asio::io_context& ioc,
                 RTCManager* manager,
                 SoraSignalingConfig config,
-      std::function<void(std::string)> on_notify);
+                std::function<void(std::string)> on_notify);
   bool Init();
 
  public:
@@ -101,6 +102,8 @@ class SoraSignaling : public std::enable_shared_from_this<SoraSignaling>,
 
   void doSendConnect();
   void doSendPong();
+  void doSendPong(
+      const rtc::scoped_refptr<const webrtc::RTCStatsReport>& report);
   void createPeerFromConfig(nlohmann::json jconfig);
 
  private:

@@ -5,39 +5,23 @@ set -ex
 BUILD_DIR="`pwd`/_build"
 INSTALL_DIR="`pwd`/_install"
 
-BOOST_VERSION="1.71.0"
-JSON_VERSION="3.6.1"
-WEBRTC_VERSION="78.8.0"
+source `pwd`/VERSIONS
 
 mkdir -p $BUILD_DIR
 mkdir -p $INSTALL_DIR
 
 # WebRTC のインストール
 if [ ! -e $INSTALL_DIR/webrtc/lib/libwebrtc.a ]; then
-  # Momo を clone して macOS 用ビルドを行い、その過程で生成された
-  # WebRTC のライブラリをこのプロジェクトにコピーする
-
-  if [ -e $BUILD_DIR/momo ]; then
-    pushd $BUILD_DIR/momo
-      git pull
-    popd
-  else
-    git clone https://github.com/shiguredo/momo.git $BUILD_DIR/momo
-  fi
-
-  pushd $BUILD_DIR/momo/build
-    make macos
+  # shiguredo-webrtc-build からバイナリをダウンロードして配置するだけ
+  pushd $BUILD_DIR
+    rm -rf webrtc.macos.tar.gz
+    curl -LO https://github.com/shiguredo-webrtc-build/webrtc-build/releases/download/m${WEBRTC_BUILD_VERSION}/webrtc.macos.tar.gz
   popd
 
-  rm -rf $INSTALL_DIR/webrtc
-
-  # libwebrtc.a
-  mkdir -p $INSTALL_DIR/webrtc/lib
-  cp $BUILD_DIR/momo/_build/macos/libwebrtc.a $INSTALL_DIR/webrtc/lib
-
-  # ヘッダ類
-  mkdir -p $INSTALL_DIR/webrtc/include
-  rsync -amv --include="*/" --include="*.h" --include="*.hpp" --exclude="*" $BUILD_DIR/momo/build/macos/webrtc/src/. $INSTALL_DIR/webrtc/include/.
+  pushd $INSTALL_DIR
+    rm -rf webrtc/
+    tar xf $BUILD_DIR/webrtc.macos.tar.gz
+  popd
 fi
 
 # nlohmann/json

@@ -1,8 +1,10 @@
 #include "sora_signaling.h"
+#include "sora_version.h"
 
 #include <boost/asio/connect.hpp>
 #include <boost/beast/core/buffers_to_string.hpp>
 #include <boost/beast/websocket/stream.hpp>
+#include <boost/preprocessor/stringize.hpp>
 #include <nlohmann/json.hpp>
 
 namespace {
@@ -195,14 +197,28 @@ void SoraSignaling::onHandshake(boost::system::error_code ec) {
   doSendConnect();
 }
 
+#define SORA_CLIENT                                                        \
+  "Sora Unity SDK for " SORA_UNITY_SDK_PLATFORM " " SORA_UNITY_SDK_VERSION \
+  " (" SORA_UNITY_SDK_COMMIT_SHORT ")"
+#define LIBWEBRTC                                                      \
+  "Shiguredo-build " WEBRTC_READABLE_VERSION " (" WEBRTC_BUILD_VERSION \
+  " " WEBRTC_SRC_COMMIT_SHORT ")"
+
 void SoraSignaling::doSendConnect() {
+  std::string role =
+    config_.role == SoraSignalingConfig::Role::Upstream ? "upstream" :
+    config_.role == SoraSignalingConfig::Role::Downstream ? "downstream" :
+    config_.role == SoraSignalingConfig::Role::Sendonly ? "sendonly" :
+    config_.role == SoraSignalingConfig::Role::Recvonly ? "recvonly" : "sendrecv";
+
   json json_message = {
       {"type", "connect"},
-      {"role", config_.role == SoraSignalingConfig::Role::Downstream
-                   ? "downstream"
-                   : "upstream"},
+      {"role", role},
       {"multistream", config_.multistream},
       {"channel_id", config_.channel_id},
+      {"sora_client", SORA_CLIENT},
+      {"libwebrtc", LIBWEBRTC},
+      {"environment", "Unity " + config_.unity_version},
   };
 
   if (!config_.metadata.is_null()) {
@@ -224,6 +240,13 @@ void SoraSignaling::doSendConnect() {
 void SoraSignaling::doSendPong() {
   json json_message = {{"type", "pong"}};
   sendText(json_message.dump());
+}
+void SoraSignaling::doSendPong(
+    const rtc::scoped_refptr<const webrtc::RTCStatsReport>& report) {
+  std::string stats = report->ToJson();
+  json json_message = {{"type", "pong"}, {"stats", stats}};
+  std::string str = R"({"type":"pong","stats":)" + stats + "}";
+  sendText(std::move(str));
 }
 
 void SoraSignaling::createPeerFromConfig(json jconfig) {
@@ -305,7 +328,16 @@ void SoraSignaling::onRead(boost::system::error_code ec,
                           kIceConnectionConnected) {
       return;
     }
-    doSendPong();
+    bool stats = json_message.value("stats", false);
+    if (stats) {
+      connection_->getStats(
+          [this](
+              const rtc::scoped_refptr<const webrtc::RTCStatsReport>& report) {
+            doSendPong(report);
+          });
+    } else {
+      doSendPong();
+    }
   }
 
   doRead();

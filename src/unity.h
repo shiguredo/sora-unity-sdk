@@ -26,10 +26,11 @@ UNITY_INTERFACE_EXPORT void sora_set_on_notify(void* p,
                                                void* userdata);
 UNITY_INTERFACE_EXPORT void sora_dispatch_events(void* p);
 UNITY_INTERFACE_EXPORT int sora_connect(void* p,
+                                        const char* unity_version,
                                         const char* signaling_url,
                                         const char* channel_id,
                                         const char* metadata,
-                                        bool downstream,
+                                        const char* role,
                                         bool multistream,
                                         int capturer_type,
                                         void* unity_camera_texture,
@@ -71,6 +72,7 @@ UNITY_INTERFACE_EXPORT bool sora_device_enum_audio_recording(device_enum_cb_t f,
                                                              void* userdata);
 UNITY_INTERFACE_EXPORT bool sora_device_enum_audio_playout(device_enum_cb_t f,
                                                            void* userdata);
+UNITY_INTERFACE_EXPORT bool sora_is_h264_supported();
 
 #ifdef __cplusplus
 }

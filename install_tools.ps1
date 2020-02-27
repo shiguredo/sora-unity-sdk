@@ -3,9 +3,14 @@ $ErrorActionPreference = 'Stop'
 $BUILD_DIR = Join-Path (Resolve-Path ".").Path "_build"
 $INSTALL_DIR = Join-Path (Resolve-Path ".").Path "_install"
 
-$BOOST_VERSION = "1.71.0"
-$JSON_VERSION = "3.6.1"
-$WEBRTC_VERSION = "78.8.0"
+$SORA_VERSION_FILE = Join-Path (Resolve-Path ".").Path "VERSIONS"
+Get-Content $SORA_VERSION_FILE | Foreach-Object{
+  if (!$_) {
+    continue
+  }
+  $var = $_.Split('=')
+  New-Variable -Name $var[0] -Value $var[1]
+}
 
 mkdir $BUILD_DIR -Force
 mkdir $INSTALL_DIR -Force
@@ -66,10 +71,10 @@ if (!(Test-Path "$INSTALL_DIR\json\include\nlohmann\json.hpp")) {
 
 # WebRTC
 
-if (!(Test-Path "$INSTALL_DIR\webrtc\lib\webrtc.lib")) {
+if (!(Test-Path "$INSTALL_DIR\webrtc\release\webrtc.lib")) {
   # shiguredo-webrtc-windows のバイナリをダウンロードする
-  $_URL = "https://github.com/shiguredo/shiguredo-webrtc-windows/releases/download/m$WEBRTC_VERSION/webrtc.zip"
-  $_FILE = "$BUILD_DIR\webrtc-m$WEBRTC_VERSION.zip"
+  $_URL = "https://github.com/shiguredo-webrtc-build/webrtc-build/releases/download/m$WEBRTC_BUILD_VERSION/webrtc.windows.zip"
+  $_FILE = "$BUILD_DIR\webrtc-m$WEBRTC_BUILD_VERSION.zip"
   Push-Location $BUILD_DIR
     if (!(Test-Path $_FILE)) {
       Invoke-WebRequest -Uri $_URL -OutFile $_FILE
@@ -79,9 +84,8 @@ if (!(Test-Path "$INSTALL_DIR\webrtc\lib\webrtc.lib")) {
   if (Test-Path "$BUILD_DIR\webrtc") {
     Remove-Item $BUILD_DIR\webrtc -Recurse -Force
   }
-  mkdir $BUILD_DIR\webrtc -Force
   # Expand-Archive -Path $_FILE -DestinationPath "$BUILD_DIR\webrtc"
-  Push-Location $BUILD_DIR\webrtc
+  Push-Location $BUILD_DIR
     7z x $_FILE
   Pop-Location
 
@@ -89,8 +93,5 @@ if (!(Test-Path "$INSTALL_DIR\webrtc\lib\webrtc.lib")) {
   if (Test-Path "$INSTALL_DIR\webrtc") {
     Remove-Item $INSTALL_DIR\webrtc -Recurse -Force
   }
-  mkdir $INSTALL_DIR\webrtc -Force
-  mkdir $INSTALL_DIR\webrtc\lib -Force
-  Move-Item $BUILD_DIR\webrtc\release\webrtc.lib $INSTALL_DIR\webrtc\lib
-  Move-Item $BUILD_DIR\webrtc\include $INSTALL_DIR\webrtc\include
+  Move-Item $BUILD_DIR\webrtc $INSTALL_DIR\webrtc
 }

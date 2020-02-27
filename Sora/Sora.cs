@@ -5,8 +5,11 @@ public class Sora : IDisposable
 {
     public enum Role
     {
-        Downstream,
         Upstream,
+        Downstream,
+        Sendonly,
+        Recvonly,
+        Sendrecv,
     }
     public enum CapturerType
     {
@@ -26,7 +29,7 @@ public class Sora : IDisposable
         public string SignalingUrl = "";
         public string ChannelId = "";
         public string Metadata = "";
-        public Role Role = Sora.Role.Downstream;
+        public Role Role = Sora.Role.Upstream;
         public bool Multistream = false;
         public CapturerType CapturerType = Sora.CapturerType.DeviceCamera;
         public UnityEngine.Camera UnityCamera = null;
@@ -100,12 +103,18 @@ public class Sora : IDisposable
             unityCameraTexture = texture.GetNativeTexturePtr();
         }
 
+        var role =
+            config.Role == Role.Upstream ? "upstream" :
+            config.Role == Role.Downstream ? "downstream" :
+            config.Role == Role.Sendonly ? "sendonly" :
+            config.Role == Role.Recvonly ? "recvonly" : "sendrecv";
         return sora_connect(
             p,
+            UnityEngine.Application.unityVersion,
             config.SignalingUrl,
             config.ChannelId,
             config.Metadata,
-            config.Role == Role.Downstream,
+            role,
             config.Multistream,
             (int)config.CapturerType,
             unityCameraTexture,
@@ -122,10 +131,13 @@ public class Sora : IDisposable
             config.AudioBitrate) == 0;
     }
 
+    // Unity 側でレンダリングが完了した時（yield return new WaitForEndOfFrame() の後）に呼ぶイベント
+    // 指定した Unity カメラの映像を Sora 側のテクスチャにレンダリングしたりする
     public void OnRender() {
         UnityEngine.GL.IssuePluginEvent(sora_get_render_callback(), sora_get_render_callback_event_id(p));
     }
 
+    // trackId で受信した映像を texutre にレンダリングする
     public void RenderTrackToTexture(uint trackId, UnityEngine.Texture texture)
     {
         commandBuffer.IssuePluginCustomTextureUpdateV2(sora_get_texture_update_callback(), texture, trackId);
@@ -312,6 +324,10 @@ public class Sora : IDisposable
         return list.ToArray();
     }
 
+    public static bool IsH264Supported() {
+        return sora_is_h264_supported();
+    }
+
     [DllImport("SoraUnitySdk")]
     private static extern IntPtr sora_create();
     [DllImport("SoraUnitySdk")]
@@ -325,10 +341,11 @@ public class Sora : IDisposable
     [DllImport("SoraUnitySdk")]
     private static extern int sora_connect(
         IntPtr p,
+        string unity_version,
         string signaling_url,
         string channel_id,
         string metadata,
-        bool downstream,
+        string role,
         bool multistream,
         int capturer_type,
         IntPtr unity_camera_texture,
@@ -361,4 +378,6 @@ public class Sora : IDisposable
     private static extern bool sora_device_enum_audio_recording(DeviceEnumCallbackDelegate f, IntPtr userdata);
     [DllImport("SoraUnitySdk")]
     private static extern bool sora_device_enum_audio_playout(DeviceEnumCallbackDelegate f, IntPtr userdata);
+    [DllImport("SoraUnitySdk")]
+    private static extern bool sora_is_h264_supported();
 }

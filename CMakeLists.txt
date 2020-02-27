@@ -1,5 +1,7 @@
 cmake_minimum_required(VERSION 3.12)
 
+cmake_policy(SET CMP0091 NEW)
+
 project(SoraUnitySdk C CXX)
 
 if (MSVC)
@@ -8,15 +10,8 @@ if (MSVC)
   add_definitions(-DUNICODE -D_UNICODE)
 
   # CRTライブラリを静的リンクさせる
-  # https://sgry.jp/blog/2017/05/27/4465/
-  string(REPLACE "/MD" "/MT" CMAKE_C_FLAGS_DEBUG            ${CMAKE_C_FLAGS_DEBUG})
-  string(REPLACE "/MD" "/MT" CMAKE_C_FLAGS_MINSIZEREL       ${CMAKE_C_FLAGS_MINSIZEREL})
-  string(REPLACE "/MD" "/MT" CMAKE_C_FLAGS_RELEASE          ${CMAKE_C_FLAGS_RELEASE})
-  string(REPLACE "/MD" "/MT" CMAKE_C_FLAGS_RELWITHDEBINFO   ${CMAKE_C_FLAGS_RELWITHDEBINFO})
-  string(REPLACE "/MD" "/MT" CMAKE_CXX_FLAGS_DEBUG          ${CMAKE_CXX_FLAGS_DEBUG})
-  string(REPLACE "/MD" "/MT" CMAKE_CXX_FLAGS_MINSIZEREL     ${CMAKE_CXX_FLAGS_MINSIZEREL})
-  string(REPLACE "/MD" "/MT" CMAKE_CXX_FLAGS_RELEASE        ${CMAKE_CXX_FLAGS_RELEASE})
-  string(REPLACE "/MD" "/MT" CMAKE_CXX_FLAGS_RELWITHDEBINFO ${CMAKE_CXX_FLAGS_RELWITHDEBINFO})
+  # CMake 3.15 以上なら CMAKE_MSVC_RUNTIME_LIBRARY が使える
+  set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded")
 
   set(_LINK_LIBRARIES
     dbghelp.lib
@@ -39,7 +34,9 @@ if (MSVC)
     iphlpapi.lib
     msdmo.lib
     Secur32.lib
-    wmcodecdspuuid.lib)
+    wmcodecdspuuid.lib
+    dxgi.lib
+    D3D11.lib)
 
   set(_COMPILE_DEFINITIONS
     _CONSOLE
@@ -48,6 +45,8 @@ if (MSVC)
     NOMINMAX
     WIN32_LEAN_AND_MEAN)
 
+  # configure_file で使う
+  set(SORA_UNITY_SDK_PLATFORM Windows)
 elseif (APPLE)
 
   set(_LINK_LIBRARIES
@@ -71,7 +70,21 @@ elseif (APPLE)
     WEBRTC_POSIX
     WEBRTC_MAC)
 
+  # configure_file で使う
+  set(SORA_UNITY_SDK_PLATFORM macOS)
 endif ()
+
+string(SUBSTRING ${SORA_UNITY_SDK_COMMIT} 0 8 SORA_UNITY_SDK_COMMIT_SHORT)
+string(SUBSTRING ${WEBRTC_SRC_COMMIT} 0 8 WEBRTC_SRC_COMMIT_SHORT)
+
+set(_INCLUDE_DIRECTORIES)
+
+configure_file(src/sora_version.h.template ${CMAKE_CURRENT_BINARY_DIR}/sora_version.h)
+list(APPEND _INCLUDE_DIRECTORIES ${CMAKE_CURRENT_BINARY_DIR})
+
+list(APPEND _INCLUDE_DIRECTORIES ${CMAKE_CURRENT_SOURCE_DIR}/src)
+list(APPEND _INCLUDE_DIRECTORIES ${CMAKE_CURRENT_SOURCE_DIR}/NvCodec/include)
+list(APPEND _INCLUDE_DIRECTORIES ${CMAKE_CURRENT_SOURCE_DIR}/NvCodec/NvCodec)
 
 set(Boost_USE_STATIC_LIBS ON)
 
@@ -94,11 +107,16 @@ set(_SOURCES
   src/rtc/rtc_connection.cpp
   src/rtc/rtc_manager.cpp
   src/rtc/scalable_track_source.cpp
+  src/rtc/hw_video_encoder_factory.cpp
+  src/rtc/h264_format.cpp
 )
 
 if (WIN32)
   list(APPEND _SOURCES
-    src/unity_camera_capturer_d3d11.cpp)
+    src/unity_camera_capturer_d3d11.cpp
+    src/hwenc_nvcodec/nvcodec_h264_encoder.cpp
+    NvCodec/NvCodec/NvEncoder/NvEncoder.cpp
+    NvCodec/NvCodec/NvEncoder/NvEncoderD3D11.cpp)
 
   add_library(SoraUnitySdk SHARED ${_SOURCES})
 elseif (APPLE)
@@ -116,11 +134,14 @@ elseif (APPLE)
     COMPILE_OPTIONS "-x;objective-c++;-fmodules;-fcxx-modules")
 
   add_library(SoraUnitySdk MODULE ${_SOURCES})
+  target_link_options(SoraUnitySdk PRIVATE -ObjC)
   set_target_properties(SoraUnitySdk PROPERTIES BUNDLE TRUE)
   set_target_properties(SoraUnitySdk PROPERTIES CXX_VISIBILITY_PRESET hidden)
 endif ()
 
 set_target_properties(SoraUnitySdk PROPERTIES CXX_STANDARD 14 C_STANDARD 99)
+
+target_include_directories(SoraUnitySdk PRIVATE ${_INCLUDE_DIRECTORIES})
 
 if (ENABLE_TSAN)
   # tsan
