@@ -85,11 +85,9 @@ Sora Unity SDK ではソフトウェアでの H.264 エンコード/デコード
     - Windows 版
         - H.264 のハードウェアエンコードへの対応
 
-
 ## 非対応
 
 - ソフトウェアエンコード/デコードの H.264
-- Sora サイマルキャスト機能
 
 ### 今後
 
@@ -127,11 +125,18 @@ See the License for the specific language governing permissions and
 limitations under the License.
 ```
 
-## 有償による対応が可能な機能リスト
+## 有償での優先実装
+
+- Windows 版 NVIDIA 対応
+    - [スロースネットワークス株式会社](http://www.sloth-networks.co.jp) 様
+
+## 有償での優先実装が可能な機能一覧
+
+**詳細は sora at shiguredo.jp までお問い合わせください**
 
 - オープンソースでの公開が前提
-- 社名の公開は可能であれば
-    - 公開が難しい場合は `企業名非公開による支援` と書かせていただきます
+- 可能であれば企業名の公開
+    - 公開が難しい場合は `企業名非公開` と書かせていただきます
 
 ### プラットフォーム
 
