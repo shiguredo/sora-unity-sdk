@@ -241,6 +241,13 @@ void SoraSignaling::doSendPong() {
   json json_message = {{"type", "pong"}};
   sendText(json_message.dump());
 }
+void SoraSignaling::doSendPong(
+    const rtc::scoped_refptr<const webrtc::RTCStatsReport>& report) {
+  std::string stats = report->ToJson();
+  json json_message = {{"type", "pong"}, {"stats", stats}};
+  std::string str = R"({"type":"pong","stats":)" + stats + "}";
+  sendText(std::move(str));
+}
 
 void SoraSignaling::createPeerFromConfig(json jconfig) {
   webrtc::PeerConnectionInterface::RTCConfiguration rtc_config;
@@ -321,7 +328,16 @@ void SoraSignaling::onRead(boost::system::error_code ec,
                           kIceConnectionConnected) {
       return;
     }
-    doSendPong();
+    bool stats = json_message.value("stats", false);
+    if (stats) {
+      connection_->getStats(
+          [this](
+              const rtc::scoped_refptr<const webrtc::RTCStatsReport>& report) {
+            doSendPong(report);
+          });
+    } else {
+      doSendPong();
+    }
   }
 
   doRead();
