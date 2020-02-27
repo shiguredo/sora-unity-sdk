@@ -132,7 +132,7 @@ limitations under the License.
 
 ## 有償での優先実装が可能な機能一覧
 
-**詳細は sora at shiguredo.jp までお問い合わせください**
+**詳細は sora at shiguredo dot jp までお問い合わせください**
 
 - オープンソースでの公開が前提
 - 可能であれば企業名の公開
