@@ -63,7 +63,7 @@ jobs:
         path: SoraUnitySdk
   release:
     name: Upload Release Asset
-    if: contains(github.ref, 'tags/v')
+    if: contains(github.ref, 'tags/202')
     needs: [package]
     runs-on: ubuntu-latest
     steps:
