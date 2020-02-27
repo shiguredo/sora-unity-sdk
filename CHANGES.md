@@ -11,11 +11,13 @@
 
 ## develop
 
-- [UPDATE] Windows 版では H.264 エンコードに NVIDIA VIDEO CODEC SDK を利用する（利用可能な場合のみ）
+- [ADD] Windows 版では H.264 エンコードに NVIDIA VIDEO CODEC SDK を利用する（利用可能な場合のみ）
     - 実験的機能
     - @melpon
-- [UPDATE] macOS 版では H.264 のエンコード/デコードに VideoToolbox を利用する
+- [ADD] macOS 版では H.264 のエンコード/デコードに VideoToolbox を利用する
     - 実験的機能
+    - @melpon
+- [ADD] Sora へ WebRTC 統計情報を送るようにした
     - @melpon
 
 ## 1.0.4
