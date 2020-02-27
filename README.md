@@ -127,8 +127,10 @@ limitations under the License.
 
 ## 有償での優先実装
 
-- Windows 版 NVIDIA 対応
+- Windows 版 NVIDIA VIDEO CODEC SDK による H.264 エンコーダ対応
     - [スロースネットワークス株式会社](http://www.sloth-networks.co.jp) 様
+- WebRTC's Statistics 対応
+    - 企業名非公開
 
 ## 有償での優先実装が可能な機能一覧
 
