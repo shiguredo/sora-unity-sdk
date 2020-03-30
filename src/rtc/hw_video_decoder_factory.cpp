@@ -49,6 +49,10 @@ std::vector<webrtc::SdpVideoFormat> HWVideoDecoderFactory::GetSupportedFormats()
   for (const webrtc::SdpVideoFormat& format : webrtc::SupportedVP9Codecs())
     formats.push_back(format);
 
+  if (!NvCodecVideoDecoder::IsSupported(cudaVideoCodec_H264)) {
+    return formats;
+  }
+
   std::vector<webrtc::SdpVideoFormat> h264_codecs = {
       CreateH264Format(webrtc::H264::kProfileBaseline, webrtc::H264::kLevel3_1,
                        "1"),

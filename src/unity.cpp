@@ -4,6 +4,7 @@
 
 #if defined(_WIN32) || defined(__linux__)
 #include "hwenc_nvcodec/nvcodec_h264_encoder.h"
+#include "hwenc_nvcodec/nvcodec_video_decoder.h"
 #endif
 
 extern "C" {
@@ -127,7 +128,7 @@ bool sora_device_enum_audio_playout(device_enum_cb_t f, void* userdata) {
 
 bool sora_is_h264_supported() {
 #if defined(_WIN32) || defined(__linux__)
-  return NvCodecH264Encoder::IsSupported();
+  return NvCodecH264Encoder::IsSupported() && NvCodecVideoDecoder::IsSupported(cudaVideoCodec_H264);
 #else
   // macOS は VideoToolbox が使えるので常に true
   return true;

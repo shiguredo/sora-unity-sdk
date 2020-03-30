@@ -109,14 +109,28 @@ NvCodecVideoDecoderCuda::~NvCodecVideoDecoderCuda() {
 }
 
 int32_t NvCodecVideoDecoderCuda::Init(cudaVideoCodec codec_id) {
-  ck(cuInit(0));
-  ck(cuDeviceGet(&cu_device_, 0));
-  char device_name[80];
-  ck(cuDeviceGetName(device_name, sizeof(device_name), cu_device_));
-  std::cout << "GPU in use: " << device_name << std::endl;
-  ck(cuCtxCreate(&cu_context_, 0, cu_device_));
+  if (!ck(cuInit(0))) {
+    return -1;
+  }
+  int gpu_num = 0;
+  if (!ck(cuDeviceGetCount(&gpu_num))) {
+    return -2;
+  }
+  if (gpu_num == 0) {
+    return -3;
+  }
+  if (!ck(cuDeviceGet(&cu_device_, 0))) {
+    return -4;
+  }
+  if (!ck(cuCtxCreate(&cu_context_, 0, cu_device_))) {
+    return -5;
+  }
 
-  decoder_.reset(new NvDecoder(cu_context_, false, codec_id));
+  try {
+    decoder_.reset(new NvDecoder(cu_context_, false, codec_id));
+  } catch (NVDECException& e) {
+    return -4;
+  }
 
   return 0;
 }
@@ -126,5 +140,6 @@ void NvCodecVideoDecoderCuda::Decode(const uint8_t* ptr, int size, uint8_t**& fr
 }
 
 void NvCodecVideoDecoderCuda::Release() {
+  decoder_.reset();
   cuCtxDestroy(cu_context_);
 }

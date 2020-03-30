@@ -16,6 +16,8 @@ class NvCodecVideoDecoder : public webrtc::VideoDecoder {
   NvCodecVideoDecoder(cudaVideoCodec codec_id);
   ~NvCodecVideoDecoder() override;
 
+  static bool IsSupported(cudaVideoCodec codec_id);
+
   int32_t InitDecode(const webrtc::VideoCodec* codec_settings,
                      int32_t number_of_cores) override;
 
