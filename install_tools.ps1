@@ -108,6 +108,6 @@ if (!(Test-Path "$INSTALL_DIR\cuda_installed")) {
   Pop-Location
   # サイレントインストール
   # https://docs.nvidia.com/cuda/cuda-installation-guide-microsoft-windows/index.html#download-cuda-software
-  & "$_FILE" -s nvcc_10.2 Display.Driver
+  Start-Process "$_FILE" -Wait -ArgumentList "-s"
   New-Item -Type File "$INSTALL_DIR\cuda_installed"
 }
