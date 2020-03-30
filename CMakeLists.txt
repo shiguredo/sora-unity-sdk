@@ -46,7 +46,6 @@ target_sources(SoraUnitySdk
     src/rtc/rtc_connection.cpp
     src/rtc/rtc_manager.cpp
     src/rtc/scalable_track_source.cpp
-    src/rtc/hw_video_encoder_factory.cpp
     src/rtc/h264_format.cpp
 )
 
@@ -72,7 +71,11 @@ target_link_libraries(SoraUnitySdk
 
 if (MSVC)
   # 文字コードを utf-8 として扱うのと、シンボルテーブル数を増やす
-  target_compile_options(SoraUnitySdk PRIVATE /utf-8 /bigobj)
+  target_compile_options(SoraUnitySdk
+    PRIVATE
+      "$<$<COMPILE_LANGUAGE:CXX>:/utf-8;/bigobj>"
+      "$<$<COMPILE_LANGUAGE:CUDA>:-Xcompiler;/utf-8 /bigobj>"
+  )
   set_target_properties(SoraUnitySdk
     PROPERTIES
       # CRTライブラリを静的リンクさせる
@@ -83,7 +86,10 @@ if (MSVC)
   target_sources(SoraUnitySdk
     PRIVATE
       src/unity_camera_capturer_d3d11.cpp
+      src/rtc/hw_video_encoder_factory.cpp
+      src/rtc/hw_video_decoder_factory.cpp
       src/hwenc_nvcodec/nvcodec_h264_encoder.cpp
+      src/hwenc_nvcodec/nvcodec_video_decoder.cpp
       NvCodec/NvCodec/NvEncoder/NvEncoder.cpp
       NvCodec/NvCodec/NvEncoder/NvEncoderD3D11.cpp
   )
@@ -124,6 +130,26 @@ if (MSVC)
       WEBRTC_WIN
       NOMINMAX
       WIN32_LEAN_AND_MEAN
+  )
+
+  # CUDA 
+  enable_language(CUDA)
+  target_sources(SoraUnitySdk
+    PRIVATE
+      NvCodec/NvCodec/NvDecoder/NvDecoder.cpp
+      src/hwenc_nvcodec/nvcodec_video_decoder_cuda.cpp
+  )
+  set_source_files_properties(
+      NvCodec/NvCodec/NvDecoder/NvDecoder.cpp
+      src/hwenc_nvcodec/nvcodec_video_decoder_cuda.cpp
+    PROPERTIES
+      LANGUAGE CUDA
+      CUDA_SEPARABLE_COMPILATION ON
+  )
+  target_link_libraries(SoraUnitySdk
+    PRIVATE
+      cuda.lib
+      ${CMAKE_CURRENT_SOURCE_DIR}/NvCodec/Lib/x64/nvcuvid.lib
   )
 elseif (APPLE)
   enable_language(OBJCXX)

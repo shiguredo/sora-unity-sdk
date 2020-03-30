@@ -11,7 +11,8 @@
                 "${workspaceFolder}/_install/webrtc/include",
                 "${workspaceFolder}/_install/webrtc/include/third_party/abseil-cpp",
                 "${workspaceFolder}/_install/webrtc/include/third_party/boringssl/src/include",
-                "${workspaceFolder}/_install/webrtc/include/third_party/libyuv/include"
+                "${workspaceFolder}/_install/webrtc/include/third_party/libyuv/include",
+                "C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v10.2/include"
             ],
             "defines": [
                 "_DEBUG",
@@ -24,7 +25,7 @@
                 "WIN32_LEAN_AND_MEAN"
             ],
             "windowsSdkVersion": "10.0.18362.0",
-            "compilerPath": "C:/Program Files (x86)/Microsoft Visual Studio/2019/Community/VC/Tools/MSVC/14.24.28314/bin/Hostx64/x64/cl.exe",
+            "compilerPath": "C:/Program Files (x86)/Microsoft Visual Studio/2019/Community/VC/Tools/MSVC/14.25.28610/bin/Hostx64/x64/cl.exe",
             "cStandard": "c11",
             "cppStandard": "c++17",
             "intelliSenseMode": "msvc-x64"

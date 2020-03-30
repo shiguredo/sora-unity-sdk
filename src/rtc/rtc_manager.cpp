@@ -18,13 +18,15 @@
 #include "rtc_base/logging.h"
 #include "rtc_base/ssl_adapter.h"
 
-#include "hw_video_encoder_factory.h"
 #include "observer.h"
 #include "rtc_manager.h"
 #include "scalable_track_source.h"
 
 #ifdef __APPLE__
 #include "mac_helper/objc_codec_factory_helper.h"
+#else
+#include "hw_video_encoder_factory.h"
+#include "hw_video_decoder_factory.h"
 #endif
 
 namespace {
@@ -104,7 +106,7 @@ bool RTCManager::Init(
   media_dependencies.video_encoder_factory =
       absl::make_unique<HWVideoEncoderFactory>();
   media_dependencies.video_decoder_factory =
-      webrtc::CreateBuiltinVideoDecoderFactory();
+      absl::make_unique<HWVideoDecoderFactory>();
 #endif
   media_dependencies.audio_mixer = nullptr;
   media_dependencies.audio_processing =
