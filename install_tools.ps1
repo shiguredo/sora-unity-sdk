@@ -95,3 +95,19 @@ if (!(Test-Path "$INSTALL_DIR\webrtc\release\webrtc.lib")) {
   }
   Move-Item $BUILD_DIR\webrtc $INSTALL_DIR\webrtc
 }
+
+# CUDA
+
+if (!(Test-Path "$INSTALL_DIR\cuda_installed")) {
+  $_URL = "http://developer.download.nvidia.com/compute/cuda/10.2/Prod/network_installers/cuda_10.2.89_win10_network.exe"
+  $_FILE = "$BUILD_DIR\cuda_10.2.89_win10_network.exe"
+  Push-Location $BUILD_DIR
+    if (!(Test-Path $_FILE)) {
+      Invoke-WebRequest -Uri $_URL -OutFile $_FILE
+    }
+  Pop-Location
+  # サイレントインストール
+  # https://docs.nvidia.com/cuda/cuda-installation-guide-microsoft-windows/index.html#download-cuda-software
+  & "$_FILE" -s nvcc_10.2 Display.Driver
+  New-Item -Type File "$INSTALL_DIR\cuda_installed"
+}
