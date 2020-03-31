@@ -117,7 +117,7 @@ if (!(Test-Path "$INSTALL_DIR\cuda_installed")) {
   mkdir $BUILD_DIR\cuda -Force
   Push-Location $BUILD_DIR\cuda
     7z x $_FILE
-    Start-Process setup.exe -Wait -ArgumentList "-log:$BUILD_DIR\cuda\log -loglevel:6 -s nvcc_10.2 cuobjdump_10.2 nvprune_10.2 cupti_10.2 gpu_library_advisor_10.2 memcheck_10.2 nvdisasm_10.2 nvprof_10.2 visual_profiler_10.2 visual_studio_integration_10.2 demo_suite_10.2 documentation_10.2 cublas_10.2 cublas_dev_10.2 cudart_10.2 cufft_10.2 cufft_dev_10.2 curand_10.2 curand_dev_10.2 cusolver_10.2 cusolver_dev_10.2 cusparse_10.2 cusparse_dev_10.2 nvgraph_10.2 nvgraph_dev_10.2 npp_10.2 npp_dev_10.2 nvrtc_10.2 nvrtc_dev_10.2 nvml_dev_10.2 occupancy_calculator_10.2"
+    Start-Process setup.exe -Wait -ArgumentList "-log:$BUILD_DIR\cuda\log -loglevel:6 -s nvcc_10.2 visual_studio_integration_10.2"
   Pop-Location
 
   Write-Output "---- LOG.setup.exe.log ----"
