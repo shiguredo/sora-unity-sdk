@@ -108,6 +108,27 @@ if (!(Test-Path "$INSTALL_DIR\cuda_installed")) {
   Pop-Location
   # サイレントインストール
   # https://docs.nvidia.com/cuda/cuda-installation-guide-microsoft-windows/index.html#download-cuda-software
-  Start-Process "$_FILE" -Wait -ArgumentList "-s"
+  #Start-Process "$_FILE" -Wait -ArgumentList "-log $BUILD_DIR\cuda_log.txt -loglevel:6 -s"
+  if (Test-Path "$BUILD_DIR\cuda") {
+    Remove-Item "$BUILD_DIR\cuda" -Recurse -Force
+  }
+  mkdir $BUILD_DIR\cuda -Force
+  Push-Location $BUILD_DIR\cuda
+    7z x $_FILE
+    Start-Process setup.exe -Wait -ArgumentList "-log:$BUILD_DIR\cuda\log -loglevel:6 -s"
+  Pop-Location
+
+  Write-Output "---- LOG.RunDll32.EXE.log ----"
+  Get-Content "$BUILD_DIR\cuda\log\LOG.RunDll32.EXE.log"
+  Write-Output "---- LOG.setup.exe.log ----"
+  Get-Content "$BUILD_DIR\cuda\log\LOG.setup.exe.log"
+  if (Test-Path "$BUILD_DIR\cuda\log\LOG.setup.exe.log1") {
+    Write-Output "---- LOG.setup.exe.log1 ----"
+    Get-Content "$BUILD_DIR\cuda\log\LOG.setup.exe.log1"
+  }
+  if (Test-Path "$BUILD_DIR\cuda\log\LOG.setup.exe.log2") {
+    Write-Output "---- LOG.setup.exe.log2 ----"
+    Get-Content "$BUILD_DIR\cuda\log\LOG.setup.exe.log2"
+  }
   New-Item -Type File "$INSTALL_DIR\cuda_installed"
 }
