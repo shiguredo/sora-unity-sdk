@@ -99,8 +99,6 @@ if (!(Test-Path "$INSTALL_DIR\webrtc\release\webrtc.lib")) {
 # CUDA
 
 if (!(Test-Path "$INSTALL_DIR\cuda_installed")) {
-  #$_URL = "http://developer.download.nvidia.com/compute/cuda/10.2/Prod/network_installers/cuda_10.2.89_win10_network.exe"
-  #$_FILE = "$BUILD_DIR\cuda_10.2.89_win10_network.exe"
   $_URL = "http://developer.download.nvidia.com/compute/cuda/10.2/Prod/local_installers/cuda_10.2.89_441.22_win10.exe"
   $_FILE = "$BUILD_DIR\cuda_10.2.89_441.22_win10.exe"
   Push-Location $BUILD_DIR
@@ -108,31 +106,12 @@ if (!(Test-Path "$INSTALL_DIR\cuda_installed")) {
       Invoke-WebRequest -Uri $_URL -OutFile $_FILE
     }
   Pop-Location
-  # サイレントインストール
-  # https://docs.nvidia.com/cuda/cuda-installation-guide-microsoft-windows/index.html#download-cuda-software
-  #Start-Process "$_FILE" -Wait -ArgumentList "-log $BUILD_DIR\cuda_log.txt -loglevel:6 -s"
   if (Test-Path "$BUILD_DIR\cuda") {
     Remove-Item "$BUILD_DIR\cuda" -Recurse -Force
   }
   mkdir $BUILD_DIR\cuda -Force
   Push-Location $BUILD_DIR\cuda
+    # サイレントインストールとかせずに、単に展開だけして nvcc を利用する
     7z x $_FILE
-    Start-Process setup.exe -Wait -ArgumentList "-log:$BUILD_DIR\cuda\log -loglevel:6 -s nvcc_10.2 visual_studio_integration_10.2"
   Pop-Location
-
-  Write-Output "---- LOG.setup.exe.log ----"
-  Get-Content "$BUILD_DIR\cuda\log\LOG.setup.exe.log"
-  if (Test-Path "$BUILD_DIR\cuda\log\LOG.setup.exe.log1") {
-    Write-Output "---- LOG.setup.exe.log1 ----"
-    Get-Content "$BUILD_DIR\cuda\log\LOG.setup.exe.log1"
-  }
-  if (Test-Path "$BUILD_DIR\cuda\log\LOG.setup.exe.log2") {
-    Write-Output "---- LOG.setup.exe.log2 ----"
-    Get-Content "$BUILD_DIR\cuda\log\LOG.setup.exe.log2"
-  }
-  if (Test-Path "$BUILD_DIR\cuda\log\LOG.RunDll32.EXE.log") {
-    Write-Output "---- LOG.RunDll32.EXE.log ----"
-    Get-Content "$BUILD_DIR\cuda\log\LOG.RunDll32.EXE.log"
-  }
-  New-Item -Type File "$INSTALL_DIR\cuda_installed"
 }
