@@ -137,7 +137,7 @@ if (MSVC)
   # enable_language(CUDA) は利用できない。
   # なので（deprecated だけど）FindCUDA を利用してコンパイルする。
 
-  set(CUDA_TOOLKIT_ROOT_DIR ${CMAKE_CURRENT_SOURCE_DIR}/_build/cuda/nvcc)
+  set(CUDA_TOOLKIT_ROOT_DIR ${CMAKE_CURRENT_SOURCE_DIR}/_install/cuda/nvcc)
   find_package(CUDA REQUIRED)
 
   set_source_files_properties(

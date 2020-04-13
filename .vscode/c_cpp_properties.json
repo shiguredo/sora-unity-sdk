@@ -12,7 +12,7 @@
                 "${workspaceFolder}/_install/webrtc/include/third_party/abseil-cpp",
                 "${workspaceFolder}/_install/webrtc/include/third_party/boringssl/src/include",
                 "${workspaceFolder}/_install/webrtc/include/third_party/libyuv/include",
-                "C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v10.2/include"
+                "${workspaceFolder}/_install/cuda/nvcc/include"
             ],
             "defines": [
                 "_DEBUG",

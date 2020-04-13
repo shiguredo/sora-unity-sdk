@@ -13,6 +13,21 @@ jobs:
     runs-on: windows-latest
     steps:
     - uses: actions/checkout@v1
+    - name: Get Versions
+      run: |
+        Get-Content "VERSIONS" | Foreach-Object {
+          if (!$_) { continue }
+          $var = $_.Split('=')
+          New-Variable -Name $var[0] -Value $var[1] -Force
+        }
+        echo "::set-output name=cuda_version::${CUDA_VERSION}"
+      id: versions
+    - name: Cache CUDA ${{ steps.versions.outputs.cuda_version }}
+      id: cache-cuda
+      uses: actions/cache@v1
+      with:
+        path: _install\cuda
+        key: cuda-${{ steps.versions.outputs.cuda_version }}
     - name: install_tools.bat
       run: .\install_tools.bat
     - name: cmake.bat

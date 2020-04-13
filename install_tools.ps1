@@ -98,9 +98,15 @@ if (!(Test-Path "$INSTALL_DIR\webrtc\release\webrtc.lib")) {
 
 # CUDA
 
-if (!(Test-Path "$INSTALL_DIR\cuda_installed")) {
-  $_URL = "http://developer.download.nvidia.com/compute/cuda/10.2/Prod/local_installers/cuda_10.2.89_441.22_win10.exe"
-  $_FILE = "$BUILD_DIR\cuda_10.2.89_441.22_win10.exe"
+if (!(Test-Path "$INSTALL_DIR\cuda\nvcc")) {
+  if ("$CUDA_VERSION" -eq "10.2") {
+    $_URL = "http://developer.download.nvidia.com/compute/cuda/10.2/Prod/local_installers/cuda_10.2.89_441.22_win10.exe"
+    $_FILE = "$BUILD_DIR\cuda_10.2.89_441.22_win10.exe"
+  } else {
+    # バージョンが増えたらこの分岐を増やしていく
+    throw "CUDA-$CUDA_VERSION URL not specified"
+  }
+
   Push-Location $BUILD_DIR
     if (!(Test-Path $_FILE)) {
       Invoke-WebRequest -Uri $_URL -OutFile $_FILE
@@ -113,5 +119,10 @@ if (!(Test-Path "$INSTALL_DIR\cuda_installed")) {
   Push-Location $BUILD_DIR\cuda
     # サイレントインストールとかせずに、単に展開だけして nvcc を利用する
     7z x $_FILE
+    if (Test-Path "$INSTALL_DIR\cuda") {
+      Remove-Item $INSTALL_DIR\cuda -Recurse -Force
+    }
+    mkdir $INSTALL_DIR\cuda
+    Move-Item nvcc $INSTALL_DIR\cuda\nvcc
   Pop-Location
 }
