@@ -131,6 +131,8 @@ limitations under the License.
     - [スロースネットワークス株式会社](http://www.sloth-networks.co.jp) 様
 - WebRTC's Statistics 対応
     - 企業名非公開
+- Windows 版 NVIDIA VIDEO CODEC SDK による H.264 デコーダ対応
+    - [スロースネットワークス株式会社](http://www.sloth-networks.co.jp) 様
 
 ## 有償での優先実装が可能な機能一覧
 
