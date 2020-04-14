@@ -146,7 +146,6 @@ limitations under the License.
 
 ### NVIDIA VIDEO CODEC SDK
 
-- H.264 のハードウェアデコーダへの対応
 - VP8 のハードウェアデコードへの対応
 - VP9 のハードウェアデコードへの対応
 - Ubuntu 18.04 への対応
