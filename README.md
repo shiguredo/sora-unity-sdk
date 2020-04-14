@@ -18,7 +18,7 @@ https://discord.gg/pFPQ5pS
 Sora Unity SDK に関する質問・要望などの報告は Disocrd へお願いします。
 
 バグに関してもまずは Discord へお願いします。
-ただし、 Sora のライセンス契約の有無に関わらず、 Issue への応答時間と問題の解決を保証しませんのでご了承ください。
+ただし、 Sora のライセンス契約の有無に関わらず、 応答時間と問題の解決を保証しませんのでご了承ください。
 
 Sora Unity SDK に対する有償のサポートについては提供しておりません。
 
@@ -134,7 +134,7 @@ limitations under the License.
 
 ## 有償での優先実装が可能な機能一覧
 
-**詳細は sora at shiguredo dot jp までお問い合わせください**
+**詳細は Discord またはメールにてお問い合わせください**
 
 - オープンソースでの公開が前提
 - 可能であれば企業名の公開
@@ -146,7 +146,6 @@ limitations under the License.
 
 ### NVIDIA VIDEO CODEC SDK
 
-- H.264 のハードウェアデコーダへの対応
 - VP8 のハードウェアデコードへの対応
 - VP9 のハードウェアデコードへの対応
 - Ubuntu 18.04 への対応
