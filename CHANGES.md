@@ -11,10 +11,6 @@
 
 ## develop
 
-- [ADD] Windows 版の H.264 デコードに NVIDIA VIDEO CODEC SDK を利用する
-    - 実験的機能
-    - @melpon
-
 ## 2020.2
 
 - [UPDATE] WebRTC のバージョンを M81 (4044@{#12}) に上げる
