@@ -50,8 +50,6 @@ Sora Unity SDK ではソフトウェアでの H.264 エンコード/デコード
 
 そのため Windows では NVIDIA VIDEO CODEC SDK 、macOS では VideoToolbox を利用し、H.264 のエンコード/デコードを実現しています。
 
-**NVIDIA VIDEO CODEC SDK を利用した H.264 はデコードは現時点では非対応です**
-
 詳細は H.264 を [USE_H264.md](doc/USE_H264.md) をお読みください
 
 ## 対応機能
