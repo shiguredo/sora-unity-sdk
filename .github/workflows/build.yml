@@ -5,8 +5,6 @@ on:
     paths-ignore:
     - 'doc/**'
     - 'README.md'
-  schedule:
-  - cron: "0 0 * * *"
 
 jobs:
   build-windows:
