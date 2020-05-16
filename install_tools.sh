@@ -19,6 +19,7 @@ for name in macos android; do
       curl -LO https://github.com/shiguredo-webrtc-build/webrtc-build/releases/download/m${WEBRTC_BUILD_VERSION}/webrtc.$name.tar.gz
     popd
 
+    mkdir -p $INSTALL_DIR/$name
     pushd $INSTALL_DIR/$name
       rm -rf webrtc/
       tar xf $BUILD_DIR/webrtc.$name.tar.gz

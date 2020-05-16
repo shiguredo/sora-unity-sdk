@@ -22,7 +22,7 @@
 #include "rtc_manager.h"
 #include "scalable_track_source.h"
 
-#ifdef __APPLE__
+#if defined(SORA_UNITY_SDK_MACOS)
 #include "mac_helper/objc_codec_factory_helper.h"
 #else
 #include "hw_video_encoder_factory.h"
@@ -101,7 +101,7 @@ bool RTCManager::Init(
       webrtc::CreateBuiltinAudioEncoderFactory();
   media_dependencies.audio_decoder_factory =
       webrtc::CreateBuiltinAudioDecoderFactory();
-#ifdef __APPLE__
+#if defined(SORA_UNITY_SDK_MACOS)
   media_dependencies.video_encoder_factory = CreateObjCEncoderFactory();
   media_dependencies.video_decoder_factory = CreateObjCDecoderFactory();
 #else

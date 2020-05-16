@@ -143,6 +143,7 @@ if (SORA_UNITY_SDK_PACKAGE STREQUAL "windows")
 
   target_compile_definitions(SoraUnitySdk
     PRIVATE
+      SORA_UNITY_SDK_WINDOWS
       UNICODE
       _UNICODE
       _CONSOLE
@@ -233,6 +234,7 @@ elseif (SORA_UNITY_SDK_PACKAGE STREQUAL "macos")
 
   target_compile_definitions(SoraUnitySdk
     PRIVATE
+      SORA_UNITY_SDK_MACOS
       WEBRTC_POSIX
       WEBRTC_MAC
   )
@@ -248,10 +250,13 @@ elseif (SORA_UNITY_SDK_PACKAGE STREQUAL "android")
   target_sources(SoraUnitySdk
     PRIVATE
       src/jni_onload.cc
+      src/rtc/hw_video_encoder_factory.cpp
+      src/rtc/hw_video_decoder_factory.cpp
   )
 
   target_compile_definitions(SoraUnitySdk
     PRIVATE
+      SORA_UNITY_SDK_ANDROID
       WEBRTC_POSIX
       WEBRTC_LINUX
       WEBRTC_ANDROID
@@ -269,9 +274,10 @@ elseif (SORA_UNITY_SDK_PACKAGE STREQUAL "android")
   )
 
   target_link_libraries(SoraUnitySdk
-    ${ANDROID_LIB_LOG}
-    ${ANDROID_LIB_ANDROID}
-    ${ANDROID_LIB_OPENSLES}
+    PRIVATE
+      ${ANDROID_LIB_LOG}
+      ${ANDROID_LIB_ANDROID}
+      ${ANDROID_LIB_OPENSLES}
   )
   target_link_options(SoraUnitySdk
     PRIVATE
@@ -282,93 +288,82 @@ elseif (SORA_UNITY_SDK_PACKAGE STREQUAL "android")
       -Wl,--wrap=realloc
       -Wl,--wrap=free
       # ./aarch64-linux-android-readelf -Ws ../../../../../../../_install/android/webrtc/lib/arm64-v8a/libwebrtc.a | grep Java_org_webrtc_ | while read a b c d e f g h; do echo -Wl,--undefined=$h; done
-      -Wl,--undefined=Java_org_webrtc_AudioTrack_nativeSetVolume
-      -Wl,--undefined=Java_org_webrtc_BuiltinAudioDecoderFactoryFactory_nativeCreateBuiltinAudioDecoderFactory
-      -Wl,--undefined=Java_org_webrtc_BuiltinAudioEncoderFactoryFactory_nativeCreateBuiltinAudioEncoderFactory
-      -Wl,--undefined=Java_org_webrtc_CallSessionFileRotatingLogSink_nativeAddSink
-      -Wl,--undefined=Java_org_webrtc_CallSessionFileRotatingLogSink_nativeDeleteSink
-      -Wl,--undefined=Java_org_webrtc_CallSessionFileRotatingLogSink_nativeGetLogData
-      -Wl,--undefined=Java_org_webrtc_DataChannel_nativeBufferedAmount
-      -Wl,--undefined=Java_org_webrtc_DataChannel_nativeClose
-      -Wl,--undefined=Java_org_webrtc_DataChannel_nativeId
-      -Wl,--undefined=Java_org_webrtc_DataChannel_nativeLabel
-      -Wl,--undefined=Java_org_webrtc_DataChannel_nativeRegisterObserver
-      -Wl,--undefined=Java_org_webrtc_DataChannel_nativeSend
-      -Wl,--undefined=Java_org_webrtc_DataChannel_nativeState
-      -Wl,--undefined=Java_org_webrtc_DataChannel_nativeUnregisterObserver
-      -Wl,--undefined=Java_org_webrtc_DtmfSender_nativeCanInsertDtmf
-      -Wl,--undefined=Java_org_webrtc_DtmfSender_nativeDuration
-      -Wl,--undefined=Java_org_webrtc_DtmfSender_nativeInsertDtmf
-      -Wl,--undefined=Java_org_webrtc_DtmfSender_nativeInterToneGap
-      -Wl,--undefined=Java_org_webrtc_DtmfSender_nativeTones
-      -Wl,--undefined=Java_org_webrtc_H264Utils_nativeIsSameH264Profile
-      -Wl,--undefined=Java_org_webrtc_Histogram_nativeAddSample
-      -Wl,--undefined=Java_org_webrtc_Histogram_nativeCreateCounts
-      -Wl,--undefined=Java_org_webrtc_Histogram_nativeCreateEnumeration
-      -Wl,--undefined=Java_org_webrtc_JavaI420Buffer_nativeCropAndScaleI420
-      -Wl,--undefined=Java_org_webrtc_JniCommon_nativeAddRef
-      -Wl,--undefined=Java_org_webrtc_JniCommon_nativeAllocateByteBuffer
-      -Wl,--undefined=Java_org_webrtc_JniCommon_nativeFreeByteBuffer
-      -Wl,--undefined=Java_org_webrtc_JniCommon_nativeReleaseRef
-      -Wl,--undefined=Java_org_webrtc_LibvpxVp8Decoder_nativeCreateDecoder
-      -Wl,--undefined=Java_org_webrtc_LibvpxVp8Encoder_nativeCreateEncoder
-      -Wl,--undefined=Java_org_webrtc_LibvpxVp9Decoder_nativeCreateDecoder
-      -Wl,--undefined=Java_org_webrtc_LibvpxVp9Decoder_nativeIsSupported
-      -Wl,--undefined=Java_org_webrtc_LibvpxVp9Encoder_nativeCreateEncoder
-      -Wl,--undefined=Java_org_webrtc_LibvpxVp9Encoder_nativeIsSupported
-      -Wl,--undefined=Java_org_webrtc_Logging_nativeEnableLogThreads
-      -Wl,--undefined=Java_org_webrtc_Logging_nativeEnableLogTimeStamps
-      -Wl,--undefined=Java_org_webrtc_Logging_nativeEnableLogToDebugOutput
-      -Wl,--undefined=Java_org_webrtc_Logging_nativeLog
-      -Wl,--undefined=Java_org_webrtc_MediaCodecVideoDecoder_nativeCreateDecoder
-      -Wl,--undefined=Java_org_webrtc_MediaCodecVideoEncoder_nativeCreateEncoder
-      -Wl,--undefined=Java_org_webrtc_MediaCodecVideoEncoder_nativeFillInputBuffer
-      -Wl,--undefined=Java_org_webrtc_MediaSource_nativeGetState
-      -Wl,--undefined=Java_org_webrtc_MediaStreamTrack_nativeGetEnabled
-      -Wl,--undefined=Java_org_webrtc_MediaStreamTrack_nativeGetId
-      -Wl,--undefined=Java_org_webrtc_MediaStreamTrack_nativeGetKind
-      -Wl,--undefined=Java_org_webrtc_MediaStreamTrack_nativeGetState
-      -Wl,--undefined=Java_org_webrtc_MediaStreamTrack_nativeSetEnabled
-      -Wl,--undefined=Java_org_webrtc_MediaStream_nativeAddAudioTrackToNativeStream
-      -Wl,--undefined=Java_org_webrtc_MediaStream_nativeAddVideoTrackToNativeStream
-      -Wl,--undefined=Java_org_webrtc_MediaStream_nativeGetId
-      -Wl,--undefined=Java_org_webrtc_MediaStream_nativeRemoveAudioTrack
-      -Wl,--undefined=Java_org_webrtc_MediaStream_nativeRemoveVideoTrack
       -Wl,--undefined=Java_org_webrtc_Metrics_nativeEnable
       -Wl,--undefined=Java_org_webrtc_Metrics_nativeGetAndReset
-      -Wl,--undefined=Java_org_webrtc_NV12Buffer_nativeCropAndScale
+      -Wl,--undefined=Java_org_webrtc_VideoDecoderFallback_nativeCreateDecoder
       -Wl,--undefined=Java_org_webrtc_NV21Buffer_nativeCropAndScale
+      -Wl,--undefined=Java_org_webrtc_VideoEncoderFallback_nativeCreateEncoder
+      -Wl,--undefined=Java_org_webrtc_JavaI420Buffer_nativeCropAndScaleI420
+      -Wl,--undefined=Java_org_webrtc_VideoTrack_nativeAddSink
+      -Wl,--undefined=Java_org_webrtc_VideoTrack_nativeFreeSink
+      -Wl,--undefined=Java_org_webrtc_VideoTrack_nativeRemoveSink
+      -Wl,--undefined=Java_org_webrtc_VideoTrack_nativeWrapSink
+      -Wl,--undefined=Java_org_webrtc_VideoEncoderWrapper_nativeOnEncodedFrame
+      -Wl,--undefined=Java_org_webrtc_VideoDecoderWrapper_nativeOnDecodedFrame
       -Wl,--undefined=Java_org_webrtc_NativeAndroidVideoTrackSource_nativeAdaptFrame
       -Wl,--undefined=Java_org_webrtc_NativeAndroidVideoTrackSource_nativeAdaptOutputFormat
       -Wl,--undefined=Java_org_webrtc_NativeAndroidVideoTrackSource_nativeOnFrameCaptured
       -Wl,--undefined=Java_org_webrtc_NativeAndroidVideoTrackSource_nativeSetIsScreencast
       -Wl,--undefined=Java_org_webrtc_NativeAndroidVideoTrackSource_nativeSetState
+      -Wl,--undefined=Java_org_webrtc_NV12Buffer_nativeCropAndScale
+      -Wl,--undefined=Java_org_webrtc_H264Utils_nativeIsSameH264Profile
+      -Wl,--undefined=Java_org_webrtc_TimestampAligner_nativeCreateTimestampAligner
+      -Wl,--undefined=Java_org_webrtc_TimestampAligner_nativeReleaseTimestampAligner
+      -Wl,--undefined=Java_org_webrtc_TimestampAligner_nativeRtcTimeNanos
+      -Wl,--undefined=Java_org_webrtc_TimestampAligner_nativeTranslateTimestamp
+      -Wl,--undefined=Java_org_webrtc_YuvHelper_nativeABGRToI420
+      -Wl,--undefined=Java_org_webrtc_YuvHelper_nativeCopyPlane
+      -Wl,--undefined=Java_org_webrtc_YuvHelper_nativeI420Copy
+      -Wl,--undefined=Java_org_webrtc_YuvHelper_nativeI420Rotate
+      -Wl,--undefined=Java_org_webrtc_YuvHelper_nativeI420ToNV12
+      -Wl,--undefined=Java_org_webrtc_audio_JavaAudioDeviceModule_nativeCreateAudioDeviceModule
+      -Wl,--undefined=Java_org_webrtc_BuiltinAudioEncoderFactoryFactory_nativeCreateBuiltinAudioEncoderFactory
+      -Wl,--undefined=Java_org_webrtc_BuiltinAudioDecoderFactoryFactory_nativeCreateBuiltinAudioDecoderFactory
+      -Wl,--undefined=Java_org_webrtc_LibvpxVp8Decoder_nativeCreateDecoder
+      -Wl,--undefined=Java_org_webrtc_LibvpxVp8Encoder_nativeCreateEncoder
       -Wl,--undefined=Java_org_webrtc_NetworkMonitor_nativeNotifyConnectionTypeChanged
       -Wl,--undefined=Java_org_webrtc_NetworkMonitor_nativeNotifyOfActiveNetworkList
       -Wl,--undefined=Java_org_webrtc_NetworkMonitor_nativeNotifyOfNetworkConnect
       -Wl,--undefined=Java_org_webrtc_NetworkMonitor_nativeNotifyOfNetworkDisconnect
-      -Wl,--undefined=Java_org_webrtc_PeerConnectionFactory_nativeCreateAudioSource
-      -Wl,--undefined=Java_org_webrtc_PeerConnectionFactory_nativeCreateAudioTrack
-      -Wl,--undefined=Java_org_webrtc_PeerConnectionFactory_nativeCreateLocalMediaStream
-      -Wl,--undefined=Java_org_webrtc_PeerConnectionFactory_nativeCreatePeerConnection
-      -Wl,--undefined=Java_org_webrtc_PeerConnectionFactory_nativeCreatePeerConnectionFactory
-      -Wl,--undefined=Java_org_webrtc_PeerConnectionFactory_nativeCreateVideoSource
-      -Wl,--undefined=Java_org_webrtc_PeerConnectionFactory_nativeCreateVideoTrack
-      -Wl,--undefined=Java_org_webrtc_PeerConnectionFactory_nativeDeleteLoggable
-      -Wl,--undefined=Java_org_webrtc_PeerConnectionFactory_nativeFindFieldTrialsFullName
-      -Wl,--undefined=Java_org_webrtc_PeerConnectionFactory_nativeFreeFactory
-      -Wl,--undefined=Java_org_webrtc_PeerConnectionFactory_nativeGetNativePeerConnectionFactory
-      -Wl,--undefined=Java_org_webrtc_PeerConnectionFactory_nativeInitializeAndroidGlobals
-      -Wl,--undefined=Java_org_webrtc_PeerConnectionFactory_nativeInitializeFieldTrials
-      -Wl,--undefined=Java_org_webrtc_PeerConnectionFactory_nativeInitializeInternalTracer
-      -Wl,--undefined=Java_org_webrtc_PeerConnectionFactory_nativeInjectLoggable
-      -Wl,--undefined=Java_org_webrtc_PeerConnectionFactory_nativePrintStackTrace
-      -Wl,--undefined=Java_org_webrtc_PeerConnectionFactory_nativePrintStackTracesOfRegisteredThreads
-      -Wl,--undefined=Java_org_webrtc_PeerConnectionFactory_nativeShutdownInternalTracer
-      -Wl,--undefined=Java_org_webrtc_PeerConnectionFactory_nativeStartAecDump
-      -Wl,--undefined=Java_org_webrtc_PeerConnectionFactory_nativeStartInternalTracingCapture
-      -Wl,--undefined=Java_org_webrtc_PeerConnectionFactory_nativeStopAecDump
-      -Wl,--undefined=Java_org_webrtc_PeerConnectionFactory_nativeStopInternalTracingCapture
+      -Wl,--undefined=Java_org_webrtc_JniCommon_nativeAddRef
+      -Wl,--undefined=Java_org_webrtc_JniCommon_nativeAllocateByteBuffer
+      -Wl,--undefined=Java_org_webrtc_JniCommon_nativeFreeByteBuffer
+      -Wl,--undefined=Java_org_webrtc_JniCommon_nativeReleaseRef
+      -Wl,--undefined=Java_org_webrtc_Logging_nativeEnableLogThreads
+      -Wl,--undefined=Java_org_webrtc_Logging_nativeEnableLogTimeStamps
+      -Wl,--undefined=Java_org_webrtc_Logging_nativeEnableLogToDebugOutput
+      -Wl,--undefined=Java_org_webrtc_Logging_nativeLog
+      -Wl,--undefined=Java_org_webrtc_Histogram_nativeAddSample
+      -Wl,--undefined=Java_org_webrtc_Histogram_nativeCreateCounts
+      -Wl,--undefined=Java_org_webrtc_Histogram_nativeCreateEnumeration
+      -Wl,--undefined=Java_org_webrtc_LibvpxVp9Decoder_nativeCreateDecoder
+      -Wl,--undefined=Java_org_webrtc_LibvpxVp9Decoder_nativeIsSupported
+      -Wl,--undefined=Java_org_webrtc_LibvpxVp9Encoder_nativeCreateEncoder
+      -Wl,--undefined=Java_org_webrtc_LibvpxVp9Encoder_nativeIsSupported
+      -Wl,--undefined=Java_org_webrtc_audio_WebRtcAudioTrack_nativeCacheDirectBufferAddress
+      -Wl,--undefined=Java_org_webrtc_audio_WebRtcAudioTrack_nativeGetPlayoutData
+      -Wl,--undefined=Java_org_webrtc_audio_WebRtcAudioRecord_nativeCacheDirectBufferAddress
+      -Wl,--undefined=Java_org_webrtc_audio_WebRtcAudioRecord_nativeDataIsRecorded
+      -Wl,--undefined=Java_org_webrtc_MediaStream_nativeAddAudioTrackToNativeStream
+      -Wl,--undefined=Java_org_webrtc_MediaStream_nativeAddVideoTrackToNativeStream
+      -Wl,--undefined=Java_org_webrtc_MediaStream_nativeGetId
+      -Wl,--undefined=Java_org_webrtc_MediaStream_nativeRemoveAudioTrack
+      -Wl,--undefined=Java_org_webrtc_MediaStream_nativeRemoveVideoTrack
+      -Wl,--undefined=Java_org_webrtc_RtpSender_nativeGetDtmfSender
+      -Wl,--undefined=Java_org_webrtc_RtpSender_nativeGetId
+      -Wl,--undefined=Java_org_webrtc_RtpSender_nativeGetParameters
+      -Wl,--undefined=Java_org_webrtc_RtpSender_nativeGetStreams
+      -Wl,--undefined=Java_org_webrtc_RtpSender_nativeGetTrack
+      -Wl,--undefined=Java_org_webrtc_RtpSender_nativeSetFrameEncryptor
+      -Wl,--undefined=Java_org_webrtc_RtpSender_nativeSetParameters
+      -Wl,--undefined=Java_org_webrtc_RtpSender_nativeSetStreams
+      -Wl,--undefined=Java_org_webrtc_RtpSender_nativeSetTrack
+      -Wl,--undefined=Java_org_webrtc_TurnCustomizer_nativeFreeTurnCustomizer
+      -Wl,--undefined=Java_org_webrtc_DtmfSender_nativeCanInsertDtmf
+      -Wl,--undefined=Java_org_webrtc_DtmfSender_nativeDuration
+      -Wl,--undefined=Java_org_webrtc_DtmfSender_nativeInsertDtmf
+      -Wl,--undefined=Java_org_webrtc_DtmfSender_nativeInterToneGap
+      -Wl,--undefined=Java_org_webrtc_DtmfSender_nativeTones
       -Wl,--undefined=Java_org_webrtc_PeerConnection_nativeAddIceCandidate
       -Wl,--undefined=Java_org_webrtc_PeerConnection_nativeAddLocalStream
       -Wl,--undefined=Java_org_webrtc_PeerConnection_nativeAddTrack
@@ -405,22 +400,50 @@ elseif (SORA_UNITY_SDK_PACKAGE STREQUAL "android")
       -Wl,--undefined=Java_org_webrtc_PeerConnection_nativeSignalingState
       -Wl,--undefined=Java_org_webrtc_PeerConnection_nativeStartRtcEventLog
       -Wl,--undefined=Java_org_webrtc_PeerConnection_nativeStopRtcEventLog
+      -Wl,--undefined=Java_org_webrtc_PeerConnectionFactory_nativeCreateAudioSource
+      -Wl,--undefined=Java_org_webrtc_PeerConnectionFactory_nativeCreateAudioTrack
+      -Wl,--undefined=Java_org_webrtc_PeerConnectionFactory_nativeCreateLocalMediaStream
+      -Wl,--undefined=Java_org_webrtc_PeerConnectionFactory_nativeCreatePeerConnection
+      -Wl,--undefined=Java_org_webrtc_PeerConnectionFactory_nativeCreatePeerConnectionFactory
+      -Wl,--undefined=Java_org_webrtc_PeerConnectionFactory_nativeCreateVideoSource
+      -Wl,--undefined=Java_org_webrtc_PeerConnectionFactory_nativeCreateVideoTrack
+      -Wl,--undefined=Java_org_webrtc_PeerConnectionFactory_nativeDeleteLoggable
+      -Wl,--undefined=Java_org_webrtc_PeerConnectionFactory_nativeFindFieldTrialsFullName
+      -Wl,--undefined=Java_org_webrtc_PeerConnectionFactory_nativeFreeFactory
+      -Wl,--undefined=Java_org_webrtc_PeerConnectionFactory_nativeGetNativePeerConnectionFactory
+      -Wl,--undefined=Java_org_webrtc_PeerConnectionFactory_nativeInitializeAndroidGlobals
+      -Wl,--undefined=Java_org_webrtc_PeerConnectionFactory_nativeInitializeFieldTrials
+      -Wl,--undefined=Java_org_webrtc_PeerConnectionFactory_nativeInitializeInternalTracer
+      -Wl,--undefined=Java_org_webrtc_PeerConnectionFactory_nativeInjectLoggable
+      -Wl,--undefined=Java_org_webrtc_PeerConnectionFactory_nativePrintStackTrace
+      -Wl,--undefined=Java_org_webrtc_PeerConnectionFactory_nativePrintStackTracesOfRegisteredThreads
+      -Wl,--undefined=Java_org_webrtc_PeerConnectionFactory_nativeShutdownInternalTracer
+      -Wl,--undefined=Java_org_webrtc_PeerConnectionFactory_nativeStartAecDump
+      -Wl,--undefined=Java_org_webrtc_PeerConnectionFactory_nativeStartInternalTracingCapture
+      -Wl,--undefined=Java_org_webrtc_PeerConnectionFactory_nativeStopAecDump
+      -Wl,--undefined=Java_org_webrtc_PeerConnectionFactory_nativeStopInternalTracingCapture
       -Wl,--undefined=Java_org_webrtc_RtcCertificatePem_nativeGenerateCertificate
+      -Wl,--undefined=Java_org_webrtc_AudioTrack_nativeSetVolume
+      -Wl,--undefined=Java_org_webrtc_MediaStreamTrack_nativeGetEnabled
+      -Wl,--undefined=Java_org_webrtc_MediaStreamTrack_nativeGetId
+      -Wl,--undefined=Java_org_webrtc_MediaStreamTrack_nativeGetKind
+      -Wl,--undefined=Java_org_webrtc_MediaStreamTrack_nativeGetState
+      -Wl,--undefined=Java_org_webrtc_MediaStreamTrack_nativeSetEnabled
+      -Wl,--undefined=Java_org_webrtc_MediaSource_nativeGetState
+      -Wl,--undefined=Java_org_webrtc_DataChannel_nativeBufferedAmount
+      -Wl,--undefined=Java_org_webrtc_DataChannel_nativeClose
+      -Wl,--undefined=Java_org_webrtc_DataChannel_nativeId
+      -Wl,--undefined=Java_org_webrtc_DataChannel_nativeLabel
+      -Wl,--undefined=Java_org_webrtc_DataChannel_nativeRegisterObserver
+      -Wl,--undefined=Java_org_webrtc_DataChannel_nativeSend
+      -Wl,--undefined=Java_org_webrtc_DataChannel_nativeState
+      -Wl,--undefined=Java_org_webrtc_DataChannel_nativeUnregisterObserver
       -Wl,--undefined=Java_org_webrtc_RtpReceiver_nativeGetId
       -Wl,--undefined=Java_org_webrtc_RtpReceiver_nativeGetParameters
       -Wl,--undefined=Java_org_webrtc_RtpReceiver_nativeGetTrack
       -Wl,--undefined=Java_org_webrtc_RtpReceiver_nativeSetFrameDecryptor
       -Wl,--undefined=Java_org_webrtc_RtpReceiver_nativeSetObserver
       -Wl,--undefined=Java_org_webrtc_RtpReceiver_nativeUnsetObserver
-      -Wl,--undefined=Java_org_webrtc_RtpSender_nativeGetDtmfSender
-      -Wl,--undefined=Java_org_webrtc_RtpSender_nativeGetId
-      -Wl,--undefined=Java_org_webrtc_RtpSender_nativeGetParameters
-      -Wl,--undefined=Java_org_webrtc_RtpSender_nativeGetStreams
-      -Wl,--undefined=Java_org_webrtc_RtpSender_nativeGetTrack
-      -Wl,--undefined=Java_org_webrtc_RtpSender_nativeSetFrameEncryptor
-      -Wl,--undefined=Java_org_webrtc_RtpSender_nativeSetParameters
-      -Wl,--undefined=Java_org_webrtc_RtpSender_nativeSetStreams
-      -Wl,--undefined=Java_org_webrtc_RtpSender_nativeSetTrack
       -Wl,--undefined=Java_org_webrtc_RtpTransceiver_nativeCurrentDirection
       -Wl,--undefined=Java_org_webrtc_RtpTransceiver_nativeDirection
       -Wl,--undefined=Java_org_webrtc_RtpTransceiver_nativeGetMediaType
@@ -430,28 +453,8 @@ elseif (SORA_UNITY_SDK_PACKAGE STREQUAL "android")
       -Wl,--undefined=Java_org_webrtc_RtpTransceiver_nativeSetDirection
       -Wl,--undefined=Java_org_webrtc_RtpTransceiver_nativeStop
       -Wl,--undefined=Java_org_webrtc_RtpTransceiver_nativeStopped
-      -Wl,--undefined=Java_org_webrtc_TimestampAligner_nativeCreateTimestampAligner
-      -Wl,--undefined=Java_org_webrtc_TimestampAligner_nativeReleaseTimestampAligner
-      -Wl,--undefined=Java_org_webrtc_TimestampAligner_nativeRtcTimeNanos
-      -Wl,--undefined=Java_org_webrtc_TimestampAligner_nativeTranslateTimestamp
-      -Wl,--undefined=Java_org_webrtc_TurnCustomizer_nativeFreeTurnCustomizer
-      -Wl,--undefined=Java_org_webrtc_VideoDecoderFallback_nativeCreateDecoder
-      -Wl,--undefined=Java_org_webrtc_VideoDecoderWrapper_nativeOnDecodedFrame
-      -Wl,--undefined=Java_org_webrtc_VideoEncoderFallback_nativeCreateEncoder
-      -Wl,--undefined=Java_org_webrtc_VideoEncoderWrapper_nativeOnEncodedFrame
-      -Wl,--undefined=Java_org_webrtc_VideoTrack_nativeAddSink
-      -Wl,--undefined=Java_org_webrtc_VideoTrack_nativeFreeSink
-      -Wl,--undefined=Java_org_webrtc_VideoTrack_nativeRemoveSink
-      -Wl,--undefined=Java_org_webrtc_VideoTrack_nativeWrapSink
-      -Wl,--undefined=Java_org_webrtc_YuvHelper_nativeABGRToI420
-      -Wl,--undefined=Java_org_webrtc_YuvHelper_nativeCopyPlane
-      -Wl,--undefined=Java_org_webrtc_YuvHelper_nativeI420Copy
-      -Wl,--undefined=Java_org_webrtc_YuvHelper_nativeI420Rotate
-      -Wl,--undefined=Java_org_webrtc_YuvHelper_nativeI420ToNV12
-      -Wl,--undefined=Java_org_webrtc_audio_JavaAudioDeviceModule_nativeCreateAudioDeviceModule
-      -Wl,--undefined=Java_org_webrtc_audio_WebRtcAudioRecord_nativeCacheDirectBufferAddress
-      -Wl,--undefined=Java_org_webrtc_audio_WebRtcAudioRecord_nativeDataIsRecorded
-      -Wl,--undefined=Java_org_webrtc_audio_WebRtcAudioTrack_nativeCacheDirectBufferAddress
-      -Wl,--undefined=Java_org_webrtc_audio_WebRtcAudioTrack_nativeGetPlayoutData
+      -Wl,--undefined=Java_org_webrtc_CallSessionFileRotatingLogSink_nativeAddSink
+      -Wl,--undefined=Java_org_webrtc_CallSessionFileRotatingLogSink_nativeDeleteSink
+      -Wl,--undefined=Java_org_webrtc_CallSessionFileRotatingLogSink_nativeGetLogData
   )
 endif ()
