@@ -11,48 +11,98 @@
 
 ## develop
 
+## 2020.2
+
+- [UPDATE] WebRTC のバージョンを M81 (4044@{#12}) に上げる
+    - @voluntas
+- [ADD] Windows 版の H.264 デコードに NVIDIA VIDEO CODEC SDK を利用する
+    - 実験的機能
+    - @melpon
+
+## 2020.1
+
+- [ADD] Windows 版では H.264 エンコードに NVIDIA VIDEO CODEC SDK を利用する（利用可能な場合のみ）
+    - 実験的機能
+    - @melpon
+- [ADD] macOS 版では H.264 のエンコード/デコードに VideoToolbox を利用する
+    - 実験的機能
+    - @melpon
+- [ADD] Sora へ WebRTC 統計情報を送るようにする
+    - @melpon
+
 ## 1.0.4
 
-- [UPDATE] webrtc-build を 80.3987.2.2 に上げた
-- [CHANGE] Sora への接続時に sendonly, recvonly, sendrecv を指定できるようにした
+- [UPDATE] webrtc-build を 80.3987.2.2 に上げる
+    - @melpon
+- [CHANGE] Sora への接続時に sendonly, recvonly, sendrecv を指定できるようにする
+    - @melpon
 
 ## 1.0.3
 
-- [UPDATE] Boost のバージョンを 1.72.0 に上げた
-- [UPDATE] WebRTC のバージョンを M80 (3987@{#2}) に上げた
+- [UPDATE] Boost のバージョンを 1.72.0 に上げる
+    - @melpon
+- [UPDATE] WebRTC のバージョンを M80 (3987@{#2}) に上げる
+    - @melpon
 
 ## 1.0.2
 
-- [UPDATE] WebRTC のバージョンを M79@{#5} に上げた
-- [UPDATE] Windows 版の WebRTC ライブラリを shiguredo-webrtc-build からダウンロードするようにした
-- [UPDATE] macOS 版の WebRTC ライブラリを shiguredo-webrtc-build からダウンロードするようにした
+- [UPDATE] WebRTC のバージョンを M79@{#5} に上げる
+    - @melpon
+- [UPDATE] Windows 版の WebRTC ライブラリを shiguredo-webrtc-build からダウンロードする
+    - @melpon
+- [UPDATE] macOS 版の WebRTC ライブラリを shiguredo-webrtc-build からダウンロードする
+    - @melpon
 
 ## 1.0.1
 
 - [ADD] connect 時の文字列に SDK や WebRTC のバージョンを送信する
+    - @melpon
 
 ## 1.0.0
 
 - [ADD] Windows 10 x86_64 対応
+    - @melpon
 - [ADD] macOS 10.15 対応
+    - @melpon
 - [ADD] macOS x86_64 でのデバイス指定機能を追加
+    - @melpon
 - [ADD] Windows x86_64 でのデバイス指定機能を追加
+    - @melpon
 - [ADD] カメラから映像を取得し Sora で送信
+    - @melpon
 - [ADD] カメラから映像を取得し Unity アプリに出力
+    - @melpon
 - [ADD] マイクから音声を取得し Sora で送信
+    - @melpon
 - [ADD] マイクから音声を取得し Unity アプリに出力
+    - @melpon
 - [ADD] Unity アプリで Sora からの音声を受信
+    - @melpon
 - [ADD] Unity アプリで Sora からの映像を受信
+    - @melpon
 - [ADD] Sora から受信した音声を Unity アプリに出力
+    - @melpon
 - [ADD] Sora から受信した映像を Unity アプリに出力
+    - @melpon
 - [ADD] マルチストリームへの対応
+    - @melpon
 - [ADD] VP8 / VP9 への対応
+    - @melpon
 - [ADD] Opus への対応
+    - @melpon
 - [ADD] Unity カメラからの映像取得に対応
+    - @melpon
 - [ADD] Sora のシグナリング通知に対応
+    - @melpon
 - [ADD] Sora の metadata に対応
+    - @melpon
 - [ADD] マイクの代わりに Unity からのオーディを出力に対応
+    - @melpon
 - [ADD] シグナリング開始時のコーデック指定機能を追加
+    - @melpon
 - [ADD] シグナリング開始時のビットレート指定機能を追加
+    - @melpon
 - [ADD] Unity 側で受信したオーディオを再生できるようにする
+    - @melpon
 - [ADD] 受信したオーディオを AudioClip から再生できるようにする
+    - @melpon

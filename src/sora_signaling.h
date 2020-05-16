@@ -102,6 +102,8 @@ class SoraSignaling : public std::enable_shared_from_this<SoraSignaling>,
 
   void doSendConnect();
   void doSendPong();
+  void doSendPong(
+      const rtc::scoped_refptr<const webrtc::RTCStatsReport>& report);
   void createPeerFromConfig(nlohmann::json jconfig);
 
  private:

@@ -4,14 +4,42 @@ on:
   push:
     paths-ignore:
     - 'doc/**'
-  schedule:
-  - cron: "0 0 * * *"
+    - 'README.md'
 
 jobs:
   build-windows:
     runs-on: windows-latest
     steps:
     - uses: actions/checkout@v1
+    - name: Get Versions
+      run: |
+        Get-Content "VERSIONS" | Foreach-Object {
+          if (!$_) { continue }
+          $var = $_.Split('=')
+          New-Variable -Name $var[0] -Value $var[1] -Force
+        }
+        echo "::set-output name=cuda_version::${CUDA_VERSION}"
+        echo "::set-output name=boost_version::${BOOST_VERSION}"
+        echo "::set-output name=webrtc_build_version::${WEBRTC_BUILD_VERSION}"
+      id: versions
+    - name: Cache CUDA ${{ steps.versions.outputs.cuda_version }}
+      id: cache-cuda
+      uses: actions/cache@v1
+      with:
+        path: _install\cuda
+        key: cuda-${{ steps.versions.outputs.cuda_version }}
+    - name: Cache Boost ${{ steps.versions.outputs.boost_version }}
+      id: cache-boost
+      uses: actions/cache@v1
+      with:
+        path: _install\boost
+        key: windows-boost-${{ steps.versions.outputs.boost_version }}
+    - name: Cache WebRTC Build ${{ steps.versions.outputs.webrtc_build_version }}
+      id: cache-webrtc
+      uses: actions/cache@v1
+      with:
+        path: _install\webrtc
+        key: windows-webrtc-${{ steps.versions.outputs.webrtc_build_version }}
     - name: install_tools.bat
       run: .\install_tools.bat
     - name: cmake.bat
@@ -25,6 +53,24 @@ jobs:
     runs-on: macOS-latest
     steps:
     - uses: actions/checkout@v1
+    - name: Get Versions
+      run: |
+        source VERSIONS
+        echo "::set-output name=boost_version::${BOOST_VERSION}"
+        echo "::set-output name=webrtc_build_version::${WEBRTC_BUILD_VERSION}"
+      id: versions
+    - name: Cache Boost ${{ steps.versions.outputs.boost_version }}
+      id: cache-boost
+      uses: actions/cache@v1
+      with:
+        path: _install/boost
+        key: macos-boost-${{ steps.versions.outputs.boost_version }}
+    - name: Cache WebRTC Build ${{ steps.versions.outputs.webrtc_build_version }}
+      id: cache-webrtc
+      uses: actions/cache@v1
+      with:
+        path: _install/webrtc
+        key: macos-webrtc-${{ steps.versions.outputs.webrtc_build_version }}
     - name: install_tools.sh
       run: ./install_tools.sh
     - name: cmake.sh
@@ -63,7 +109,7 @@ jobs:
         path: SoraUnitySdk
   release:
     name: Upload Release Asset
-    if: contains(github.ref, 'tags/v')
+    if: contains(github.ref, 'tags/202')
     needs: [package]
     runs-on: ubuntu-latest
     steps:

@@ -1,0 +1,35 @@
+{
+    "configurations": [
+        {
+            "name": "Win32",
+            "includePath": [
+                "${workspaceFolder}/src",
+                "${workspaceFolder}/_install/boost/include",
+                "${workspaceFolder}/_install/json/include",
+                "${workspaceFolder}/NvCodec/include",
+                "${workspaceFolder}/NvCodec/NvCodec",
+                "${workspaceFolder}/_install/webrtc/include",
+                "${workspaceFolder}/_install/webrtc/include/third_party/abseil-cpp",
+                "${workspaceFolder}/_install/webrtc/include/third_party/boringssl/src/include",
+                "${workspaceFolder}/_install/webrtc/include/third_party/libyuv/include",
+                "${workspaceFolder}/_install/cuda/nvcc/include"
+            ],
+            "defines": [
+                "_DEBUG",
+                "UNICODE",
+                "_UNICODE",
+                "_CONSOLE",
+                "_WIN32_WINNT=0x0A00",
+                "WEBRTC_WIN",
+                "NOMINMAX",
+                "WIN32_LEAN_AND_MEAN"
+            ],
+            "windowsSdkVersion": "10.0.18362.0",
+            "compilerPath": "C:/Program Files (x86)/Microsoft Visual Studio/2019/Community/VC/Tools/MSVC/14.25.28610/bin/Hostx64/x64/cl.exe",
+            "cStandard": "c11",
+            "cppStandard": "c++17",
+            "intelliSenseMode": "msvc-x64"
+        }
+    ],
+    "version": 4
+}

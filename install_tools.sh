@@ -11,9 +11,9 @@ mkdir -p $BUILD_DIR
 mkdir -p $INSTALL_DIR
 
 # WebRTC のインストール
-if [ ! -e $INSTALL_DIR/webrtc/lib/libwebrtc.a ]; then
-  # shiguredo-webrtc-build から各環境のバイナリをダウンロードして配置するだけ
-  for name in macos; do
+for name in macos android; do
+  if [ ! -e $INSTALL_DIR/$name/webrtc/lib/libwebrtc.a ]; then
+    # shiguredo-webrtc-build から各環境のバイナリをダウンロードして配置するだけ
     pushd $BUILD_DIR
       rm -rf webrtc.$name.tar.gz
       curl -LO https://github.com/shiguredo-webrtc-build/webrtc-build/releases/download/m${WEBRTC_BUILD_VERSION}/webrtc.$name.tar.gz
@@ -23,8 +23,8 @@ if [ ! -e $INSTALL_DIR/webrtc/lib/libwebrtc.a ]; then
       rm -rf webrtc/
       tar xf $BUILD_DIR/webrtc.$name.tar.gz
     popd
-  done
-fi
+  fi
+done
 
 # nlohmann/json
 if [ ! -e $INSTALL_DIR/json/include ]; then
@@ -76,18 +76,18 @@ fi
 source $INSTALL_DIR/macos/webrtc/VERSIONS
 pushd $INSTALL_DIR
   if [ ! -e libcxx/.git ]; then
-    git clone https://chromium.googlesource.com/chromium/llvm-project/libcxx
+    git clone $WEBRTC_SRC_BUILDTOOLS_THIRD_PARTY_LIBCXX_TRUNK_URL
   fi
   pushd libcxx
     git fetch
-    git reset --hard $WEBRTC_SRC_BUILDTOOLS_THIRD_PARTY_LIBCXX_TRUNK
+    git reset --hard $WEBRTC_SRC_BUILDTOOLS_THIRD_PARTY_LIBCXX_TRUNK_COMMIT
   popd
 
   if [ ! -e libcxxabi/.git ]; then
-    git clone https://chromium.googlesource.com/chromium/llvm-project/libcxxabi
+    git clone $WEBRTC_SRC_BUILDTOOLS_THIRD_PARTY_LIBCXXABI_TRUNK_URL
   fi
   pushd libcxxabi
     git fetch
-    git reset --hard $WEBRTC_SRC_BUILDTOOLS_THIRD_PARTY_LIBCXXABI_TRUNK
+    git reset --hard $WEBRTC_SRC_BUILDTOOLS_THIRD_PARTY_LIBCXXABI_TRUNK_COMMIT
   popd
 popd
