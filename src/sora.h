@@ -70,6 +70,8 @@ class Sora {
   std::mutex event_mutex_;
   std::deque<std::function<void()>> event_queue_;
 
+  rtc::scoped_refptr<rtc::AdaptedVideoTrackSource> camera_capturer_;
+
   rtc::scoped_refptr<UnityCameraCapturer> unity_camera_capturer_;
   ptrid_t ptrid_;
 

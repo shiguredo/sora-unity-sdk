@@ -23,6 +23,10 @@ Sora::~Sora() {
 
   IdPointer::Instance().Unregister(ptrid_);
 
+#if defined(SORA_UNITY_SDK_ANDROID)
+  static_cast<AndroidCapturer*>(camera_capturer_.get())->Stop();
+#endif
+  camera_capturer_ = nullptr;
   if (signaling_) {
     signaling_->release();
   }
@@ -148,6 +152,8 @@ bool Sora::Connect(std::string unity_version,
     if (!capturer) {
       return false;
     }
+
+    camera_capturer_ = capturer;
 
     config.no_playout = role == "upstream" || role == "sendonly";
 

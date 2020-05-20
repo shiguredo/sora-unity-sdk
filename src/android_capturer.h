@@ -1,6 +1,8 @@
 #ifndef ANDROID_CAPTURER_H_INCLUDED
 #define ANDROID_CAPTURER_H_INCLUDED
 
+#include <android/log.h>
+
 #include "api/media_stream_interface.h"
 #include "rtc_base/thread.h"
 #include "sdk/android/native_api/jni/class_loader.h"
@@ -18,6 +20,21 @@ class AndroidCapturer : public webrtc::jni::AndroidVideoTrackSource {
                                              env,
                                              false,
                                              true) {}
+  ~AndroidCapturer() {
+    RTC_LOG(LS_INFO) << "AndroidCapturer::~AndroidCapturer";
+    Stop();
+  }
+
+  void Stop() {
+    RTC_LOG(LS_INFO) << "AndroidCapturer::Stop";
+    if (video_capturer_ != nullptr) {
+      RTC_LOG(LS_INFO) << "AndroidCapturer::stopCapture";
+      stopCapture(env_, video_capturer_->obj());
+      dispose(env_, video_capturer_->obj());
+      video_capturer_.reset();
+      native_capturer_observer_.reset();
+    }
+  }
 
   static rtc::scoped_refptr<AndroidCapturer> Create(
       JNIEnv* env,
@@ -134,6 +151,18 @@ class AndroidCapturer : public webrtc::jni::AndroidVideoTrackSource {
     jmethodID startid = env->GetMethodID(capcls, "startCapture", "(III)V");
     env->CallVoidMethod(capturer, startid, width, height, target_fps);
   }
+  void stopCapture(JNIEnv* env, jobject capturer) {
+    // videoCapturer.stopCapture();
+    jclass capcls = env->GetObjectClass(capturer);
+    jmethodID stopid = env->GetMethodID(capcls, "stopCapture", "()V");
+    env->CallVoidMethod(capturer, stopid);
+  }
+  void dispose(JNIEnv* env, jobject capturer) {
+    // videoCapturer.dispose();
+    jclass capcls = env->GetObjectClass(capturer);
+    jmethodID disposeid = env->GetMethodID(capcls, "dispose", "()V");
+    env->CallVoidMethod(capturer, disposeid);
+  }
 
   bool Init(JNIEnv* env,
             rtc::Thread* signaling_thread,
@@ -141,8 +170,24 @@ class AndroidCapturer : public webrtc::jni::AndroidVideoTrackSource {
             size_t height,
             size_t target_fps,
             std::string video_capturer_device) {
+    env_ = env;
+
+    // CreateJavaNativeCapturerObserver の実装は以下のようになっている。
+    //
+    // ScopedJavaLocalRef<jobject> CreateJavaNativeCapturerObserver(
+    //     JNIEnv* env,
+    //     rtc::scoped_refptr<AndroidVideoTrackSource> native_source) {
+    //   return Java_NativeCapturerObserver_Constructor(
+    //       env, NativeToJavaPointer(native_source.release()));
+    // }
+    //
+    // ここで新しく this に対して scoped_refptr を構築して release() しているため、参照カウントが増えたままになっている。
+    // Java 側からこの参照カウントを減らしたりはしていないようなので、このままだとリークしてしまう。
+    // なので直後に this->Release() を呼んでカウントを調節する。
     native_capturer_observer_.reset(new webrtc::ScopedJavaGlobalRef<jobject>(
-        env, webrtc::jni::CreateJavaNativeCapturerObserver(env, this)));
+        webrtc::jni::CreateJavaNativeCapturerObserver(env, this)));
+    this->Release();
+
     // 以下の Java コードを JNI 経由で呼んで何とか videoCapturer を作る
 
     // applicationContext = UnityPlayer.currentActivity.getApplicationContext();
@@ -178,6 +223,7 @@ class AndroidCapturer : public webrtc::jni::AndroidVideoTrackSource {
   }
 
  private:
+  JNIEnv* env_ = nullptr;
   std::unique_ptr<webrtc::ScopedJavaGlobalRef<jobject>>
       native_capturer_observer_;
   std::unique_ptr<webrtc::ScopedJavaGlobalRef<jobject>> video_capturer_;
