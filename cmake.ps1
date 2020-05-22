@@ -25,6 +25,7 @@ $MODULE_PATH = (Join-Path (Resolve-Path ".").Path "cmake").Replace("\", "/")
 mkdir build -Force
 Push-Location build
   cmake .. -G "Visual Studio 16 2019" `
+    -DSORA_UNITY_SDK_PACKAGE=windows `
     -DSORA_UNITY_SDK_VERSION="$SORA_UNITY_SDK_VERSION" `
     -DSORA_UNITY_SDK_COMMIT="$SORA_UNITY_SDK_COMMIT" `
     -DWEBRTC_BUILD_VERSION="$WEBRTC_BUILD_VERSION" `

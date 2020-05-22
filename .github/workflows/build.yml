@@ -74,7 +74,7 @@ jobs:
     - name: install_tools.sh
       run: ./install_tools.sh
     - name: cmake.sh
-      run: ./cmake.sh
+      run: ./cmake.sh android
     - name: Upload macOS Artifact
       uses: actions/upload-artifact@v1
       with:
