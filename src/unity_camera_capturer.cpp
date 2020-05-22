@@ -16,7 +16,8 @@ rtc::scoped_refptr<UnityCameraCapturer> UnityCameraCapturer::Create(
 }
 
 void UnityCameraCapturer::OnRender() {
-#if defined(SORA_UNITY_SDK_WINDOWS) || defined(SORA_UNITY_SDK_MACOS)
+#if defined(SORA_UNITY_SDK_WINDOWS) || defined(SORA_UNITY_SDK_MACOS) || \
+    defined(SORA_UNITY_SDK_ANDROID)
   auto i420_buffer = capturer_->Capture();
   if (!i420_buffer) {
     return;
@@ -48,6 +49,13 @@ bool UnityCameraCapturer::Init(UnityContext* context,
 
 #ifdef SORA_UNITY_SDK_MACOS
   capturer_.reset(new MetalImpl());
+  if (!capturer_->Init(context, unity_camera_texture, width, height)) {
+    return false;
+  }
+#endif
+
+#ifdef SORA_UNITY_SDK_ANDROID
+  capturer_.reset(new VulkanImpl());
   if (!capturer_->Init(context, unity_camera_texture, width, height)) {
     return false;
   }

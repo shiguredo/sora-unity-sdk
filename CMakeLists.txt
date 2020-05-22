@@ -246,12 +246,14 @@ elseif (SORA_UNITY_SDK_PACKAGE STREQUAL "android")
   find_library(ANDROID_LIB_LOG log)
   find_library(ANDROID_LIB_ANDROID android)
   find_library(ANDROID_LIB_OPENSLES OpenSLES)
+  find_library(ANDROID_LIB_VULKAN vulkan)
 
   target_sources(SoraUnitySdk
     PRIVATE
       src/jni_onload.cc
       src/rtc/hw_video_encoder_factory.cpp
       src/rtc/hw_video_decoder_factory.cpp
+      src/unity_camera_capturer_vulkan.cpp
   )
 
   target_compile_definitions(SoraUnitySdk
@@ -278,6 +280,7 @@ elseif (SORA_UNITY_SDK_PACKAGE STREQUAL "android")
       ${ANDROID_LIB_LOG}
       ${ANDROID_LIB_ANDROID}
       ${ANDROID_LIB_OPENSLES}
+      ${ANDROID_LIB_VULKAN}
   )
   target_link_options(SoraUnitySdk
     PRIVATE

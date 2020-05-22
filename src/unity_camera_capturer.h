@@ -14,6 +14,10 @@
 #include "rtc/scalable_track_source.h"
 #include "unity_context.h"
 
+#ifdef SORA_UNITY_SDK_ANDROID
+#include <vulkan/vulkan.h>
+#endif
+
 namespace sora {
 
 class UnityCameraCapturer : public sora::ScalableVideoTrackSource,
@@ -54,6 +58,27 @@ class UnityCameraCapturer : public sora::ScalableVideoTrackSource,
     rtc::scoped_refptr<webrtc::I420Buffer> Capture();
   };
   std::unique_ptr<MetalImpl> capturer_;
+#endif
+
+#ifdef SORA_UNITY_SDK_ANDROID
+  class VulkanImpl {
+    UnityContext* context_;
+    void* camera_texture_;
+    VkImage image_ = VK_NULL_HANDLE;
+    VkDeviceMemory memory_ = VK_NULL_HANDLE;
+    VkCommandPool pool_ = VK_NULL_HANDLE;
+    int width_;
+    int height_;
+
+   public:
+    ~VulkanImpl();
+    bool Init(UnityContext* context,
+              void* camera_texture,
+              int width,
+              int height);
+    rtc::scoped_refptr<webrtc::I420Buffer> Capture();
+  };
+  std::unique_ptr<VulkanImpl> capturer_;
 #endif
 
  public:
