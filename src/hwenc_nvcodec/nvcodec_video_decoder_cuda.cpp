@@ -127,7 +127,7 @@ int32_t NvCodecVideoDecoderCuda::Init(cudaVideoCodec codec_id) {
   }
 
   try {
-    decoder_.reset(new NvDecoder(cu_context_, false, codec_id));
+    decoder_.reset(new NvDecoder(cu_context_, false, codec_id, nullptr, false, false, nullptr, nullptr, 3840, 2160));
   } catch (NVDECException& e) {
     return -4;
   }
