@@ -326,6 +326,7 @@ void SoraSignaling::onRead(boost::system::error_code ec,
   } else if (type == "ping") {
     if (rtc_state_ != webrtc::PeerConnectionInterface::IceConnectionState::
                           kIceConnectionConnected) {
+      doRead();
       return;
     }
     bool stats = json_message.value("stats", false);
