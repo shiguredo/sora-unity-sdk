@@ -110,7 +110,10 @@ bool SoraSignaling::Init() {
 }
 
 void SoraSignaling::release() {
-  connection_ = nullptr;
+  // connection_ を nullptr にした上で解放する
+  // デストラクタ中にコールバックが呼ばれて解放中の connection_ にアクセスしてしまうことがあるため
+  auto connection = std::move(connection_);
+  connection = nullptr;
 }
 
 bool SoraSignaling::connect() {
@@ -429,7 +432,7 @@ void SoraSignaling::onCreateDescription(webrtc::SdpType type,
 void SoraSignaling::onSetDescription(webrtc::SdpType type) {
   RTC_LOG(LS_INFO) << __FUNCTION__
                    << " SdpType: " << webrtc::SdpTypeToString(type);
-  if (type == webrtc::SdpType::kOffer) {
+  if (connection_ && type == webrtc::SdpType::kOffer) {
     connection_->createAnswer();
   }
 }
