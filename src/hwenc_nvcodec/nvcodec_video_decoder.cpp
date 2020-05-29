@@ -17,8 +17,18 @@ NvCodecVideoDecoder::~NvCodecVideoDecoder() {
   Release();
 }
 
+void NvCodecVideoDecoder::Log(NvCodecVideoDecoderCuda::LogType type, const std::string& log) {
+  if (type == NvCodecVideoDecoderCuda::LogType::LOG_INFO) {
+    RTC_LOG(LS_INFO) << log;
+  } else if (type == NvCodecVideoDecoderCuda::LogType::LOG_WARNING) {
+    RTC_LOG(LS_WARNING) << log;
+  } else {
+    RTC_LOG(LS_ERROR) << log;
+  }
+}
+
 bool NvCodecVideoDecoder::IsSupported(cudaVideoCodec codec_id) {
-  auto decoder = NvCodecVideoDecoderCuda::Create(codec_id);
+  auto decoder = NvCodecVideoDecoderCuda::Create(codec_id, &NvCodecVideoDecoder::Log);
   return decoder != nullptr;
 }
 
@@ -101,7 +111,7 @@ const char* NvCodecVideoDecoder::ImplementationName() const {
 }
 
 int32_t NvCodecVideoDecoder::InitNvCodec() {
-  decoder_ = NvCodecVideoDecoderCuda::Create(codec_id_);
+  decoder_ = NvCodecVideoDecoderCuda::Create(codec_id_, &NvCodecVideoDecoder::Log);
   output_info_ = false;
   return WEBRTC_VIDEO_CODEC_OK;
 }
