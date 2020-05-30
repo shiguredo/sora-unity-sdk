@@ -5,7 +5,7 @@
 
 namespace sora {
 
-Sora::Sora(UnityContext* context) : ioc_(1), context_(context) {
+Sora::Sora(UnityContext* context) : context_(context) {
   ptrid_ = IdPointer::Instance().Register(this);
 }
 
@@ -14,16 +14,20 @@ Sora::~Sora() {
 
   IdPointer::Instance().Unregister(ptrid_);
 
+  unity_adm_ = nullptr;
+
+  ioc_->stop();
+  if (thread_) {
+    thread_->Stop();
+    thread_.reset();
+  }
   if (signaling_) {
     signaling_->release();
   }
   signaling_.reset();
+  ioc_.reset();
   rtc_manager_.reset();
   renderer_.reset();
-  ioc_.stop();
-  if (thread_) {
-    thread_->Stop();
-  }
   RTC_LOG(LS_INFO) << "Sora object destroy finished";
 }
 void Sora::SetOnAddTrack(std::function<void(ptrid_t)> on_add_track) {
@@ -175,8 +179,9 @@ bool Sora::Connect(std::string unity_version,
       }
     }
 
+    ioc_.reset(new boost::asio::io_context(1));
     signaling_ = SoraSignaling::Create(
-        ioc_, rtc_manager_.get(), config, [this](std::string json) {
+        *ioc_, rtc_manager_.get(), config, [this](std::string json) {
           std::lock_guard<std::mutex> guard(event_mutex_);
           event_queue_.push_back([this, json = std::move(json)]() {
             // ここは Unity スレッドから呼ばれる
@@ -204,7 +209,7 @@ bool Sora::Connect(std::string unity_version,
   }
   thread_->PostTask(RTC_FROM_HERE, [this]() {
     RTC_LOG(LS_INFO) << "io_context started";
-    ioc_.run();
+    ioc_->run();
     RTC_LOG(LS_INFO) << "io_context finished";
   });
 

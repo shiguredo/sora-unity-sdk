@@ -54,7 +54,7 @@ struct SoraConfig {
 };
 
 class Sora {
-  boost::asio::io_context ioc_;
+  std::unique_ptr<boost::asio::io_context> ioc_;
   UnityContext* context_;
   std::string signaling_url_;
   std::string channel_id_;
