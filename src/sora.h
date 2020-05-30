@@ -31,28 +31,6 @@
 
 namespace sora {
 
-struct SoraConfig {
-  std::string signaling_url;
-  std::string channel_id;
-  std::string metadata;
-  bool downstream = false;
-  bool multistream = false;
-  int capturer_type = 0;
-  std::string video_capturer_device;
-  void* unity_camera_texture = nullptr;
-  int video_width = 640;
-  int video_height = 480;
-  bool unity_audio_input = false;
-  std::string audio_recording_device = "";
-  std::string audio_playout_device = "";
-
-  bool disable_echo_cancellation = false;
-  bool disable_auto_gain_control = false;
-  bool disable_noise_suppression = false;
-  bool disable_highpass_filter = false;
-  bool disable_typing_detection = false;
-};
-
 class Sora {
   std::unique_ptr<boost::asio::io_context> ioc_;
   UnityContext* context_;

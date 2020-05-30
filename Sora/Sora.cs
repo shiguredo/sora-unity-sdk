@@ -5,8 +5,6 @@ public class Sora : IDisposable
 {
     public enum Role
     {
-        Upstream,
-        Downstream,
         Sendonly,
         Recvonly,
         Sendrecv,
@@ -29,7 +27,7 @@ public class Sora : IDisposable
         public string SignalingUrl = "";
         public string ChannelId = "";
         public string Metadata = "";
-        public Role Role = Sora.Role.Upstream;
+        public Role Role = Sora.Role.Sendonly;
         public bool Multistream = false;
         public CapturerType CapturerType = Sora.CapturerType.DeviceCamera;
         public UnityEngine.Camera UnityCamera = null;
@@ -104,8 +102,6 @@ public class Sora : IDisposable
         }
 
         var role =
-            config.Role == Role.Upstream ? "upstream" :
-            config.Role == Role.Downstream ? "downstream" :
             config.Role == Role.Sendonly ? "sendonly" :
             config.Role == Role.Recvonly ? "recvonly" : "sendrecv";
         return sora_connect(

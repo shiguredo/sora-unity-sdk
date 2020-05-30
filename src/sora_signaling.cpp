@@ -209,8 +209,6 @@ void SoraSignaling::onHandshake(boost::system::error_code ec) {
 
 void SoraSignaling::doSendConnect() {
   std::string role =
-    config_.role == SoraSignalingConfig::Role::Upstream ? "upstream" :
-    config_.role == SoraSignalingConfig::Role::Downstream ? "downstream" :
     config_.role == SoraSignalingConfig::Role::Sendonly ? "sendonly" :
     config_.role == SoraSignalingConfig::Role::Recvonly ? "recvonly" : "sendrecv";
 

@@ -11,6 +11,8 @@
 
 ## develop
 
+- [CHANGE] Sora.Role.Upstream, Sora.Role.Downstream を削除
+    - @melpon
 - [UPDATE] WebRTC のバージョンを M83 (4103@{#12}) に上げる
     - @melpon
 - [FIX] 接続確立中に Sora.Dispose するとエラーになることがあったのを修正
