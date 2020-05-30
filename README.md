@@ -103,26 +103,6 @@ Sora Unity SDK ではソフトウェアでの H.264 エンコード/デコード
 - Windows 10 1809 x86_64 以降
 - macOS 10.15 x86_64 以降
 
-## ライセンス
-
-Apache License 2.0
-
-```
-Copyright 2019-2020, Wandbox LLC (Original Author)
-Copyright 2019-2020, Shiguredo Inc
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-```
 
 ## 有償での優先実装
 
@@ -177,8 +157,8 @@ Android 5.0 以上への対応
 Apache License 2.0
 
 ```
-Copyright 2019-2020, melpon (Origin Author)
-Copyright 2019-2020, Shiguredo Inc.
+Copyright 2019-2020, Wandbox LLC (Original Author)
+Copyright 2019-2020, Shiguredo Inc
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
