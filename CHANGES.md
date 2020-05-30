@@ -11,6 +11,8 @@
 
 ## develop
 
+- [UPDATE] WebRTC のバージョンを M83 (4103@{#12}) に上げる
+    - @melpon
 - [FIX] 接続確立中に Sora.Dispose するとエラーになることがあったのを修正
     - @melpon
 - [FIX] 接続が確立する前に ping を受け取ると通信が切断されてしまっていたのを修正
