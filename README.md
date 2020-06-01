@@ -148,10 +148,6 @@ Sora Unity SDK ではソフトウェアでの H.264 エンコード/デコード
 
 iOS 10.0 以上への対応
 
-### Android 対応
-
-Android 5.0 以上への対応
-
 ## ライセンス
 
 Apache License 2.0
