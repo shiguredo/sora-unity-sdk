@@ -11,9 +11,13 @@
 
 ## develop
 
-- [CHANGE] Sora.Role.Upstream, Sora.Role.Downstream を削除
-    - @melpon
+## 2020.3
+
+- [UPDATE] Boost のバージョンを 1.73.0 に上げる
+    - @voluntas
 - [UPDATE] WebRTC のバージョンを M83 (4103@{#12}) に上げる
+    - @melpon
+- [CHANGE] Sora.Role.Upstream, Sora.Role.Downstream を削除
     - @melpon
 - [FIX] 接続確立中に Sora.Dispose するとエラーになることがあったのを修正
     - @melpon
