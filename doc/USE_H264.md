@@ -5,8 +5,6 @@ Sora Unity SDK では、ソフトウェアでの H.264 エンコード/デコー
 ただし、ハードウェアで H.264 エンコーダ/デコーダが使える場合は、それを積極的に利用します。
 
 - Windows 版では [NVIDIA VIDEO CODEC SDK](https://developer.nvidia.com/nvidia-video-codec-sdk) がインストールされていれば、これを利用します。
-  - もしこれが利用可能な場合 **H.264 エンコードのみ可能** です。H.264 のデコードはできません。
-  - つまりシングルストリームの場合は `Sora.Role.Upstream` または `Sora.Role.Sendonly` のみ、マルチストリームの場合は `Sora.Role.Sendonly` でしか動作しません。
 - macOS 版では [VideoToolbox](https://developer.apple.com/documentation/videotoolbox) を利用します。
   - VideoToolbox によって H.264 エンコード/デコードが可能です。
 

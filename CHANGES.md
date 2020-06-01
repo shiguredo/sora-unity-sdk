@@ -11,6 +11,21 @@
 
 ## develop
 
+## 2020.3
+
+- [UPDATE] Boost のバージョンを 1.73.0 に上げる
+    - @voluntas
+- [UPDATE] WebRTC のバージョンを M83 (4103@{#12}) に上げる
+    - @melpon
+- [CHANGE] Sora.Role.Upstream, Sora.Role.Downstream を削除
+    - @melpon
+- [FIX] 接続確立中に Sora.Dispose するとエラーになることがあったのを修正
+    - @melpon
+- [FIX] 接続が確立する前に ping を受け取ると通信が切断されてしまっていたのを修正
+    - @melpon
+- [FIX] Windows 版の H.264 デコードでリサイズが発生した際にエラーになるのを修正
+    - @melpon
+
 ## 2020.2
 
 - [UPDATE] WebRTC のバージョンを M81 (4044@{#12}) に上げる

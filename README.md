@@ -50,8 +50,6 @@ Sora Unity SDK ではソフトウェアでの H.264 エンコード/デコード
 
 そのため Windows では NVIDIA VIDEO CODEC SDK 、macOS では VideoToolbox を利用し、H.264 のエンコード/デコードを実現しています。
 
-**NVIDIA VIDEO CODEC SDK を利用した H.264 はデコードは現時点では非対応です**
-
 詳細は H.264 を [USE_H264.md](doc/USE_H264.md) をお読みください
 
 ## 対応機能
@@ -84,6 +82,7 @@ Sora Unity SDK ではソフトウェアでの H.264 エンコード/デコード
 - NVIDIA VIDEO CODEC SDK
     - Windows 版
         - H.264 のハードウェアエンコードへの対応
+        - H.264 のハードウェアデコードへの対応
 
 ## 非対応
 
@@ -104,26 +103,6 @@ Sora Unity SDK ではソフトウェアでの H.264 エンコード/デコード
 - Windows 10 1809 x86_64 以降
 - macOS 10.15 x86_64 以降
 
-## ライセンス
-
-Apache License 2.0
-
-```
-Copyright 2019-2020, Wandbox LLC (Original Author)
-Copyright 2019-2020, Shiguredo Inc
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-```
 
 ## 有償での優先実装
 
@@ -131,6 +110,8 @@ limitations under the License.
     - [スロースネットワークス株式会社](http://www.sloth-networks.co.jp) 様
 - WebRTC's Statistics 対応
     - 企業名非公開
+- Windows 版 NVIDIA VIDEO CODEC SDK による H.264 デコーダ対応
+    - [スロースネットワークス株式会社](http://www.sloth-networks.co.jp) 様
 
 ## 有償での優先実装が可能な機能一覧
 
@@ -170,3 +151,24 @@ iOS 10.0 以上への対応
 ### Android 対応
 
 Android 5.0 以上への対応
+
+## ライセンス
+
+Apache License 2.0
+
+```
+Copyright 2019-2020, Wandbox LLC (Original Author)
+Copyright 2019-2020, Shiguredo Inc
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+```

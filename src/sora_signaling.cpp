@@ -110,7 +110,10 @@ bool SoraSignaling::Init() {
 }
 
 void SoraSignaling::release() {
-  connection_ = nullptr;
+  // connection_ を nullptr にした上で解放する
+  // デストラクタ中にコールバックが呼ばれて解放中の connection_ にアクセスしてしまうことがあるため
+  auto connection = std::move(connection_);
+  connection = nullptr;
 }
 
 bool SoraSignaling::connect() {
@@ -206,8 +209,6 @@ void SoraSignaling::onHandshake(boost::system::error_code ec) {
 
 void SoraSignaling::doSendConnect() {
   std::string role =
-    config_.role == SoraSignalingConfig::Role::Upstream ? "upstream" :
-    config_.role == SoraSignalingConfig::Role::Downstream ? "downstream" :
     config_.role == SoraSignalingConfig::Role::Sendonly ? "sendonly" :
     config_.role == SoraSignalingConfig::Role::Recvonly ? "recvonly" : "sendrecv";
 
@@ -326,6 +327,7 @@ void SoraSignaling::onRead(boost::system::error_code ec,
   } else if (type == "ping") {
     if (rtc_state_ != webrtc::PeerConnectionInterface::IceConnectionState::
                           kIceConnectionConnected) {
+      doRead();
       return;
     }
     bool stats = json_message.value("stats", false);
@@ -428,7 +430,7 @@ void SoraSignaling::onCreateDescription(webrtc::SdpType type,
 void SoraSignaling::onSetDescription(webrtc::SdpType type) {
   RTC_LOG(LS_INFO) << __FUNCTION__
                    << " SdpType: " << webrtc::SdpTypeToString(type);
-  if (type == webrtc::SdpType::kOffer) {
+  if (connection_ && type == webrtc::SdpType::kOffer) {
     connection_->createAnswer();
   }
 }
