@@ -253,6 +253,7 @@ elseif (SORA_UNITY_SDK_PACKAGE STREQUAL "android")
       src/jni_onload.cc
       src/rtc/hw_video_encoder_factory.cpp
       src/rtc/hw_video_decoder_factory.cpp
+      src/android_helper/android_codec_factory_helper.cpp
       src/unity_camera_capturer_vulkan.cpp
   )
 

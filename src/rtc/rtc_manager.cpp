@@ -24,6 +24,8 @@
 
 #if defined(SORA_UNITY_SDK_MACOS)
 #include "mac_helper/objc_codec_factory_helper.h"
+#elif defined(SORA_UNITY_SDK_ANDROID)
+#include "android_helper/android_codec_factory_helper.h"
 #else
 #include "hw_video_encoder_factory.h"
 #include "hw_video_decoder_factory.h"
@@ -104,6 +106,10 @@ bool RTCManager::Init(
 #if defined(SORA_UNITY_SDK_MACOS)
   media_dependencies.video_encoder_factory = CreateObjCEncoderFactory();
   media_dependencies.video_decoder_factory = CreateObjCDecoderFactory();
+#elif defined(SORA_UNITY_SDK_ANDROID)
+  JNIEnv* jni = webrtc::AttachCurrentThreadIfNeeded();
+  media_dependencies.video_encoder_factory = CreateAndroidEncoderFactory(jni);
+  media_dependencies.video_decoder_factory = CreateAndroidDecoderFactory(jni);
 #else
   media_dependencies.video_encoder_factory =
       absl::make_unique<HWVideoEncoderFactory>();
