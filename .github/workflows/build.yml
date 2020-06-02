@@ -108,13 +108,16 @@ jobs:
       run: ./install_tools.sh
     - name: cmake.sh
       run: ./cmake.sh android
-    - name: copy webrtc.jar
-      run: cp _install/android/webrtc/jar/webrtc.jar build/android/
+    - name: copy files
+      run: |
+        mkdir android/
+        cp _install/android/webrtc/jar/webrtc.jar android/
+        cp build/android/libSoraUnitySdk.so android/
     - name: Upload Android Artifact
       uses: actions/upload-artifact@v1
       with:
         name: android
-        path: build/android/
+        path: android/
   package:
     runs-on: macOS-latest
     needs: [build-windows, build-macos, build-android]
