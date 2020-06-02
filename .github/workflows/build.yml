@@ -141,6 +141,7 @@ jobs:
         cp SoraUnitySdk.dll/SoraUnitySdk.dll SoraUnitySdk/Plugins/SoraUnitySdk/windows/x86_64/
         cp -r SoraUnitySdk.bundle SoraUnitySdk/Plugins/SoraUnitySdk/macos/
         cp libSoraUnitySdk.so/libSoraUnitySdk.so SoraUnitySdk/Plugins/SoraUnitySdk/android/arm64-v8a/
+        cp _install/android/webrtc/jar/webrtc.jar SoraUnitySdk/Plugins/SoraUnitySdk/android/
     - name: Upload SoraUnitySdk
       uses: actions/upload-artifact@v1
       with:
