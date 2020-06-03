@@ -1,13 +1,14 @@
 #include "android_codec_factory_helper.h"
 
+#include "rtc_base/logging.h"
 #include "sdk/android/native_api/codecs/wrapper.h"
 #include "sdk/android/native_api/jni/class_loader.h"
 #include "sdk/android/native_api/jni/scoped_java_ref.h"
 
 std::unique_ptr<webrtc::VideoEncoderFactory> CreateAndroidEncoderFactory(JNIEnv* env) {
-  // int[] config_plain = EglBase.CONFIG_PLAIN;
-  // EglBase eglBase = EglBase.create(nullptr, config_plain);
-  // EglBase.Context context = context.getEglBaseContext();
+  // int[] configPlain = EglBase.CONFIG_PLAIN;
+  // EglBase eglBase = new EglBase14Impl(configPlain);
+  // EglBase.Context context = eglBase.getEglBaseContext();
   // DefaultVideoEncoderFactory encoderFactory = new DefaultVideoEncoderFactory(context, true /* enableIntelVp8Encoder */, false /* enableH264HighProfile */);
 
   //jobject config_plain;
@@ -22,18 +23,17 @@ std::unique_ptr<webrtc::VideoEncoderFactory> CreateAndroidEncoderFactory(JNIEnv*
   //jobject egl_base;
   //{
   //  webrtc::ScopedJavaLocalRef<jclass> eglcls =
-  //      webrtc::GetClass(env, "org/webrtc/EglBase");
-  //  jmethodID createid =
-  //      env->GetStaticMethodID(eglcls.obj(), "create",
-  //                             "(Lorg/webrtc/EglBase$Context;[I)"
-  //                             "Lorg/webrtc/EglBase;");
-  //  egl_base = env->CallStaticObjectMethod(eglcls.obj(), createid, nullptr,
-  //                                         config_plain);
+  //      webrtc::GetClass(env, "org/webrtc/EglBase14Impl");
+  //  jmethodID ctorid = env->GetMethodID(eglcls.obj(), "<init>",
+  //                                      "(Landroid/opengl/EGLContext;[I)V");
+  //  egl_base = env->NewObject(eglcls.obj(), ctorid, nullptr, config_plain);
   //}
+
   //jobject context;
   //{
-  //  jclass eglcls = env->GetObjectClass(egl_base);
-  //  jmethodID ctxid = env->GetMethodID(eglcls, "getEglBaseContext",
+  //  webrtc::ScopedJavaLocalRef<jclass> eglcls =
+  //      webrtc::GetClass(env, "org/webrtc/EglBase");
+  //  jmethodID ctxid = env->GetMethodID(eglcls.obj(), "getEglBaseContext",
   //                                     "()Lorg/webrtc/EglBase$Context;");
   //  context = env->CallObjectMethod(egl_base, ctxid);
   //}
@@ -45,7 +45,7 @@ std::unique_ptr<webrtc::VideoEncoderFactory> CreateAndroidEncoderFactory(JNIEnv*
     jmethodID ctorid = env->GetMethodID(faccls.obj(), "<init>",
                                         "(Lorg/webrtc/EglBase$Context;ZZ)V");
     encoder_factory =
-        env->NewObject(faccls.obj(), ctorid, /*context*/ nullptr, true, false);
+        env->NewObject(faccls.obj(), ctorid, nullptr, true, false);
   }
 
   return webrtc::JavaToNativeVideoEncoderFactory(env, encoder_factory);
