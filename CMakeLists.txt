@@ -153,14 +153,15 @@ if (MSVC)
       -Xcompiler /utf-8
       -Xcompiler /I${CMAKE_CURRENT_SOURCE_DIR}/NvCodec/include
       -Xcompiler /I${CMAKE_CURRENT_SOURCE_DIR}/NvCodec/NvCodec
+      -Xcompiler /I${CMAKE_CURRENT_SOURCE_DIR}/src
   )
   target_sources(SoraUnitySdk PRIVATE ${CUDA_FILES})
   target_include_directories(SoraUnitySdk PRIVATE ${CUDA_INCLUDE_DIRS})
   target_link_libraries(SoraUnitySdk
     PRIVATE
-      ${CUDA_TOOLKIT_ROOT_DIR}/lib/x64/cuda.lib
+      #${CUDA_TOOLKIT_ROOT_DIR}/lib/x64/cuda.lib
       ${CUDA_LIBRARIES}
-      ${CMAKE_CURRENT_SOURCE_DIR}/NvCodec/Lib/x64/nvcuvid.lib
+      #${CMAKE_CURRENT_SOURCE_DIR}/NvCodec/Lib/x64/nvcuvid.lib
   )
 
   # CUDA 
