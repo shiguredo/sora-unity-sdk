@@ -46,7 +46,7 @@ https://github.com/shiguredo/sora-unity-sdk/releases から から最新の `Sor
 ### H.264 の利用について
 
 Sora Unity SDK ではソフトウェアでの H.264 エンコード/デコードの利用はできません。
-これは H.264 のソフトウェアエンコーダ/デコーダを含んで配布した場合はライセンス費用が発生するためです。
+これは H.264 のソフトウェアエンコーダ/デコーダを含んで配布した場合はライセンス費用が発生することから、無効にしているためです。
 
 そのため Windows では NVIDIA VIDEO CODEC SDK 、macOS では VideoToolbox を利用し、H.264 のエンコード/デコードを実現しています。
 
@@ -148,17 +148,13 @@ Sora Unity SDK ではソフトウェアでの H.264 エンコード/デコード
 
 iOS 10.0 以上への対応
 
-### Android 対応
-
-Android 5.0 以上への対応
-
 ## ライセンス
 
 Apache License 2.0
 
 ```
 Copyright 2019-2020, Wandbox LLC (Original Author)
-Copyright 2019-2020, Shiguredo Inc
+Copyright 2019-2020, Shiguredo Inc.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.

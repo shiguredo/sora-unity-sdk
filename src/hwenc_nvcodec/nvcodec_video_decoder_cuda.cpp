@@ -3,13 +3,15 @@
 #include <utility>
 #include <sstream>
 
+#include "dyn/cuda.h"
+
 typedef std::function<void (NvCodecVideoDecoderCuda::LogType, const std::string&)> LogFunc;
 
 #ifdef __cuda_cuda_h__
 inline bool check(const LogFunc& f, CUresult e, int iLine, const char* szFile) {
   if (e != CUDA_SUCCESS) {
     const char* szErrName = NULL;
-    cuGetErrorName(e, &szErrName);
+    dyn::cuGetErrorName(e, &szErrName);
     std::stringstream ss;
     ss << "CUDA driver API error " << szErrName << " at line " << iLine
               << " in file " << szFile;
@@ -126,20 +128,20 @@ NvCodecVideoDecoderCuda::~NvCodecVideoDecoderCuda() {
 }
 
 int32_t NvCodecVideoDecoderCuda::Init(cudaVideoCodec codec_id, const std::function<void (LogType, const std::string&)>& f) {
-  if (!ck(f, cuInit(0))) {
+  if (!ck(f, dyn::cuInit(0))) {
     return -1;
   }
   int gpu_num = 0;
-  if (!ck(f, cuDeviceGetCount(&gpu_num))) {
+  if (!ck(f, dyn::cuDeviceGetCount(&gpu_num))) {
     return -2;
   }
   if (gpu_num == 0) {
     return -3;
   }
-  if (!ck(f, cuDeviceGet(&cu_device_, 0))) {
+  if (!ck(f, dyn::cuDeviceGet(&cu_device_, 0))) {
     return -4;
   }
-  if (!ck(f, cuCtxCreate(&cu_context_, 0, cu_device_))) {
+  if (!ck(f, dyn::cuCtxCreate(&cu_context_, 0, cu_device_))) {
     return -5;
   }
 
@@ -159,5 +161,5 @@ void NvCodecVideoDecoderCuda::Decode(const uint8_t* ptr, int size, uint8_t**& fr
 
 void NvCodecVideoDecoderCuda::Release() {
   decoder_.reset();
-  cuCtxDestroy(cu_context_);
+  dyn::cuCtxDestroy(cu_context_);
 }

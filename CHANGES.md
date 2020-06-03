@@ -11,6 +11,11 @@
 
 ## develop
 
+## 2020.3.1
+
+- [FIX] Windows で CUDA が無い環境でも動くようにする
+    - @melpon
+
 ## 2020.3
 
 - [UPDATE] Boost のバージョンを 1.73.0 に上げる
