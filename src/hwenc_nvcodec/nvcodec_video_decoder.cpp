@@ -7,6 +7,9 @@
 #include <rtc_base/time_utils.h>
 #include <third_party/libyuv/include/libyuv/convert.h>
 
+#include "dyn/cuda.h"
+#include "dyn/nvcuvid.h"
+
 NvCodecVideoDecoder::NvCodecVideoDecoder(cudaVideoCodec codec_id)
     : codec_id_(codec_id),
       decode_complete_callback_(nullptr),
@@ -28,6 +31,16 @@ void NvCodecVideoDecoder::Log(NvCodecVideoDecoderCuda::LogType type, const std::
 }
 
 bool NvCodecVideoDecoder::IsSupported(cudaVideoCodec codec_id) {
+  // CUDA 周りのライブラリがロードできるか確認する
+  if (!dyn::DynModule::Instance().IsLoadable(dyn::CUDA_SO)) {
+    RTC_LOG(LS_WARNING) << "load library failed: " << dyn::CUDA_SO;
+    return false;
+  }
+  if (!dyn::DynModule::Instance().IsLoadable(dyn::NVCUVID_SO)) {
+    RTC_LOG(LS_WARNING) << "load library failed: " << dyn::NVCUVID_SO;
+    return false;
+  }
+
   auto decoder = NvCodecVideoDecoderCuda::Create(codec_id, &NvCodecVideoDecoder::Log);
   return decoder != nullptr;
 }
