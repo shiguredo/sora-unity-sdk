@@ -103,7 +103,7 @@ jobs:
       uses: actions/cache@v1
       with:
         path: _install/webrtc
-        key: android-webrtc-${{ steps.versions.outputs.webrtc_build_version }}-v2
+        key: android-webrtc-${{ steps.versions.outputs.webrtc_build_version }}-v3
     - name: install_tools.sh
       run: ./install_tools.sh
     - name: cmake.sh

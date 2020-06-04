@@ -24,21 +24,6 @@ for name in macos android; do
       rm -rf webrtc/
       tar xf $BUILD_DIR/webrtc.$name.tar.gz
     popd
-
-    # Android 側からのコールバックする関数は消してはいけないので、
-    # libwebrtc.a の中から消してはいけない関数の一覧を作っておく
-    if [ "$name" == "android" ]; then
-      # readelf を使って libwebrtc.a の関数一覧を列挙して、その中から Java_org_webrtc_ を含む関数を取り出し、
-      # -Wl,--undefined=<関数名> に加工する。
-      # （-Wl,--undefined はアプリケーションから参照されていなくても関数を削除しないためのフラグ）
-      _READELF=$INSTALL_DIR/android-ndk/toolchains/llvm/prebuilt/darwin-x86_64/bin/aarch64-linux-android-readelf
-      _LIBWEBRTC_A=$INSTALL_DIR/android/webrtc/lib/arm64-v8a/libwebrtc.a
-      $_READELF -Ws $_LIBWEBRTC_A \
-        | grep Java_org_webrtc_ \
-        | while read a b c d e f g h; do echo -Wl,--undefined=$h; done \
-        | sort \
-        > $INSTALL_DIR/android/webrtc.ldflags
-    fi
   fi
 done
 
@@ -86,6 +71,21 @@ if [ ! -e $INSTALL_DIR/android-ndk ]; then
     cmake -E tar xf $_FILE
     mv android-ndk-${ANDROID_NDK_VERSION} android-ndk
   popd
+fi
+
+# Android 側からのコールバックする関数は消してはいけないので、
+# libwebrtc.a の中から消してはいけない関数の一覧を作っておく
+if [ ! -e $INSTALL_DIR/android/webrtc.ldflags ]; then
+  # readelf を使って libwebrtc.a の関数一覧を列挙して、その中から Java_org_webrtc_ を含む関数を取り出し、
+  # -Wl,--undefined=<関数名> に加工する。
+  # （-Wl,--undefined はアプリケーションから参照されていなくても関数を削除しないためのフラグ）
+  _READELF=$INSTALL_DIR/android-ndk/toolchains/llvm/prebuilt/darwin-x86_64/bin/aarch64-linux-android-readelf
+  _LIBWEBRTC_A=$INSTALL_DIR/android/webrtc/lib/arm64-v8a/libwebrtc.a
+  $_READELF -Ws $_LIBWEBRTC_A \
+    | grep Java_org_webrtc_ \
+    | while read a b c d e f g h; do echo -Wl,--undefined=$h; done \
+    | sort \
+    > $INSTALL_DIR/android/webrtc.ldflags
 fi
 
 # 特定バージョンの libcxx, libcxxabi を取得
