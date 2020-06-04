@@ -9,7 +9,8 @@
 #endif
 
 #ifdef SORA_UNITY_SDK_ANDROID
-#include "android_capturer.h"
+#include "android_helper/android_capturer.h"
+#include "android_helper/android_context.h"
 #endif
 
 namespace sora {
@@ -281,21 +282,9 @@ rtc::scoped_refptr<UnityAudioDevice> Sora::CreateADM(
 #if defined(SORA_UNITY_SDK_WINDOWS)
     adm = webrtc::CreateWindowsCoreAudioAudioDeviceModule(task_queue_factory);
 #elif defined(SORA_UNITY_SDK_ANDROID)
-    // Context context = UnityPlayer.currentActivity.getApplicationContext()
-    // を頑張って C++ から呼んでるだけ
     JNIEnv* env = webrtc::AttachCurrentThreadIfNeeded();
-    webrtc::ScopedJavaLocalRef<jclass> upcls =
-        webrtc::GetClass(env, "com/unity3d/player/UnityPlayer");
-    jfieldID actid = env->GetStaticFieldID(upcls.obj(), "currentActivity",
-                                           "Landroid/app/Activity;");
-    jobject activity = env->GetStaticObjectField(upcls.obj(), actid);
-
-    jclass actcls = env->GetObjectClass(activity);
-    jmethodID ctxid = env->GetMethodID(actcls, "getApplicationContext",
-                                       "()Landroid/content/Context;");
-    jobject context = env->CallObjectMethod(activity, ctxid);
-
-    adm = webrtc::CreateJavaAudioDeviceModule(env, context);
+    auto context = GetAndroidApplicationContext(env);
+    adm = webrtc::CreateJavaAudioDeviceModule(env, context.obj());
 #else
     adm = webrtc::AudioDeviceModule::Create(
         webrtc::AudioDeviceModule::kPlatformDefaultAudio, task_queue_factory);

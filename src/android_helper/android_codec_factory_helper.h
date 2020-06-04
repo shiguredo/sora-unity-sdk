@@ -7,9 +7,13 @@
 #include "api/video_codecs/video_encoder_factory.h"
 #include "sdk/android/native_api/jni/jvm.h"
 
+namespace sora {
+
 std::unique_ptr<webrtc::VideoEncoderFactory> CreateAndroidEncoderFactory(
     JNIEnv* env);
 std::unique_ptr<webrtc::VideoDecoderFactory> CreateAndroidDecoderFactory(
     JNIEnv* env);
+
+}  // namespace sora
 
 #endif // ANDROID_CODEC_FACTORY_HELPER_H_

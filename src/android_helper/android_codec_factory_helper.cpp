@@ -5,6 +5,8 @@
 #include "sdk/android/native_api/jni/class_loader.h"
 #include "sdk/android/native_api/jni/scoped_java_ref.h"
 
+namespace sora {
+
 std::unique_ptr<webrtc::VideoEncoderFactory> CreateAndroidEncoderFactory(JNIEnv* env) {
   // int[] configPlain = EglBase.CONFIG_PLAIN;
   // EglBase eglBase = new EglBase14Impl(configPlain);
@@ -63,3 +65,5 @@ std::unique_ptr<webrtc::VideoDecoderFactory> CreateAndroidDecoderFactory(
   jobject decoder_factory = env->NewObject(faccls.obj(), ctorid, nullptr);
   return webrtc::JavaToNativeVideoDecoderFactory(env, decoder_factory);
 }
+
+}  // namespace sora
