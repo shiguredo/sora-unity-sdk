@@ -1,6 +1,7 @@
 #include "android_capturer.h"
 
 #include "api/media_stream_interface.h"
+#include "rtc_base/logging.h"
 #include "rtc_base/thread.h"
 #include "sdk/android/native_api/jni/class_loader.h"
 #include "sdk/android/native_api/jni/scoped_java_ref.h"
@@ -292,6 +293,5 @@ webrtc::ScopedJavaLocalRef<jobject>
 AndroidCapturer::GetJavaVideoCapturerObserver(JNIEnv* env) {
   return webrtc::ScopedJavaLocalRef<jobject>(env, *native_capturer_observer_);
 }
-}
 
-#endif // ANDROID_CAPTURER_H_INCLUDED
+}  // namespace sora
