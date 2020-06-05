@@ -133,8 +133,8 @@ bool sora_is_h264_supported() {
   // macOS は VideoToolbox が使えるので常に true
   return true;
 #elif defined(SORA_UNITY_SDK_ANDROID)
-  // Android はよくわからないのでとりあえず false
-  return false;
+  // Android は多分大体動くので true
+  return true;
 #endif
 }
 
