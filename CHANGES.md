@@ -11,6 +11,10 @@
 
 ## develop
 
+## 2020.4
+
+- [ADD] Android 対応
+
 ## 2020.3.1
 
 - [FIX] Windows で CUDA が無い環境でも動くようにする
