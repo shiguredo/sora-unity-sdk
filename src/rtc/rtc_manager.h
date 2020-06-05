@@ -36,18 +36,20 @@ class RTCManager {
  public:
   static std::unique_ptr<RTCManager> Create(
       RTCManagerConfig config,
-      rtc::scoped_refptr<ScalableVideoTrackSource> video_track_source,
+      rtc::scoped_refptr<rtc::AdaptedVideoTrackSource> video_track_source,
       VideoTrackReceiver* receiver,
       rtc::scoped_refptr<webrtc::AudioDeviceModule> adm,
-      std::unique_ptr<webrtc::TaskQueueFactory> task_queue_factory);
+      std::unique_ptr<webrtc::TaskQueueFactory> task_queue_factory,
+      std::unique_ptr<rtc::Thread> signaling_thread);
 
  private:
   RTCManager();
   bool Init(RTCManagerConfig config,
-            rtc::scoped_refptr<ScalableVideoTrackSource> video_track_source,
+            rtc::scoped_refptr<rtc::AdaptedVideoTrackSource> video_track_source,
             VideoTrackReceiver* receiver,
             rtc::scoped_refptr<webrtc::AudioDeviceModule> adm,
-            std::unique_ptr<webrtc::TaskQueueFactory> task_queue_factory);
+            std::unique_ptr<webrtc::TaskQueueFactory> task_queue_factory,
+            std::unique_ptr<rtc::Thread> signaling_thread);
 
  public:
   ~RTCManager();

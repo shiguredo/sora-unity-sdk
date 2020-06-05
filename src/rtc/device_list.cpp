@@ -8,17 +8,30 @@
 #include "modules/video_capture/video_capture_factory.h"
 #include "rtc_base/logging.h"
 
-#ifdef __APPLE__
+#ifdef SORA_UNITY_SDK_ANDROID
+#include "sdk/android/native_api/audio_device_module/audio_device_android.h"
+#include "sdk/android/native_api/jni/jvm.h"
+#endif
+
+#if defined(SORA_UNITY_SDK_MACOS)
 #include "../mac_helper/mac_capturer.h"
+#elif defined(SORA_UNITY_SDK_ANDROID)
+#include "../android_helper/android_capturer.h"
+#include "../android_helper/android_context.h"
 #endif
 
 namespace sora {
 
 bool DeviceList::EnumVideoCapturer(
     std::function<void(std::string, std::string)> f) {
-#ifdef __APPLE__
+#if defined(SORA_UNITY_SDK_MACOS)
 
   return MacCapturer::EnumVideoDevice(f);
+
+#elif defined(SORA_UNITY_SDK_ANDROID)
+
+  JNIEnv* env = webrtc::AttachCurrentThreadIfNeeded();
+  return AndroidCapturer::EnumVideoDevice(env, f);
 
 #else
 
@@ -51,7 +64,14 @@ bool DeviceList::EnumVideoCapturer(
 bool DeviceList::EnumAudioRecording(
     std::function<void(std::string, std::string)> f) {
   auto task_queue_factory = webrtc::CreateDefaultTaskQueueFactory();
-#ifdef _WIN32
+#if defined(SORA_UNITY_SDK_ANDROID)
+  // Android の場合常に１個しかなく、かつ adm->RecordingDeviceName() を呼ぶと fatal error が起きるので
+  // 適当な名前で１回だけコールバックする
+  f("0", "0");
+  return true;
+#else
+
+#if defined(SORA_UNITY_SDK_WINDOWS)
   auto adm =
       webrtc::CreateWindowsCoreAudioAudioDeviceModule(task_queue_factory.get());
 #else
@@ -91,12 +111,20 @@ bool DeviceList::EnumAudioRecording(
     f(name, guid);
   }
   return true;
+#endif
 }
 
 bool DeviceList::EnumAudioPlayout(
     std::function<void(std::string, std::string)> f) {
   auto task_queue_factory = webrtc::CreateDefaultTaskQueueFactory();
-#ifdef _WIN32
+#if defined(SORA_UNITY_SDK_ANDROID)
+  // Android の場合常に１個しかなく、かつ adm->PlayoutDeviceName() を呼ぶと fatal error が起きるので
+  // 適当な名前で１回だけコールバックする
+  f("0", "0");
+  return true;
+#else
+
+#if defined(SORA_UNITY_SDK_WINDOWS)
   auto adm =
       webrtc::CreateWindowsCoreAudioAudioDeviceModule(task_queue_factory.get());
 #else
@@ -136,6 +164,7 @@ bool DeviceList::EnumAudioPlayout(
     f(name, guid);
   }
   return true;
+#endif
 }
 
 }  // namespace sora

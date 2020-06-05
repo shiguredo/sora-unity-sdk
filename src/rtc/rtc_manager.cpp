@@ -22,8 +22,10 @@
 #include "rtc_manager.h"
 #include "scalable_track_source.h"
 
-#ifdef __APPLE__
+#if defined(SORA_UNITY_SDK_MACOS)
 #include "mac_helper/objc_codec_factory_helper.h"
+#elif defined(SORA_UNITY_SDK_ANDROID)
+#include "android_helper/android_codec_factory_helper.h"
 #else
 #include "hw_video_encoder_factory.h"
 #include "hw_video_decoder_factory.h"
@@ -47,13 +49,14 @@ namespace sora {
 
 std::unique_ptr<RTCManager> RTCManager::Create(
     RTCManagerConfig config,
-    rtc::scoped_refptr<ScalableVideoTrackSource> video_track_source,
+    rtc::scoped_refptr<rtc::AdaptedVideoTrackSource> video_track_source,
     VideoTrackReceiver* receiver,
     rtc::scoped_refptr<webrtc::AudioDeviceModule> adm,
-    std::unique_ptr<webrtc::TaskQueueFactory> task_queue_factory) {
+    std::unique_ptr<webrtc::TaskQueueFactory> task_queue_factory,
+    std::unique_ptr<rtc::Thread> signaling_thread) {
   std::unique_ptr<RTCManager> p(new RTCManager());
   if (!p->Init(config, video_track_source, receiver, adm,
-               std::move(task_queue_factory))) {
+               std::move(task_queue_factory), std::move(signaling_thread))) {
     return nullptr;
   }
   return p;
@@ -63,10 +66,11 @@ RTCManager::RTCManager() {}
 
 bool RTCManager::Init(
     RTCManagerConfig config,
-    rtc::scoped_refptr<ScalableVideoTrackSource> video_track_source,
+    rtc::scoped_refptr<rtc::AdaptedVideoTrackSource> video_track_source,
     VideoTrackReceiver* receiver,
     rtc::scoped_refptr<webrtc::AudioDeviceModule> adm,
-    std::unique_ptr<webrtc::TaskQueueFactory> task_queue_factory) {
+    std::unique_ptr<webrtc::TaskQueueFactory> task_queue_factory,
+    std::unique_ptr<rtc::Thread> signaling_thread) {
   config_ = config;
   receiver_ = receiver;
 
@@ -76,7 +80,7 @@ bool RTCManager::Init(
   network_thread_->Start();
   worker_thread_ = rtc::Thread::Create();
   worker_thread_->Start();
-  signaling_thread_ = rtc::Thread::Create();
+  signaling_thread_ = std::move(signaling_thread);
   signaling_thread_->Start();
 
   webrtc::PeerConnectionFactoryDependencies dependencies;
@@ -99,9 +103,13 @@ bool RTCManager::Init(
       webrtc::CreateBuiltinAudioEncoderFactory();
   media_dependencies.audio_decoder_factory =
       webrtc::CreateBuiltinAudioDecoderFactory();
-#ifdef __APPLE__
+#if defined(SORA_UNITY_SDK_MACOS)
   media_dependencies.video_encoder_factory = CreateObjCEncoderFactory();
   media_dependencies.video_decoder_factory = CreateObjCDecoderFactory();
+#elif defined(SORA_UNITY_SDK_ANDROID)
+  JNIEnv* jni = webrtc::AttachCurrentThreadIfNeeded();
+  media_dependencies.video_encoder_factory = CreateAndroidEncoderFactory(jni);
+  media_dependencies.video_decoder_factory = CreateAndroidDecoderFactory(jni);
 #else
   media_dependencies.video_encoder_factory =
       absl::make_unique<HWVideoEncoderFactory>();

@@ -74,15 +74,53 @@ jobs:
     - name: install_tools.sh
       run: ./install_tools.sh
     - name: cmake.sh
-      run: ./cmake.sh
+      run: ./cmake.sh macos
     - name: Upload macOS Artifact
       uses: actions/upload-artifact@v1
       with:
         name: SoraUnitySdk.bundle
-        path: build/SoraUnitySdk.bundle
+        path: build/macos/SoraUnitySdk.bundle
+  build-android:
+    # 多分 Ubuntu でもいけると思うけど、普段ビルドしてるのは
+    # macOS からなので macOS にする
+    runs-on: macOS-latest
+    steps:
+    - uses: actions/checkout@v1
+    - name: Get Versions
+      run: |
+        source VERSIONS
+        echo "::set-output name=boost_version::${BOOST_VERSION}"
+        echo "::set-output name=webrtc_build_version::${WEBRTC_BUILD_VERSION}"
+      id: versions
+    - name: Cache Boost ${{ steps.versions.outputs.boost_version }}
+      id: cache-boost
+      uses: actions/cache@v1
+      with:
+        path: _install/boost
+        key: android-boost-${{ steps.versions.outputs.boost_version }}
+    - name: Cache WebRTC Build ${{ steps.versions.outputs.webrtc_build_version }}
+      id: cache-webrtc
+      uses: actions/cache@v1
+      with:
+        path: _install/webrtc
+        key: android-webrtc-${{ steps.versions.outputs.webrtc_build_version }}-v3
+    - name: install_tools.sh
+      run: ./install_tools.sh
+    - name: cmake.sh
+      run: ./cmake.sh android
+    - name: copy files
+      run: |
+        mkdir android/
+        cp _install/android/webrtc/jar/webrtc.jar android/
+        cp build/android/libSoraUnitySdk.so android/
+    - name: Upload Android Artifact
+      uses: actions/upload-artifact@v1
+      with:
+        name: android
+        path: android/
   package:
     runs-on: macOS-latest
-    needs: [build-windows, build-macos]
+    needs: [build-windows, build-macos, build-android]
     steps:
     - uses: actions/checkout@v1
     - name: Download SoraUnitySdk.dll
@@ -93,15 +131,22 @@ jobs:
       uses: actions/download-artifact@v1
       with:
         name: SoraUnitySdk.bundle
+    - name: Download android
+      uses: actions/download-artifact@v1
+      with:
+        name: android
     - name: Packaging
       run: |
         set -ex
         mkdir -p SoraUnitySdk/Plugins/SoraUnitySdk/windows/x86_64
         mkdir -p SoraUnitySdk/Plugins/SoraUnitySdk/macos
+        mkdir -p SoraUnitySdk/Plugins/SoraUnitySdk/android/arm64-v8a
         mkdir -p SoraUnitySdk/SoraUnitySdk
         cp Sora/Sora.cs SoraUnitySdk/SoraUnitySdk/
         cp SoraUnitySdk.dll/SoraUnitySdk.dll SoraUnitySdk/Plugins/SoraUnitySdk/windows/x86_64/
         cp -r SoraUnitySdk.bundle SoraUnitySdk/Plugins/SoraUnitySdk/macos/
+        cp android/libSoraUnitySdk.so SoraUnitySdk/Plugins/SoraUnitySdk/android/arm64-v8a/
+        cp android/webrtc.jar SoraUnitySdk/Plugins/SoraUnitySdk/android/
     - name: Upload SoraUnitySdk
       uses: actions/upload-artifact@v1
       with:

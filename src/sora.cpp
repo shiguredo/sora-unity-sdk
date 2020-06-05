@@ -3,6 +3,16 @@
 #include "api/task_queue/default_task_queue_factory.h"
 #include "modules/audio_device/include/audio_device_factory.h"
 
+#ifdef SORA_UNITY_SDK_ANDROID
+#include "sdk/android/native_api/audio_device_module/audio_device_android.h"
+#include "sdk/android/native_api/jni/jvm.h"
+#endif
+
+#ifdef SORA_UNITY_SDK_ANDROID
+#include "android_helper/android_capturer.h"
+#include "android_helper/android_context.h"
+#endif
+
 namespace sora {
 
 Sora::Sora(UnityContext* context) : context_(context) {
@@ -14,6 +24,12 @@ Sora::~Sora() {
 
   IdPointer::Instance().Unregister(ptrid_);
 
+#if defined(SORA_UNITY_SDK_ANDROID)
+  if (capturer_ != nullptr && capturer_type_ == 0) {
+    static_cast<AndroidCapturer*>(capturer_.get())->Stop();
+  }
+#endif
+  capturer_ = nullptr;
   unity_adm_ = nullptr;
 
   ioc_->stop();
@@ -121,31 +137,43 @@ bool Sora::Connect(std::string unity_version,
     return false;
   }
 
+  std::unique_ptr<rtc::Thread> signaling_thread = rtc::Thread::Create();
+
   RTCManagerConfig config;
   config.audio_recording_device = audio_recording_device;
   config.audio_playout_device = audio_playout_device;
 
   if (role == "sendonly" || role == "sendrecv") {
     // 送信側は capturer を設定する。送信のみの場合は playout の設定はしない
-    rtc::scoped_refptr<ScalableVideoTrackSource> capturer = CreateVideoCapturer(
-        capturer_type, unity_camera_texture, video_capturer_device, video_width,
-        video_height, unity_camera_capturer_);
+    rtc::scoped_refptr<rtc::AdaptedVideoTrackSource> capturer =
+        CreateVideoCapturer(capturer_type, unity_camera_texture,
+                            video_capturer_device, video_width, video_height,
+                            signaling_thread.get());
     if (!capturer) {
       return false;
     }
 
+    capturer_ = capturer;
+    capturer_type_ = capturer_type;
+
     config.no_playout = role == "sendonly";
-    rtc_manager_ =
-        RTCManager::Create(config, std::move(capturer), renderer_.get(),
-                           unity_adm_, std::move(task_queue_factory));
+
+    config.audio_recording_device = audio_recording_device;
+    config.audio_playout_device = audio_playout_device;
+    rtc_manager_ = RTCManager::Create(
+        config, std::move(capturer), renderer_.get(), unity_adm_,
+        std::move(task_queue_factory), std::move(signaling_thread));
   } else {
     // 受信側は capturer を作らず、video, recording の設定もしない
     RTCManagerConfig config;
     config.no_recording = true;
     config.no_video = true;
-    rtc_manager_ =
-        RTCManager::Create(config, nullptr, renderer_.get(), unity_adm_,
-                           std::move(task_queue_factory));
+
+    config.audio_recording_device = audio_recording_device;
+    config.audio_playout_device = audio_playout_device;
+    rtc_manager_ = RTCManager::Create(config, nullptr, renderer_.get(),
+                                      unity_adm_, std::move(task_queue_factory),
+                                      std::move(signaling_thread));
   }
 
   {
@@ -222,8 +250,8 @@ int Sora::GetRenderCallbackEventID() const {
 }
 
 void Sora::RenderCallback() {
-  if (unity_camera_capturer_) {
-    unity_camera_capturer_->OnRender();
+  if (capturer_ != nullptr && capturer_type_ != 0) {
+    static_cast<UnityCameraCapturer*>(capturer_.get())->OnRender();
   }
 }
 void Sora::ProcessAudio(const void* p, int offset, int samples) {
@@ -251,8 +279,12 @@ rtc::scoped_refptr<UnityAudioDevice> Sora::CreateADM(
     adm = webrtc::AudioDeviceModule::Create(
         webrtc::AudioDeviceModule::kDummyAudio, task_queue_factory);
   } else {
-#ifdef _WIN32
+#if defined(SORA_UNITY_SDK_WINDOWS)
     adm = webrtc::CreateWindowsCoreAudioAudioDeviceModule(task_queue_factory);
+#elif defined(SORA_UNITY_SDK_ANDROID)
+    JNIEnv* env = webrtc::AttachCurrentThreadIfNeeded();
+    auto context = GetAndroidApplicationContext(env);
+    adm = webrtc::CreateJavaAudioDeviceModule(env, context.obj());
 #else
     adm = webrtc::AudioDeviceModule::Create(
         webrtc::AudioDeviceModule::kPlatformDefaultAudio, task_queue_factory);
@@ -263,32 +295,32 @@ rtc::scoped_refptr<UnityAudioDevice> Sora::CreateADM(
                                   on_handle_audio, task_queue_factory);
 }
 
-rtc::scoped_refptr<ScalableVideoTrackSource> Sora::CreateVideoCapturer(
+rtc::scoped_refptr<rtc::AdaptedVideoTrackSource> Sora::CreateVideoCapturer(
     int capturer_type,
     void* unity_camera_texture,
     std::string video_capturer_device,
     int video_width,
     int video_height,
-    rtc::scoped_refptr<UnityCameraCapturer>& unity_camera_capturer) {
-  // 送信側は capturer を設定する。playout の設定はしない
-  rtc::scoped_refptr<ScalableVideoTrackSource> capturer;
-
+    rtc::Thread* signaling_thread) {
   if (capturer_type == 0) {
     // 実カメラ（デバイス）を使う
     // TODO(melpon): framerate をちゃんと設定する
-#ifdef __APPLE__
-    return capturer = MacCapturer::Create(video_width, video_height, 30,
-                                          video_capturer_device);
+#if defined(SORA_UNITY_SDK_MACOS)
+    return MacCapturer::Create(video_width, video_height, 30,
+                               video_capturer_device);
+#elif defined(SORA_UNITY_SDK_ANDROID)
+    JNIEnv* jni = webrtc::AttachCurrentThreadIfNeeded();
+    return AndroidCapturer::Create(jni, signaling_thread, video_width,
+                                   video_height, 30, video_capturer_device);
 #else
     return DeviceVideoCapturer::Create(video_width, video_height, 30,
                                        video_capturer_device);
 #endif
   } else {
     // Unity のカメラからの映像を使う
-    unity_camera_capturer = UnityCameraCapturer::Create(
-        &UnityContext::Instance(), unity_camera_texture, video_width,
-        video_height);
-    return unity_camera_capturer;
+    return UnityCameraCapturer::Create(&UnityContext::Instance(),
+                                       unity_camera_texture, video_width,
+                                       video_height);
   }
 }
 

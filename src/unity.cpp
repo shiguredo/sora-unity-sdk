@@ -2,7 +2,7 @@
 #include "rtc/device_list.h"
 #include "sora.h"
 
-#if defined(_WIN32) || defined(__linux__)
+#if defined(SORA_UNITY_SDK_WINDOWS)
 #include "hwenc_nvcodec/nvcodec_h264_encoder.h"
 #include "hwenc_nvcodec/nvcodec_video_decoder.h"
 #endif
@@ -127,10 +127,13 @@ bool sora_device_enum_audio_playout(device_enum_cb_t f, void* userdata) {
 }
 
 bool sora_is_h264_supported() {
-#if defined(_WIN32) || defined(__linux__)
+#if defined(SORA_UNITY_SDK_WINDOWS)
   return NvCodecH264Encoder::IsSupported() && NvCodecVideoDecoder::IsSupported(cudaVideoCodec_H264);
-#else
+#elif defined(SORA_UNITY_SDK_MACOS)
   // macOS は VideoToolbox が使えるので常に true
+  return true;
+#elif defined(SORA_UNITY_SDK_ANDROID)
+  // Android は多分大体動くので true
   return true;
 #endif
 }

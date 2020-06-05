@@ -8,7 +8,7 @@
 // boost
 #include <boost/asio/io_context.hpp>
 
-#if __APPLE__
+#if SORA_UNITY_SDK_MACOS
 #include "mac_helper/mac_capturer.h"
 #else
 #include "rtc/device_video_capturer.h"
@@ -48,8 +48,10 @@ class Sora {
   std::mutex event_mutex_;
   std::deque<std::function<void()>> event_queue_;
 
-  rtc::scoped_refptr<UnityCameraCapturer> unity_camera_capturer_;
   ptrid_t ptrid_;
+
+  rtc::scoped_refptr<rtc::AdaptedVideoTrackSource> capturer_;
+  int capturer_type_ = 0;
 
   rtc::scoped_refptr<UnityAudioDevice> unity_adm_;
 
@@ -99,13 +101,13 @@ class Sora {
       std::string audio_recording_device,
       std::string audio_playout_device);
 
-  static rtc::scoped_refptr<ScalableVideoTrackSource> CreateVideoCapturer(
+  static rtc::scoped_refptr<rtc::AdaptedVideoTrackSource> CreateVideoCapturer(
       int capturer_type,
       void* unity_camera_texture,
       std::string video_capturer_device,
       int video_width,
       int video_height,
-      rtc::scoped_refptr<UnityCameraCapturer>& unity_camera_capturer);
+      rtc::Thread* signaling_thread);
 };
 
 }  // namespace sora

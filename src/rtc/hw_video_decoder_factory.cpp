@@ -20,8 +20,10 @@
 #include "rtc_base/checks.h"
 #include "rtc_base/logging.h"
 
+#if defined(SORA_UNITY_SDK_WINDOWS)
 #include "hwenc_nvcodec/nvcodec_video_decoder.h"
 #include "h264_format.h"
+#endif
 
 namespace {
 
@@ -49,6 +51,7 @@ std::vector<webrtc::SdpVideoFormat> HWVideoDecoderFactory::GetSupportedFormats()
   for (const webrtc::SdpVideoFormat& format : webrtc::SupportedVP9Codecs())
     formats.push_back(format);
 
+#if defined(SORA_UNITY_SDK_WINDOWS)
   if (!NvCodecVideoDecoder::IsSupported(cudaVideoCodec_H264)) {
     return formats;
   }
@@ -65,6 +68,7 @@ std::vector<webrtc::SdpVideoFormat> HWVideoDecoderFactory::GetSupportedFormats()
 
   for (const webrtc::SdpVideoFormat& h264_format : h264_codecs)
     formats.push_back(h264_format);
+#endif
 
   return formats;
 }
@@ -80,9 +84,11 @@ std::unique_ptr<webrtc::VideoDecoder> HWVideoDecoderFactory::CreateVideoDecoder(
     return webrtc::VP8Decoder::Create();
   if (absl::EqualsIgnoreCase(format.name, cricket::kVp9CodecName))
     return webrtc::VP9Decoder::Create();
+#if defined(SORA_UNITY_SDK_WINDOWS)
   if (absl::EqualsIgnoreCase(format.name, cricket::kH264CodecName))
     return std::unique_ptr<webrtc::VideoDecoder>(
         absl::make_unique<NvCodecVideoDecoder>(cudaVideoCodec_H264));
+#endif
 
   RTC_NOTREACHED();
   return nullptr;
