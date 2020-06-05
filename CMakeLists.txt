@@ -1,24 +1,40 @@
-cmake_minimum_required(VERSION 3.15)
+cmake_minimum_required(VERSION 3.16)
 
 # Only interpret if() arguments as variables or keywords when unquoted.
 cmake_policy(SET CMP0054 NEW)
 # MSVC runtime library flags are selected by an abstraction.
 cmake_policy(SET CMP0091 NEW)
 
+if (SORA_UNITY_SDK_PACKAGE STREQUAL "android")
+  # toolchain の設定
+  set(CMAKE_TOOLCHAIN_FILE ${ANDROID_TOOLCHAIN_FILE})
+  set(ANDROID_NATIVE_API_LEVEL 24)
+  set(ANDROID_ABI arm64-v8a)
+  set(ANDROID_STL none)
+endif()
+
 project(SoraUnitySdk C CXX)
 
 set(Boost_USE_STATIC_LIBS ON)
+
+set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY BOTH)
+set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE BOTH)
+set(CMAKE_FIND_ROOT_PATH_MODE_PACKAGE BOTH)
 
 find_package(WebRTC REQUIRED)
 find_package(Boost REQUIRED)
 find_package(JSON REQUIRED)
 
-if (MSVC)
+set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)
+set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
+set(CMAKE_FIND_ROOT_PATH_MODE_PACKAGE ONLY)
+
+if (SORA_UNITY_SDK_PACKAGE STREQUAL "windows")
   add_library(SoraUnitySdk SHARED)
 
   # configure_file で使う
   set(SORA_UNITY_SDK_PLATFORM Windows)
-elseif (APPLE)
+elseif (SORA_UNITY_SDK_PACKAGE STREQUAL "macos")
   add_library(SoraUnitySdk MODULE)
   set_target_properties(SoraUnitySdk PROPERTIES BUNDLE TRUE)
   set_target_properties(SoraUnitySdk PROPERTIES CXX_VISIBILITY_PRESET hidden)
@@ -26,6 +42,10 @@ elseif (APPLE)
 
   # configure_file で使う
   set(SORA_UNITY_SDK_PLATFORM macOS)
+elseif (SORA_UNITY_SDK_PACKAGE STREQUAL "android")
+  add_library(SoraUnitySdk SHARED)
+
+  set(SORA_UNITY_SDK_PLATFORM Android)
 endif()
 
 set_target_properties(SoraUnitySdk PROPERTIES CXX_STANDARD 14 C_STANDARD 99)
@@ -69,7 +89,7 @@ target_link_libraries(SoraUnitySdk
     JSON::JSON
 )
 
-if (MSVC)
+if (SORA_UNITY_SDK_PACKAGE STREQUAL "windows")
   # 文字コードを utf-8 として扱うのと、シンボルテーブル数を増やす
   target_compile_options(SoraUnitySdk
     PRIVATE
@@ -123,6 +143,7 @@ if (MSVC)
 
   target_compile_definitions(SoraUnitySdk
     PRIVATE
+      SORA_UNITY_SDK_WINDOWS
       UNICODE
       _UNICODE
       _CONSOLE
@@ -183,7 +204,7 @@ if (MSVC)
   #     cuda.lib
   #     ${CMAKE_CURRENT_SOURCE_DIR}/NvCodec/Lib/x64/nvcuvid.lib
   # )
-elseif (APPLE)
+elseif (SORA_UNITY_SDK_PACKAGE STREQUAL "macos")
   enable_language(OBJCXX)
 
   target_sources(SoraUnitySdk
@@ -214,7 +235,67 @@ elseif (APPLE)
 
   target_compile_definitions(SoraUnitySdk
     PRIVATE
+      SORA_UNITY_SDK_MACOS
       WEBRTC_POSIX
       WEBRTC_MAC
+  )
+
+elseif (SORA_UNITY_SDK_PACKAGE STREQUAL "android")
+
+  set(_INSTALL_DIR ${CMAKE_CURRENT_SOURCE_DIR}/_install)
+
+  find_library(ANDROID_LIB_LOG log)
+  find_library(ANDROID_LIB_ANDROID android)
+  find_library(ANDROID_LIB_OPENSLES OpenSLES)
+  find_library(ANDROID_LIB_VULKAN vulkan)
+
+  target_sources(SoraUnitySdk
+    PRIVATE
+      src/jni_onload.cc
+      src/rtc/hw_video_encoder_factory.cpp
+      src/rtc/hw_video_decoder_factory.cpp
+      src/android_helper/android_codec_factory_helper.cpp
+      src/android_helper/android_capturer.cpp
+      src/android_helper/android_context.cpp
+      src/unity_camera_capturer_vulkan.cpp
+  )
+
+  target_compile_definitions(SoraUnitySdk
+    PRIVATE
+      SORA_UNITY_SDK_ANDROID
+      WEBRTC_POSIX
+      WEBRTC_LINUX
+      WEBRTC_ANDROID
+      _LIBCPP_ABI_UNSTABLE
+      SORA_UNITY_SDK_ANDROID
+      _LIBCPP_DISABLE_VISIBILITY_ANNOTATIONS
+      _LIBCXXABI_DISABLE_VISIBILITY_ANNOTATIONS
+      _LIBCPP_ENABLE_NODISCARD
+  )
+  target_compile_options(SoraUnitySdk PRIVATE "-nostdinc++")
+  target_include_directories(SoraUnitySdk
+    PRIVATE
+      ${_INSTALL_DIR}/libcxx/include
+      ${_INSTALL_DIR}/libcxxabi/include
+  )
+
+  target_link_libraries(SoraUnitySdk
+    PRIVATE
+      ${ANDROID_LIB_LOG}
+      ${ANDROID_LIB_ANDROID}
+      ${ANDROID_LIB_OPENSLES}
+      ${ANDROID_LIB_VULKAN}
+  )
+  file(READ ${_INSTALL_DIR}/android/webrtc.ldflags _WEBRTC_ANDROID_LDFLAGS)
+  string(REGEX REPLACE "\n" ";" _WEBRTC_ANDROID_LDFLAGS "${_WEBRTC_ANDROID_LDFLAGS}")
+  target_link_options(SoraUnitySdk
+    PRIVATE
+      -fuse-ld=lld
+      -Wl,--wrap=malloc
+      -Wl,--wrap=calloc
+      -Wl,--wrap=memalign
+      -Wl,--wrap=realloc
+      -Wl,--wrap=free
+      ${_WEBRTC_ANDROID_LDFLAGS}
   )
 endif ()

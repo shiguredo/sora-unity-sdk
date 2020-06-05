@@ -9,7 +9,7 @@
 #include "unity/IUnityGraphics.h"
 #include "unity/IUnityInterface.h"
 
-#ifdef _WIN32
+#ifdef SORA_UNITY_SDK_WINDOWS
 #include "unity/IUnityGraphicsD3D11.h"
 #endif
 
@@ -38,7 +38,7 @@ class UnityContext {
 
   IUnityInterfaces* GetInterfaces();
 
-#ifdef _WIN32
+#ifdef SORA_UNITY_SDK_WINDOWS
  private:
   ID3D11Device* device_ = nullptr;
   ID3D11DeviceContext* context_ = nullptr;

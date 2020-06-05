@@ -45,7 +45,7 @@ void UnityContext::OnGraphicsDeviceEvent(UnityGfxDeviceEventType eventType) {
       auto renderer_type = graphics_->GetRenderer();
       RTC_LOG(LS_INFO) << "Renderer Type is "
                        << UnityGfxRendererToString(renderer_type);
-#ifdef _WIN32
+#ifdef SORA_UNITY_SDK_WINDOWS
       if (renderer_type == kUnityGfxRendererD3D11) {
         device_ = ifs_->Get<IUnityGraphicsD3D11>()->GetDevice();
         device_->GetImmediateContext(&context_);
@@ -54,7 +54,7 @@ void UnityContext::OnGraphicsDeviceEvent(UnityGfxDeviceEventType eventType) {
       break;
     }
     case kUnityGfxDeviceEventShutdown:
-#ifdef _WIN32
+#ifdef SORA_UNITY_SDK_WINDOWS
       if (context_ != nullptr) {
         context_->Release();
         context_ = nullptr;
@@ -81,11 +81,11 @@ UnityContext& UnityContext::Instance() {
 
 bool UnityContext::IsInitialized() {
   std::lock_guard<std::mutex> guard(mutex_);
-#ifdef _WIN32
+#ifdef SORA_UNITY_SDK_WINDOWS
   return ifs_ != nullptr && device_ != nullptr;
 #endif
 
-#ifdef __APPLE__
+#ifdef SORA_UNITY_SDK_MACOS
   if (ifs_ == nullptr || graphics_ == nullptr) {
     return false;
   }
@@ -98,11 +98,13 @@ bool UnityContext::IsInitialized() {
 
   return true;
 #endif
+  return true;
 }
 
 void UnityContext::Init(IUnityInterfaces* ifs) {
   std::lock_guard<std::mutex> guard(mutex_);
 
+#if defined(SORA_UNITY_SDK_WINDOWS) || defined(SORA_UNITY_SDK_MACOS)
   const size_t kDefaultMaxLogFileSize = 10 * 1024 * 1024;
   rtc::LogMessage::LogToDebug((rtc::LoggingSeverity)rtc::LS_NONE);
   rtc::LogMessage::LogTimestamps();
@@ -120,6 +122,13 @@ void UnityContext::Init(IUnityInterfaces* ifs) {
   rtc::LogMessage::AddLogToStream(log_sink_.get(), rtc::LS_INFO);
 
   RTC_LOG(LS_INFO) << "Log initialized";
+#endif
+
+#if defined(SORA_UNITY_SDK_ANDROID)
+  rtc::LogMessage::LogToDebug((rtc::LoggingSeverity)rtc::LS_INFO);
+  rtc::LogMessage::LogTimestamps();
+  rtc::LogMessage::LogThreads();
+#endif
 
   ifs_ = ifs;
   OnGraphicsDeviceEvent(kUnityGfxDeviceEventInitialize);
@@ -140,7 +149,7 @@ IUnityInterfaces* UnityContext::GetInterfaces() {
   return ifs_;
 }
 
-#ifdef _WIN32
+#ifdef SORA_UNITY_SDK_WINDOWS
 ID3D11Device* UnityContext::GetDevice() {
   std::lock_guard<std::mutex> guard(mutex_);
   return device_;

@@ -14,13 +14,17 @@
 #include "rtc/scalable_track_source.h"
 #include "unity_context.h"
 
+#ifdef SORA_UNITY_SDK_ANDROID
+#include <vulkan/vulkan.h>
+#endif
+
 namespace sora {
 
 class UnityCameraCapturer : public sora::ScalableVideoTrackSource,
                             public rtc::VideoSinkInterface<webrtc::VideoFrame> {
   webrtc::Clock* clock_ = webrtc::Clock::GetRealTimeClock();
 
-#ifdef WIN32
+#ifdef SORA_UNITY_SDK_WINDOWS
   class D3D11Impl {
     UnityContext* context_;
     void* camera_texture_;
@@ -38,7 +42,7 @@ class UnityCameraCapturer : public sora::ScalableVideoTrackSource,
   std::unique_ptr<D3D11Impl> capturer_;
 #endif
 
-#ifdef __APPLE__
+#ifdef SORA_UNITY_SDK_MACOS
   class MetalImpl {
     UnityContext* context_;
     void* camera_texture_;
@@ -54,6 +58,27 @@ class UnityCameraCapturer : public sora::ScalableVideoTrackSource,
     rtc::scoped_refptr<webrtc::I420Buffer> Capture();
   };
   std::unique_ptr<MetalImpl> capturer_;
+#endif
+
+#ifdef SORA_UNITY_SDK_ANDROID
+  class VulkanImpl {
+    UnityContext* context_;
+    void* camera_texture_;
+    VkImage image_ = VK_NULL_HANDLE;
+    VkDeviceMemory memory_ = VK_NULL_HANDLE;
+    VkCommandPool pool_ = VK_NULL_HANDLE;
+    int width_;
+    int height_;
+
+   public:
+    ~VulkanImpl();
+    bool Init(UnityContext* context,
+              void* camera_texture,
+              int width,
+              int height);
+    rtc::scoped_refptr<webrtc::I420Buffer> Capture();
+  };
+  std::unique_ptr<VulkanImpl> capturer_;
 #endif
 
  public:

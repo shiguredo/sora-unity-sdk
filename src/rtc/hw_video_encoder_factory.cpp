@@ -11,7 +11,7 @@
 #include "rtc_base/logging.h"
 
 #include "h264_format.h"
-#if defined(_WIN32) || defined(__linux__)
+#if defined(SORA_UNITY_SDK_WINDOWS)
 #include "hwenc_nvcodec/nvcodec_h264_encoder.h"
 #endif
 
@@ -24,7 +24,7 @@ std::vector<webrtc::SdpVideoFormat> HWVideoEncoderFactory::GetSupportedFormats()
   for (const webrtc::SdpVideoFormat& format : webrtc::SupportedVP9Codecs())
     supported_codecs.push_back(format);
 
-#if defined(_WIN32) || defined(__linux__)
+#if defined(SORA_UNITY_SDK_WINDOWS)
   if (NvCodecH264Encoder::IsSupported()) {
     std::vector<webrtc::SdpVideoFormat> h264_codecs = {
         CreateH264Format(webrtc::H264::kProfileBaseline,
@@ -63,7 +63,7 @@ std::unique_ptr<webrtc::VideoEncoder> HWVideoEncoderFactory::CreateVideoEncoder(
   if (absl::EqualsIgnoreCase(format.name, cricket::kVp9CodecName))
     return webrtc::VP9Encoder::Create(cricket::VideoCodec(format));
 
-#if defined(_WIN32) || defined(__linux__)
+#if defined(SORA_UNITY_SDK_WINDOWS)
   if (absl::EqualsIgnoreCase(format.name, cricket::kH264CodecName)) {
     return std::unique_ptr<webrtc::VideoEncoder>(
         absl::make_unique<NvCodecH264Encoder>(cricket::VideoCodec(format)));
