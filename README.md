@@ -48,12 +48,13 @@ https://github.com/shiguredo/sora-unity-sdk/releases から から最新の `Sor
 Sora Unity SDK ではソフトウェアでの H.264 エンコード/デコードの利用はできません。
 これは H.264 のソフトウェアエンコーダ/デコーダを含んで配布した場合はライセンス費用が発生することから、無効にしているためです。
 
-そのため Windows では NVIDIA VIDEO CODEC SDK 、macOS では VideoToolbox を利用し、H.264 のエンコード/デコードを実現しています。
+そのため Windows では NVIDIA VIDEO CODEC SDK 、macOS では VideoToolbox を利用し、H.264 のエンコード/デコードを実現しています。また Android でも H.264 ハードウェアエンコーダを利用します。
 
 詳細は H.264 を [USE_H264.md](doc/USE_H264.md) をお読みください
 
 ## 対応機能
 
+- Android への対応
 - Unity のカメラ映像を取得し Sora で送信
 - カメラから映像を取得し Sora に送信
 - カメラから映像を取得し Unity アプリに出力
@@ -102,7 +103,6 @@ Sora Unity SDK ではソフトウェアでの H.264 エンコード/デコード
 
 - Windows 10 1809 x86_64 以降
 - macOS 10.15 x86_64 以降
-
 
 ## 有償での優先実装
 
