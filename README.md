@@ -112,6 +112,8 @@ Sora Unity SDK ではソフトウェアでの H.264 エンコード/デコード
     - 企業名非公開
 - Windows 版 NVIDIA VIDEO CODEC SDK による H.264 デコーダ対応
     - [スロースネットワークス株式会社](http://www.sloth-networks.co.jp) 様
+- Android 版対応
+    - [株式会社KDDIテクノロジー](https://kddi-tech.com/) 様
 
 ## 有償での優先実装が可能な機能一覧
 
