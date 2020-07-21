@@ -11,11 +11,17 @@
 
 ## develop
 
+## 2020.5
+
 - [UPDATE] Android 対応を正式版としてリリース
+    - @melpon
+- [UPDATE] WebRTC のバージョンを M84 (4147@{#10}) に上げる
+    - @melpon
 
 ## 2020.4
 
 - [ADD] 実験的機能として Android に対応する
+    - @melpon
 
 ## 2020.3.1
 
