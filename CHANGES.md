@@ -17,6 +17,8 @@
     - @melpon
 - [UPDATE] WebRTC のバージョンを M84 (4147@{#10}) に上げる
     - @melpon
+- [FIX] EncodedImage::set_buffer が消えてしまったのを修正
+    - @melpon
 
 ## 2020.4
 
