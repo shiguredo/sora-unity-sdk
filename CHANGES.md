@@ -17,6 +17,8 @@
     - @melpon
 - [UPDATE] WebRTC のバージョンを M84 (4147@{#10}) に上げる
     - @melpon
+- [UPDATE] json を 3.8.0 に上げる
+    - @voluntas
 - [FIX] EncodedImage::set_buffer が消えてしまったのを修正
     - @melpon
 
