@@ -5,12 +5,15 @@ on:
     paths-ignore:
     - 'doc/**'
     - '**/*.md'
+    - 'README.md'
+  schedule:
+  - cron: "0 0 * * *"
 
 jobs:
   build-windows:
     runs-on: windows-latest
     steps:
-    - uses: actions/checkout@v1
+    - uses: actions/checkout@v2
     - name: Get Versions
       run: |
         Get-Content "VERSIONS" | Foreach-Object {
@@ -24,19 +27,19 @@ jobs:
       id: versions
     - name: Cache CUDA ${{ steps.versions.outputs.cuda_version }}
       id: cache-cuda
-      uses: actions/cache@v1
+      uses: actions/cache@v2
       with:
         path: _install\cuda
         key: cuda-${{ steps.versions.outputs.cuda_version }}
     - name: Cache Boost ${{ steps.versions.outputs.boost_version }}
       id: cache-boost
-      uses: actions/cache@v1
+      uses: actions/cache@v2
       with:
         path: _install\boost
         key: windows-boost-${{ steps.versions.outputs.boost_version }}
     - name: Cache WebRTC Build ${{ steps.versions.outputs.webrtc_build_version }}
       id: cache-webrtc
-      uses: actions/cache@v1
+      uses: actions/cache@v2
       with:
         path: _install\webrtc
         key: windows-webrtc-${{ steps.versions.outputs.webrtc_build_version }}
@@ -52,7 +55,7 @@ jobs:
   build-macos:
     runs-on: macOS-latest
     steps:
-    - uses: actions/checkout@v1
+    - uses: actions/checkout@v2
     - name: Get Versions
       run: |
         source VERSIONS
@@ -61,13 +64,13 @@ jobs:
       id: versions
     - name: Cache Boost ${{ steps.versions.outputs.boost_version }}
       id: cache-boost
-      uses: actions/cache@v1
+      uses: actions/cache@v2
       with:
         path: _install/boost
         key: macos-boost-${{ steps.versions.outputs.boost_version }}
     - name: Cache WebRTC Build ${{ steps.versions.outputs.webrtc_build_version }}
       id: cache-webrtc
-      uses: actions/cache@v1
+      uses: actions/cache@v2
       with:
         path: _install/webrtc
         key: macos-webrtc-${{ steps.versions.outputs.webrtc_build_version }}
@@ -85,7 +88,7 @@ jobs:
     # macOS からなので macOS にする
     runs-on: macOS-latest
     steps:
-    - uses: actions/checkout@v1
+    - uses: actions/checkout@v2
     - name: Get Versions
       run: |
         source VERSIONS
@@ -94,13 +97,13 @@ jobs:
       id: versions
     - name: Cache Boost ${{ steps.versions.outputs.boost_version }}
       id: cache-boost
-      uses: actions/cache@v1
+      uses: actions/cache@v2
       with:
         path: _install/boost
         key: android-boost-${{ steps.versions.outputs.boost_version }}
     - name: Cache WebRTC Build ${{ steps.versions.outputs.webrtc_build_version }}
       id: cache-webrtc
-      uses: actions/cache@v1
+      uses: actions/cache@v2
       with:
         path: _install/webrtc
         key: android-webrtc-${{ steps.versions.outputs.webrtc_build_version }}-v3
@@ -122,7 +125,7 @@ jobs:
     runs-on: macOS-latest
     needs: [build-windows, build-macos, build-android]
     steps:
-    - uses: actions/checkout@v1
+    - uses: actions/checkout@v2
     - name: Download SoraUnitySdk.dll
       uses: actions/download-artifact@v1
       with:
@@ -159,7 +162,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Checkout code
-      uses: actions/checkout@master
+      uses: actions/checkout@v2
     - name: Download SoraUnitySdk
       uses: actions/download-artifact@v1
       with:

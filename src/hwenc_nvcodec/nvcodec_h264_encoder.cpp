@@ -238,8 +238,8 @@ int32_t NvCodecH264Encoder::Encode(
   }
 
   for (std::vector<uint8_t>& packet : v_packet_) {
-    encoded_image_.set_buffer(packet.data(), packet.size());
-    encoded_image_.set_size(packet.size());
+    encoded_image_.SetEncodedData(
+        webrtc::EncodedImageBuffer::Create(packet.data(), packet.size()));
     encoded_image_._completeFrame = true;
     encoded_image_._encodedWidth = width_;
     encoded_image_._encodedHeight = height_;
