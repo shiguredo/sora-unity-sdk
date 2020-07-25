@@ -98,6 +98,8 @@ Sora Unity SDK ではソフトウェアでの H.264 エンコード/デコード
 - Unity 2019.1
 - Unity 2019.2
 - Unity 2019.3
+- Unity 2019.4
+- Unity 2020.1
 
 ## 対応プラットフォーム
 
