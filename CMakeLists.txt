@@ -290,7 +290,7 @@ elseif (SORA_UNITY_SDK_PACKAGE STREQUAL "android")
   string(REGEX REPLACE "\n" ";" _WEBRTC_ANDROID_LDFLAGS "${_WEBRTC_ANDROID_LDFLAGS}")
   target_link_options(SoraUnitySdk
     PRIVATE
-      -fuse-ld=lld
+      -fuse-ld=gold
       -Wl,--wrap=malloc
       -Wl,--wrap=calloc
       -Wl,--wrap=memalign
