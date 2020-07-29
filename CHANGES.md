@@ -11,6 +11,13 @@
 
 ## develop
 
+## 2020.6
+
+- [UPDATE] WebRTC のバージョンを M84 (4147@{#11}) に上げる
+    - @voluntas
+- [ADD] GetStats を Unity から呼べるようにする
+    - @melpon
+
 ## 2020.5
 
 - [UPDATE] Android 対応を正式版としてリリース

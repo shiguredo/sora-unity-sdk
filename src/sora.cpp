@@ -324,4 +324,26 @@ rtc::scoped_refptr<rtc::AdaptedVideoTrackSource> Sora::CreateVideoCapturer(
   }
 }
 
+void Sora::GetStats(std::function<void (std::string)> on_get_stats) {
+  auto conn = signaling_ == nullptr ? nullptr : signaling_->getRTCConnection();
+  if (signaling_ == nullptr || conn == nullptr) {
+    std::lock_guard<std::mutex> guard(event_mutex_);
+    event_queue_.push_back([on_get_stats = std::move(on_get_stats)]() {
+      // ここは Unity スレッドから呼ばれる
+      on_get_stats("[]");
+    });
+    return;
+  }
+
+  conn->getStats(
+    [this, on_get_stats = std::move(on_get_stats)](const rtc::scoped_refptr<const webrtc::RTCStatsReport>& report) {
+      std::string json = report->ToJson();
+      std::lock_guard<std::mutex> guard(event_mutex_);
+      event_queue_.push_back([on_get_stats = std::move(on_get_stats), json = std::move(json)]() {
+        // ここは Unity スレッドから呼ばれる
+        on_get_stats(std::move(json));
+      });
+    });
+}
+
 }  // namespace sora
