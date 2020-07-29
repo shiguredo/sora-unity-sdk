@@ -107,6 +107,13 @@ void sora_set_on_handle_audio(void* p, handle_audio_cb_t f, void* userdata) {
       });
 }
 
+void sora_get_stats(void* p, stats_cb_t f, void* userdata) {
+  auto sora = (sora::Sora*)p;
+  sora->GetStats([f, userdata](std::string json) {
+    f(json.c_str(), json.size(), userdata);
+  });
+}
+
 bool sora_device_enum_video_capturer(device_enum_cb_t f, void* userdata) {
   return sora::DeviceList::EnumVideoCapturer(
       [f, userdata](std::string device_name, std::string unique_name) {

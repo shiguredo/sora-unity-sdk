@@ -14,12 +14,14 @@ public class Sora : IDisposable
         DeviceCamera = 0,
         UnityCamera = 1,
     }
-    public enum VideoCodec {
+    public enum VideoCodec
+    {
         VP9,
         VP8,
         H264,
     }
-    public enum AudioCodec {
+    public enum AudioCodec
+    {
         OPUS,
     }
     public class Config
@@ -129,7 +131,8 @@ public class Sora : IDisposable
 
     // Unity 側でレンダリングが完了した時（yield return new WaitForEndOfFrame() の後）に呼ぶイベント
     // 指定した Unity カメラの映像を Sora 側のテクスチャにレンダリングしたりする
-    public void OnRender() {
+    public void OnRender()
+    {
         UnityEngine.GL.IssuePluginEvent(sora_get_render_callback(), sora_get_render_callback_event_id(p));
     }
 
@@ -205,7 +208,8 @@ public class Sora : IDisposable
         sora_dispatch_events(p);
     }
 
-    public void ProcessAudio(float[] data, int offset, int samples) {
+    public void ProcessAudio(float[] data, int offset, int samples)
+    {
         sora_process_audio(p, data, offset, samples);
     }
 
@@ -232,6 +236,23 @@ public class Sora : IDisposable
             onHandleAudioHandle = GCHandle.Alloc(value);
             sora_set_on_handle_audio(p, HandleAudioCallback, GCHandle.ToIntPtr(onHandleAudioHandle));
         }
+    }
+
+    private delegate void StatsCallbackDelegate(string json, int size, IntPtr userdata);
+
+    [AOT.MonoPInvokeCallback(typeof(StatsCallbackDelegate))]
+    static private void StatsCallback(string json, int size, IntPtr userdata)
+    {
+        GCHandle handle = GCHandle.FromIntPtr(userdata);
+        var callback = GCHandle.FromIntPtr(userdata).Target as Action<string>;
+        callback(json);
+        handle.Free();
+    }
+
+    public void GetStats(Action<string> onGetStats)
+    {
+        GCHandle handle = GCHandle.Alloc(onGetStats);
+        sora_get_stats(p, StatsCallback, GCHandle.ToIntPtr(handle));
     }
 
     private delegate void DeviceEnumCallbackDelegate(string device_name, string unique_name, IntPtr userdata);
@@ -320,7 +341,8 @@ public class Sora : IDisposable
         return list.ToArray();
     }
 
-    public static bool IsH264Supported() {
+    public static bool IsH264Supported()
+    {
         return sora_is_h264_supported();
     }
 
@@ -368,6 +390,8 @@ public class Sora : IDisposable
     private static extern void sora_process_audio(IntPtr p, [In] float[] data, int offset, int samples);
     [DllImport("SoraUnitySdk")]
     private static extern void sora_set_on_handle_audio(IntPtr p, HandleAudioCallbackDelegate on_handle_audio, IntPtr userdata);
+    [DllImport("SoraUnitySdk")]
+    private static extern bool sora_get_stats(IntPtr p, StatsCallbackDelegate on_get_stats, IntPtr userdata);
     [DllImport("SoraUnitySdk")]
     private static extern bool sora_device_enum_video_capturer(DeviceEnumCallbackDelegate f, IntPtr userdata);
     [DllImport("SoraUnitySdk")]

@@ -91,6 +91,8 @@ class Sora {
   void ProcessAudio(const void* p, int offset, int samples);
   void SetOnHandleAudio(std::function<void(const int16_t*, int, int)> f);
 
+  void GetStats(std::function<void (std::string)> on_get_stats);
+
  private:
   static rtc::scoped_refptr<UnityAudioDevice> CreateADM(
       webrtc::TaskQueueFactory* task_queue_factory,
