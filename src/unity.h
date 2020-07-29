@@ -13,6 +13,7 @@ typedef unsigned int ptrid_t;
 
 typedef void (*track_cb_t)(ptrid_t track_id, void* userdata);
 typedef void (*notify_cb_t)(const char* json, int size, void* userdata);
+typedef void (*stats_cb_t)(const char* json, int size, void* userdata);
 
 UNITY_INTERFACE_EXPORT void* sora_create();
 UNITY_INTERFACE_EXPORT void sora_set_on_add_track(void* p,
@@ -62,6 +63,8 @@ typedef void (*handle_audio_cb_t)(const int16_t* buf,
 UNITY_INTERFACE_EXPORT void sora_set_on_handle_audio(void* p,
                                                      handle_audio_cb_t f,
                                                      void* userdata);
+
+UNITY_INTERFACE_EXPORT void sora_get_stats(void* p, stats_cb_t f, void* userdata);
 
 typedef void (*device_enum_cb_t)(const char* device_name,
                                  const char* unique_name,
