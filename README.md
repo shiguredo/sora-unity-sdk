@@ -65,7 +65,7 @@ Sora Unity SDK ではソフトウェアでの H.264 エンコード/デコード
 
 - Windows 10 1809 x86_64 以降
 - macOS 10.15 x86_64 以降
-- Android 5 以降
+- Android 7 以降
 
 ## 対応機能
 
