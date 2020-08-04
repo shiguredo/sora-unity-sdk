@@ -53,8 +53,24 @@ Sora Unity SDK ではソフトウェアでの H.264 エンコード/デコード
 
 詳細は H.264 を [USE_H264.md](doc/USE_H264.md) をお読みください
 
+## 対応 Unity バージョン
+
+- Unity 2019.1
+- Unity 2019.2
+- Unity 2019.3
+- Unity 2019.4
+- Unity 2020.1
+
+## 対応プラットフォーム
+
+- Windows 10 1809 x86_64 以降
+- macOS 10.15 x86_64 以降
+- Android 5 以降
+
 ## 対応機能
 
+- Windows への対応
+- macOS への対応
 - Android への対応
 - Unity のカメラ映像を取得し Sora で送信
 - カメラから映像を取得し Sora に送信
@@ -94,20 +110,6 @@ Sora Unity SDK ではソフトウェアでの H.264 エンコード/デコード
 
 - iOS 対応
 - サイマルキャスト対応
-
-## 対応 Unity バージョン
-
-- Unity 2019.1
-- Unity 2019.2
-- Unity 2019.3
-- Unity 2019.4
-- Unity 2020.1
-
-## 対応プラットフォーム
-
-- Windows 10 1809 x86_64 以降
-- macOS 10.15 x86_64 以降
-- Android 5 以降
 
 ## 有償での優先実装
 
