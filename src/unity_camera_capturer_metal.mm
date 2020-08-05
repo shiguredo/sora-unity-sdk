@@ -11,8 +11,10 @@ static std::string MTLStorageModeToString(MTLStorageMode mode) {
   switch (mode) {
     case MTLStorageModeShared:
       return "MTLStorageModeShared";
+#if defined(SORA_UNITY_SDK_MACOS)
     case MTLStorageModeManaged:
       return "MTLStorageModeManaged";
+#endif
     case MTLStorageModePrivate:
       return "MTLStorageModePrivate";
     //case MTLStorageModeMemoryless:
@@ -80,7 +82,9 @@ UnityCameraCapturer::MetalImpl::Capture() {
        destinationSlice:0
        destinationLevel:0
       destinationOrigin:MTLOriginMake(0, 0, 0)];
+#if defined(SORA_UNITY_SDK_MACOS)
   [blit synchronizeResource:tex];
+#endif
   [blit endEncoding];
   blit = nil;
 

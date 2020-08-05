@@ -42,6 +42,12 @@ elseif (SORA_UNITY_SDK_PACKAGE STREQUAL "macos")
 
   # configure_file で使う
   set(SORA_UNITY_SDK_PLATFORM macOS)
+elseif (SORA_UNITY_SDK_PACKAGE STREQUAL "ios")
+  add_library(SoraUnitySdk)
+  set_target_properties(SoraUnitySdk PROPERTIES CXX_VISIBILITY_PRESET hidden)
+  target_link_options(SoraUnitySdk PRIVATE -ObjC)
+
+  set(SORA_UNITY_SDK_PLATFORM iOS)
 elseif (SORA_UNITY_SDK_PACKAGE STREQUAL "android")
   add_library(SoraUnitySdk SHARED)
 
@@ -239,6 +245,25 @@ elseif (SORA_UNITY_SDK_PACKAGE STREQUAL "macos")
       WEBRTC_POSIX
       WEBRTC_MAC
   )
+
+elseif (SORA_UNITY_SDK_PACKAGE STREQUAL "ios")
+  enable_language(OBJCXX)
+
+  target_sources(SoraUnitySdk
+    PRIVATE
+      src/unity_camera_capturer_metal.mm
+      src/mac_helper/mac_capturer.mm
+      src/mac_helper/objc_codec_factory_helper.mm
+  )
+
+  target_compile_definitions(SoraUnitySdk
+    PRIVATE
+      SORA_UNITY_SDK_IOS
+      WEBRTC_POSIX
+      WEBRTC_MAC
+      WEBRTC_IOS
+  )
+  install(TARGETS SoraUnitySdk DESTINATION lib)
 
 elseif (SORA_UNITY_SDK_PACKAGE STREQUAL "android")
 

@@ -129,10 +129,14 @@ bool Sora::Connect(std::string unity_version,
         });
       }));
 
+  std::unique_ptr<rtc::Thread> worker_thread = rtc::Thread::Create();
+  worker_thread->Start();
+
   auto task_queue_factory = webrtc::CreateDefaultTaskQueueFactory();
-  unity_adm_ = CreateADM(task_queue_factory.get(), false, unity_audio_input,
-                         unity_audio_output, on_handle_audio_,
-                         audio_recording_device, audio_playout_device);
+  unity_adm_ =
+      CreateADM(task_queue_factory.get(), false, unity_audio_input,
+                unity_audio_output, on_handle_audio_, audio_recording_device,
+                audio_playout_device, worker_thread.get());
   if (!unity_adm_) {
     return false;
   }
@@ -162,7 +166,8 @@ bool Sora::Connect(std::string unity_version,
     config.audio_playout_device = audio_playout_device;
     rtc_manager_ = RTCManager::Create(
         config, std::move(capturer), renderer_.get(), unity_adm_,
-        std::move(task_queue_factory), std::move(signaling_thread));
+        std::move(task_queue_factory), std::move(signaling_thread),
+        std::move(worker_thread));
   } else {
     // 受信側は capturer を作らず、video, recording の設定もしない
     RTCManagerConfig config;
@@ -173,7 +178,8 @@ bool Sora::Connect(std::string unity_version,
     config.audio_playout_device = audio_playout_device;
     rtc_manager_ = RTCManager::Create(config, nullptr, renderer_.get(),
                                       unity_adm_, std::move(task_queue_factory),
-                                      std::move(signaling_thread));
+                                      std::move(signaling_thread),
+                                      std::move(worker_thread));
   }
 
   {
@@ -272,27 +278,47 @@ rtc::scoped_refptr<UnityAudioDevice> Sora::CreateADM(
     bool unity_audio_output,
     std::function<void(const int16_t*, int, int)> on_handle_audio,
     std::string audio_recording_device,
-    std::string audio_playout_device) {
+    std::string audio_playout_device,
+    rtc::Thread* worker_thread) {
   rtc::scoped_refptr<webrtc::AudioDeviceModule> adm;
 
   if (dummy_audio) {
-    adm = webrtc::AudioDeviceModule::Create(
-        webrtc::AudioDeviceModule::kDummyAudio, task_queue_factory);
+    adm =
+        worker_thread->Invoke<rtc::scoped_refptr<webrtc::AudioDeviceModule> >(
+            RTC_FROM_HERE, [&] {
+              return webrtc::AudioDeviceModule::Create(
+                  webrtc::AudioDeviceModule::kDummyAudio, task_queue_factory);
+            });
   } else {
 #if defined(SORA_UNITY_SDK_WINDOWS)
-    adm = webrtc::CreateWindowsCoreAudioAudioDeviceModule(task_queue_factory);
+    adm = worker_thread->Invoke<rtc::scoped_refptr<webrtc::AudioDeviceModule> >(
+        RTC_FROM_HERE, [&] {
+          return webrtc::CreateWindowsCoreAudioAudioDeviceModule(
+              task_queue_factory);
+        });
 #elif defined(SORA_UNITY_SDK_ANDROID)
     JNIEnv* env = webrtc::AttachCurrentThreadIfNeeded();
     auto context = GetAndroidApplicationContext(env);
-    adm = webrtc::CreateJavaAudioDeviceModule(env, context.obj());
+    adm = worker_thread->Invoke<rtc::scoped_refptr<webrtc::AudioDeviceModule> >(
+        RTC_FROM_HERE, [&] {
+          return webrtc::CreateJavaAudioDeviceModule(env, context.obj());
+        });
 #else
-    adm = webrtc::AudioDeviceModule::Create(
-        webrtc::AudioDeviceModule::kPlatformDefaultAudio, task_queue_factory);
+    adm = worker_thread->Invoke<rtc::scoped_refptr<webrtc::AudioDeviceModule> >(
+        RTC_FROM_HERE, [&] {
+          return webrtc::AudioDeviceModule::Create(
+              webrtc::AudioDeviceModule::kPlatformDefaultAudio,
+              task_queue_factory);
+        });
 #endif
   }
 
-  return UnityAudioDevice::Create(adm, !unity_audio_input, !unity_audio_output,
-                                  on_handle_audio, task_queue_factory);
+  return worker_thread->Invoke<rtc::scoped_refptr<UnityAudioDevice> >(
+      RTC_FROM_HERE, [&] {
+        return UnityAudioDevice::Create(adm, !unity_audio_input,
+                                        !unity_audio_output, on_handle_audio,
+                                        task_queue_factory);
+      });
 }
 
 rtc::scoped_refptr<rtc::AdaptedVideoTrackSource> Sora::CreateVideoCapturer(
@@ -305,7 +331,7 @@ rtc::scoped_refptr<rtc::AdaptedVideoTrackSource> Sora::CreateVideoCapturer(
   if (capturer_type == 0) {
     // 実カメラ（デバイス）を使う
     // TODO(melpon): framerate をちゃんと設定する
-#if defined(SORA_UNITY_SDK_MACOS)
+#if defined(SORA_UNITY_SDK_MACOS) || defined(SORA_UNITY_SDK_IOS)
     return MacCapturer::Create(video_width, video_height, 30,
                                video_capturer_device);
 #elif defined(SORA_UNITY_SDK_ANDROID)

@@ -22,7 +22,7 @@
 #include "rtc_manager.h"
 #include "scalable_track_source.h"
 
-#if defined(SORA_UNITY_SDK_MACOS)
+#if defined(SORA_UNITY_SDK_MACOS) || defined(SORA_UNITY_SDK_IOS)
 #include "mac_helper/objc_codec_factory_helper.h"
 #elif defined(SORA_UNITY_SDK_ANDROID)
 #include "android_helper/android_codec_factory_helper.h"
@@ -53,10 +53,12 @@ std::unique_ptr<RTCManager> RTCManager::Create(
     VideoTrackReceiver* receiver,
     rtc::scoped_refptr<webrtc::AudioDeviceModule> adm,
     std::unique_ptr<webrtc::TaskQueueFactory> task_queue_factory,
-    std::unique_ptr<rtc::Thread> signaling_thread) {
+    std::unique_ptr<rtc::Thread> signaling_thread,
+    std::unique_ptr<rtc::Thread> worker_thread) {
   std::unique_ptr<RTCManager> p(new RTCManager());
   if (!p->Init(config, video_track_source, receiver, adm,
-               std::move(task_queue_factory), std::move(signaling_thread))) {
+               std::move(task_queue_factory), std::move(signaling_thread),
+               std::move(worker_thread))) {
     return nullptr;
   }
   return p;
@@ -70,7 +72,8 @@ bool RTCManager::Init(
     VideoTrackReceiver* receiver,
     rtc::scoped_refptr<webrtc::AudioDeviceModule> adm,
     std::unique_ptr<webrtc::TaskQueueFactory> task_queue_factory,
-    std::unique_ptr<rtc::Thread> signaling_thread) {
+    std::unique_ptr<rtc::Thread> signaling_thread,
+    std::unique_ptr<rtc::Thread> worker_thread) {
   config_ = config;
   receiver_ = receiver;
 
@@ -78,8 +81,7 @@ bool RTCManager::Init(
 
   network_thread_ = rtc::Thread::CreateWithSocketServer();
   network_thread_->Start();
-  worker_thread_ = rtc::Thread::Create();
-  worker_thread_->Start();
+  worker_thread_ = std::move(worker_thread);
   signaling_thread_ = std::move(signaling_thread);
   signaling_thread_->Start();
 
@@ -103,7 +105,7 @@ bool RTCManager::Init(
       webrtc::CreateBuiltinAudioEncoderFactory();
   media_dependencies.audio_decoder_factory =
       webrtc::CreateBuiltinAudioDecoderFactory();
-#if defined(SORA_UNITY_SDK_MACOS)
+#if defined(SORA_UNITY_SDK_MACOS) || defined(SORA_UNITY_SDK_IOS)
   media_dependencies.video_encoder_factory = CreateObjCEncoderFactory();
   media_dependencies.video_decoder_factory = CreateObjCDecoderFactory();
 #elif defined(SORA_UNITY_SDK_ANDROID)

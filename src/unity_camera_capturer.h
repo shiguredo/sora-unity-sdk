@@ -42,7 +42,7 @@ class UnityCameraCapturer : public sora::ScalableVideoTrackSource,
   std::unique_ptr<D3D11Impl> capturer_;
 #endif
 
-#ifdef SORA_UNITY_SDK_MACOS
+#if defined(SORA_UNITY_SDK_MACOS) || defined(SORA_UNITY_SDK_IOS)
   class MetalImpl {
     UnityContext* context_;
     void* camera_texture_;

@@ -1,6 +1,6 @@
 #include "unity_renderer.h"
 
-#include "rtc_base/logging.h"
+#include <rtc_base/logging.h>
 
 namespace sora {
 
@@ -29,22 +29,16 @@ void UnityRenderer::Sink::SetFrameBuffer(
 }
 
 void UnityRenderer::Sink::OnFrame(const webrtc::VideoFrame& frame) {
-  //RTC_LOG(LS_INFO) << "OnFrame: width=" << frame.width()
-  //                 << " height=" << frame.height() << " size=" << frame.size()
-  //                 << " timestamp=" << frame.timestamp()
-  //                 << " rotation=" << (int)frame.rotation()
-  //                 << " videowidth=" << frame.video_frame_buffer()->width()
-  //                 << " videoheight=" << frame.video_frame_buffer()->height()
-  //                 << " videotype=" << (int)frame.video_frame_buffer()->type();
+  rtc::scoped_refptr<webrtc::VideoFrameBuffer> frame_buffer =
+      frame.video_frame_buffer();
 
   // kNative の場合は別スレッドで変換が出来ない可能性が高いため、
-  // ここで I420 に変換して渡す。
-  if (frame.video_frame_buffer()->type() ==
-      webrtc::VideoFrameBuffer::Type::kNative) {
-    SetFrameBuffer(frame.video_frame_buffer()->ToI420());
-  } else {
-    SetFrameBuffer(frame.video_frame_buffer());
+  // ここで I420 に変換する。
+  if (frame_buffer->type() == webrtc::VideoFrameBuffer::Type::kNative) {
+    frame_buffer = frame_buffer->ToI420();
   }
+
+  SetFrameBuffer(frame_buffer);
 }
 
 void UnityRenderer::Sink::TextureUpdateCallback(int eventID, void* data) {

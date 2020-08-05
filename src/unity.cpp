@@ -9,7 +9,28 @@
 
 extern "C" {
 
+#if defined(SORA_UNITY_SDK_IOS)
+// PlaybackEngines/iOSSupport/Trampoline/Classes/Unity/UnityInterface.h から必要な定義だけ拾ってきた
+typedef void (*UnityPluginLoadFunc)(IUnityInterfaces* unityInterfaces);
+typedef void (*UnityPluginUnloadFunc)();
+void UnityRegisterRenderingPluginV5(UnityPluginLoadFunc loadPlugin,
+                                    UnityPluginUnloadFunc unloadPlugin);
+
+bool g_ios_plugin_registered = false;
+
+void UNITY_INTERFACE_API SoraUnitySdk_UnityPluginLoad(IUnityInterfaces* ifs);
+void UNITY_INTERFACE_API SoraUnitySdk_UnityPluginUnload();
+#endif
+
 void* sora_create() {
+#if defined(SORA_UNITY_SDK_IOS)
+  if (!g_ios_plugin_registered) {
+    UnityRegisterRenderingPluginV5(&SoraUnitySdk_UnityPluginLoad,
+                                   &SoraUnitySdk_UnityPluginUnload);
+    g_ios_plugin_registered = true;
+  }
+#endif
+
   auto context = &sora::UnityContext::Instance();
   if (!context->IsInitialized()) {
     return nullptr;
@@ -53,7 +74,7 @@ int sora_connect(void* p,
                  const char* channel_id,
                  const char* metadata,
                  const char* role,
-                 bool multistream,
+                 unity_bool_t multistream,
                  int capturer_type,
                  void* unity_camera_texture,
                  const char* video_capturer_device,
@@ -61,8 +82,8 @@ int sora_connect(void* p,
                  int video_height,
                  const char* video_codec,
                  int video_bitrate,
-                 bool unity_audio_input,
-                 bool unity_audio_output,
+                 unity_bool_t unity_audio_input,
+                 unity_bool_t unity_audio_output,
                  const char* audio_recording_device,
                  const char* audio_playout_device,
                  const char* audio_codec,
@@ -114,30 +135,33 @@ void sora_get_stats(void* p, stats_cb_t f, void* userdata) {
   });
 }
 
-bool sora_device_enum_video_capturer(device_enum_cb_t f, void* userdata) {
+unity_bool_t sora_device_enum_video_capturer(device_enum_cb_t f,
+                                             void* userdata) {
   return sora::DeviceList::EnumVideoCapturer(
       [f, userdata](std::string device_name, std::string unique_name) {
         f(device_name.c_str(), unique_name.c_str(), userdata);
       });
 }
-bool sora_device_enum_audio_recording(device_enum_cb_t f, void* userdata) {
+unity_bool_t sora_device_enum_audio_recording(device_enum_cb_t f,
+                                              void* userdata) {
   return sora::DeviceList::EnumAudioRecording(
       [f, userdata](std::string device_name, std::string unique_name) {
         f(device_name.c_str(), unique_name.c_str(), userdata);
       });
 }
-bool sora_device_enum_audio_playout(device_enum_cb_t f, void* userdata) {
+unity_bool_t sora_device_enum_audio_playout(device_enum_cb_t f,
+                                            void* userdata) {
   return sora::DeviceList::EnumAudioPlayout(
       [f, userdata](std::string device_name, std::string unique_name) {
         f(device_name.c_str(), unique_name.c_str(), userdata);
       });
 }
 
-bool sora_is_h264_supported() {
+unity_bool_t sora_is_h264_supported() {
 #if defined(SORA_UNITY_SDK_WINDOWS)
   return NvCodecH264Encoder::IsSupported() && NvCodecVideoDecoder::IsSupported(cudaVideoCodec_H264);
-#elif defined(SORA_UNITY_SDK_MACOS)
-  // macOS は VideoToolbox が使えるので常に true
+#elif defined(SORA_UNITY_SDK_MACOS) || defined(SORA_UNITY_SDK_IOS)
+  // macOS, iOS は VideoToolbox が使えるので常に true
   return true;
 #elif defined(SORA_UNITY_SDK_ANDROID)
   // Android は多分大体動くので true
@@ -145,11 +169,24 @@ bool sora_is_h264_supported() {
 #endif
 }
 
+// iOS の場合は static link で名前が被る可能性があるので、別の名前にしておく
 void UNITY_INTERFACE_EXPORT UNITY_INTERFACE_API
-UnityPluginLoad(IUnityInterfaces* ifs) {
+#if defined(SORA_UNITY_SDK_IOS)
+SoraUnitySdk_UnityPluginLoad(IUnityInterfaces* ifs)
+#else
+UnityPluginLoad(IUnityInterfaces* ifs)
+#endif
+{
   sora::UnityContext::Instance().Init(ifs);
 }
-void UNITY_INTERFACE_EXPORT UNITY_INTERFACE_API UnityPluginUnload() {
+
+void UNITY_INTERFACE_EXPORT UNITY_INTERFACE_API
+#if defined(SORA_UNITY_SDK_IOS)
+SoraUnitySdk_UnityPluginUnload()
+#else
+UnityPluginUnload()
+#endif
+{
   sora::UnityContext::Instance().Shutdown();
 }
 }

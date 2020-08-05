@@ -8,7 +8,7 @@
 // boost
 #include <boost/asio/io_context.hpp>
 
-#if SORA_UNITY_SDK_MACOS
+#if defined(SORA_UNITY_SDK_MACOS) || defined(SORA_UNITY_SDK_IOS)
 #include "mac_helper/mac_capturer.h"
 #else
 #include "rtc/device_video_capturer.h"
@@ -101,7 +101,8 @@ class Sora {
       bool unity_audio_output,
       std::function<void(const int16_t*, int, int)> on_handle_audio,
       std::string audio_recording_device,
-      std::string audio_playout_device);
+      std::string audio_playout_device,
+      rtc::Thread* worker_thread);
 
   static rtc::scoped_refptr<rtc::AdaptedVideoTrackSource> CreateVideoCapturer(
       int capturer_type,

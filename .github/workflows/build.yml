@@ -53,6 +53,15 @@ jobs:
         name: SoraUnitySdk.dll
         path: build\Release\SoraUnitySdk.dll
   build-macos:
+    strategy:
+      fail-fast: false
+      matrix:
+        name:
+          - macos
+          - ios
+          # Android に関しては多分 Ubuntu でもいけると思うけど、
+          # 普段ビルドしてるのは macOS からなので macOS でビルドする
+          - android
     runs-on: macOS-latest
     steps:
     - uses: actions/checkout@v2
@@ -67,63 +76,53 @@ jobs:
       uses: actions/cache@v2
       with:
         path: _install/boost
-        key: macos-boost-${{ steps.versions.outputs.boost_version }}
+        key: boost-${{ steps.versions.outputs.boost_version }}
     - name: Cache WebRTC Build ${{ steps.versions.outputs.webrtc_build_version }}
       id: cache-webrtc
       uses: actions/cache@v2
       with:
         path: _install/webrtc
-        key: macos-webrtc-${{ steps.versions.outputs.webrtc_build_version }}
+        key: webrtc-${{ steps.versions.outputs.webrtc_build_version }}
     - name: install_tools.sh
       run: ./install_tools.sh
     - name: cmake.sh
-      run: ./cmake.sh macos
+      run: ./cmake.sh ${{ matrix.name }}
+    # macOS 用
     - name: Upload macOS Artifact
+      if: matrix.name == 'macos'
       uses: actions/upload-artifact@v1
       with:
         name: SoraUnitySdk.bundle
         path: build/macos/SoraUnitySdk.bundle
-  build-android:
-    # 多分 Ubuntu でもいけると思うけど、普段ビルドしてるのは
-    # macOS からなので macOS にする
-    runs-on: macOS-latest
-    steps:
-    - uses: actions/checkout@v2
-    - name: Get Versions
-      run: |
-        source VERSIONS
-        echo "::set-output name=boost_version::${BOOST_VERSION}"
-        echo "::set-output name=webrtc_build_version::${WEBRTC_BUILD_VERSION}"
-      id: versions
-    - name: Cache Boost ${{ steps.versions.outputs.boost_version }}
-      id: cache-boost
-      uses: actions/cache@v2
-      with:
-        path: _install/boost
-        key: android-boost-${{ steps.versions.outputs.boost_version }}
-    - name: Cache WebRTC Build ${{ steps.versions.outputs.webrtc_build_version }}
-      id: cache-webrtc
-      uses: actions/cache@v2
-      with:
-        path: _install/webrtc
-        key: android-webrtc-${{ steps.versions.outputs.webrtc_build_version }}-v3
-    - name: install_tools.sh
-      run: ./install_tools.sh
-    - name: cmake.sh
-      run: ./cmake.sh android
-    - name: copy files
+    # Android 用
+    - name: Copy Android files
+      if: matrix.name == 'android'
       run: |
         mkdir android/
         cp _install/android/webrtc/jar/webrtc.jar android/
         cp build/android/libSoraUnitySdk.so android/
     - name: Upload Android Artifact
+      if: matrix.name == 'android'
       uses: actions/upload-artifact@v1
       with:
         name: android
         path: android/
+    # iOS 用
+    - name: Copy iOS files
+      if: matrix.name == 'ios'
+      run: |
+        mkdir ios/
+        cp _install/ios/webrtc/lib/libwebrtc.a ios/
+        cp build/ios/_install/lib/libSoraUnitySdk.a ios/
+    - name: Upload iOS Artifact
+      if: matrix.name == 'ios'
+      uses: actions/upload-artifact@v1
+      with:
+        name: ios
+        path: ios/
   package:
     runs-on: macOS-latest
-    needs: [build-windows, build-macos, build-android]
+    needs: [build-windows, build-macos]
     steps:
     - uses: actions/checkout@v2
     - name: Download SoraUnitySdk.dll
@@ -138,18 +137,24 @@ jobs:
       uses: actions/download-artifact@v1
       with:
         name: android
+    - name: Download ios
+      uses: actions/download-artifact@v1
+      with:
+        name: ios
     - name: Packaging
       run: |
         set -ex
         mkdir -p SoraUnitySdk/Plugins/SoraUnitySdk/windows/x86_64
         mkdir -p SoraUnitySdk/Plugins/SoraUnitySdk/macos
+        mkdir -p SoraUnitySdk/Plugins/SoraUnitySdk/ios
         mkdir -p SoraUnitySdk/Plugins/SoraUnitySdk/android/arm64-v8a
-        mkdir -p SoraUnitySdk/SoraUnitySdk
-        cp Sora/Sora.cs SoraUnitySdk/SoraUnitySdk/
+        cp -r Sora/ SoraUnitySdk/SoraUnitySdk/
         cp SoraUnitySdk.dll/SoraUnitySdk.dll SoraUnitySdk/Plugins/SoraUnitySdk/windows/x86_64/
         cp -r SoraUnitySdk.bundle SoraUnitySdk/Plugins/SoraUnitySdk/macos/
         cp android/libSoraUnitySdk.so SoraUnitySdk/Plugins/SoraUnitySdk/android/arm64-v8a/
         cp android/webrtc.jar SoraUnitySdk/Plugins/SoraUnitySdk/android/
+        cp ios/libSoraUnitySdk.a SoraUnitySdk/Plugins/SoraUnitySdk/ios/
+        cp ios/libwebrtc.a SoraUnitySdk/Plugins/SoraUnitySdk/ios/
     - name: Upload SoraUnitySdk
       uses: actions/upload-artifact@v1
       with:
