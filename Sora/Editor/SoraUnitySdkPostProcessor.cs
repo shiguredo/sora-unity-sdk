@@ -16,7 +16,11 @@ public class SoraUnitySdkPostProcesser
         var projPath = pathToBuiltProject + "/Unity-iPhone.xcodeproj/project.pbxproj";
         PBXProject proj = new PBXProject();
         proj.ReadFromFile(projPath);
+#if UNITY_2019_3_OR_NEWER
+        string guid = proj.GetUnityFrameworkTargetGuid();
+#else
         string guid = proj.TargetGuidByName("Unity-iPhone");
+#endif
 
         proj.AddBuildProperty(guid, "OTHER_LDFLAGS", "-ObjC");
         proj.AddFrameworkToProject(guid, "VideoToolbox.framework", false);
