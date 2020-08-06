@@ -200,9 +200,8 @@ void SoraSignaling::onHandshake(boost::system::error_code ec) {
   doSendConnect();
 }
 
-#define SORA_CLIENT                                                        \
-  "Sora Unity SDK for " SORA_UNITY_SDK_PLATFORM " " SORA_UNITY_SDK_VERSION \
-  " (" SORA_UNITY_SDK_COMMIT_SHORT ")"
+#define SORA_CLIENT \
+  "Sora Unity SDK " SORA_UNITY_SDK_VERSION " (" SORA_UNITY_SDK_COMMIT_SHORT ")"
 #define LIBWEBRTC                                                      \
   "Shiguredo-build " WEBRTC_READABLE_VERSION " (" WEBRTC_BUILD_VERSION \
   " " WEBRTC_SRC_COMMIT_SHORT ")"
@@ -219,7 +218,8 @@ void SoraSignaling::doSendConnect() {
       {"channel_id", config_.channel_id},
       {"sora_client", SORA_CLIENT},
       {"libwebrtc", LIBWEBRTC},
-      {"environment", "Unity " + config_.unity_version},
+      {"environment",
+       "Unity " + config_.unity_version + " for " SORA_UNITY_SDK_PLATFORM},
   };
 
   if (!config_.metadata.is_null()) {
