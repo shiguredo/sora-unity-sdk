@@ -297,10 +297,10 @@ rtc::scoped_refptr<UnityAudioDevice> Sora::CreateADM(
               task_queue_factory);
         });
 #elif defined(SORA_UNITY_SDK_ANDROID)
-    JNIEnv* env = webrtc::AttachCurrentThreadIfNeeded();
-    auto context = GetAndroidApplicationContext(env);
     adm = worker_thread->Invoke<rtc::scoped_refptr<webrtc::AudioDeviceModule> >(
-        RTC_FROM_HERE, [&] {
+        RTC_FROM_HERE, [] {
+          JNIEnv* env = webrtc::AttachCurrentThreadIfNeeded();
+          auto context = GetAndroidApplicationContext(env);
           return webrtc::CreateJavaAudioDeviceModule(env, context.obj());
         });
 #else
