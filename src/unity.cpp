@@ -89,12 +89,27 @@ int sora_connect(void* p,
                  const char* audio_codec,
                  int audio_bitrate) {
   auto sora = (sora::Sora*)p;
-  if (!sora->Connect(unity_version, signaling_url, channel_id, metadata, role,
-                     multistream, capturer_type, unity_camera_texture,
-                     video_capturer_device, video_width, video_height,
-                     video_codec, video_bitrate, unity_audio_input,
-                     unity_audio_output, audio_recording_device,
-                     audio_playout_device, audio_codec, audio_bitrate)) {
+  sora::Sora::ConnectConfig config;
+  config.unity_version = unity_version;
+  config.signaling_url = signaling_url;
+  config.channel_id = channel_id;
+  config.metadata = metadata;
+  config.role = role;
+  config.multistream = multistream;
+  config.capturer_type = capturer_type;
+  config.unity_camera_texture = unity_camera_texture;
+  config.video_capturer_device = video_capturer_device;
+  config.video_width = video_width;
+  config.video_height = video_height;
+  config.video_codec = video_codec;
+  config.video_bitrate = video_bitrate;
+  config.unity_audio_input = unity_audio_input;
+  config.unity_audio_output = unity_audio_output;
+  config.audio_recording_device = audio_recording_device;
+  config.audio_playout_device = audio_playout_device;
+  config.audio_codec = audio_codec;
+  config.audio_bitrate = audio_bitrate;
+  if (!sora->Connect(config)) {
     return -1;
   }
   return 0;

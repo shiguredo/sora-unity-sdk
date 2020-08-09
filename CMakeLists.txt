@@ -254,6 +254,7 @@ elseif (SORA_UNITY_SDK_PACKAGE STREQUAL "ios")
       src/unity_camera_capturer_metal.mm
       src/mac_helper/mac_capturer.mm
       src/mac_helper/objc_codec_factory_helper.mm
+      src/mac_helper/ios_audio_init.mm
   )
 
   target_compile_definitions(SoraUnitySdk

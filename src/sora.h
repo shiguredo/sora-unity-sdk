@@ -63,25 +63,29 @@ class Sora {
   void SetOnNotify(std::function<void(std::string)> on_notify);
   void DispatchEvents();
 
-  bool Connect(std::string unity_version,
-               std::string signaling_url,
-               std::string channel_id,
-               std::string metadata,
-               std::string role,
-               bool multistream,
-               int capturer_type,
-               void* unity_camera_texture,
-               std::string video_capturer_device,
-               int video_width,
-               int video_height,
-               std::string video_codec,
-               int video_bitrate,
-               bool unity_audio_input,
-               bool unity_audio_output,
-               std::string audio_recording_device,
-               std::string audio_playout_device,
-               std::string audio_codec,
-               int audio_bitrate);
+  struct ConnectConfig {
+    std::string unity_version;
+    std::string signaling_url;
+    std::string channel_id;
+    std::string metadata;
+    std::string role;
+    bool multistream;
+    int capturer_type;
+    void* unity_camera_texture;
+    std::string video_capturer_device;
+    int video_width;
+    int video_height;
+    std::string video_codec;
+    int video_bitrate;
+    bool unity_audio_input;
+    bool unity_audio_output;
+    std::string audio_recording_device;
+    std::string audio_playout_device;
+    std::string audio_codec;
+    int audio_bitrate;
+  };
+
+  bool Connect(const ConnectConfig& config);
 
   static void UNITY_INTERFACE_API RenderCallbackStatic(int event_id);
   int GetRenderCallbackEventID() const;
@@ -94,6 +98,8 @@ class Sora {
   void GetStats(std::function<void (std::string)> on_get_stats);
 
  private:
+  bool DoConnect(const ConnectConfig& config);
+
   static rtc::scoped_refptr<UnityAudioDevice> CreateADM(
       webrtc::TaskQueueFactory* task_queue_factory,
       bool dummy_audio,
