@@ -12,29 +12,9 @@ Sora Unity SDK は [WebRTC SFU Sora](https://sora.shiguredo.jp/) の Unity ク�
 We check PRs or Issues only when written in JAPANESE.
 In other languages, we won't be able to deal with them. Thank you for your understanding.
 
-## Discord
+## [時雨堂のオープンソースソフトウェアについて]
 
-https://discord.gg/pFPQ5pS
-
-## 開発について
-
-Sora Unity SDK はオープンソースソフトウェアですが、開発についてはオープンではありません。
-そのため Discord での相談なく Issue や Pull-Request を頂いても採用はしません。
-
-まずは Discord の #unity にてご連絡ください。
-
-## 質問
-
-質問は Discord の #unity へお願いします。
-
-## 改善希望やバグ報告
-
-改善希望やバグ報告はまず Discord の #unity へお願いします
-ただし、 Sora のライセンス契約の有無に関わらず、応答時間と解決を保証しませんのでご了承ください。
-
-## Pull-Request
-
-改善や修正 Pull-Request はまず Discord の #unity へお願いします。
+まず https://github.com/shiguredo/oss をお読みください。
 
 ## 利用方法
 
