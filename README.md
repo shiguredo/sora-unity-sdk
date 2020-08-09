@@ -16,19 +16,25 @@ In other languages, we won't be able to deal with them. Thank you for your under
 
 https://discord.gg/pFPQ5pS
 
-Sora Unity SDK に関する質問・要望などの報告は Disocrd へお願いします。
-
-バグに関してもまずは Discord へお願いします。
-ただし、 Sora のライセンス契約の有無に関わらず、 応答時間と問題の解決を保証しませんのでご了承ください。
-
-Sora Unity SDK に対する有償のサポートについては提供しておりません。
-
 ## 開発について
 
-Momo はオープンソースソフトウェアですが、開発についてはオープンではありません
-そのため Discord 経由以外のコメントやプルリクエストを頂いても採用はしません。
+Sora Unity SDK はオープンソースソフトウェアですが、開発についてはオープンではありません。
+そのため Discord での相談なく Issue や Pull-Request を頂いても採用はしません。
 
-まずは Discord にてご連絡ください。
+まずは Discord の #unity にてご連絡ください。
+
+## 質問
+
+質問は Discord の #unity へお願いします。
+
+## 改善希望やバグ報告
+
+改善希望やバグ報告はまず Discord の #unity へお願いします
+ただし、 Sora のライセンス契約の有無に関わらず、応答時間と解決を保証しませんのでご了承ください。
+
+## Pull-Request
+
+改善や修正 Pull-Request はまず Discord の #unity へお願いします。
 
 ## 利用方法
 
