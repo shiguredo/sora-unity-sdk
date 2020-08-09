@@ -12,9 +12,9 @@ Sora Unity SDK は [WebRTC SFU Sora](https://sora.shiguredo.jp/) の Unity ク�
 We check PRs or Issues only when written in JAPANESE.
 In other languages, we won't be able to deal with them. Thank you for your understanding.
 
-## [時雨堂のオープンソースソフトウェアについて]
+## 時雨堂のオープンソースソフトウェアについて
 
-まず https://github.com/shiguredo/oss をお読みください。
+利用前に https://github.com/shiguredo/oss をお読みください。
 
 ## 利用方法
 
