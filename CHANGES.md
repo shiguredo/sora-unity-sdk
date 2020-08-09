@@ -14,12 +14,18 @@
 - [ADD] iOS に対応する
     - @melpon
 
-## 2020.6
+## 2020.6.1
 
 - [UPDATE] WebRTC のバージョンを M84 (4147@{#11}) に上げる
     - @voluntas
 - [ADD] GetStats を Unity から呼べるようにする
     - @melpon
+- [FIX] Android でビルドが通らなくなっていたのを `-fuse-ld=gold` にすることで修正
+    - @melpon
+
+## 2020.6
+
+**リリースミスのためスキップ**
 
 ## 2020.5
 
