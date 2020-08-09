@@ -1,4 +1,6 @@
-﻿using UnityEngine;
+﻿#if UNITY_IOS
+
+using UnityEngine;
 using UnityEditor;
 using UnityEditor.iOS.Xcode;
 using UnityEditor.Callbacks;
@@ -36,3 +38,5 @@ public class SoraUnitySdkPostProcesser
         proj.WriteToFile(projPath);
     }
 }
+
+#endif
