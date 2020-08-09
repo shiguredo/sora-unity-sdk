@@ -23,6 +23,13 @@ Sora Unity SDK に関する質問・要望などの報告は Disocrd へお願�
 
 Sora Unity SDK に対する有償のサポートについては提供しておりません。
 
+## 開発について
+
+Momo はオープンソースソフトウェアですが、開発についてはオープンではありません
+そのため Discord 経由以外のコメントやプルリクエストを頂いても採用はしません。
+
+まずは Discord にてご連絡ください。
+
 ## 利用方法
 
 https://github.com/shiguredo/sora-unity-sdk/releases から から最新の `SoraUnitySdk.zip` をダウンロードして展開し、`SoraUnitySdk\Plugins\SoraUnitySdk` を `Assets\Plugins\SoraUnitySdk` に、`SoraUnitySdk\SoraUnitySdk` を `Assets/SoraUnitySdk` にコピーしてください。
