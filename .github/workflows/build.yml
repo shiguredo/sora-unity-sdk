@@ -47,11 +47,16 @@ jobs:
       run: .\install_tools.bat
     - name: cmake.bat
       run: .\cmake.bat
+    - name: Copy Windows files
+      run: |
+        mkdir windows
+        Copy-Item build\Release\SoraUnitySdk.dll windows
+        Copy-Item _install\webrtc\NOTICE windows
     - name: Upload Windows Artifact
       uses: actions/upload-artifact@v1
       with:
-        name: SoraUnitySdk.dll
-        path: build\Release\SoraUnitySdk.dll
+        name: windows
+        path: windows
   build-macos:
     strategy:
       fail-fast: false
@@ -88,17 +93,24 @@ jobs:
     - name: cmake.sh
       run: ./cmake.sh ${{ matrix.name }}
     # macOS 用
+    - name: Copy macOS files
+      if: matrix.name == 'macos'
+      run: |
+        mkdir macos/
+        cp -r build/macos/SoraUnitySdk.bundle/ macos/SoraUnitySdk.bundle/
+        cp _install/macos/webrtc/NOTICE macos/
     - name: Upload macOS Artifact
       if: matrix.name == 'macos'
       uses: actions/upload-artifact@v1
       with:
-        name: SoraUnitySdk.bundle
-        path: build/macos/SoraUnitySdk.bundle
+        name: macos
+        path: macos/
     # Android 用
     - name: Copy Android files
       if: matrix.name == 'android'
       run: |
         mkdir android/
+        cp _install/android/webrtc/NOTICE android/
         cp _install/android/webrtc/jar/webrtc.jar android/
         cp build/android/libSoraUnitySdk.so android/
     - name: Upload Android Artifact
@@ -112,6 +124,7 @@ jobs:
       if: matrix.name == 'ios'
       run: |
         mkdir ios/
+        cp _install/ios/webrtc/NOTICE ios/
         cp _install/ios/webrtc/lib/libwebrtc.a ios/
         cp build/ios/_install/lib/libSoraUnitySdk.a ios/
     - name: Upload iOS Artifact
@@ -125,14 +138,14 @@ jobs:
     needs: [build-windows, build-macos]
     steps:
     - uses: actions/checkout@v2
-    - name: Download SoraUnitySdk.dll
+    - name: Download windows
       uses: actions/download-artifact@v1
       with:
-        name: SoraUnitySdk.dll
-    - name: Download SoraUnitySdk.bundle
+        name: windows
+    - name: Download macos
       uses: actions/download-artifact@v1
       with:
-        name: SoraUnitySdk.bundle
+        name: macos
     - name: Download android
       uses: actions/download-artifact@v1
       with:
@@ -149,12 +162,37 @@ jobs:
         mkdir -p SoraUnitySdk/Plugins/SoraUnitySdk/ios
         mkdir -p SoraUnitySdk/Plugins/SoraUnitySdk/android/arm64-v8a
         cp -r Sora/ SoraUnitySdk/SoraUnitySdk/
-        cp SoraUnitySdk.dll/SoraUnitySdk.dll SoraUnitySdk/Plugins/SoraUnitySdk/windows/x86_64/
-        cp -r SoraUnitySdk.bundle SoraUnitySdk/Plugins/SoraUnitySdk/macos/
+        cp windows/SoraUnitySdk.dll SoraUnitySdk/Plugins/SoraUnitySdk/windows/x86_64/
+        cp -r macos/SoraUnitySdk.bundle SoraUnitySdk/Plugins/SoraUnitySdk/macos/SoraUnitySdk.bundle
         cp android/libSoraUnitySdk.so SoraUnitySdk/Plugins/SoraUnitySdk/android/arm64-v8a/
         cp android/webrtc.jar SoraUnitySdk/Plugins/SoraUnitySdk/android/
         cp ios/libSoraUnitySdk.a SoraUnitySdk/Plugins/SoraUnitySdk/ios/
         cp ios/libwebrtc.a SoraUnitySdk/Plugins/SoraUnitySdk/ios/
+
+        cp LICENSE SoraUnitySdk/
+
+        # NOTICE ファイルを結合する
+        touch SoraUnitySdk/NOTICE
+        echo "-----------------------------" >> SoraUnitySdk/NOTICE
+        echo "# WebRTC for Windows" >> SoraUnitySdk/NOTICE
+        echo "-----------------------------" >> SoraUnitySdk/NOTICE
+        cat windows/NOTICE >> SoraUnitySdk/NOTICE
+
+        echo "-----------------------------" >> SoraUnitySdk/NOTICE
+        echo "# WebRTC for macOS" >> SoraUnitySdk/NOTICE
+        echo "-----------------------------" >> SoraUnitySdk/NOTICE
+        cat macos/NOTICE >> SoraUnitySdk/NOTICE
+
+        echo "-----------------------------" >> SoraUnitySdk/NOTICE
+        echo "# WebRTC for Android" >> SoraUnitySdk/NOTICE
+        echo "-----------------------------" >> SoraUnitySdk/NOTICE
+        cat android/NOTICE >> SoraUnitySdk/NOTICE
+
+        echo "-----------------------------" >> SoraUnitySdk/NOTICE
+        echo "# WebRTC for iOS" >> SoraUnitySdk/NOTICE
+        echo "-----------------------------" >> SoraUnitySdk/NOTICE
+        cat ios/NOTICE >> SoraUnitySdk/NOTICE
+
     - name: Upload SoraUnitySdk
       uses: actions/upload-artifact@v1
       with:
