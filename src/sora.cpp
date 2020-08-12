@@ -13,6 +13,10 @@
 #include "android_helper/android_context.h"
 #endif
 
+#ifdef SORA_UNITY_SDK_IOS
+#include "mac_helper/ios_audio_init.h"
+#endif
+
 namespace sora {
 
 Sora::Sora(UnityContext* context) : context_(context) {
@@ -32,7 +36,10 @@ Sora::~Sora() {
   capturer_ = nullptr;
   unity_adm_ = nullptr;
 
-  ioc_->stop();
+  if (ioc_ != nullptr) {
+    ioc_->stop();
+  }
+
   if (thread_) {
     thread_->Stop();
     thread_.reset();
@@ -68,44 +75,47 @@ void Sora::DispatchEvents() {
   }
 }
 
-bool Sora::Connect(std::string unity_version,
-                   std::string signaling_url,
-                   std::string channel_id,
-                   std::string metadata,
-                   std::string role,
-                   bool multistream,
-                   int capturer_type,
-                   void* unity_camera_texture,
-                   std::string video_capturer_device,
-                   int video_width,
-                   int video_height,
-                   std::string video_codec,
-                   int video_bitrate,
-                   bool unity_audio_input,
-                   bool unity_audio_output,
-                   std::string audio_recording_device,
-                   std::string audio_playout_device,
-                   std::string audio_codec,
-                   int audio_bitrate) {
-  signaling_url_ = std::move(signaling_url);
-  channel_id_ = std::move(channel_id);
+bool Sora::Connect(const Sora::ConnectConfig& cc) {
+#if defined(SORA_UNITY_SDK_IOS)
+  // iOS でマイクを使用する場合、マイクの初期化の設定をしてから DoConnect する。
 
-  RTC_LOG(LS_INFO) << "Sora::Connect unity_version=" << unity_version
+  if (cc.role == "recvonly" || cc.unity_audio_input) {
+    // この場合マイクを利用しないのですぐに DoConnect
+    return DoConnect(cc);
+  }
+
+  IosAudioInit([this](std::string error) {
+    if (!error.empty()) {
+      RTC_LOG(LS_ERROR) << "Failed to IosAudioInit: error=" << error;
+    }
+  });
+  return DoConnect(cc);
+#else
+  return DoConnect(cc);
+#endif
+}
+
+bool Sora::DoConnect(const Sora::ConnectConfig& cc) {
+  signaling_url_ = std::move(cc.signaling_url);
+  channel_id_ = std::move(cc.channel_id);
+
+  RTC_LOG(LS_INFO) << "Sora::Connect unity_version=" << cc.unity_version
                    << " signaling_url =" << signaling_url_
-                   << " channel_id=" << channel_id_ << " metadata=" << metadata
-                   << " role=" << role << " multistream=" << multistream
-                   << " capturer_type=" << capturer_type
-                   << " unity_camera_texture=0x" << unity_camera_texture
-                   << " video_capturer_device=" << video_capturer_device
-                   << " video_width=" << video_width
-                   << " video_height=" << video_height
-                   << " unity_audio_input=" << unity_audio_input
-                   << " unity_audio_output=" << unity_audio_output
-                   << " audio_recording_device=" << audio_recording_device
-                   << " audio_playout_device=" << audio_playout_device;
+                   << " channel_id=" << channel_id_
+                   << " metadata=" << cc.metadata << " role=" << cc.role
+                   << " multistream=" << cc.multistream
+                   << " capturer_type=" << cc.capturer_type
+                   << " unity_camera_texture=0x" << cc.unity_camera_texture
+                   << " video_capturer_device=" << cc.video_capturer_device
+                   << " video_width=" << cc.video_width
+                   << " video_height=" << cc.video_height
+                   << " unity_audio_input=" << cc.unity_audio_input
+                   << " unity_audio_output=" << cc.unity_audio_output
+                   << " audio_recording_device=" << cc.audio_recording_device
+                   << " audio_playout_device=" << cc.audio_playout_device;
 
-  if (role != "sendonly" && role != "recvonly" && role != "sendrecv") {
-    RTC_LOG(LS_ERROR) << "Invalid role: " << role;
+  if (cc.role != "sendonly" && cc.role != "recvonly" && cc.role != "sendrecv") {
+    RTC_LOG(LS_ERROR) << "Invalid role: " << cc.role;
     return false;
   }
 
@@ -129,10 +139,14 @@ bool Sora::Connect(std::string unity_version,
         });
       }));
 
+  std::unique_ptr<rtc::Thread> worker_thread = rtc::Thread::Create();
+  worker_thread->Start();
+
   auto task_queue_factory = webrtc::CreateDefaultTaskQueueFactory();
-  unity_adm_ = CreateADM(task_queue_factory.get(), false, unity_audio_input,
-                         unity_audio_output, on_handle_audio_,
-                         audio_recording_device, audio_playout_device);
+  unity_adm_ = CreateADM(task_queue_factory.get(), false, cc.unity_audio_input,
+                         cc.unity_audio_output, on_handle_audio_,
+                         cc.audio_recording_device, cc.audio_playout_device,
+                         worker_thread.get());
   if (!unity_adm_) {
     return false;
   }
@@ -140,61 +154,65 @@ bool Sora::Connect(std::string unity_version,
   std::unique_ptr<rtc::Thread> signaling_thread = rtc::Thread::Create();
 
   RTCManagerConfig config;
-  config.audio_recording_device = audio_recording_device;
-  config.audio_playout_device = audio_playout_device;
+  config.audio_recording_device = cc.audio_recording_device;
+  config.audio_playout_device = cc.audio_playout_device;
 
-  if (role == "sendonly" || role == "sendrecv") {
+  if (cc.role == "sendonly" || cc.role == "sendrecv") {
     // 送信側は capturer を設定する。送信のみの場合は playout の設定はしない
     rtc::scoped_refptr<rtc::AdaptedVideoTrackSource> capturer =
-        CreateVideoCapturer(capturer_type, unity_camera_texture,
-                            video_capturer_device, video_width, video_height,
-                            signaling_thread.get());
+        CreateVideoCapturer(cc.capturer_type, cc.unity_camera_texture,
+                            cc.video_capturer_device, cc.video_width,
+                            cc.video_height, signaling_thread.get());
     if (!capturer) {
       return false;
     }
 
     capturer_ = capturer;
-    capturer_type_ = capturer_type;
+    capturer_type_ = cc.capturer_type;
 
-    config.no_playout = role == "sendonly";
+    config.no_playout = cc.role == "sendonly";
 
-    config.audio_recording_device = audio_recording_device;
-    config.audio_playout_device = audio_playout_device;
+    config.audio_recording_device = cc.audio_recording_device;
+    config.audio_playout_device = cc.audio_playout_device;
     rtc_manager_ = RTCManager::Create(
         config, std::move(capturer), renderer_.get(), unity_adm_,
-        std::move(task_queue_factory), std::move(signaling_thread));
+        std::move(task_queue_factory), std::move(signaling_thread),
+        std::move(worker_thread));
   } else {
     // 受信側は capturer を作らず、video, recording の設定もしない
     RTCManagerConfig config;
     config.no_recording = true;
     config.no_video = true;
 
-    config.audio_recording_device = audio_recording_device;
-    config.audio_playout_device = audio_playout_device;
+    config.audio_recording_device = cc.audio_recording_device;
+    config.audio_playout_device = cc.audio_playout_device;
     rtc_manager_ = RTCManager::Create(config, nullptr, renderer_.get(),
                                       unity_adm_, std::move(task_queue_factory),
-                                      std::move(signaling_thread));
+                                      std::move(signaling_thread),
+                                      std::move(worker_thread));
   }
 
   {
     RTC_LOG(LS_INFO) << "Start Signaling: url=" << signaling_url_
                      << " channel_id=" << channel_id_;
     SoraSignalingConfig config;
-    config.unity_version = unity_version;
-    config.role = role == "sendonly" ? SoraSignalingConfig::Role::Sendonly :
-                  role == "recvonly" ? SoraSignalingConfig::Role::Recvonly :
-                                       SoraSignalingConfig::Role::Sendrecv;
-    config.multistream = multistream;
+    config.unity_version = cc.unity_version;
+    config.role = cc.role == "sendonly"
+                      ? SoraSignalingConfig::Role::Sendonly
+                      : cc.role == "recvonly"
+                            ? SoraSignalingConfig::Role::Recvonly
+                            : SoraSignalingConfig::Role::Sendrecv;
+    config.multistream = cc.multistream;
     config.signaling_url = signaling_url_;
     config.channel_id = channel_id_;
-    config.video_codec = video_codec;
-    config.video_bitrate = video_bitrate;
-    config.audio_codec = audio_codec;
-    config.audio_bitrate = audio_bitrate;
-    if (!metadata.empty()) {
-      auto md = nlohmann::json::parse(metadata, nullptr, false);
+    config.video_codec = cc.video_codec;
+    config.video_bitrate = cc.video_bitrate;
+    config.audio_codec = cc.audio_codec;
+    config.audio_bitrate = cc.audio_bitrate;
+    if (!cc.metadata.empty()) {
+      auto md = nlohmann::json::parse(cc.metadata, nullptr, false);
       if (md.type() == nlohmann::json::value_t::discarded) {
-        RTC_LOG(LS_WARNING) << "Invalid JSON: metadata=" << metadata;
+        RTC_LOG(LS_WARNING) << "Invalid JSON: metadata=" << cc.metadata;
       } else {
         config.metadata = md;
       }
@@ -272,27 +290,47 @@ rtc::scoped_refptr<UnityAudioDevice> Sora::CreateADM(
     bool unity_audio_output,
     std::function<void(const int16_t*, int, int)> on_handle_audio,
     std::string audio_recording_device,
-    std::string audio_playout_device) {
+    std::string audio_playout_device,
+    rtc::Thread* worker_thread) {
   rtc::scoped_refptr<webrtc::AudioDeviceModule> adm;
 
   if (dummy_audio) {
-    adm = webrtc::AudioDeviceModule::Create(
-        webrtc::AudioDeviceModule::kDummyAudio, task_queue_factory);
+    adm =
+        worker_thread->Invoke<rtc::scoped_refptr<webrtc::AudioDeviceModule> >(
+            RTC_FROM_HERE, [&] {
+              return webrtc::AudioDeviceModule::Create(
+                  webrtc::AudioDeviceModule::kDummyAudio, task_queue_factory);
+            });
   } else {
 #if defined(SORA_UNITY_SDK_WINDOWS)
-    adm = webrtc::CreateWindowsCoreAudioAudioDeviceModule(task_queue_factory);
+    adm = worker_thread->Invoke<rtc::scoped_refptr<webrtc::AudioDeviceModule> >(
+        RTC_FROM_HERE, [&] {
+          return webrtc::CreateWindowsCoreAudioAudioDeviceModule(
+              task_queue_factory);
+        });
 #elif defined(SORA_UNITY_SDK_ANDROID)
-    JNIEnv* env = webrtc::AttachCurrentThreadIfNeeded();
-    auto context = GetAndroidApplicationContext(env);
-    adm = webrtc::CreateJavaAudioDeviceModule(env, context.obj());
+    adm = worker_thread->Invoke<rtc::scoped_refptr<webrtc::AudioDeviceModule> >(
+        RTC_FROM_HERE, [] {
+          JNIEnv* env = webrtc::AttachCurrentThreadIfNeeded();
+          auto context = GetAndroidApplicationContext(env);
+          return webrtc::CreateJavaAudioDeviceModule(env, context.obj());
+        });
 #else
-    adm = webrtc::AudioDeviceModule::Create(
-        webrtc::AudioDeviceModule::kPlatformDefaultAudio, task_queue_factory);
+    adm = worker_thread->Invoke<rtc::scoped_refptr<webrtc::AudioDeviceModule> >(
+        RTC_FROM_HERE, [&] {
+          return webrtc::AudioDeviceModule::Create(
+              webrtc::AudioDeviceModule::kPlatformDefaultAudio,
+              task_queue_factory);
+        });
 #endif
   }
 
-  return UnityAudioDevice::Create(adm, !unity_audio_input, !unity_audio_output,
-                                  on_handle_audio, task_queue_factory);
+  return worker_thread->Invoke<rtc::scoped_refptr<UnityAudioDevice> >(
+      RTC_FROM_HERE, [&] {
+        return UnityAudioDevice::Create(adm, !unity_audio_input,
+                                        !unity_audio_output, on_handle_audio,
+                                        task_queue_factory);
+      });
 }
 
 rtc::scoped_refptr<rtc::AdaptedVideoTrackSource> Sora::CreateVideoCapturer(
@@ -305,7 +343,7 @@ rtc::scoped_refptr<rtc::AdaptedVideoTrackSource> Sora::CreateVideoCapturer(
   if (capturer_type == 0) {
     // 実カメラ（デバイス）を使う
     // TODO(melpon): framerate をちゃんと設定する
-#if defined(SORA_UNITY_SDK_MACOS)
+#if defined(SORA_UNITY_SDK_MACOS) || defined(SORA_UNITY_SDK_IOS)
     return MacCapturer::Create(video_width, video_height, 30,
                                video_capturer_device);
 #elif defined(SORA_UNITY_SDK_ANDROID)

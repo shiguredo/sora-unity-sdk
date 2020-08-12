@@ -11,7 +11,7 @@ mkdir -p $BUILD_DIR
 mkdir -p $INSTALL_DIR
 
 # WebRTC のインストール
-for name in macos android; do
+for name in macos android ios; do
   if [ ! -e $INSTALL_DIR/$name/webrtc/lib/libwebrtc.a ]; then
     # shiguredo-webrtc-build から各環境のバイナリをダウンロードして配置するだけ
     pushd $BUILD_DIR

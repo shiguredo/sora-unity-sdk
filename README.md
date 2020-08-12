@@ -1,8 +1,9 @@
 # Sora Unity SDK
 
- [![GitHub tag](https://img.shields.io/github/tag/shiguredo/sora-unity-sdk.svg)](https://github.com/shiguredo/sora-unity-sdk)
- [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
- [![Actions Status](https://github.com/shiguredo/sora-unity-sdk/workflows/build/badge.svg)](https://github.com/shiguredo/sora-unity-sdk/actions)
+[![libwebrtc](https://img.shields.io/badge/libwebrtc-m84.4147.11-blue.svg)](https://chromium.googlesource.com/external/webrtc/+/branch-heads/4147)
+[![GitHub tag](https://img.shields.io/github/tag/shiguredo/sora-unity-sdk.svg)](https://github.com/shiguredo/sora-unity-sdk)
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+[![Actions Status](https://github.com/shiguredo/sora-unity-sdk/workflows/build/badge.svg)](https://github.com/shiguredo/sora-unity-sdk/actions)
 
 Sora Unity SDK は [WebRTC SFU Sora](https://sora.shiguredo.jp/) の Unity クライアントアプリケーションを開発するためのライブラリです。
 
@@ -11,16 +12,9 @@ Sora Unity SDK は [WebRTC SFU Sora](https://sora.shiguredo.jp/) の Unity ク�
 We check PRs or Issues only when written in JAPANESE.
 In other languages, we won't be able to deal with them. Thank you for your understanding.
 
-## Discord
+## 時雨堂のオープンソースソフトウェアについて
 
-https://discord.gg/pFPQ5pS
-
-Sora Unity SDK に関する質問・要望などの報告は Disocrd へお願いします。
-
-バグに関してもまずは Discord へお願いします。
-ただし、 Sora のライセンス契約の有無に関わらず、 応答時間と問題の解決を保証しませんのでご了承ください。
-
-Sora Unity SDK に対する有償のサポートについては提供しておりません。
+利用前に https://github.com/shiguredo/oss をお読みください。
 
 ## 利用方法
 
@@ -52,8 +46,24 @@ Sora Unity SDK ではソフトウェアでの H.264 エンコード/デコード
 
 詳細は H.264 を [USE_H264.md](doc/USE_H264.md) をお読みください
 
+## 対応 Unity バージョン
+
+- Unity 2019.1
+- Unity 2019.2
+- Unity 2019.3
+- Unity 2019.4
+- Unity 2020.1
+
+## 対応プラットフォーム
+
+- Windows 10 1809 x86_64 以降
+- macOS 10.15 x86_64 以降
+- Android 7 以降
+
 ## 対応機能
 
+- Windows への対応
+- macOS への対応
 - Android への対応
 - Unity のカメラ映像を取得し Sora で送信
 - カメラから映像を取得し Sora に送信
@@ -91,20 +101,8 @@ Sora Unity SDK ではソフトウェアでの H.264 エンコード/デコード
 
 ### 今後
 
+- iOS 対応
 - サイマルキャスト対応
-
-## 対応 Unity バージョン
-
-- Unity 2019.1
-- Unity 2019.2
-- Unity 2019.3
-- Unity 2019.4
-- Unity 2020.1
-
-## 対応プラットフォーム
-
-- Windows 10 1809 x86_64 以降
-- macOS 10.15 x86_64 以降
 
 ## 有償での優先実装
 
@@ -147,10 +145,6 @@ Sora Unity SDK ではソフトウェアでの H.264 エンコード/デコード
 - H.264 のハードウェアデコードへの対応
 - VP8 のハードウェアデコードへの対応
 - VP9 のハードウェアデコードへの対応
-
-### iOS 対応
-
-iOS 10.0 以上への対応
 
 ## ライセンス
 
