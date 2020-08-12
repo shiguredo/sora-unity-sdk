@@ -172,7 +172,8 @@ jobs:
         cp LICENSE SoraUnitySdk/
 
         # NOTICE ファイルを結合する
-        touch SoraUnitySdk/NOTICE
+        cp NOTICE.md SoraUnitySdk/NOTICE
+        echo ""
         echo "-----------------------------" >> SoraUnitySdk/NOTICE
         echo "# WebRTC for Windows" >> SoraUnitySdk/NOTICE
         echo "-----------------------------" >> SoraUnitySdk/NOTICE
