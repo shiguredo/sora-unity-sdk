@@ -16,9 +16,9 @@
 #include "api/video/i420_buffer.h"
 #include "api/video/video_frame_buffer.h"
 #include "api/video/video_rotation.h"
-#include "rtc_base/logging.h"
-
+#include "libyuv.h"
 #include "native_buffer.h"
+#include "rtc_base/logging.h"
 
 namespace sora {
 
@@ -44,10 +44,50 @@ bool ScalableVideoTrackSource::remote() const {
 }
 
 void ScalableVideoTrackSource::OnCapturedFrame(
-    const webrtc::VideoFrame& frame) {
+    const webrtc::VideoFrame& video_frame) {
+  webrtc::VideoFrame frame = video_frame;
+
   const int64_t timestamp_us = frame.timestamp_us();
   const int64_t translated_timestamp_us =
       timestamp_aligner_.TranslateTimestamp(timestamp_us, rtc::TimeMicros());
+
+  // 回転が必要
+  if (frame.rotation() != webrtc::kVideoRotation_0) {
+    int width;
+    int height;
+    libyuv::RotationMode mode;
+    switch (frame.rotation()) {
+      case webrtc::kVideoRotation_180:
+        width = frame.width();
+        height = frame.height();
+        mode = libyuv::kRotate180;
+        break;
+      case webrtc::kVideoRotation_90:
+        width = frame.height();
+        height = frame.width();
+        mode = libyuv::kRotate90;
+        break;
+      case webrtc::kVideoRotation_270:
+      default:
+        width = frame.height();
+        height = frame.width();
+        mode = libyuv::kRotate270;
+        break;
+    }
+
+    rtc::scoped_refptr<webrtc::I420Buffer> rotated =
+        webrtc::I420Buffer::Create(width, height);
+    rtc::scoped_refptr<webrtc::I420BufferInterface> src =
+        frame.video_frame_buffer()->ToI420();
+    libyuv::I420Rotate(src->DataY(), src->StrideY(), src->DataU(),
+                       src->StrideU(), src->DataV(), src->StrideV(),
+                       rotated->MutableDataY(), rotated->StrideY(),
+                       rotated->MutableDataU(), rotated->StrideU(),
+                       rotated->MutableDataV(), rotated->StrideV(),
+                       frame.width(), frame.height(), mode);
+    frame.set_video_frame_buffer(rotated);
+    frame.set_rotation(webrtc::kVideoRotation_0);
+  }
 
   int adapted_width;
   int adapted_height;

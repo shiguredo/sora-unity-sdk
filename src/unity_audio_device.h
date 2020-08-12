@@ -402,6 +402,18 @@ class UnityAudioDevice : public webrtc::AudioDeviceModule {
   virtual int32_t EnableBuiltInAGC(bool enable) override { return 0; }
   virtual int32_t EnableBuiltInNS(bool enable) override { return 0; }
 
+// Only supported on iOS.
+#if defined(WEBRTC_IOS)
+  virtual int GetPlayoutAudioParameters(
+      webrtc::AudioParameters* params) const override {
+    return -1;
+  }
+  virtual int GetRecordAudioParameters(
+      webrtc::AudioParameters* params) const override {
+    return -1;
+  }
+#endif  // WEBRTC_IOS
+
  private:
   rtc::scoped_refptr<webrtc::AudioDeviceModule> adm_;
   bool adm_recording_;

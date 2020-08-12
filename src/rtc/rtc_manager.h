@@ -40,7 +40,8 @@ class RTCManager {
       VideoTrackReceiver* receiver,
       rtc::scoped_refptr<webrtc::AudioDeviceModule> adm,
       std::unique_ptr<webrtc::TaskQueueFactory> task_queue_factory,
-      std::unique_ptr<rtc::Thread> signaling_thread);
+      std::unique_ptr<rtc::Thread> signaling_thread,
+      std::unique_ptr<rtc::Thread> worker_thread);
 
  private:
   RTCManager();
@@ -49,7 +50,8 @@ class RTCManager {
             VideoTrackReceiver* receiver,
             rtc::scoped_refptr<webrtc::AudioDeviceModule> adm,
             std::unique_ptr<webrtc::TaskQueueFactory> task_queue_factory,
-            std::unique_ptr<rtc::Thread> signaling_thread);
+            std::unique_ptr<rtc::Thread> signaling_thread,
+            std::unique_ptr<rtc::Thread> worker_thread);
 
  public:
   ~RTCManager();
