@@ -97,7 +97,7 @@ public class Sora : IDisposable
         if (config.CapturerType == CapturerType.UnityCamera)
         {
             unityCamera = config.UnityCamera;
-            var texture = new UnityEngine.RenderTexture(config.VideoWidth, config.VideoHeight, 0, UnityEngine.RenderTextureFormat.BGRA32);
+            var texture = new UnityEngine.RenderTexture(config.VideoWidth, config.VideoHeight, 16, UnityEngine.RenderTextureFormat.BGRA32);
             unityCamera.targetTexture = texture;
             unityCamera.enabled = true;
             unityCameraTexture = texture.GetNativeTexturePtr();
