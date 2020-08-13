@@ -59,12 +59,14 @@ Sora Unity SDK ではソフトウェアでの H.264 エンコード/デコード
 - Windows 10 1809 x86_64 以降
 - macOS 10.15 x86_64 以降
 - Android 7 以降
+- iOS 10 以降
 
 ## 対応機能
 
 - Windows への対応
 - macOS への対応
 - Android への対応
+- iOS 対応
 - Unity のカメラ映像を取得し Sora で送信
 - カメラから映像を取得し Sora に送信
 - カメラから映像を取得し Unity アプリに出力
@@ -101,7 +103,6 @@ Sora Unity SDK ではソフトウェアでの H.264 エンコード/デコード
 
 ### 今後
 
-- iOS 対応
 - サイマルキャスト対応
 
 ## 有償での優先実装
@@ -132,10 +133,6 @@ Sora Unity SDK ではソフトウェアでの H.264 エンコード/デコード
 - VP8 のハードウェアデコードへの対応
 - VP9 のハードウェアデコードへの対応
 - Ubuntu 18.04 への対応
-
-### AMD Video Coding Engine 対応
-
-- H.264 のハードウェアエンコードへの対応
 
 ### INTEL Media SDK 対応
 
