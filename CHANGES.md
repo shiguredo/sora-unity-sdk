@@ -11,7 +11,7 @@
 
 ## develop
 
-- [FIX] RenderTexture に depth buffer を設定する
+- [ADD] RenderTexture に depth buffer を設定できるようにする
     - @melpon
 
 ## 2020.7
