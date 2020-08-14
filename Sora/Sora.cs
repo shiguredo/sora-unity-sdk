@@ -33,6 +33,7 @@ public class Sora : IDisposable
         public bool Multistream = false;
         public CapturerType CapturerType = Sora.CapturerType.DeviceCamera;
         public UnityEngine.Camera UnityCamera = null;
+        public int UnityCameraRenderTargetDepthBuffer = 16;
         public string VideoCapturerDevice = "";
         public int VideoWidth = 640;
         public int VideoHeight = 480;
@@ -97,7 +98,7 @@ public class Sora : IDisposable
         if (config.CapturerType == CapturerType.UnityCamera)
         {
             unityCamera = config.UnityCamera;
-            var texture = new UnityEngine.RenderTexture(config.VideoWidth, config.VideoHeight, 0, UnityEngine.RenderTextureFormat.BGRA32);
+            var texture = new UnityEngine.RenderTexture(config.VideoWidth, config.VideoHeight, config.UnityCameraRenderTargetDepthBuffer, UnityEngine.RenderTextureFormat.BGRA32);
             unityCamera.targetTexture = texture;
             unityCamera.enabled = true;
             unityCameraTexture = texture.GetNativeTexturePtr();

@@ -11,6 +11,11 @@
 
 ## develop
 
+## 2020.8
+
+- [ADD] RenderTexture に depth buffer を設定できるようにする
+    - @melpon
+
 ## 2020.7
 
 - [ADD] iOS に対応する
