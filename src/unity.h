@@ -15,6 +15,8 @@ typedef void (*track_cb_t)(ptrid_t track_id, void* userdata);
 typedef void (*notify_cb_t)(const char* json, int size, void* userdata);
 typedef void (*stats_cb_t)(const char* json, int size, void* userdata);
 
+typedef int32_t unity_bool_t;
+
 UNITY_INTERFACE_EXPORT void* sora_create();
 UNITY_INTERFACE_EXPORT void sora_set_on_add_track(void* p,
                                                   track_cb_t on_add_track,
@@ -32,7 +34,7 @@ UNITY_INTERFACE_EXPORT int sora_connect(void* p,
                                         const char* channel_id,
                                         const char* metadata,
                                         const char* role,
-                                        bool multistream,
+                                        unity_bool_t multistream,
                                         int capturer_type,
                                         void* unity_camera_texture,
                                         const char* video_capturer_device,
@@ -40,8 +42,8 @@ UNITY_INTERFACE_EXPORT int sora_connect(void* p,
                                         int video_height,
                                         const char* video_codec,
                                         int video_bitrate,
-                                        bool unity_audio_input,
-                                        bool unity_audio_output,
+                                        unity_bool_t unity_audio_input,
+                                        unity_bool_t unity_audio_output,
                                         const char* audio_recording_device,
                                         const char* audio_playout_device,
                                         const char* audio_codec,
@@ -69,13 +71,13 @@ UNITY_INTERFACE_EXPORT void sora_get_stats(void* p, stats_cb_t f, void* userdata
 typedef void (*device_enum_cb_t)(const char* device_name,
                                  const char* unique_name,
                                  void* userdata);
-UNITY_INTERFACE_EXPORT bool sora_device_enum_video_capturer(device_enum_cb_t f,
-                                                            void* userdata);
-UNITY_INTERFACE_EXPORT bool sora_device_enum_audio_recording(device_enum_cb_t f,
-                                                             void* userdata);
-UNITY_INTERFACE_EXPORT bool sora_device_enum_audio_playout(device_enum_cb_t f,
-                                                           void* userdata);
-UNITY_INTERFACE_EXPORT bool sora_is_h264_supported();
+UNITY_INTERFACE_EXPORT unity_bool_t
+sora_device_enum_video_capturer(device_enum_cb_t f, void* userdata);
+UNITY_INTERFACE_EXPORT unity_bool_t
+sora_device_enum_audio_recording(device_enum_cb_t f, void* userdata);
+UNITY_INTERFACE_EXPORT unity_bool_t
+sora_device_enum_audio_playout(device_enum_cb_t f, void* userdata);
+UNITY_INTERFACE_EXPORT unity_bool_t sora_is_h264_supported();
 
 #ifdef __cplusplus
 }

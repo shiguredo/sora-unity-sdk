@@ -33,6 +33,7 @@ public class Sora : IDisposable
         public bool Multistream = false;
         public CapturerType CapturerType = Sora.CapturerType.DeviceCamera;
         public UnityEngine.Camera UnityCamera = null;
+        public int UnityCameraRenderTargetDepthBuffer = 16;
         public string VideoCapturerDevice = "";
         public int VideoWidth = 640;
         public int VideoHeight = 480;
@@ -97,7 +98,7 @@ public class Sora : IDisposable
         if (config.CapturerType == CapturerType.UnityCamera)
         {
             unityCamera = config.UnityCamera;
-            var texture = new UnityEngine.RenderTexture(config.VideoWidth, config.VideoHeight, 0, UnityEngine.RenderTextureFormat.BGRA32);
+            var texture = new UnityEngine.RenderTexture(config.VideoWidth, config.VideoHeight, config.UnityCameraRenderTargetDepthBuffer, UnityEngine.RenderTextureFormat.BGRA32);
             unityCamera.targetTexture = texture;
             unityCamera.enabled = true;
             unityCameraTexture = texture.GetNativeTexturePtr();
@@ -113,7 +114,7 @@ public class Sora : IDisposable
             config.ChannelId,
             config.Metadata,
             role,
-            config.Multistream,
+            config.Multistream ? 1 : 0,
             (int)config.CapturerType,
             unityCameraTexture,
             config.VideoCapturerDevice,
@@ -121,8 +122,8 @@ public class Sora : IDisposable
             config.VideoHeight,
             config.VideoCodec.ToString(),
             config.VideoBitrate,
-            config.UnityAudioInput,
-            config.UnityAudioOutput,
+            config.UnityAudioInput ? 1 : 0,
+            config.UnityAudioOutput ? 1 : 0,
             config.AudioRecordingDevice,
             config.AudioPlayoutDevice,
             config.AudioCodec.ToString(),
@@ -282,10 +283,10 @@ public class Sora : IDisposable
         };
 
         GCHandle handle = GCHandle.Alloc(f);
-        bool result = sora_device_enum_video_capturer(DeviceEnumCallback, GCHandle.ToIntPtr(handle));
+        int result = sora_device_enum_video_capturer(DeviceEnumCallback, GCHandle.ToIntPtr(handle));
         handle.Free();
 
-        if (!result)
+        if (result == 0)
         {
             return null;
         }
@@ -306,10 +307,10 @@ public class Sora : IDisposable
         };
 
         GCHandle handle = GCHandle.Alloc(f);
-        bool result = sora_device_enum_audio_recording(DeviceEnumCallback, GCHandle.ToIntPtr(handle));
+        int result = sora_device_enum_audio_recording(DeviceEnumCallback, GCHandle.ToIntPtr(handle));
         handle.Free();
 
-        if (!result)
+        if (result == 0)
         {
             return null;
         }
@@ -330,10 +331,10 @@ public class Sora : IDisposable
         };
 
         GCHandle handle = GCHandle.Alloc(f);
-        bool result = sora_device_enum_audio_playout(DeviceEnumCallback, GCHandle.ToIntPtr(handle));
+        int result = sora_device_enum_audio_playout(DeviceEnumCallback, GCHandle.ToIntPtr(handle));
         handle.Free();
 
-        if (!result)
+        if (result == 0)
         {
             return null;
         }
@@ -343,20 +344,44 @@ public class Sora : IDisposable
 
     public static bool IsH264Supported()
     {
-        return sora_is_h264_supported();
+        return sora_is_h264_supported() != 0;
     }
 
+#if UNITY_IOS && !UNITY_EDITOR
+    [DllImport("__Internal")]
+#else
     [DllImport("SoraUnitySdk")]
+#endif
     private static extern IntPtr sora_create();
+#if UNITY_IOS && !UNITY_EDITOR
+    [DllImport("__Internal")]
+#else
     [DllImport("SoraUnitySdk")]
+#endif
     private static extern void sora_set_on_add_track(IntPtr p, TrackCallbackDelegate on_add_track, IntPtr userdata);
+#if UNITY_IOS && !UNITY_EDITOR
+    [DllImport("__Internal")]
+#else
     [DllImport("SoraUnitySdk")]
+#endif
     private static extern void sora_set_on_remove_track(IntPtr p, TrackCallbackDelegate on_remove_track, IntPtr userdata);
+#if UNITY_IOS && !UNITY_EDITOR
+    [DllImport("__Internal")]
+#else
     [DllImport("SoraUnitySdk")]
+#endif
     private static extern void sora_set_on_notify(IntPtr p, NotifyCallbackDelegate on_notify, IntPtr userdata);
+#if UNITY_IOS && !UNITY_EDITOR
+    [DllImport("__Internal")]
+#else
     [DllImport("SoraUnitySdk")]
+#endif
     private static extern void sora_dispatch_events(IntPtr p);
+#if UNITY_IOS && !UNITY_EDITOR
+    [DllImport("__Internal")]
+#else
     [DllImport("SoraUnitySdk")]
+#endif
     private static extern int sora_connect(
         IntPtr p,
         string unity_version,
@@ -364,7 +389,7 @@ public class Sora : IDisposable
         string channel_id,
         string metadata,
         string role,
-        bool multistream,
+        int multistream,
         int capturer_type,
         IntPtr unity_camera_texture,
         string video_capturer_device,
@@ -372,32 +397,76 @@ public class Sora : IDisposable
         int video_height,
         string video_codec,
         int video_bitrate,
-        bool unity_audio_input,
-        bool unity_audio_output,
+        int unity_audio_input,
+        int unity_audio_output,
         string audio_recording_device,
         string audio_playout_device,
         string audio_codec,
         int audio_bitrate);
+#if UNITY_IOS && !UNITY_EDITOR
+    [DllImport("__Internal")]
+#else
     [DllImport("SoraUnitySdk")]
+#endif
     private static extern IntPtr sora_get_texture_update_callback();
+#if UNITY_IOS && !UNITY_EDITOR
+    [DllImport("__Internal")]
+#else
     [DllImport("SoraUnitySdk")]
+#endif
     private static extern void sora_destroy(IntPtr p);
+#if UNITY_IOS && !UNITY_EDITOR
+    [DllImport("__Internal")]
+#else
     [DllImport("SoraUnitySdk")]
+#endif
     private static extern IntPtr sora_get_render_callback();
+#if UNITY_IOS && !UNITY_EDITOR
+    [DllImport("__Internal")]
+#else
     [DllImport("SoraUnitySdk")]
+#endif
     private static extern int sora_get_render_callback_event_id(IntPtr p);
+#if UNITY_IOS && !UNITY_EDITOR
+    [DllImport("__Internal")]
+#else
     [DllImport("SoraUnitySdk")]
+#endif
     private static extern void sora_process_audio(IntPtr p, [In] float[] data, int offset, int samples);
+#if UNITY_IOS && !UNITY_EDITOR
+    [DllImport("__Internal")]
+#else
     [DllImport("SoraUnitySdk")]
+#endif
     private static extern void sora_set_on_handle_audio(IntPtr p, HandleAudioCallbackDelegate on_handle_audio, IntPtr userdata);
+#if UNITY_IOS && !UNITY_EDITOR
+    [DllImport("__Internal")]
+#else
     [DllImport("SoraUnitySdk")]
-    private static extern bool sora_get_stats(IntPtr p, StatsCallbackDelegate on_get_stats, IntPtr userdata);
+#endif
+    private static extern void sora_get_stats(IntPtr p, StatsCallbackDelegate on_get_stats, IntPtr userdata);
+#if UNITY_IOS && !UNITY_EDITOR
+    [DllImport("__Internal")]
+#else
     [DllImport("SoraUnitySdk")]
-    private static extern bool sora_device_enum_video_capturer(DeviceEnumCallbackDelegate f, IntPtr userdata);
+#endif
+    private static extern int sora_device_enum_video_capturer(DeviceEnumCallbackDelegate f, IntPtr userdata);
+#if UNITY_IOS && !UNITY_EDITOR
+    [DllImport("__Internal")]
+#else
     [DllImport("SoraUnitySdk")]
-    private static extern bool sora_device_enum_audio_recording(DeviceEnumCallbackDelegate f, IntPtr userdata);
+#endif
+    private static extern int sora_device_enum_audio_recording(DeviceEnumCallbackDelegate f, IntPtr userdata);
+#if UNITY_IOS && !UNITY_EDITOR
+    [DllImport("__Internal")]
+#else
     [DllImport("SoraUnitySdk")]
-    private static extern bool sora_device_enum_audio_playout(DeviceEnumCallbackDelegate f, IntPtr userdata);
+#endif
+    private static extern int sora_device_enum_audio_playout(DeviceEnumCallbackDelegate f, IntPtr userdata);
+#if UNITY_IOS && !UNITY_EDITOR
+    [DllImport("__Internal")]
+#else
     [DllImport("SoraUnitySdk")]
-    private static extern bool sora_is_h264_supported();
+#endif
+    private static extern int sora_is_h264_supported();
 }

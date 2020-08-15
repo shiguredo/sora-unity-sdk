@@ -8,7 +8,7 @@
 // boost
 #include <boost/asio/io_context.hpp>
 
-#if SORA_UNITY_SDK_MACOS
+#if defined(SORA_UNITY_SDK_MACOS) || defined(SORA_UNITY_SDK_IOS)
 #include "mac_helper/mac_capturer.h"
 #else
 #include "rtc/device_video_capturer.h"
@@ -63,25 +63,29 @@ class Sora {
   void SetOnNotify(std::function<void(std::string)> on_notify);
   void DispatchEvents();
 
-  bool Connect(std::string unity_version,
-               std::string signaling_url,
-               std::string channel_id,
-               std::string metadata,
-               std::string role,
-               bool multistream,
-               int capturer_type,
-               void* unity_camera_texture,
-               std::string video_capturer_device,
-               int video_width,
-               int video_height,
-               std::string video_codec,
-               int video_bitrate,
-               bool unity_audio_input,
-               bool unity_audio_output,
-               std::string audio_recording_device,
-               std::string audio_playout_device,
-               std::string audio_codec,
-               int audio_bitrate);
+  struct ConnectConfig {
+    std::string unity_version;
+    std::string signaling_url;
+    std::string channel_id;
+    std::string metadata;
+    std::string role;
+    bool multistream;
+    int capturer_type;
+    void* unity_camera_texture;
+    std::string video_capturer_device;
+    int video_width;
+    int video_height;
+    std::string video_codec;
+    int video_bitrate;
+    bool unity_audio_input;
+    bool unity_audio_output;
+    std::string audio_recording_device;
+    std::string audio_playout_device;
+    std::string audio_codec;
+    int audio_bitrate;
+  };
+
+  bool Connect(const ConnectConfig& config);
 
   static void UNITY_INTERFACE_API RenderCallbackStatic(int event_id);
   int GetRenderCallbackEventID() const;
@@ -94,6 +98,8 @@ class Sora {
   void GetStats(std::function<void (std::string)> on_get_stats);
 
  private:
+  bool DoConnect(const ConnectConfig& config);
+
   static rtc::scoped_refptr<UnityAudioDevice> CreateADM(
       webrtc::TaskQueueFactory* task_queue_factory,
       bool dummy_audio,
@@ -101,7 +107,8 @@ class Sora {
       bool unity_audio_output,
       std::function<void(const int16_t*, int, int)> on_handle_audio,
       std::string audio_recording_device,
-      std::string audio_playout_device);
+      std::string audio_playout_device,
+      rtc::Thread* worker_thread);
 
   static rtc::scoped_refptr<rtc::AdaptedVideoTrackSource> CreateVideoCapturer(
       int capturer_type,

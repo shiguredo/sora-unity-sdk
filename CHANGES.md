@@ -11,6 +11,16 @@
 
 ## develop
 
+## 2020.8
+
+- [ADD] RenderTexture に depth buffer を設定できるようにする
+    - @melpon
+
+## 2020.7
+
+- [ADD] iOS に対応する
+    - @melpon
+
 ## 2020.6.1
 
 - [UPDATE] WebRTC のバージョンを M84 (4147@{#11}) に上げる

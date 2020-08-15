@@ -13,7 +13,7 @@
 #include "sdk/android/native_api/jni/jvm.h"
 #endif
 
-#if defined(SORA_UNITY_SDK_MACOS)
+#if defined(SORA_UNITY_SDK_MACOS) || defined(SORA_UNITY_SDK_IOS)
 #include "../mac_helper/mac_capturer.h"
 #elif defined(SORA_UNITY_SDK_ANDROID)
 #include "../android_helper/android_capturer.h"
@@ -24,7 +24,7 @@ namespace sora {
 
 bool DeviceList::EnumVideoCapturer(
     std::function<void(std::string, std::string)> f) {
-#if defined(SORA_UNITY_SDK_MACOS)
+#if defined(SORA_UNITY_SDK_MACOS) || defined(SORA_UNITY_SDK_IOS)
 
   return MacCapturer::EnumVideoDevice(f);
 
@@ -64,8 +64,8 @@ bool DeviceList::EnumVideoCapturer(
 bool DeviceList::EnumAudioRecording(
     std::function<void(std::string, std::string)> f) {
   auto task_queue_factory = webrtc::CreateDefaultTaskQueueFactory();
-#if defined(SORA_UNITY_SDK_ANDROID)
-  // Android の場合常に１個しかなく、かつ adm->RecordingDeviceName() を呼ぶと fatal error が起きるので
+#if defined(SORA_UNITY_SDK_ANDROID) || defined(SORA_UNITY_SDK_IOS)
+  // Android や iOS の場合常に１個しかなく、かつ adm->RecordingDeviceName() を呼ぶと fatal error が起きるので
   // 適当な名前で１回だけコールバックする
   f("0", "0");
   return true;
@@ -117,8 +117,8 @@ bool DeviceList::EnumAudioRecording(
 bool DeviceList::EnumAudioPlayout(
     std::function<void(std::string, std::string)> f) {
   auto task_queue_factory = webrtc::CreateDefaultTaskQueueFactory();
-#if defined(SORA_UNITY_SDK_ANDROID)
-  // Android の場合常に１個しかなく、かつ adm->PlayoutDeviceName() を呼ぶと fatal error が起きるので
+#if defined(SORA_UNITY_SDK_ANDROID) || defined(SORA_UNITY_SDK_IOS)
+  // Android や iOS の場合常に１個しかなく、かつ adm->PlayoutDeviceName() を呼ぶと fatal error が起きるので
   // 適当な名前で１回だけコールバックする
   f("0", "0");
   return true;
