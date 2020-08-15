@@ -18,7 +18,7 @@ In other languages, we won't be able to deal with them. Thank you for your under
 
 ## 利用方法
 
-https://github.com/shiguredo/sora-unity-sdk/releases から から最新の `SoraUnitySdk.zip` をダウンロードして展開し、`SoraUnitySdk\Plugins\SoraUnitySdk` を `Assets\Plugins\SoraUnitySdk` に、`SoraUnitySdk\SoraUnitySdk` を `Assets/SoraUnitySdk` にコピーしてください。
+Sora Unity SDK を使ってみたい人は [USE.md](doc/USE.md) をお読みください。
 
 ## ビルド方法
 

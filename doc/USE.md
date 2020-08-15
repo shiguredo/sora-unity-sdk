@@ -2,7 +2,10 @@
 
 ## 準備
 
-https://github.com/shiguredo/sora-unity-sdk/releases から から最新の `SoraUnitySdk.zip` をダウンロードして展開し、`SoraUnitySdk\Plugins\SoraUnitySdk` を `Assets\Plugins\SoraUnitySdk` に、`SoraUnitySdk\SoraUnitySdk` を `Assets/SoraUnitySdk` にコピーしてください。
+https://github.com/shiguredo/sora-unity-sdk/releases から最新の `SoraUnitySdk.zip` をダウンロードして展開し、Sora Unity SDK を利用したいプロジェクトに以下のようにコピーして下さい。
+
+- `SoraUnitySdk\Plugins\SoraUnitySdk` を `Assets\Plugins\SoraUnitySdk` にコピーしてください
+- `SoraUnitySdk\SoraUnitySdk` を `Assets/SoraUnitySdk` にコピーしてください。
 
 ## 注意点
 
