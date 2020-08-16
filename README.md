@@ -79,12 +79,12 @@ Sora Unity SDK を使ってみたい人は [USE.md](doc/USE.md) をお読みく�
 - Sora シグナリング開始時の映像コーデック/ビットレート指定に対応
 - シグナリング通知への対応
 - Apple VideoToolbox
-  - H.264 ハードウェアエンコードへの対応
-  - H.264 ハードウェアデコードへの対応
+    - H.264 ハードウェアエンコードへの対応
+    - H.264 ハードウェアデコードへの対応
 - NVIDIA VIDEO CODEC SDK
-  - Windows 版
-    - H.264 のハードウェアエンコードへの対応
-    - H.264 のハードウェアデコードへの対応
+    - Windows 版
+        - H.264 のハードウェアエンコードへの対応
+        - H.264 のハードウェアデコードへの対応
 
 ## H.264 の利用について
 
@@ -102,13 +102,13 @@ Sora Unity SDK ではソフトウェアでの H.264 エンコード/デコード
 ## 有償での優先実装
 
 - Windows 版 NVIDIA VIDEO CODEC SDK による H.264 エンコーダ対応
-  - [スロースネットワークス株式会社](http://www.sloth-networks.co.jp) 様
+    - [スロースネットワークス株式会社](http://www.sloth-networks.co.jp) 様
 - WebRTC's Statistics 対応
-  - 企業名非公開
+    - 企業名非公開
 - Windows 版 NVIDIA VIDEO CODEC SDK による H.264 デコーダ対応
-  - [スロースネットワークス株式会社](http://www.sloth-networks.co.jp) 様
+    - [スロースネットワークス株式会社](http://www.sloth-networks.co.jp) 様
 - Android 版対応
-  - [株式会社 KDDI テクノロジー](https://kddi-tech.com/) 様
+    - [株式会社KDDIテクノロジー](https://kddi-tech.com/) 様
 
 ## 有償での優先実装が可能な機能一覧
 
@@ -116,7 +116,7 @@ Sora Unity SDK ではソフトウェアでの H.264 エンコード/デコード
 
 - オープンソースでの公開が前提
 - 可能であれば企業名の公開
-  - 公開が難しい場合は `企業名非公開` と書かせていただきます
+    - 公開が難しい場合は `企業名非公開` と書かせていただきます
 
 ### プラットフォーム
 
