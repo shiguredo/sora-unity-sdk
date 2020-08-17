@@ -5,7 +5,7 @@ using UnityEditor;
 using UnityEditor.iOS.Xcode;
 using UnityEditor.Callbacks;
 
-public class SoraUnitySdkPostProcesser
+public class SoraUnitySdkPostProcessor
 {
     [PostProcessBuildAttribute(500)]
     public static void OnPostprocessBuild(BuildTarget buildTarget, string pathToBuiltProject)
