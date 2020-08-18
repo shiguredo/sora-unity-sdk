@@ -9,18 +9,18 @@
 
 ### iOS Plugin の設定変更をします。
 
-- libwebrtc.a のインスペクタ -> Select Platform for plugin -> Any Platform のチェックを外し、 Include Platforms で iOS だけが チェックされるように設定して下さい。 [![Image from Gyazo](https://i.gyazo.com/e34f2d8c153e6962a3608baece18ee6c.png)](https://gyazo.com/e34f2d8c153e6962a3608baece18ee6c)
+- libwebrtc.a のインスペクタ -> Select Platform for plugin -> Any Platform のチェックを外し、 Include Platforms で iOS だけが チェックされるように設定して下さい。 [![Image from Gyazo](https://i.gyazo.com/56c8d6e6f975ae5666f25e07d0eccde9.png)](https://gyazo.com/56c8d6e6f975ae5666f25e07d0eccde9)
 
-- libSoraUnitySdk.a のインスペクタ -> Select Platform for plugin -> Any Platform のチェックを外し、 Include Platforms で iOS だけが チェックされるように設定して下さい。 [![Image from Gyazo](https://i.gyazo.com/1a7aba91aeed5bae303708d3d5d90ff0.png)](https://gyazo.com/1a7aba91aeed5bae303708d3d5d90ff0)
+- libSoraUnitySdk.a のインスペクタ -> Select Platform for plugin -> Any Platform のチェックを外し、 Include Platforms で iOS だけが チェックされるように設定して下さい。 [![Image from Gyazo](https://i.gyazo.com/f7dbf0ebbd1b1567517b4fcd34ff1c97.png)](https://gyazo.com/f7dbf0ebbd1b1567517b4fcd34ff1c97)
 
 ### カメラの権限の設定をする必要があります。
 
 Player Settings -> Other Settings -> Camera Usage Description にカメラ利用のためのコメントを設定して下さい。
 
-[![Image from Gyazo](https://i.gyazo.com/e3e14212339c0cfc395a1bde53ee3593.png)](https://gyazo.com/e3e14212339c0cfc395a1bde53ee3593)
+[![Image from Gyazo](https://i.gyazo.com/ea332824fbcf5377734c6d399d1c77e2.png)](https://gyazo.com/ea332824fbcf5377734c6d399d1c77e2)
 
 ### マイクを使用する場合は権限の設定をする必要があります。
 
 Player Settings -> Other Settings -> Microphone Usage Description にマイク利用のためのコメントを設定して下さい。(マイクを利用しない recvonly や Unity Audio Input の場合は不要です)
 
-[![Image from Gyazo](https://i.gyazo.com/7ef3d9f05e0582740252101463ff7465.png)](https://gyazo.com/7ef3d9f05e0582740252101463ff7465)
+[![Image from Gyazo](https://i.gyazo.com/aa73f00db149a853234939659eff999a.png)](https://gyazo.com/aa73f00db149a853234939659eff999a)

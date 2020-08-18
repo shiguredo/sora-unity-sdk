@@ -12,19 +12,19 @@
 
 libSoraUnitySdk.so インスペクタの Platform settings -> Android の設定で CPU を ARM64 に変更して下さい。
 
-[![Image from Gyazo](https://i.gyazo.com/42042dcc7dd506c1b42f0e7092992afc.png)](https://gyazo.com/42042dcc7dd506c1b42f0e7092992afc)
+[![Image from Gyazo](https://i.gyazo.com/f7dbf0ebbd1b1567517b4fcd34ff1c97.png)](https://gyazo.com/f7dbf0ebbd1b1567517b4fcd34ff1c97)
 
 ### Target Architectures で ARM64 を設定します。
 
 Player Settings -> Other Settings -> Target Architectures で ARM64 にチェックをして下さい。
 
-[![Image from Gyazo](https://i.gyazo.com/0bf7c9c091c635aa37084900aaff6fa0.png)](https://gyazo.com/0bf7c9c091c635aa37084900aaff6fa0)
+[![Image from Gyazo](https://i.gyazo.com/de434b5dfff683dd3f9c306b9e9844bc.png)](https://gyazo.com/de434b5dfff683dd3f9c306b9e9844bc)
 
 ### Vulkan で動かす必要があります。
 
 Player Settings -> Other Settings の Graphics APIs で Vulkan を先頭にして下さい。
 
-[![Image from Gyazo](https://i.gyazo.com/c13c6c9f600eb37d9d3b55caae30f190.png)](https://gyazo.com/c13c6c9f600eb37d9d3b55caae30f190)
+[![Image from Gyazo](https://i.gyazo.com/6088aa664df137c0bbeff69de2af57ae.png)](https://gyazo.com/6088aa664df137c0bbeff69de2af57ae)
 
 ## そのほかの利用に関する注意点
 
