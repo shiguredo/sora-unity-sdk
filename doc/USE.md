@@ -1,6 +1,10 @@
 # Sora Unity SDK を使ってみる
 
-## 準備
+## サンプル
+
+まず使ってみたい方に[サンプル](https://github.com/shiguredo/sora-unity-sdk-samples)のご用意があります。
+
+## インストール
 
 https://github.com/shiguredo/sora-unity-sdk/releases から最新の `SoraUnitySdk.zip` をダウンロードして展開し、Sora Unity SDK を利用したいプロジェクトに以下のようにコピーして下さい。
 
@@ -11,16 +15,16 @@ https://github.com/shiguredo/sora-unity-sdk/releases から最新の `SoraUnityS
 
 ### macOS / Windows で Sora Unity SDK を使ってみる
 
-準備完了後使うことができます。
+インストール完了後使うことができます。
 
 ### iOS で Sora Unity SDK を使ってみる
 
-[IOS.md](IOS.md) をお読みください。
+インストール完了後 [IOS.md](IOS.md) をお読みください。
 
 ### Android で Sora Unity SDK を使ってみる
 
-[ANDROID.md](ANDROID.md) をお読みください。
+インストール完了後 [ANDROID.md](ANDROID.md) をお読みください。
 
-## Q&A
+## FAQ
 
-Q&A に関しては [FAQ.md](FAQ.md) をお読みください。
+[FAQ.md](FAQ.md) をお読みください。
