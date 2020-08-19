@@ -2,7 +2,7 @@
 
 ## サンプル
 
-まず使ってみたい方に[サンプル](https://github.com/shiguredo/sora-unity-sdk-samples)のご用意があります。
+まず使ってみたい方に[サンプル集](https://github.com/shiguredo/sora-unity-sdk-samples)のご用意がございます。
 
 ## インストール
 

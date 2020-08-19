@@ -1,9 +1,9 @@
 # iOS で Sora Unity SDK を使ってみる
 
-## iOS で使うために必要な環境
+## 動作環境
 
-- arm64 と x86_64 用バイナリしか生成しないので、32bit の iPhone には対応していません。
-- 最低でも Target minimum iOS Version は 10.0 が必要です。
+- iOS 10 以上が必要です
+- 64bit の iPhone が必要です
 
 ## iOS で使うために必要な設定
 
@@ -13,9 +13,15 @@
 
 - libSoraUnitySdk.a のインスペクタ -> Select Platform for plugin -> Any Platform のチェックを外し、 Include Platforms で iOS だけが チェックされるように設定して下さい。 [![Image from Gyazo](https://i.gyazo.com/f7dbf0ebbd1b1567517b4fcd34ff1c97.png)](https://gyazo.com/f7dbf0ebbd1b1567517b4fcd34ff1c97)
 
-### カメラの権限の設定をする必要があります。
+### Target Minimum iOS Version で 10.0 以上を設定します。
 
-Player Settings -> Other Settings -> Camera Usage Description にカメラ利用のためのコメントを設定して下さい。
+Player Settings -> Other Settings -> Target Minimum iOS Version で 10.0 以上を設定して下さい。
+
+[![Image from Gyazo](https://i.gyazo.com/68c11b75729d369aba529e07129a61a6.png)](https://gyazo.com/68c11b75729d369aba529e07129a61a6)
+
+### カメラを使用する場合は権限の設定をする必要があります。
+
+Player Settings -> Other Settings -> Camera Usage Description にカメラ利用のためのコメントを設定して下さい。(カメラを利用しない recvonly や Capture Unity Camera の場合は不要です)
 
 [![Image from Gyazo](https://i.gyazo.com/ea332824fbcf5377734c6d399d1c77e2.png)](https://gyazo.com/ea332824fbcf5377734c6d399d1c77e2)
 
