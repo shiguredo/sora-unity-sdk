@@ -13,7 +13,7 @@ libSoraUnitySdk.so インスペクタの Platform settings -> Android の設定�
 
 [![Image from Gyazo](https://i.gyazo.com/f7dbf0ebbd1b1567517b4fcd34ff1c97.png)](https://gyazo.com/f7dbf0ebbd1b1567517b4fcd34ff1c97)
 
-### Graphics APIs を Vulkan で設定します。
+### Graphics APIs を Vulkan に設定します。
 
 Player Settings -> Other Settings の Graphics APIs で Vulkan を先頭にして下さい。
 
