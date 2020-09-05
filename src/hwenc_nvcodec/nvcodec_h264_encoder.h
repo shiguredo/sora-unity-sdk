@@ -15,7 +15,6 @@
 #include "common_video/h264/h264_bitstream_parser.h"
 #include "common_video/include/bitrate_adjuster.h"
 #include "modules/video_coding/codecs/h264/include/h264.h"
-#include "rtc_base/critical_section.h"
 
 // NvCodec
 #ifdef _WIN32
@@ -48,8 +47,7 @@ class NvCodecH264Encoder : public webrtc::VideoEncoder {
  private:
   std::mutex mutex_;
   webrtc::EncodedImageCallback* callback_ = nullptr;
-  webrtc::BitrateAdjuster bitrate_adjuster_ =
-      webrtc::BitrateAdjuster(0.5f, 0.95f);
+  webrtc::BitrateAdjuster bitrate_adjuster_;
   uint32_t target_bitrate_bps_ = 0;
   uint32_t max_bitrate_bps_ = 0;
 
