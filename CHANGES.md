@@ -11,6 +11,9 @@
 
 ## develop
 
+- [UPDATE] WebRTC のバージョンを M86 (4240@{#1}) に上げる
+    - @voluntas
+
 ## 2020.8
 
 - [ADD] RenderTexture に depth buffer を設定できるようにする
