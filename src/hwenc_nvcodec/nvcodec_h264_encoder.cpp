@@ -18,7 +18,8 @@ struct nal_entry {
 using Microsoft::WRL::ComPtr;
 #endif
 
-NvCodecH264Encoder::NvCodecH264Encoder(const cricket::VideoCodec& codec) {
+NvCodecH264Encoder::NvCodecH264Encoder(const cricket::VideoCodec& codec)
+    : bitrate_adjuster_(0.05, 0.95) {
 #ifdef _WIN32
   ComPtr<IDXGIFactory1> idxgi_factory;
   RTC_CHECK(!FAILED(CreateDXGIFactory1(__uuidof(IDXGIFactory1),
