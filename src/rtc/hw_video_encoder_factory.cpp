@@ -44,17 +44,6 @@ std::vector<webrtc::SdpVideoFormat> HWVideoEncoderFactory::GetSupportedFormats()
   return supported_codecs;
 }
 
-webrtc::VideoEncoderFactory::CodecInfo HWVideoEncoderFactory::QueryVideoEncoder(
-    const webrtc::SdpVideoFormat& format) const {
-  CodecInfo info;
-  info.has_internal_source = false;
-  if (absl::EqualsIgnoreCase(format.name, cricket::kH264CodecName))
-    info.is_hardware_accelerated = true;
-  else
-    info.is_hardware_accelerated = false;
-  return info;
-}
-
 std::unique_ptr<webrtc::VideoEncoder> HWVideoEncoderFactory::CreateVideoEncoder(
     const webrtc::SdpVideoFormat& format) {
   if (absl::EqualsIgnoreCase(format.name, cricket::kVp8CodecName))
