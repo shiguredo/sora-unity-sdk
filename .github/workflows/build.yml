@@ -54,27 +54,9 @@ jobs:
       uses: actions/cache@v2
       with:
         path: _install
-        key: windows-v1-${{ hashFiles('VERSIONS') }}
+        key: macos-v1-${{ hashFiles('VERSIONS') }}
         restore-keys: |
-          windows-v1-
-    - name: Get Versions
-      run: |
-        source VERSIONS
-        echo "::set-output name=boost_version::${BOOST_VERSION}"
-        echo "::set-output name=webrtc_build_version::${WEBRTC_BUILD_VERSION}"
-      id: versions
-    - name: Cache Boost ${{ steps.versions.outputs.boost_version }}
-      id: cache-boost
-      uses: actions/cache@v2
-      with:
-        path: _install/boost
-        key: boost-${{ steps.versions.outputs.boost_version }}
-    - name: Cache WebRTC Build ${{ steps.versions.outputs.webrtc_build_version }}
-      id: cache-webrtc
-      uses: actions/cache@v2
-      with:
-        path: _install/webrtc
-        key: webrtc-${{ steps.versions.outputs.webrtc_build_version }}
+          macos-v1-
     - name: install_tools.sh
       run: ./install_tools.sh
     - name: cmake.sh
