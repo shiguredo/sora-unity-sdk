@@ -17,7 +17,13 @@ mkdir $INSTALL_DIR -Force
 
 # Boost
 
-if (!(Test-Path "$INSTALL_DIR\boost\include\boost\version.hpp")) {
+$BOOST_VERSION_FILE = "$INSTALL_DIR\boost.version"
+$BOOST_CHANGED = $FALSE
+if (!(Test-Path $BOOST_VERSION_FILE) -Or ("$BOOST_VERSION" -ne (Get-Content $BOOST_VERSION_FILE))) {
+  $BOOST_CHANGED = $TRUE
+}
+
+if ($BOOST_CHANGED -Or !(Test-Path "$INSTALL_DIR\boost\include\boost\version.hpp")) {
   $_BOOST_UNDERSCORE_VERSION = $BOOST_VERSION.Replace(".", "_")
   $_URL = "https://dl.bintray.com/boostorg/release/${BOOST_VERSION}/source/boost_${_BOOST_UNDERSCORE_VERSION}.zip"
   $_FILE = "boost_${_BOOST_UNDERSCORE_VERSION}.zip"
@@ -49,10 +55,17 @@ if (!(Test-Path "$INSTALL_DIR\boost\include\boost\version.hpp")) {
         runtime-link=static
   Pop-Location
 }
+Set-Content "$BOOST_VERSION_FILE" -Value "$BOOST_VERSION"
 
 # JSON
 
-if (!(Test-Path "$INSTALL_DIR\json\include\nlohmann\json.hpp")) {
+$JSON_VERSION_FILE = "$INSTALL_DIR\json.version"
+$JSON_CHANGED = $FALSE
+if (!(Test-Path $JSON_VERSION_FILE) -Or ("$JSON_VERSION" -ne (Get-Content $JSON_VERSION_FILE))) {
+  $JSON_CHANGED = $TRUE
+}
+
+if ($JSON_CHANGED -Or !(Test-Path "$INSTALL_DIR\json\include\nlohmann\json.hpp")) {
   $_URL = "https://github.com/nlohmann/json/releases/download/v${JSON_VERSION}/include.zip"
   $_FILE = "$BUILD_DIR\json.zip"
   # ダウンロード
@@ -68,10 +81,17 @@ if (!(Test-Path "$INSTALL_DIR\json\include\nlohmann\json.hpp")) {
     7z x $_FILE
   Pop-Location
 }
+Set-Content "$JSON_VERSION_FILE" -Value "$JSON_VERSION"
 
 # WebRTC
 
-if (!(Test-Path "$INSTALL_DIR\webrtc\release\webrtc.lib")) {
+$WEBRTC_VERSION_FILE = "$INSTALL_DIR\webrtc.version"
+$WEBRTC_CHANGED = $FALSE
+if (!(Test-Path $WEBRTC_VERSION_FILE) -Or ("$WEBRTC_BUILD_VERSION" -ne (Get-Content $WEBRTC_VERSION_FILE))) {
+  $WEBRTC_CHANGED = $TRUE
+}
+
+if ($WEBRTC_CHANGED -Or !(Test-Path "$INSTALL_DIR\webrtc\release\webrtc.lib")) {
   # shiguredo-webrtc-windows のバイナリをダウンロードする
   $_URL = "https://github.com/shiguredo-webrtc-build/webrtc-build/releases/download/m$WEBRTC_BUILD_VERSION/webrtc.windows.zip"
   $_FILE = "$BUILD_DIR\webrtc-m$WEBRTC_BUILD_VERSION.zip"
@@ -95,10 +115,17 @@ if (!(Test-Path "$INSTALL_DIR\webrtc\release\webrtc.lib")) {
   }
   Move-Item $BUILD_DIR\webrtc $INSTALL_DIR\webrtc
 }
+Set-Content "$WEBRTC_VERSION_FILE" -Value "$WEBRTC_BUILD_VERSION"
 
 # CUDA
 
-if (!(Test-Path "$INSTALL_DIR\cuda\nvcc")) {
+$CUDA_VERSION_FILE = "$INSTALL_DIR\cuda.version"
+$CUDA_CHANGED = $FALSE
+if (!(Test-Path $CUDA_VERSION_FILE) -Or ("$CUDA_VERSION" -ne (Get-Content $CUDA_VERSION_FILE))) {
+  $CUDA_CHANGED = $TRUE
+}
+
+if ($CUDA_CHANGED -Or !(Test-Path "$INSTALL_DIR\cuda\nvcc")) {
   if ("$CUDA_VERSION" -eq "10.2") {
     $_URL = "http://developer.download.nvidia.com/compute/cuda/10.2/Prod/local_installers/cuda_10.2.89_441.22_win10.exe"
     $_FILE = "$BUILD_DIR\cuda_10.2.89_441.22_win10.exe"
@@ -126,3 +153,4 @@ if (!(Test-Path "$INSTALL_DIR\cuda\nvcc")) {
     Move-Item nvcc $INSTALL_DIR\cuda\nvcc
   Pop-Location
 }
+Set-Content "$CUDA_VERSION_FILE" -Value "$CUDA_VERSION"

@@ -14,46 +14,25 @@ jobs:
     runs-on: windows-latest
     steps:
     - uses: actions/checkout@v2
-    - name: Get Versions
-      run: |
-        Get-Content "VERSIONS" | Foreach-Object {
-          if (!$_) { continue }
-          $var = $_.Split('=')
-          New-Variable -Name $var[0] -Value $var[1] -Force
-        }
-        echo "::set-output name=cuda_version::${CUDA_VERSION}"
-        echo "::set-output name=boost_version::${BOOST_VERSION}"
-        echo "::set-output name=webrtc_build_version::${WEBRTC_BUILD_VERSION}"
-      id: versions
-    - name: Cache CUDA ${{ steps.versions.outputs.cuda_version }}
-      id: cache-cuda
+    - name: Cache
+      id: cache
       uses: actions/cache@v2
       with:
-        path: _install\cuda
-        key: cuda-${{ steps.versions.outputs.cuda_version }}
-    - name: Cache Boost ${{ steps.versions.outputs.boost_version }}
-      id: cache-boost
-      uses: actions/cache@v2
-      with:
-        path: _install\boost
-        key: windows-boost-${{ steps.versions.outputs.boost_version }}
-    - name: Cache WebRTC Build ${{ steps.versions.outputs.webrtc_build_version }}
-      id: cache-webrtc
-      uses: actions/cache@v2
-      with:
-        path: _install\webrtc
-        key: windows-webrtc-${{ steps.versions.outputs.webrtc_build_version }}
-    - name: install_tools.bat
-      run: .\install_tools.bat
-    - name: cmake.bat
-      run: .\cmake.bat
+        path: _install
+        key: windows-v2-${{ hashFiles('VERSIONS') }}
+        restore-keys: |
+          windows-v2-
+    - name: install_tools.ps1
+      run: "& .\\install_tools.ps1"
+    - name: cmake.ps1
+      run: "& .\\cmake.ps1"
     - name: Copy Windows files
       run: |
         mkdir windows
         Copy-Item build\Release\SoraUnitySdk.dll windows
         Copy-Item _install\webrtc\NOTICE windows
     - name: Upload Windows Artifact
-      uses: actions/upload-artifact@v1
+      uses: actions/upload-artifact@v2
       with:
         name: windows
         path: windows
@@ -70,6 +49,14 @@ jobs:
     runs-on: macOS-latest
     steps:
     - uses: actions/checkout@v2
+    - name: Cache
+      id: cache
+      uses: actions/cache@v2
+      with:
+        path: _install
+        key: windows-v1-${{ hashFiles('VERSIONS') }}
+        restore-keys: |
+          windows-v1-
     - name: Get Versions
       run: |
         source VERSIONS
@@ -101,7 +88,7 @@ jobs:
         cp _install/macos/webrtc/NOTICE macos/
     - name: Upload macOS Artifact
       if: matrix.name == 'macos'
-      uses: actions/upload-artifact@v1
+      uses: actions/upload-artifact@v2
       with:
         name: macos
         path: macos/
@@ -115,7 +102,7 @@ jobs:
         cp build/android/libSoraUnitySdk.so android/
     - name: Upload Android Artifact
       if: matrix.name == 'android'
-      uses: actions/upload-artifact@v1
+      uses: actions/upload-artifact@v2
       with:
         name: android
         path: android/
@@ -129,7 +116,7 @@ jobs:
         cp build/ios/_install/lib/libSoraUnitySdk.a ios/
     - name: Upload iOS Artifact
       if: matrix.name == 'ios'
-      uses: actions/upload-artifact@v1
+      uses: actions/upload-artifact@v2
       with:
         name: ios
         path: ios/
@@ -138,22 +125,8 @@ jobs:
     needs: [build-windows, build-macos]
     steps:
     - uses: actions/checkout@v2
-    - name: Download windows
-      uses: actions/download-artifact@v1
-      with:
-        name: windows
-    - name: Download macos
-      uses: actions/download-artifact@v1
-      with:
-        name: macos
-    - name: Download android
-      uses: actions/download-artifact@v1
-      with:
-        name: android
-    - name: Download ios
-      uses: actions/download-artifact@v1
-      with:
-        name: ios
+    - name: Download artifacts
+      uses: actions/download-artifact@v2
     - name: Packaging
       run: |
         set -ex
@@ -195,7 +168,7 @@ jobs:
         cat ios/NOTICE >> SoraUnitySdk/NOTICE
 
     - name: Upload SoraUnitySdk
-      uses: actions/upload-artifact@v1
+      uses: actions/upload-artifact@v2
       with:
         name: SoraUnitySdk
         path: SoraUnitySdk
@@ -208,15 +181,16 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v2
     - name: Download SoraUnitySdk
-      uses: actions/download-artifact@v1
+      uses: actions/download-artifact@v2
       with:
         name: SoraUnitySdk
+        path: SoraUnitySdk
     - name: Archive to zip SoraUnitySdk
       run: |
         zip -r SoraUnitySdk SoraUnitySdk
     - name: Create Release
       id: create_release
-      uses: actions/create-release@v1.0.0
+      uses: actions/create-release@v1
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
@@ -226,7 +200,7 @@ jobs:
         prerelease: false
     - name: Upload Release Asset
       id: upload-release-asset 
-      uses: actions/upload-release-asset@v1.0.1
+      uses: actions/upload-release-asset@v1
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
