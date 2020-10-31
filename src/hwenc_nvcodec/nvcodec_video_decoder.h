@@ -3,7 +3,7 @@
 
 // WebRTC
 #include <api/video_codecs/video_decoder.h>
-#include <common_video/include/i420_buffer_pool.h>
+#include <common_video/include/video_frame_buffer_pool.h>
 #include <rtc_base/platform_thread.h>
 
 #include "nvcodec_video_decoder_cuda.h"
@@ -46,7 +46,7 @@ class NvCodecVideoDecoder : public webrtc::VideoDecoder {
   int width_ = 0;
   int height_ = 0;
   webrtc::DecodedImageCallback* decode_complete_callback_ = nullptr;
-  webrtc::I420BufferPool buffer_pool_;
+  webrtc::VideoFrameBufferPool buffer_pool_;
 
   cudaVideoCodec codec_id_;
   std::unique_ptr<NvCodecVideoDecoderCuda> decoder_;
