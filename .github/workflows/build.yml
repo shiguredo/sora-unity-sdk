@@ -66,7 +66,7 @@ jobs:
       if: matrix.name == 'macos'
       run: |
         mkdir macos/
-        cp -r build/macos/SoraUnitySdk.bundle/ macos/SoraUnitySdk.bundle/
+        cp -r _build/sora-unity-sdk/macos/SoraUnitySdk.bundle/ macos/SoraUnitySdk.bundle/
         cp _install/macos/webrtc/NOTICE macos/
     - name: Upload macOS Artifact
       if: matrix.name == 'macos'
@@ -81,7 +81,7 @@ jobs:
         mkdir android/
         cp _install/android/webrtc/NOTICE android/
         cp _install/android/webrtc/jar/webrtc.jar android/
-        cp build/android/libSoraUnitySdk.so android/
+        cp _build/sora-unity-sdk/android/libSoraUnitySdk.so android/
     - name: Upload Android Artifact
       if: matrix.name == 'android'
       uses: actions/upload-artifact@v2
@@ -95,7 +95,7 @@ jobs:
         mkdir ios/
         cp _install/ios/webrtc/NOTICE ios/
         cp _install/ios/webrtc/lib/libwebrtc.a ios/
-        cp build/ios/_install/lib/libSoraUnitySdk.a ios/
+        cp _build/sorao-unity-sdk/ios/libSoraUnitySdk.a ios/
     - name: Upload iOS Artifact
       if: matrix.name == 'ios'
       uses: actions/upload-artifact@v2
