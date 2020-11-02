@@ -11,6 +11,12 @@
 
 ## develop
 
+## 2020.10
+
+- [UPDATE] WebRTC のバージョンを M87 (4280@{#10}) に上げる
+    - @melpon @torikizi
+- [UPDATE] Boost のバージョンを 1.74.0 に上げる
+
 ## 2020.9
 
 - [UPDATE] WebRTC のバージョンを M86 (4240@{#1}) に上げる
