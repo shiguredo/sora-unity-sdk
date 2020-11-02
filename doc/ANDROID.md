@@ -13,6 +13,12 @@ libSoraUnitySdk.so インスペクタの Platform settings -> Android の設定�
 
 [![Image from Gyazo](https://i.gyazo.com/f7dbf0ebbd1b1567517b4fcd34ff1c97.png)](https://gyazo.com/f7dbf0ebbd1b1567517b4fcd34ff1c97)
 
+### iOS Plugin の設定変更をします。
+
+- libwebrtc.a のインスペクタ -> Select Platform for plugin -> Any Platform のチェックを外し、 Include Platforms で iOS だけが チェックされるように設定して下さい。 [![Image from Gyazo](https://i.gyazo.com/56c8d6e6f975ae5666f25e07d0eccde9.png)](https://gyazo.com/56c8d6e6f975ae5666f25e07d0eccde9)
+
+- libSoraUnitySdk.a のインスペクタ -> Select Platform for plugin -> Any Platform のチェックを外し、 Include Platforms で iOS だけが チェックされるように設定して下さい。 [![Image from Gyazo](https://i.gyazo.com/622ba8940acb005eb354124b2a1999bb.png)](https://gyazo.com/622ba8940acb005eb354124b2a1999bb)
+
 ### Graphics APIs を Vulkan に設定します。
 
 Player Settings -> Other Settings の Graphics APIs で Vulkan を先頭にして下さい。

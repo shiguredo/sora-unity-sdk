@@ -11,8 +11,14 @@ mkdir -p $BUILD_DIR
 mkdir -p $INSTALL_DIR
 
 # WebRTC のインストール
+WEBRTC_VERSION_FILE="$INSTALL_DIR/webrtc.version"
+WEBRTC_CHANGED=0
+if [ ! -e $WEBRTC_VERSION_FILE -o "$WEBRTC_BUILD_VERSION" != "`cat $WEBRTC_VERSION_FILE`" ]; then
+  WEBRTC_CHANGED=1
+fi
+
 for name in macos android ios; do
-  if [ ! -e $INSTALL_DIR/$name/webrtc/lib/libwebrtc.a ]; then
+  if [ $WEBRTC_CHANGED -eq 1 -o ! -e $INSTALL_DIR/$name/webrtc ]; then
     # shiguredo-webrtc-build から各環境のバイナリをダウンロードして配置するだけ
     pushd $BUILD_DIR
       rm -rf webrtc.$name.tar.gz
@@ -24,16 +30,33 @@ for name in macos android ios; do
       rm -rf webrtc/
       tar xf $BUILD_DIR/webrtc.$name.tar.gz
     popd
+
+    rm -rf $INSTALL_DIR/libcxx/
+    rm -rf $INSTALL_DIR/libcxxabi/
   fi
 done
+echo $WEBRTC_BUILD_VERSION > $WEBRTC_VERSION_FILE
 
 # nlohmann/json
-if [ ! -e $INSTALL_DIR/json/include ]; then
+JSON_VERSION_FILE="$INSTALL_DIR/json.version"
+JSON_CHANGED=0
+if [ ! -e $JSON_VERSION_FILE -o "$JSON_VERSION" != "`cat $JSON_VERSION_FILE`" ]; then
+  JSON_CHANGED=1
+fi
+
+if [ $JSON_CHANGED -eq 1 -o ! -e $INSTALL_DIR/json/include ]; then
   rm -rf $INSTALL_DIR/json
   git clone --branch v$JSON_VERSION --depth 1 https://github.com/nlohmann/json.git $INSTALL_DIR/json
 fi
+echo $JSON_VERSION > $JSON_VERSION_FILE
 
 # Boost
+BOOST_VERSION_FILE="$INSTALL_DIR/boost.version"
+BOOST_CHANGED=0
+if [ ! -e $BOOST_VERSION_FILE -o "$BOOST_VERSION" != "`cat $BOOST_VERSION_FILE`" ]; then
+  BOOST_CHANGED=1
+fi
+
 if [ ! -e $INSTALL_DIR/boost/include/boost/version.hpp ]; then
   _VERSION_UNDERSCORE=${BOOST_VERSION//./_}
   _URL=https://dl.bintray.com/boostorg/release/${BOOST_VERSION}/source/boost_${_VERSION_UNDERSCORE}.tar.gz
@@ -54,9 +77,16 @@ if [ ! -e $INSTALL_DIR/boost/include/boost/version.hpp ]; then
     popd
   popd
 fi
+echo $BOOST_VERSION > $BOOST_VERSION_FILE
 
 # Android NDK のインストール
-if [ ! -e $INSTALL_DIR/android-ndk ]; then
+ANDROID_NDK_VERSION_FILE="$INSTALL_DIR/android_ndk.version"
+ANDROID_NDK_CHANGED=0
+if [ ! -e $ANDROID_NDK_VERSION_FILE -o "$ANDROID_NDK_VERSION" != "`cat $ANDROID_NDK_VERSION_FILE`" ]; then
+  ANDROID_NDK_CHANGED=1
+fi
+
+if [ $ANDROID_NDK_CHANGED -eq 1 -o ! -e $INSTALL_DIR/android-ndk ]; then
   _URL=https://dl.google.com/android/repository/android-ndk-${ANDROID_NDK_VERSION}-darwin-x86_64.zip
   _FILE=$BUILD_DIR/android-ndk-${ANDROID_NDK_VERSION}-darwin-x86_64.zip
   mkdir -p $BUILD_DIR
@@ -71,7 +101,9 @@ if [ ! -e $INSTALL_DIR/android-ndk ]; then
     cmake -E tar xf $_FILE
     mv android-ndk-${ANDROID_NDK_VERSION} android-ndk
   popd
+  rm -f $INSTALL_DIR/android/webrtc.ldflags
 fi
+echo $ANDROID_NDK_VERSION > $ANDROID_NDK_VERSION_FILE
 
 # Android 側からのコールバックする関数は消してはいけないので、
 # libwebrtc.a の中から消してはいけない関数の一覧を作っておく
@@ -90,20 +122,18 @@ fi
 
 # 特定バージョンの libcxx, libcxxabi を取得
 source $INSTALL_DIR/macos/webrtc/VERSIONS
-pushd $INSTALL_DIR
-  if [ ! -e libcxx/.git ]; then
-    git clone $WEBRTC_SRC_BUILDTOOLS_THIRD_PARTY_LIBCXX_TRUNK_URL
-  fi
-  pushd libcxx
-    git fetch
-    git reset --hard $WEBRTC_SRC_BUILDTOOLS_THIRD_PARTY_LIBCXX_TRUNK_COMMIT
-  popd
+if [ ! -e $INSTALL_DIR/libcxx/.git ]; then
+  git clone $WEBRTC_SRC_BUILDTOOLS_THIRD_PARTY_LIBCXX_TRUNK_URL $INSTALL_DIR/libcxx
+fi
+pushd $INSTALL_DIR/libcxx
+  git fetch
+  git reset --hard $WEBRTC_SRC_BUILDTOOLS_THIRD_PARTY_LIBCXX_TRUNK_COMMIT
+popd
 
-  if [ ! -e libcxxabi/.git ]; then
-    git clone $WEBRTC_SRC_BUILDTOOLS_THIRD_PARTY_LIBCXXABI_TRUNK_URL
-  fi
-  pushd libcxxabi
-    git fetch
-    git reset --hard $WEBRTC_SRC_BUILDTOOLS_THIRD_PARTY_LIBCXXABI_TRUNK_COMMIT
-  popd
+if [ ! -e $INSTALL_DIR/libcxxabi/.git ]; then
+  git clone $WEBRTC_SRC_BUILDTOOLS_THIRD_PARTY_LIBCXXABI_TRUNK_URL $INSTALL_DIR/libcxxabi
+fi
+pushd $INSTALL_DIR/libcxxabi
+  git fetch
+  git reset --hard $WEBRTC_SRC_BUILDTOOLS_THIRD_PARTY_LIBCXXABI_TRUNK_COMMIT
 popd
