@@ -31,6 +31,8 @@ struct RTCManagerConfig {
   // webrtc::DegradationPreference::MAINTAIN_FRAMERATE;
   webrtc::DegradationPreference priority =
       webrtc::DegradationPreference::BALANCED;
+
+  bool insecure = false;
 };
 
 class RTCManager {

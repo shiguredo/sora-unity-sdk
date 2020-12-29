@@ -21,6 +21,7 @@
 
 #include "peer_connection_observer.h"
 #include "rtc_manager.h"
+#include "rtc_ssl_verifier.h"
 #include "scalable_track_source.h"
 
 #if defined(SORA_UNITY_SDK_MACOS) || defined(SORA_UNITY_SDK_IOS)
@@ -287,9 +288,17 @@ std::shared_ptr<RTCConnection> RTCManager::createConnection(
   rtc_config.sdp_semantics = webrtc::SdpSemantics::kUnifiedPlan;
   std::unique_ptr<PeerConnectionObserver> observer(
       new PeerConnectionObserver(sender, receiver_));
+  webrtc::PeerConnectionDependencies dependencies(observer.get());
+
+  // WebRTC の SSL 接続の検証は自前のルート証明書(rtc_base/ssl_roots.h)でやっていて、
+  // その中に Let's Encrypt の証明書が無いため、接続先によっては接続できないことがある。
+  //
+  // それを解消するために tls_cert_verifier を設定して自前で検証を行う。
+  dependencies.tls_cert_verifier = std::unique_ptr<rtc::SSLCertificateVerifier>(
+      new RTCSSLVerifier(config_.insecure));
+
   rtc::scoped_refptr<webrtc::PeerConnectionInterface> connection =
-      factory_->CreatePeerConnection(rtc_config, nullptr, nullptr,
-                                     observer.get());
+      factory_->CreatePeerConnection(rtc_config, std::move(dependencies));
   if (!connection) {
     RTC_LOG(LS_ERROR) << __FUNCTION__ << ": CreatePeerConnection failed";
     return nullptr;
