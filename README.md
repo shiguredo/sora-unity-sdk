@@ -37,10 +37,7 @@ Sora Unity SDK を使ってみたい人は [USE.md](doc/USE.md) をお読みく�
 
 ## 対応 Unity バージョン
 
-**最新版と最新 LTS 版のみをサポート対応バージョンとします**
-
-- Unity 2019.4
-- Unity 2020.2
+- Unity 2019.4 (LTS)
 
 ## 対応プラットフォーム
 
