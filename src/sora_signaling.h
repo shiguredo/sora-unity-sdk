@@ -21,6 +21,7 @@
 #include "rtc/rtc_manager.h"
 #include "rtc/rtc_message_sender.h"
 #include "url_parts.h"
+#include "websocket.h"
 
 namespace sora {
 
@@ -39,20 +40,14 @@ struct SoraSignalingConfig {
   enum class Role { Sendonly, Recvonly, Sendrecv };
   Role role = Role::Sendonly;
   bool multistream = false;
+
+  bool insecure = false;
 };
 
 class SoraSignaling : public std::enable_shared_from_this<SoraSignaling>,
                       public RTCMessageSender {
   boost::asio::io_context& ioc_;
-
-  boost::asio::ip::tcp::resolver resolver_;
-
-  typedef boost::beast::websocket::stream<
-      boost::asio::ssl::stream<boost::asio::ip::tcp::socket>>
-      ssl_websocket_t;
-  std::unique_ptr<ssl_websocket_t> wss_;
-  boost::beast::multi_buffer read_buffer_;
-  std::vector<boost::beast::flat_buffer> write_buffer_;
+  std::unique_ptr<Websocket> ws_;
 
   URLParts parts_;
 
@@ -64,7 +59,6 @@ class SoraSignaling : public std::enable_shared_from_this<SoraSignaling>,
   webrtc::PeerConnectionInterface::IceConnectionState rtc_state_;
 
   bool connected_ = false;
-  bool answer_sent_ = false;
 
  public:
   webrtc::PeerConnectionInterface::IceConnectionState getRTCConnectionState()
@@ -94,11 +88,7 @@ class SoraSignaling : public std::enable_shared_from_this<SoraSignaling>,
   void Release();
 
  private:
-  void OnResolve(boost::system::error_code ec,
-                 boost::asio::ip::tcp::resolver::results_type results);
-  void OnSSLConnect(boost::system::error_code ec);
-  void OnSSLHandshake(boost::system::error_code ec);
-  void OnHandshake(boost::system::error_code ec);
+  void OnConnect(boost::system::error_code ec);
 
   void DoSendConnect();
   void DoSendPong();
@@ -110,13 +100,9 @@ class SoraSignaling : public std::enable_shared_from_this<SoraSignaling>,
   void OnClose(boost::system::error_code ec);
 
   void DoRead();
-  void onRead(boost::system::error_code ec, std::size_t bytes_transferred);
-
-  void SendText(std::string text);
-  void DoSendText(std::string text);
-
-  void DoWrite();
-  void OnWrite(boost::system::error_code ec, std::size_t bytes_transferred);
+  void OnRead(boost::system::error_code ec,
+              std::size_t bytes_transferred,
+              std::string text);
 
  private:
   // WebRTC からのコールバック
