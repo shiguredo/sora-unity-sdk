@@ -1,24 +1,25 @@
 #include <iostream>
 
-#include "absl/memory/memory.h"
-#include "api/audio_codecs/builtin_audio_decoder_factory.h"
-#include "api/audio_codecs/builtin_audio_encoder_factory.h"
-#include "api/create_peerconnection_factory.h"
-#include "api/rtc_event_log/rtc_event_log_factory.h"
-#include "api/task_queue/default_task_queue_factory.h"
-#include "api/video_codecs/builtin_video_decoder_factory.h"
-#include "api/video_codecs/builtin_video_encoder_factory.h"
-#include "api/video_track_source_proxy.h"
-#include "media/engine/webrtc_media_engine.h"
-#include "modules/audio_device/include/audio_device.h"
-#include "modules/audio_device/include/audio_device_factory.h"
-#include "modules/audio_processing/include/audio_processing.h"
-#include "modules/video_capture/video_capture.h"
-#include "modules/video_capture/video_capture_factory.h"
-#include "rtc_base/logging.h"
-#include "rtc_base/ssl_adapter.h"
+// WebRTC
+#include <absl/memory/memory.h>
+#include <api/audio_codecs/builtin_audio_decoder_factory.h>
+#include <api/audio_codecs/builtin_audio_encoder_factory.h>
+#include <api/create_peerconnection_factory.h>
+#include <api/rtc_event_log/rtc_event_log_factory.h>
+#include <api/task_queue/default_task_queue_factory.h>
+#include <api/video_codecs/builtin_video_decoder_factory.h>
+#include <api/video_codecs/builtin_video_encoder_factory.h>
+#include <api/video_track_source_proxy.h>
+#include <media/engine/webrtc_media_engine.h>
+#include <modules/audio_device/include/audio_device.h>
+#include <modules/audio_device/include/audio_device_factory.h>
+#include <modules/audio_processing/include/audio_processing.h>
+#include <modules/video_capture/video_capture.h>
+#include <modules/video_capture/video_capture_factory.h>
+#include <rtc_base/logging.h>
+#include <rtc_base/ssl_adapter.h>
 
-#include "observer.h"
+#include "peer_connection_observer.h"
 #include "rtc_manager.h"
 #include "scalable_track_source.h"
 
@@ -27,20 +28,20 @@
 #elif defined(SORA_UNITY_SDK_ANDROID)
 #include "android_helper/android_codec_factory_helper.h"
 #else
-#include "hw_video_encoder_factory.h"
 #include "hw_video_decoder_factory.h"
+#include "hw_video_encoder_factory.h"
 #endif
 
 namespace {
 
-std::string generateRandomChars(size_t length) {
+std::string GenerateRandomChars(size_t length) {
   std::string result;
   rtc::CreateRandomString(length, &result);
   return result;
 }
 
-std::string generateRandomChars() {
-  return generateRandomChars(32);
+std::string GenerateRandomChars() {
+  return GenerateRandomChars(32);
 }
 
 }  // namespace
@@ -157,7 +158,7 @@ bool RTCManager::Init(
     if (config_.disable_typing_detection)
       ao.typing_detection = false;
     RTC_LOG(LS_INFO) << __FUNCTION__ << ": " << ao.ToString();
-    audio_track_ = factory_->CreateAudioTrack(generateRandomChars(),
+    audio_track_ = factory_->CreateAudioTrack(GenerateRandomChars(),
                                               factory_->CreateAudioSource(ao));
     if (!audio_track_) {
       RTC_LOG(LS_ERROR) << __FUNCTION__ << ": Cannot create audio_track";
@@ -170,7 +171,7 @@ bool RTCManager::Init(
         webrtc::VideoTrackSourceProxy::Create(
             signaling_thread_.get(), worker_thread_.get(), video_track_source);
     video_track_ =
-        factory_->CreateVideoTrack(generateRandomChars(), video_source);
+        factory_->CreateVideoTrack(GenerateRandomChars(), video_source);
     if (video_track_) {
       if (config_.fixed_resolution) {
         video_track_->set_content_hint(
@@ -294,7 +295,7 @@ std::shared_ptr<RTCConnection> RTCManager::createConnection(
     return nullptr;
   }
 
-  std::string stream_id = generateRandomChars();
+  std::string stream_id = GenerateRandomChars();
 
   if (audio_track_) {
     webrtc::RTCErrorOr<rtc::scoped_refptr<webrtc::RtpSenderInterface> >

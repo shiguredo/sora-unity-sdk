@@ -85,53 +85,50 @@ class SoraSignaling : public std::enable_shared_from_this<SoraSignaling>,
   bool Init();
 
  public:
-  bool connect();
-  void close();
+  bool Connect();
+  void Close();
 
   // connection_ = nullptr すると直ちに onIceConnectionStateChange コールバックが呼ばれるが、
   // この中で使っている shared_from_this() がデストラクタ内で使えないため、デストラクタで connection_ = nullptr すると実行時エラーになる。
-  // なのでこのクラスを解放する前に明示的に release() 関数を呼んでもらうことにする。.
-  void release();
+  // なのでこのクラスを解放する前に明示的に Release() 関数を呼んでもらうことにする。.
+  void Release();
 
  private:
-  void onResolve(boost::system::error_code ec,
+  void OnResolve(boost::system::error_code ec,
                  boost::asio::ip::tcp::resolver::results_type results);
-  void onSSLConnect(boost::system::error_code ec);
-  void onSSLHandshake(boost::system::error_code ec);
-  void onHandshake(boost::system::error_code ec);
+  void OnSSLConnect(boost::system::error_code ec);
+  void OnSSLHandshake(boost::system::error_code ec);
+  void OnHandshake(boost::system::error_code ec);
 
-  void doSendConnect();
-  void doSendPong();
-  void doSendPong(
+  void DoSendConnect();
+  void DoSendPong();
+  void DoSendPong(
       const rtc::scoped_refptr<const webrtc::RTCStatsReport>& report);
-  void createPeerFromConfig(nlohmann::json jconfig);
+  void CreatePeerFromConfig(nlohmann::json jconfig);
 
  private:
-  void onClose(boost::system::error_code ec);
+  void OnClose(boost::system::error_code ec);
 
-  void doRead();
+  void DoRead();
   void onRead(boost::system::error_code ec, std::size_t bytes_transferred);
 
-  void sendText(std::string text);
-  void doSendText(std::string text);
+  void SendText(std::string text);
+  void DoSendText(std::string text);
 
-  void doWrite();
-  void onWrite(boost::system::error_code ec, std::size_t bytes_transferred);
+  void DoWrite();
+  void OnWrite(boost::system::error_code ec, std::size_t bytes_transferred);
 
  private:
   // WebRTC からのコールバック
   // これらは別スレッドからやってくるので取り扱い注意.
-  void onIceConnectionStateChange(
+  void OnIceConnectionStateChange(
       webrtc::PeerConnectionInterface::IceConnectionState new_state) override;
-  void onIceCandidate(const std::string sdp_mid,
+  void OnIceCandidate(const std::string sdp_mid,
                       const int sdp_mlineindex,
                       const std::string sdp) override;
-  void onCreateDescription(webrtc::SdpType type,
-                           const std::string sdp) override;
-  void onSetDescription(webrtc::SdpType type) override;
 
  private:
-  void doIceConnectionStateChange(
+  void DoIceConnectionStateChange(
       webrtc::PeerConnectionInterface::IceConnectionState new_state);
 };
 }  // namespace sora
