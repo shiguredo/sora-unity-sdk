@@ -1,9 +1,10 @@
 #ifndef SORA_RTC_CONNECTION_H_
 #define SORA_RTC_CONNECTION_H_
 
-#include "api/peer_connection_interface.h"
+// WebRTC
+#include <api/peer_connection_interface.h>
 
-#include "observer.h"
+#include "peer_connection_observer.h"
 
 namespace sora {
 
@@ -14,32 +15,51 @@ class RTCConnection {
                 rtc::scoped_refptr<webrtc::PeerConnectionInterface> connection)
       : sender_(sender),
         observer_(std::move(observer)),
-        connection_(connection){};
+        connection_(connection) {}
   ~RTCConnection();
-  void createOffer();
-  void setOffer(const std::string sdp);
-  void createAnswer();
-  void setAnswer(const std::string sdp);
-  void addIceCandidate(const std::string sdp_mid,
+
+  typedef std::function<void(webrtc::SessionDescriptionInterface*)>
+      OnCreateSuccessFunc;
+  typedef std::function<void(webrtc::RTCError)> OnCreateFailureFunc;
+
+  typedef std::function<void()> OnSetSuccessFunc;
+  typedef std::function<void(webrtc::RTCError)> OnSetFailureFunc;
+
+  void CreateOffer(OnCreateSuccessFunc on_success = nullptr,
+                   OnCreateFailureFunc on_failure = nullptr);
+  void SetOffer(const std::string sdp,
+                OnSetSuccessFunc on_success = nullptr,
+                OnSetFailureFunc on_failure = nullptr);
+  void CreateAnswer(OnCreateSuccessFunc on_success = nullptr,
+                    OnCreateFailureFunc on_failure = nullptr);
+  void SetAnswer(const std::string sdp,
+                 OnSetSuccessFunc on_success = nullptr,
+                 OnSetFailureFunc on_failure = nullptr);
+  void AddIceCandidate(const std::string sdp_mid,
                        const int sdp_mlineindex,
                        const std::string sdp);
-  bool setAudioEnabled(bool enabled);
-  bool setVideoEnabled(bool enabled);
-  bool isAudioEnabled();
-  bool isVideoEnabled();
+  bool SetAudioEnabled(bool enabled);
+  bool SetVideoEnabled(bool enabled);
+  bool IsAudioEnabled();
+  bool IsVideoEnabled();
 
-  void getStats(
+  void GetStats(
       std::function<void(
           const rtc::scoped_refptr<const webrtc::RTCStatsReport>&)> callback);
 
+  void SetEncodingParameters(
+      std::vector<webrtc::RtpEncodingParameters> encodings);
+
+  rtc::scoped_refptr<webrtc::PeerConnectionInterface> GetConnection() const;
+
  private:
-  rtc::scoped_refptr<webrtc::MediaStreamInterface> getLocalStream();
-  rtc::scoped_refptr<webrtc::AudioTrackInterface> getLocalAudioTrack();
-  rtc::scoped_refptr<webrtc::VideoTrackInterface> getLocalVideoTrack();
-  bool setMediaEnabled(
+  rtc::scoped_refptr<webrtc::MediaStreamInterface> GetLocalStream();
+  rtc::scoped_refptr<webrtc::AudioTrackInterface> GetLocalAudioTrack();
+  rtc::scoped_refptr<webrtc::VideoTrackInterface> GetLocalVideoTrack();
+  bool SetMediaEnabled(
       rtc::scoped_refptr<webrtc::MediaStreamTrackInterface> track,
       bool enabled);
-  bool isMediaEnabled(
+  bool IsMediaEnabled(
       rtc::scoped_refptr<webrtc::MediaStreamTrackInterface> track);
 
   RTCMessageSender* sender_;
@@ -47,6 +67,6 @@ class RTCConnection {
   rtc::scoped_refptr<webrtc::PeerConnectionInterface> connection_;
 };
 
-}  // namespace sora
+}
 
 #endif

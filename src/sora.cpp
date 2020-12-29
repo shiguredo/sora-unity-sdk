@@ -45,7 +45,7 @@ Sora::~Sora() {
     thread_.reset();
   }
   if (signaling_) {
-    signaling_->release();
+    signaling_->Release();
   }
   signaling_.reset();
   ioc_.reset();
@@ -232,7 +232,7 @@ bool Sora::DoConnect(const Sora::ConnectConfig& cc) {
     if (signaling_ == nullptr) {
       return false;
     }
-    if (!signaling_->connect()) {
+    if (!signaling_->Connect()) {
       return false;
     }
   }
@@ -295,12 +295,11 @@ rtc::scoped_refptr<UnityAudioDevice> Sora::CreateADM(
   rtc::scoped_refptr<webrtc::AudioDeviceModule> adm;
 
   if (dummy_audio) {
-    adm =
-        worker_thread->Invoke<rtc::scoped_refptr<webrtc::AudioDeviceModule> >(
-            RTC_FROM_HERE, [&] {
-              return webrtc::AudioDeviceModule::Create(
-                  webrtc::AudioDeviceModule::kDummyAudio, task_queue_factory);
-            });
+    adm = worker_thread->Invoke<rtc::scoped_refptr<webrtc::AudioDeviceModule> >(
+        RTC_FROM_HERE, [&] {
+          return webrtc::AudioDeviceModule::Create(
+              webrtc::AudioDeviceModule::kDummyAudio, task_queue_factory);
+        });
   } else {
 #if defined(SORA_UNITY_SDK_WINDOWS)
     adm = worker_thread->Invoke<rtc::scoped_refptr<webrtc::AudioDeviceModule> >(
@@ -362,7 +361,7 @@ rtc::scoped_refptr<rtc::AdaptedVideoTrackSource> Sora::CreateVideoCapturer(
   }
 }
 
-void Sora::GetStats(std::function<void (std::string)> on_get_stats) {
+void Sora::GetStats(std::function<void(std::string)> on_get_stats) {
   auto conn = signaling_ == nullptr ? nullptr : signaling_->getRTCConnection();
   if (signaling_ == nullptr || conn == nullptr) {
     std::lock_guard<std::mutex> guard(event_mutex_);
@@ -373,15 +372,17 @@ void Sora::GetStats(std::function<void (std::string)> on_get_stats) {
     return;
   }
 
-  conn->getStats(
-    [this, on_get_stats = std::move(on_get_stats)](const rtc::scoped_refptr<const webrtc::RTCStatsReport>& report) {
-      std::string json = report->ToJson();
-      std::lock_guard<std::mutex> guard(event_mutex_);
-      event_queue_.push_back([on_get_stats = std::move(on_get_stats), json = std::move(json)]() {
-        // ここは Unity スレッドから呼ばれる
-        on_get_stats(std::move(json));
+  conn->GetStats(
+      [this, on_get_stats = std::move(on_get_stats)](
+          const rtc::scoped_refptr<const webrtc::RTCStatsReport>& report) {
+        std::string json = report->ToJson();
+        std::lock_guard<std::mutex> guard(event_mutex_);
+        event_queue_.push_back(
+            [on_get_stats = std::move(on_get_stats), json = std::move(json)]() {
+              // ここは Unity スレッドから呼ばれる
+              on_get_stats(std::move(json));
+            });
       });
-    });
 }
 
 }  // namespace sora

@@ -12,7 +12,8 @@
                 "${workspaceFolder}/_install/webrtc/include/third_party/abseil-cpp",
                 "${workspaceFolder}/_install/webrtc/include/third_party/boringssl/src/include",
                 "${workspaceFolder}/_install/webrtc/include/third_party/libyuv/include",
-                "${workspaceFolder}/_install/cuda/nvcc/include"
+                "${workspaceFolder}/_install/cuda/nvcc/include",
+                "${workspaceFolder}/build"
             ],
             "defines": [
                 "_DEBUG",

@@ -68,7 +68,7 @@ target_sources(SoraUnitySdk
     src/rtc/device_list.cpp
     src/rtc/device_video_capturer.cpp
     src/rtc/native_buffer.cpp
-    src/rtc/observer.cpp
+    src/rtc/peer_connection_observer.cpp
     src/rtc/rtc_connection.cpp
     src/rtc/rtc_manager.cpp
     src/rtc/scalable_track_source.cpp
