@@ -151,6 +151,8 @@ void SoraSignaling::DoSendConnect() {
       {"type", "connect"},
       {"role", role},
       {"multistream", config_.multistream},
+      {"spotlight", config_.spotlight},
+      {"simulcast", config_.simulcast},
       {"channel_id", config_.channel_id},
       {"sora_client", SORA_CLIENT},
       {"libwebrtc", LIBWEBRTC},
@@ -186,7 +188,8 @@ void SoraSignaling::DoSendPong(
   ws_->WriteText(std::move(str));
 }
 
-void SoraSignaling::CreatePeerFromConfig(json jconfig) {
+std::shared_ptr<sora::RTCConnection> SoraSignaling::CreateRTCConnection(
+    json jconfig) {
   webrtc::PeerConnectionInterface::RTCConfiguration rtc_config;
   webrtc::PeerConnectionInterface::IceServers ice_servers;
 
@@ -206,7 +209,7 @@ void SoraSignaling::CreatePeerFromConfig(json jconfig) {
 
   rtc_config.servers = ice_servers;
 
-  connection_ = manager_->createConnection(rtc_config, this);
+  return manager_->CreateConnection(rtc_config, this);
 }
 
 void SoraSignaling::Close() {
@@ -246,9 +249,51 @@ void SoraSignaling::OnRead(boost::system::error_code ec,
   auto json_message = json::parse(text);
   const std::string type = json_message["type"];
   if (type == "offer") {
-    CreatePeerFromConfig(json_message["config"]);
     const std::string sdp = json_message["sdp"];
+    connection_ = CreateRTCConnection(json_message["config"]);
     connection_->SetOffer(sdp, [this, json_message]() {
+      // simulcast では offer の setRemoteDescription が終わった後に
+      // トラックを追加する必要があるため、ここで初期化する
+      manager_->InitTracks(connection_.get());
+
+      if (config_.simulcast) {
+        std::vector<webrtc::RtpEncodingParameters> encoding_parameters;
+
+        // "encodings" キーの各内容を webrtc::RtpEncodingParameters に変換する
+        auto encodings_json = json_message["encodings"];
+        for (auto p : encodings_json) {
+          webrtc::RtpEncodingParameters params;
+          // absl::optional<uint32_t> ssrc;
+          // double bitrate_priority = kDefaultBitratePriority;
+          // enum class Priority { kVeryLow, kLow, kMedium, kHigh };
+          // Priority network_priority = Priority::kLow;
+          // absl::optional<int> max_bitrate_bps;
+          // absl::optional<int> min_bitrate_bps;
+          // absl::optional<double> max_framerate;
+          // absl::optional<int> num_temporal_layers;
+          // absl::optional<double> scale_resolution_down_by;
+          // bool active = true;
+          // std::string rid;
+          // bool adaptive_ptime = false;
+          params.rid = p["rid"].get<std::string>();
+          if (p.contains("maxBitrate")) {
+            params.max_bitrate_bps = p["maxBitrate"].get<int>();
+          }
+          if (p.contains("minBitrate")) {
+            params.min_bitrate_bps = p["minBitrate"].get<int>();
+          }
+          if (p.contains("scaleResolutionDownBy")) {
+            params.scale_resolution_down_by =
+                p["scaleResolutionDownBy"].get<double>();
+          }
+          if (p.contains("maxFramerate")) {
+            params.max_framerate = p["maxFramerate"].get<double>();
+          }
+          encoding_parameters.push_back(params);
+        }
+        connection_->SetEncodingParameters(std::move(encoding_parameters));
+      }
+
       connection_->CreateAnswer(
           [this](webrtc::SessionDescriptionInterface* desc) {
             std::string sdp;

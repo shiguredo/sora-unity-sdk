@@ -35,6 +35,8 @@ UNITY_INTERFACE_EXPORT int sora_connect(void* p,
                                         const char* metadata,
                                         const char* role,
                                         unity_bool_t multistream,
+                                        unity_bool_t spotlight,
+                                        unity_bool_t simulcast,
                                         int capturer_type,
                                         void* unity_camera_texture,
                                         const char* video_capturer_device,
@@ -66,7 +68,9 @@ UNITY_INTERFACE_EXPORT void sora_set_on_handle_audio(void* p,
                                                      handle_audio_cb_t f,
                                                      void* userdata);
 
-UNITY_INTERFACE_EXPORT void sora_get_stats(void* p, stats_cb_t f, void* userdata);
+UNITY_INTERFACE_EXPORT void sora_get_stats(void* p,
+                                           stats_cb_t f,
+                                           void* userdata);
 
 typedef void (*device_enum_cb_t)(const char* device_name,
                                  const char* unique_name,

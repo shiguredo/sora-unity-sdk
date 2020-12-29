@@ -1,14 +1,15 @@
 #include "hw_video_encoder_factory.h"
 
-#include "absl/memory/memory.h"
-#include "absl/strings/match.h"
-#include "api/video_codecs/sdp_video_format.h"
-#include "media/base/codec.h"
-#include "media/base/media_constants.h"
-#include "modules/video_coding/codecs/h264/include/h264.h"
-#include "modules/video_coding/codecs/vp8/include/vp8.h"
-#include "modules/video_coding/codecs/vp9/include/vp9.h"
-#include "rtc_base/logging.h"
+#include <absl/memory/memory.h>
+#include <absl/strings/match.h>
+#include <api/video_codecs/sdp_video_format.h>
+#include <media/base/codec.h>
+#include <media/base/media_constants.h>
+#include <media/engine/simulcast_encoder_adapter.h>
+#include <modules/video_coding/codecs/h264/include/h264.h>
+#include <modules/video_coding/codecs/vp8/include/vp8.h>
+#include <modules/video_coding/codecs/vp9/include/vp9.h>
+#include <rtc_base/logging.h>
 
 #include "h264_format.h"
 #if defined(SORA_UNITY_SDK_WINDOWS)
@@ -16,6 +17,12 @@
 #endif
 
 namespace sora {
+
+HWVideoEncoderFactory::HWVideoEncoderFactory(bool simulcast) {
+  if (simulcast) {
+    internal_encoder_factory_.reset(new HWVideoEncoderFactory(false));
+  }
+}
 
 std::vector<webrtc::SdpVideoFormat> HWVideoEncoderFactory::GetSupportedFormats()
     const {
@@ -54,14 +61,29 @@ std::unique_ptr<webrtc::VideoEncoder> HWVideoEncoderFactory::CreateVideoEncoder(
 
 #if defined(SORA_UNITY_SDK_WINDOWS)
   if (absl::EqualsIgnoreCase(format.name, cricket::kH264CodecName)) {
-    return std::unique_ptr<webrtc::VideoEncoder>(
-        absl::make_unique<NvCodecH264Encoder>(cricket::VideoCodec(format)));
+    return WithSimulcast(format, [](const webrtc::SdpVideoFormat& format) {
+      return std::unique_ptr<webrtc::VideoEncoder>(
+          absl::make_unique<NvCodecH264Encoder>(cricket::VideoCodec(format)));
+    });
   }
 #endif
 
   RTC_LOG(LS_ERROR) << "Trying to created encoder of unsupported format "
                     << format.name;
   return nullptr;
+}
+
+std::unique_ptr<webrtc::VideoEncoder> HWVideoEncoderFactory::WithSimulcast(
+    const webrtc::SdpVideoFormat& format,
+    std::function<std::unique_ptr<webrtc::VideoEncoder>(
+        const webrtc::SdpVideoFormat&)> create) {
+  if (internal_encoder_factory_) {
+    return std::unique_ptr<webrtc::VideoEncoder>(
+        new webrtc::SimulcastEncoderAdapter(internal_encoder_factory_.get(),
+                                            format));
+  } else {
+    return create(format);
+  }
 }
 
 }  // namespace sora

@@ -16,12 +16,21 @@ namespace sora {
 
 class HWVideoEncoderFactory : public webrtc::VideoEncoderFactory {
  public:
+  HWVideoEncoderFactory(bool simulcast);
   virtual ~HWVideoEncoderFactory() {}
 
   std::vector<webrtc::SdpVideoFormat> GetSupportedFormats() const override;
 
   std::unique_ptr<webrtc::VideoEncoder> CreateVideoEncoder(
       const webrtc::SdpVideoFormat& format) override;
+
+  std::unique_ptr<webrtc::VideoEncoder> HWVideoEncoderFactory::WithSimulcast(
+      const webrtc::SdpVideoFormat& format,
+      std::function<std::unique_ptr<webrtc::VideoEncoder>(
+          const webrtc::SdpVideoFormat&)> create);
+
+ private:
+  std::unique_ptr<HWVideoEncoderFactory> internal_encoder_factory_;
 };
 
 }  // namespace sora

@@ -70,6 +70,8 @@ class Sora {
     std::string metadata;
     std::string role;
     bool multistream;
+    bool spotlight;
+    bool simulcast;
     int capturer_type;
     void* unity_camera_texture;
     std::string video_capturer_device;

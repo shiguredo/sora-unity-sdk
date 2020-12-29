@@ -40,6 +40,8 @@ struct SoraSignalingConfig {
   enum class Role { Sendonly, Recvonly, Sendrecv };
   Role role = Role::Sendonly;
   bool multistream = false;
+  bool spotlight = false;
+  bool simulcast = false;
 
   bool insecure = false;
 };
@@ -94,7 +96,8 @@ class SoraSignaling : public std::enable_shared_from_this<SoraSignaling>,
   void DoSendPong();
   void DoSendPong(
       const rtc::scoped_refptr<const webrtc::RTCStatsReport>& report);
-  void CreatePeerFromConfig(nlohmann::json jconfig);
+  std::shared_ptr<sora::RTCConnection> CreateRTCConnection(
+      nlohmann::json jconfig);
 
  private:
   void OnClose(boost::system::error_code ec);

@@ -33,6 +33,7 @@ struct RTCManagerConfig {
       webrtc::DegradationPreference::BALANCED;
 
   bool insecure = false;
+  bool simulcast = false;
 };
 
 class RTCManager {
@@ -58,9 +59,10 @@ class RTCManager {
 
  public:
   ~RTCManager();
-  std::shared_ptr<RTCConnection> createConnection(
+  std::shared_ptr<RTCConnection> CreateConnection(
       webrtc::PeerConnectionInterface::RTCConfiguration rtc_config,
       RTCMessageSender* sender);
+  void InitTracks(RTCConnection* conn);
 
  private:
   static bool InitADM(rtc::scoped_refptr<webrtc::AudioDeviceModule> adm,

@@ -116,7 +116,7 @@ bool RTCManager::Init(
   media_dependencies.video_decoder_factory = CreateAndroidDecoderFactory(jni);
 #else
   media_dependencies.video_encoder_factory =
-      absl::make_unique<HWVideoEncoderFactory>();
+      absl::make_unique<HWVideoEncoderFactory>(config_.simulcast);
   media_dependencies.video_decoder_factory =
       absl::make_unique<HWVideoDecoderFactory>();
 #endif
@@ -281,7 +281,7 @@ RTCManager::~RTCManager() {
   rtc::CleanupSSL();
 }
 
-std::shared_ptr<RTCConnection> RTCManager::createConnection(
+std::shared_ptr<RTCConnection> RTCManager::CreateConnection(
     webrtc::PeerConnectionInterface::RTCConfiguration rtc_config,
     RTCMessageSender* sender) {
   rtc_config.enable_dtls_srtp = true;
@@ -303,6 +303,13 @@ std::shared_ptr<RTCConnection> RTCManager::createConnection(
     RTC_LOG(LS_ERROR) << __FUNCTION__ << ": CreatePeerConnection failed";
     return nullptr;
   }
+
+  return std::make_shared<RTCConnection>(sender, std::move(observer),
+                                         connection);
+}
+
+void RTCManager::InitTracks(RTCConnection* conn) {
+  auto connection = conn->GetConnection();
 
   std::string stream_id = GenerateRandomChars();
 
@@ -327,9 +334,6 @@ std::shared_ptr<RTCConnection> RTCManager::createConnection(
       RTC_LOG(LS_WARNING) << __FUNCTION__ << ": Cannot add video_track_";
     }
   }
-
-  return std::make_shared<RTCConnection>(sender, std::move(observer),
-                                         connection);
 }
 
 }  // namespace sora
