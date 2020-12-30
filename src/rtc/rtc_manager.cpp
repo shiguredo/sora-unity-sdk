@@ -32,6 +32,7 @@
 #include "hw_video_decoder_factory.h"
 #include "hw_video_encoder_factory.h"
 #endif
+#include "simulcast_video_encoder_factory.h"
 
 namespace {
 
@@ -108,15 +109,20 @@ bool RTCManager::Init(
   media_dependencies.audio_decoder_factory =
       webrtc::CreateBuiltinAudioDecoderFactory();
 #if defined(SORA_UNITY_SDK_MACOS) || defined(SORA_UNITY_SDK_IOS)
-  media_dependencies.video_encoder_factory = CreateObjCEncoderFactory();
+  media_dependencies.video_encoder_factory =
+      absl::make_unique<SimulcastVideoEncoderFactory>(
+          CreateObjCEncoderFactory());
   media_dependencies.video_decoder_factory = CreateObjCDecoderFactory();
 #elif defined(SORA_UNITY_SDK_ANDROID)
   JNIEnv* jni = webrtc::AttachCurrentThreadIfNeeded();
-  media_dependencies.video_encoder_factory = CreateAndroidEncoderFactory(jni);
+  media_dependencies.video_encoder_factory =
+      absl::make_unique<SimulcastVideoEncoderFactory>(
+          CreateAndroidEncoderFactory(jni));
   media_dependencies.video_decoder_factory = CreateAndroidDecoderFactory(jni);
 #else
   media_dependencies.video_encoder_factory =
-      absl::make_unique<HWVideoEncoderFactory>(config_.simulcast);
+      absl::make_unique<SimulcastVideoEncoderFactory>(
+          absl::make_unique<HWVideoEncoderFactory>());
   media_dependencies.video_decoder_factory =
       absl::make_unique<HWVideoDecoderFactory>();
 #endif
