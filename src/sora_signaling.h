@@ -41,6 +41,7 @@ struct SoraSignalingConfig {
   Role role = Role::Sendonly;
   bool multistream = false;
   bool spotlight = false;
+  int spotlight_number = 0;
   bool simulcast = false;
 
   bool insecure = false;

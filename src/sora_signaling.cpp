@@ -174,6 +174,10 @@ void SoraSignaling::DoSendConnect() {
     json_message["audio"]["bit_rate"] = config_.audio_bitrate;
   }
 
+  if (config_.spotlight && config_.spotlight_number > 0) {
+    json_message["spotlight_number"] = config_.spotlight_number;
+  }
+
   ws_->WriteText(json_message.dump());
 }
 void SoraSignaling::DoSendPong() {

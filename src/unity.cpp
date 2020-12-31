@@ -76,6 +76,7 @@ int sora_connect(void* p,
                  const char* role,
                  unity_bool_t multistream,
                  unity_bool_t spotlight,
+                 int spotlight_number,
                  unity_bool_t simulcast,
                  int capturer_type,
                  void* unity_camera_texture,
@@ -99,6 +100,7 @@ int sora_connect(void* p,
   config.role = role;
   config.multistream = multistream;
   config.spotlight = spotlight;
+  config.spotlight_number = spotlight_number;
   config.simulcast = simulcast;
   config.capturer_type = capturer_type;
   config.unity_camera_texture = unity_camera_texture;

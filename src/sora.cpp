@@ -105,6 +105,7 @@ bool Sora::DoConnect(const Sora::ConnectConfig& cc) {
                    << " metadata=" << cc.metadata << " role=" << cc.role
                    << " multistream=" << cc.multistream
                    << " spotlight=" << cc.spotlight
+                   << " spotlight_number=" << cc.spotlight_number
                    << " simulcast=" << cc.simulcast
                    << " capturer_type=" << cc.capturer_type
                    << " unity_camera_texture=0x" << cc.unity_camera_texture
@@ -207,6 +208,7 @@ bool Sora::DoConnect(const Sora::ConnectConfig& cc) {
                             : SoraSignalingConfig::Role::Sendrecv;
     config.multistream = cc.multistream;
     config.spotlight = cc.spotlight;
+    config.spotlight_number = cc.spotlight_number;
     config.simulcast = cc.simulcast;
     config.signaling_url = signaling_url_;
     config.channel_id = channel_id_;

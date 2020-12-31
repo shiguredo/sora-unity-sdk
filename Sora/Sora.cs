@@ -32,6 +32,7 @@ public class Sora : IDisposable
         public Role Role = Sora.Role.Sendonly;
         public bool Multistream = false;
         public bool Spotlight = false;
+        public int SpotlightNumber = 0;
         public bool Simulcast = false;
         public CapturerType CapturerType = Sora.CapturerType.DeviceCamera;
         public UnityEngine.Camera UnityCamera = null;
@@ -118,6 +119,7 @@ public class Sora : IDisposable
             role,
             config.Multistream ? 1 : 0,
             config.Spotlight ? 1 : 0,
+            config.SpotlightNumber,
             config.Simulcast ? 1 : 0,
             (int)config.CapturerType,
             unityCameraTexture,
@@ -395,6 +397,7 @@ public class Sora : IDisposable
         string role,
         int multistream,
         int spotlight,
+        int spotlight_number,
         int simulcast,
         int capturer_type,
         IntPtr unity_camera_texture,
