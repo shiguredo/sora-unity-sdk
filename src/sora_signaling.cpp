@@ -293,6 +293,12 @@ void SoraSignaling::OnRead(boost::system::error_code ec,
           if (p.contains("maxFramerate")) {
             params.max_framerate = p["maxFramerate"].get<double>();
           }
+          if (p.contains("active")) {
+            params.active = p["active"].get<bool>();
+          }
+          if (p.contains("adaptivePtime")) {
+            params.adaptive_ptime = p["adaptivePtime"].get<bool>();
+          }
           encoding_parameters.push_back(params);
         }
         connection_->SetEncodingParameters(std::move(encoding_parameters));
