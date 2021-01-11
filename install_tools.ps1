@@ -45,8 +45,6 @@ if ($BOOST_CHANGED -Or !(Test-Path "$INSTALL_DIR\boost\include\boost\version.hpp
         -j8 `
         --prefix=$INSTALL_DIR\boost `
         --with-filesystem `
-        --with-date_time `
-        --with-regex `
         --layout=system `
         address-model=64 `
         link=static `
@@ -56,32 +54,6 @@ if ($BOOST_CHANGED -Or !(Test-Path "$INSTALL_DIR\boost\include\boost\version.hpp
   Pop-Location
 }
 Set-Content "$BOOST_VERSION_FILE" -Value "$BOOST_VERSION"
-
-# JSON
-
-$JSON_VERSION_FILE = "$INSTALL_DIR\json.version"
-$JSON_CHANGED = $FALSE
-if (!(Test-Path $JSON_VERSION_FILE) -Or ("$JSON_VERSION" -ne (Get-Content $JSON_VERSION_FILE))) {
-  $JSON_CHANGED = $TRUE
-}
-
-if ($JSON_CHANGED -Or !(Test-Path "$INSTALL_DIR\json\include\nlohmann\json.hpp")) {
-  $_URL = "https://github.com/nlohmann/json/releases/download/v${JSON_VERSION}/include.zip"
-  $_FILE = "$BUILD_DIR\json.zip"
-  # ダウンロード
-  Push-Location $BUILD_DIR
-    if (!(Test-Path $_FILE)) {
-      Invoke-WebRequest -Uri $_URL -OutFile $_FILE
-    }
-  Pop-Location
-  # 展開(=インストール)
-  mkdir "$INSTALL_DIR\json" -Force
-  # Expand-Archive -Path $_FILE -DestinationPath "$INSTALL_DIR\json"
-  Push-Location $INSTALL_DIR\json
-    7z x $_FILE
-  Pop-Location
-}
-Set-Content "$JSON_VERSION_FILE" -Value "$JSON_VERSION"
 
 # WebRTC
 

@@ -4,8 +4,8 @@
 #include <boost/asio/connect.hpp>
 #include <boost/beast/core/buffers_to_string.hpp>
 #include <boost/beast/websocket/stream.hpp>
+#include <boost/json.hpp>
 #include <boost/preprocessor/stringize.hpp>
-#include <nlohmann/json.hpp>
 
 namespace {
 
@@ -33,8 +33,6 @@ std::string iceConnectionStateToString(
 }
 
 }  // namespace
-
-using json = nlohmann::json;
 
 namespace sora {
 
@@ -147,7 +145,7 @@ void SoraSignaling::DoSendConnect() {
                                ? "recvonly"
                                : "sendrecv";
 
-  json json_message = {
+  boost::json::object json_message = {
       {"type", "connect"},
       {"role", role},
       {"multistream", config_.multistream},
@@ -162,42 +160,43 @@ void SoraSignaling::DoSendConnect() {
     json_message["metadata"] = config_.metadata;
   }
 
-  json_message["video"]["codec_type"] = config_.video_codec;
+  json_message["video"] = boost::json::object();
+  json_message["video"].as_object()["codec_type"] = config_.video_codec;
   if (config_.video_bitrate != 0) {
-    json_message["video"]["bit_rate"] = config_.video_bitrate;
+    json_message["video"].as_object()["bit_rate"] = config_.video_bitrate;
   }
 
-  json_message["audio"]["codec_type"] = config_.audio_codec;
+  json_message["audio"] = boost::json::object();
+  json_message["audio"].as_object()["codec_type"] = config_.audio_codec;
   if (config_.audio_bitrate != 0) {
-    json_message["audio"]["bit_rate"] = config_.audio_bitrate;
+    json_message["audio"].as_object()["bit_rate"] = config_.audio_bitrate;
   }
 
-  ws_->WriteText(json_message.dump());
+  ws_->WriteText(boost::json::serialize(json_message));
 }
 void SoraSignaling::DoSendPong() {
-  json json_message = {{"type", "pong"}};
-  ws_->WriteText(json_message.dump());
+  boost::json::value json_message = {{"type", "pong"}};
+  ws_->WriteText(boost::json::serialize(json_message));
 }
 void SoraSignaling::DoSendPong(
     const rtc::scoped_refptr<const webrtc::RTCStatsReport>& report) {
   std::string stats = report->ToJson();
-  json json_message = {{"type", "pong"}, {"stats", stats}};
   std::string str = R"({"type":"pong","stats":)" + stats + "}";
   ws_->WriteText(std::move(str));
 }
 
-void SoraSignaling::CreatePeerFromConfig(json jconfig) {
+void SoraSignaling::CreatePeerFromConfig(boost::json::value jconfig) {
   webrtc::PeerConnectionInterface::RTCConfiguration rtc_config;
   webrtc::PeerConnectionInterface::IceServers ice_servers;
 
-  auto jservers = jconfig["iceServers"];
-  for (auto jserver : jservers) {
-    const std::string username = jserver["username"];
-    const std::string credential = jserver["credential"];
-    auto jurls = jserver["urls"];
-    for (const std::string url : jurls) {
+  auto jservers = jconfig.at("iceServers");
+  for (auto jserver : jservers.as_array()) {
+    const std::string username = jserver.at("username").as_string().c_str();
+    const std::string credential = jserver.at("credential").as_string().c_str();
+    auto jurls = jserver.at("urls");
+    for (const auto url : jurls.as_array()) {
       webrtc::PeerConnectionInterface::IceServer ice_server;
-      ice_server.uri = url;
+      ice_server.uri = url.as_string().c_str();
       ice_server.username = username;
       ice_server.password = credential;
       ice_servers.push_back(ice_server);
@@ -243,29 +242,31 @@ void SoraSignaling::OnRead(boost::system::error_code ec,
 
   RTC_LOG(LS_INFO) << __FUNCTION__ << ": text=" << text;
 
-  auto json_message = json::parse(text);
-  const std::string type = json_message["type"];
+  auto json_message = boost::json::parse(text);
+  const std::string type = json_message.at("type").as_string().c_str();
   if (type == "offer") {
-    CreatePeerFromConfig(json_message["config"]);
-    const std::string sdp = json_message["sdp"];
+    CreatePeerFromConfig(json_message.at("config"));
+    const std::string sdp = json_message.at("sdp").as_string().c_str();
     connection_->SetOffer(sdp, [this, json_message]() {
       connection_->CreateAnswer(
           [this](webrtc::SessionDescriptionInterface* desc) {
             std::string sdp;
             desc->ToString(&sdp);
-            json json_message = {{"type", "answer"}, {"sdp", sdp}};
-            ws_->WriteText(json_message.dump());
+            boost::json::value json_message = {{"type", "answer"},
+                                               {"sdp", sdp}};
+            ws_->WriteText(boost::json::serialize(json_message));
           });
     });
   } else if (type == "update") {
-    const std::string sdp = json_message["sdp"];
+    const std::string sdp = json_message.at("sdp").as_string().c_str();
     connection_->SetOffer(sdp, [this]() {
       connection_->CreateAnswer(
           [this](webrtc::SessionDescriptionInterface* desc) {
             std::string sdp;
             desc->ToString(&sdp);
-            json json_message = {{"type", "update"}, {"sdp", sdp}};
-            ws_->WriteText(json_message.dump());
+            boost::json::value json_message = {{"type", "update"},
+                                               {"sdp", sdp}};
+            ws_->WriteText(boost::json::serialize(json_message));
           });
     });
   } else if (type == "notify") {
@@ -278,8 +279,8 @@ void SoraSignaling::OnRead(boost::system::error_code ec,
       DoRead();
       return;
     }
-    bool stats = json_message.value("stats", false);
-    if (stats) {
+    auto it = json_message.as_object().find("stats");
+    if (it != json_message.as_object().end() && it->value().as_bool()) {
       connection_->GetStats(
           [this](
               const rtc::scoped_refptr<const webrtc::RTCStatsReport>& report) {
@@ -305,8 +306,8 @@ void SoraSignaling::OnIceConnectionStateChange(
 void SoraSignaling::OnIceCandidate(const std::string sdp_mid,
                                    const int sdp_mlineindex,
                                    const std::string sdp) {
-  json json_message = {{"type", "candidate"}, {"candidate", sdp}};
-  ws_->WriteText(json_message.dump());
+  boost::json::value json_message = {{"type", "candidate"}, {"candidate", sdp}};
+  ws_->WriteText(boost::json::serialize(json_message));
 }
 void SoraSignaling::DoIceConnectionStateChange(
     webrtc::PeerConnectionInterface::IceConnectionState new_state) {
