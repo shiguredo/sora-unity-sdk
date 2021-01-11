@@ -11,6 +11,9 @@
 
 ## develop
 
+- [UPDATE] WebRTC のバージョンを M88 (4324@{#3}) に上げる
+    - @melpon @torikizi
+
 ## 2020.10
 
 - [UPDATE] WebRTC のバージョンを M87 (4280@{#10}) に上げる
