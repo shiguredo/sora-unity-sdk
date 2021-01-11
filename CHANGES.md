@@ -12,6 +12,7 @@
 ## develop
 
 - [UPDATE] Boost のバージョンを 1.75.0 に上げる
+- [UPDATE] nlohmann/json を Boost.JSON に変更
 
 ## 2020.10
 

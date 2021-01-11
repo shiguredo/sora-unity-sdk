@@ -37,19 +37,6 @@ for name in macos android ios; do
 done
 echo $WEBRTC_BUILD_VERSION > $WEBRTC_VERSION_FILE
 
-# nlohmann/json
-JSON_VERSION_FILE="$INSTALL_DIR/json.version"
-JSON_CHANGED=0
-if [ ! -e $JSON_VERSION_FILE -o "$JSON_VERSION" != "`cat $JSON_VERSION_FILE`" ]; then
-  JSON_CHANGED=1
-fi
-
-if [ $JSON_CHANGED -eq 1 -o ! -e $INSTALL_DIR/json/include ]; then
-  rm -rf $INSTALL_DIR/json
-  git clone --branch v$JSON_VERSION --depth 1 https://github.com/nlohmann/json.git $INSTALL_DIR/json
-fi
-echo $JSON_VERSION > $JSON_VERSION_FILE
-
 # Boost
 BOOST_VERSION_FILE="$INSTALL_DIR/boost.version"
 BOOST_CHANGED=0
@@ -72,8 +59,10 @@ if [ ! -e $INSTALL_DIR/boost/include/boost/version.hpp ]; then
 
     pushd boost_${_VERSION_UNDERSCORE}
       ./bootstrap.sh
-      #./b2 install --prefix=$INSTALL_DIR/boost --build-dir=build link=static --with-filesystem
-      ./b2 install --prefix=$INSTALL_DIR/boost --build-dir=build
+      ./b2 headers
+      rm -rf $INSTALL_DIR/boost
+      mkdir -p $INSTALL_DIR/boost/include
+      cp -r boost $INSTALL_DIR/boost/include/boost
     popd
   popd
 fi
