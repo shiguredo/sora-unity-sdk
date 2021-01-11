@@ -16,7 +16,7 @@
 #include <boost/beast/core/multi_buffer.hpp>
 #include <boost/beast/websocket/ssl.hpp>
 #include <boost/beast/websocket/stream.hpp>
-#include <nlohmann/json.hpp>
+#include <boost/json.hpp>
 
 #include "rtc/rtc_manager.h"
 #include "rtc/rtc_message_sender.h"
@@ -30,7 +30,7 @@ struct SoraSignalingConfig {
   std::string signaling_url;
   std::string channel_id;
 
-  nlohmann::json metadata;
+  boost::json::value metadata;
   std::string video_codec = "VP9";
   int video_bitrate = 0;
 
@@ -98,7 +98,7 @@ class SoraSignaling : public std::enable_shared_from_this<SoraSignaling>,
   void DoSendPong(
       const rtc::scoped_refptr<const webrtc::RTCStatsReport>& report);
   std::shared_ptr<sora::RTCConnection> CreateRTCConnection(
-      nlohmann::json jconfig);
+      boost::json::value jconfig);
 
  private:
   void OnClose(boost::system::error_code ec);

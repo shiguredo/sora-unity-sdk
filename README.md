@@ -31,18 +31,13 @@ Sora Unity SDK を使ってみたい人は [USE.md](doc/USE.md) をお読みく�
 
 ### サンプル動作例
 
-- [「こんな感じに Unity のカメラ映像を WebRTC で配信できるようになりました https://t\.co/R98ZmZTFOK」 / Twitter](https://twitter.com/melponn/status/1193406538494275592?s=20)
-- [「ちゃんとリアルタイムで配信してます（モーション作るのが面倒だったのでシーンエディタから動かしてる）。Unity 側が配信で、ブラウザ（右上）で受信してる。 https://t\.co/TIL7NYroZm」 / Twitter](https://twitter.com/melponn/status/1193411591183552512?s=20)
+- [「こんな感じに Unity のカメラ映像を WebRTC で配信できるようになりました https://t\.co/R98ZmZTFOK」 / Twitter](https://twitter.com/melponn/status/1193406538494275592)
+- [「ちゃんとリアルタイムで配信してます（モーション作るのが面倒だったのでシーンエディタから動かしてる）。Unity 側が配信で、ブラウザ（右上）で受信してる。 https://t\.co/TIL7NYroZm」 / Twitter](https://twitter.com/melponn/status/1193411591183552512)
 - [「Momo (on Jetson Nano) -> Sora-Labo -> Sora-Unity と Sora-Js 同時受信。ここまでがお手軽すぎてやばい。」 / Twitter](https://twitter.com/izmhrats/status/1203299775354851328?s=20)
 
 ## 対応 Unity バージョン
 
-- Unity 2019.1
-- Unity 2019.2
-- Unity 2019.3
-- Unity 2019.4
-- Unity 2020.1
-- Unity 2020.2
+- Unity 2019.4 (LTS)
 
 ## 対応プラットフォーム
 
@@ -127,6 +122,7 @@ Sora Unity SDK ではソフトウェアでの H.264 エンコード/デコード
 
 - VP8 のハードウェアデコードへの対応
 - VP9 のハードウェアデコードへの対応
+- AV1 のハードウェアデコードへの対応
 - Ubuntu 18.04 への対応
 
 ### INTEL Media SDK 対応

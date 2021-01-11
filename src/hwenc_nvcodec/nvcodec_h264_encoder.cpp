@@ -79,7 +79,6 @@ int32_t NvCodecH264Encoder::InitEncode(const webrtc::VideoCodec* codec_settings,
   RTC_LOG(LS_INFO) << "InitEncode " << target_bitrate_bps_ << "bit/sec";
 
   // Initialize encoded image. Default buffer size: size of unencoded data.
-  encoded_image_._completeFrame = true;
   encoded_image_._encodedWidth = 0;
   encoded_image_._encodedHeight = 0;
   encoded_image_.set_size(0);
@@ -241,7 +240,6 @@ int32_t NvCodecH264Encoder::Encode(
   for (std::vector<uint8_t>& packet : v_packet_) {
     encoded_image_.SetEncodedData(
         webrtc::EncodedImageBuffer::Create(packet.data(), packet.size()));
-    encoded_image_._completeFrame = true;
     encoded_image_._encodedWidth = width_;
     encoded_image_._encodedHeight = height_;
     encoded_image_.content_type_ =

@@ -19,16 +19,21 @@ fi
 
 for name in macos android ios; do
   if [ $WEBRTC_CHANGED -eq 1 -o ! -e $INSTALL_DIR/$name/webrtc ]; then
+    pkgname=$name
+    if [ "$name" == "macos" ]; then
+      pkgname=macos_x86_64
+    fi
+
     # shiguredo-webrtc-build から各環境のバイナリをダウンロードして配置するだけ
     pushd $BUILD_DIR
       rm -rf webrtc.$name.tar.gz
-      curl -LO https://github.com/shiguredo-webrtc-build/webrtc-build/releases/download/m${WEBRTC_BUILD_VERSION}/webrtc.$name.tar.gz
+      curl -LO https://github.com/shiguredo-webrtc-build/webrtc-build/releases/download/m${WEBRTC_BUILD_VERSION}/webrtc.$pkgname.tar.gz
     popd
 
     mkdir -p $INSTALL_DIR/$name
     pushd $INSTALL_DIR/$name
       rm -rf webrtc/
-      tar xf $BUILD_DIR/webrtc.$name.tar.gz
+      tar xf $BUILD_DIR/webrtc.$pkgname.tar.gz
     popd
 
     rm -rf $INSTALL_DIR/libcxx/
@@ -36,19 +41,6 @@ for name in macos android ios; do
   fi
 done
 echo $WEBRTC_BUILD_VERSION > $WEBRTC_VERSION_FILE
-
-# nlohmann/json
-JSON_VERSION_FILE="$INSTALL_DIR/json.version"
-JSON_CHANGED=0
-if [ ! -e $JSON_VERSION_FILE -o "$JSON_VERSION" != "`cat $JSON_VERSION_FILE`" ]; then
-  JSON_CHANGED=1
-fi
-
-if [ $JSON_CHANGED -eq 1 -o ! -e $INSTALL_DIR/json/include ]; then
-  rm -rf $INSTALL_DIR/json
-  git clone --branch v$JSON_VERSION --depth 1 https://github.com/nlohmann/json.git $INSTALL_DIR/json
-fi
-echo $JSON_VERSION > $JSON_VERSION_FILE
 
 # Boost
 BOOST_VERSION_FILE="$INSTALL_DIR/boost.version"
@@ -72,8 +64,10 @@ if [ ! -e $INSTALL_DIR/boost/include/boost/version.hpp ]; then
 
     pushd boost_${_VERSION_UNDERSCORE}
       ./bootstrap.sh
-      #./b2 install --prefix=$INSTALL_DIR/boost --build-dir=build link=static --with-filesystem
-      ./b2 install --prefix=$INSTALL_DIR/boost --build-dir=build
+      ./b2 headers
+      rm -rf $INSTALL_DIR/boost
+      mkdir -p $INSTALL_DIR/boost/include
+      cp -r boost $INSTALL_DIR/boost/include/boost
     popd
   popd
 fi

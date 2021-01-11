@@ -23,7 +23,6 @@ set(CMAKE_FIND_ROOT_PATH_MODE_PACKAGE BOTH)
 
 find_package(WebRTC REQUIRED)
 find_package(Boost REQUIRED)
-find_package(JSON REQUIRED)
 
 set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)
 set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
@@ -58,6 +57,7 @@ set_target_properties(SoraUnitySdk PROPERTIES CXX_STANDARD 14 C_STANDARD 99)
 
 target_sources(SoraUnitySdk
   PRIVATE
+    src/boost_json.cpp
     src/id_pointer.cpp
     src/sora.cpp
     src/sora_signaling.cpp
@@ -96,7 +96,6 @@ target_link_libraries(SoraUnitySdk
   PRIVATE
     WebRTC::WebRTC
     Boost::boost
-    JSON::JSON
 )
 
 if (SORA_UNITY_SDK_PACKAGE STREQUAL "windows")
@@ -236,6 +235,7 @@ elseif (SORA_UNITY_SDK_PACKAGE STREQUAL "macos")
       "-framework CoreGraphics"
       "-framework CoreMedia"
       "-framework CoreVideo"
+      "-framework QuartzCore"
       "-framework VideoToolbox"
       "-framework AppKit"
       "-framework Metal"
@@ -326,6 +326,8 @@ elseif (SORA_UNITY_SDK_PACKAGE STREQUAL "android")
       -Wl,--wrap=memalign
       -Wl,--wrap=realloc
       -Wl,--wrap=free
+      -Wl,--wrap=realpath
+      -Wl,--wrap=getcwd
       ${_WEBRTC_ANDROID_LDFLAGS}
   )
 endif ()

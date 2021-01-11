@@ -217,8 +217,9 @@ bool Sora::DoConnect(const Sora::ConnectConfig& cc) {
     config.audio_codec = cc.audio_codec;
     config.audio_bitrate = cc.audio_bitrate;
     if (!cc.metadata.empty()) {
-      auto md = nlohmann::json::parse(cc.metadata, nullptr, false);
-      if (md.type() == nlohmann::json::value_t::discarded) {
+      boost::json::error_code ec;
+      auto md = boost::json::parse(cc.metadata, ec);
+      if (ec) {
         RTC_LOG(LS_WARNING) << "Invalid JSON: metadata=" << cc.metadata;
       } else {
         config.metadata = md;
