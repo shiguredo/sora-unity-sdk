@@ -234,6 +234,7 @@ elseif (SORA_UNITY_SDK_PACKAGE STREQUAL "macos")
       "-framework CoreGraphics"
       "-framework CoreMedia"
       "-framework CoreVideo"
+      "-framework QuartzCore"
       "-framework VideoToolbox"
       "-framework AppKit"
       "-framework Metal"
@@ -324,6 +325,8 @@ elseif (SORA_UNITY_SDK_PACKAGE STREQUAL "android")
       -Wl,--wrap=memalign
       -Wl,--wrap=realloc
       -Wl,--wrap=free
+      -Wl,--wrap=realpath
+      -Wl,--wrap=getcwd
       ${_WEBRTC_ANDROID_LDFLAGS}
   )
 endif ()
