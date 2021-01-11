@@ -13,6 +13,8 @@
 
 - [UPDATE] WebRTC のバージョンを M88 (4324@{#3}) に上げる
     - @melpon @torikizi
+- [UPDATE] Boost のバージョンを 1.75.0 に上げる
+- [UPDATE] nlohmann/json を Boost.JSON に変更
 
 ## 2020.10
 

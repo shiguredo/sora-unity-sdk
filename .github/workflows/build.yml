@@ -19,9 +19,9 @@ jobs:
       uses: actions/cache@v2
       with:
         path: _install
-        key: windows-v2-${{ hashFiles('VERSIONS') }}
+        key: windows-v3-${{ hashFiles('VERSIONS') }}
         restore-keys: |
-          windows-v2-
+          windows-v3-
     - name: install_tools.ps1
       run: "& .\\install_tools.ps1"
     - name: cmake.ps1
@@ -54,9 +54,9 @@ jobs:
       uses: actions/cache@v2
       with:
         path: _install
-        key: macos-v1-${{ hashFiles('VERSIONS') }}
+        key: macos-v2-${{ hashFiles('VERSIONS') }}
         restore-keys: |
-          macos-v1-
+          macos-v2-
     - name: install_tools.sh
       run: ./install_tools.sh
     - name: cmake.sh
