@@ -19,16 +19,21 @@ fi
 
 for name in macos android ios; do
   if [ $WEBRTC_CHANGED -eq 1 -o ! -e $INSTALL_DIR/$name/webrtc ]; then
+    pkgname=$name
+    if [ "$name" == "macos" ]; then
+      pkgname=macos_x86_64
+    fi
+
     # shiguredo-webrtc-build から各環境のバイナリをダウンロードして配置するだけ
     pushd $BUILD_DIR
       rm -rf webrtc.$name.tar.gz
-      curl -LO https://github.com/shiguredo-webrtc-build/webrtc-build/releases/download/m${WEBRTC_BUILD_VERSION}/webrtc.$name.tar.gz
+      curl -LO https://github.com/shiguredo-webrtc-build/webrtc-build/releases/download/m${WEBRTC_BUILD_VERSION}/webrtc.$pkgname.tar.gz
     popd
 
     mkdir -p $INSTALL_DIR/$name
     pushd $INSTALL_DIR/$name
       rm -rf webrtc/
-      tar xf $BUILD_DIR/webrtc.$name.tar.gz
+      tar xf $BUILD_DIR/webrtc.$pkgname.tar.gz
     popd
 
     rm -rf $INSTALL_DIR/libcxx/

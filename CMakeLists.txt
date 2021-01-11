@@ -235,6 +235,7 @@ elseif (SORA_UNITY_SDK_PACKAGE STREQUAL "macos")
       "-framework CoreGraphics"
       "-framework CoreMedia"
       "-framework CoreVideo"
+      "-framework QuartzCore"
       "-framework VideoToolbox"
       "-framework AppKit"
       "-framework Metal"
