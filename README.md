@@ -140,8 +140,8 @@ Sora Unity SDK ではソフトウェアでの H.264 エンコード/デコード
 Apache License 2.0
 
 ```
-Copyright 2019-2020, Wandbox LLC (Original Author)
-Copyright 2019-2020, Shiguredo Inc.
+Copyright 2019-2021, Wandbox LLC (Original Author)
+Copyright 2019-2021, Shiguredo Inc.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
