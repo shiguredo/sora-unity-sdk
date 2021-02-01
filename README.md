@@ -23,6 +23,8 @@ Sora Unity SDK を使ってみたい人は [USE.md](doc/USE.md) をお読みく�
 
 ## ビルド方法
 
+**ビルド方法の詳細は GitHub Actions をご確認ください、ビルドに関しての問い合わせは受け付けておりません**
+
 - Windows でのビルド方法は [BUILD_WINDOWS.md](doc/BUILD_WINDOWS.md) をお読みください
 - macOS でのビルド方法は [BUILD_MACOS.md](doc/BUILD_MACOS.md) をお読みください
 
