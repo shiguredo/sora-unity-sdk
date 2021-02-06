@@ -139,11 +139,10 @@ void SoraSignaling::OnConnect(boost::system::error_code ec) {
   " " WEBRTC_SRC_COMMIT_SHORT ")"
 
 void SoraSignaling::DoSendConnect() {
-  std::string role = config_.role == SoraSignalingConfig::Role::Sendonly
-                         ? "sendonly"
-                         : config_.role == SoraSignalingConfig::Role::Recvonly
-                               ? "recvonly"
-                               : "sendrecv";
+  std::string role =
+      config_.role == SoraSignalingConfig::Role::Sendonly   ? "sendonly"
+      : config_.role == SoraSignalingConfig::Role::Recvonly ? "recvonly"
+                                                            : "sendrecv";
 
   boost::json::object json_message = {
       {"type", "connect"},
@@ -259,7 +258,7 @@ void SoraSignaling::OnRead(boost::system::error_code ec,
       // トラックを追加する必要があるため、ここで初期化する
       manager_->InitTracks(connection_.get());
 
-      if (config_.simulcast) {
+      if (config_.simulcast && json_message.as_object().count("encodings") != 0) {
         std::vector<webrtc::RtpEncodingParameters> encoding_parameters;
 
         // "encodings" キーの各内容を webrtc::RtpEncodingParameters に変換する
@@ -304,26 +303,24 @@ void SoraSignaling::OnRead(boost::system::error_code ec,
         connection_->SetEncodingParameters(std::move(encoding_parameters));
       }
 
-      connection_->CreateAnswer(
-          [this](webrtc::SessionDescriptionInterface* desc) {
-            std::string sdp;
-            desc->ToString(&sdp);
-            boost::json::value json_message = {{"type", "answer"},
-                                               {"sdp", sdp}};
-            ws_->WriteText(boost::json::serialize(json_message));
-          });
+      connection_->CreateAnswer([this](
+                                    webrtc::SessionDescriptionInterface* desc) {
+        std::string sdp;
+        desc->ToString(&sdp);
+        boost::json::value json_message = {{"type", "answer"}, {"sdp", sdp}};
+        ws_->WriteText(boost::json::serialize(json_message));
+      });
     });
   } else if (type == "update") {
     const std::string sdp = json_message.at("sdp").as_string().c_str();
     connection_->SetOffer(sdp, [this]() {
-      connection_->CreateAnswer(
-          [this](webrtc::SessionDescriptionInterface* desc) {
-            std::string sdp;
-            desc->ToString(&sdp);
-            boost::json::value json_message = {{"type", "update"},
-                                               {"sdp", sdp}};
-            ws_->WriteText(boost::json::serialize(json_message));
-          });
+      connection_->CreateAnswer([this](
+                                    webrtc::SessionDescriptionInterface* desc) {
+        std::string sdp;
+        desc->ToString(&sdp);
+        boost::json::value json_message = {{"type", "update"}, {"sdp", sdp}};
+        ws_->WriteText(boost::json::serialize(json_message));
+      });
     });
   } else if (type == "notify") {
     if (on_notify_) {
