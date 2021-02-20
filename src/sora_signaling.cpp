@@ -258,7 +258,8 @@ void SoraSignaling::OnRead(boost::system::error_code ec,
       // トラックを追加する必要があるため、ここで初期化する
       manager_->InitTracks(connection_.get());
 
-      if (config_.simulcast && json_message.as_object().count("encodings") != 0) {
+      if (config_.simulcast &&
+          json_message.as_object().count("encodings") != 0) {
         std::vector<webrtc::RtpEncodingParameters> encoding_parameters;
 
         // "encodings" キーの各内容を webrtc::RtpEncodingParameters に変換する
@@ -314,6 +315,11 @@ void SoraSignaling::OnRead(boost::system::error_code ec,
   } else if (type == "update") {
     const std::string sdp = json_message.at("sdp").as_string().c_str();
     connection_->SetOffer(sdp, [this]() {
+      // エンコーディングパラメータの情報がクリアされるので設定し直す
+      if (config_.simulcast) {
+        connection_->ResetEncodingParameters();
+      }
+
       connection_->CreateAnswer([this](
                                     webrtc::SessionDescriptionInterface* desc) {
         std::string sdp;
