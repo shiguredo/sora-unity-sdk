@@ -75,6 +75,9 @@ int sora_connect(void* p,
                  const char* metadata,
                  const char* role,
                  unity_bool_t multistream,
+                 unity_bool_t spotlight,
+                 int spotlight_number,
+                 unity_bool_t simulcast,
                  int capturer_type,
                  void* unity_camera_texture,
                  const char* video_capturer_device,
@@ -96,6 +99,9 @@ int sora_connect(void* p,
   config.metadata = metadata;
   config.role = role;
   config.multistream = multistream;
+  config.spotlight = spotlight;
+  config.spotlight_number = spotlight_number;
+  config.simulcast = simulcast;
   config.capturer_type = capturer_type;
   config.unity_camera_texture = unity_camera_texture;
   config.video_capturer_device = video_capturer_device;
@@ -174,7 +180,8 @@ unity_bool_t sora_device_enum_audio_playout(device_enum_cb_t f,
 
 unity_bool_t sora_is_h264_supported() {
 #if defined(SORA_UNITY_SDK_WINDOWS)
-  return NvCodecH264Encoder::IsSupported() && NvCodecVideoDecoder::IsSupported(cudaVideoCodec_H264);
+  return NvCodecH264Encoder::IsSupported() &&
+         NvCodecVideoDecoder::IsSupported(cudaVideoCodec_H264);
 #elif defined(SORA_UNITY_SDK_MACOS) || defined(SORA_UNITY_SDK_IOS)
   // macOS, iOS は VideoToolbox が使えるので常に true
   return true;

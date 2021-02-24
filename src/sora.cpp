@@ -104,6 +104,9 @@ bool Sora::DoConnect(const Sora::ConnectConfig& cc) {
                    << " channel_id=" << channel_id_
                    << " metadata=" << cc.metadata << " role=" << cc.role
                    << " multistream=" << cc.multistream
+                   << " spotlight=" << cc.spotlight
+                   << " spotlight_number=" << cc.spotlight_number
+                   << " simulcast=" << cc.simulcast
                    << " capturer_type=" << cc.capturer_type
                    << " unity_camera_texture=0x" << cc.unity_camera_texture
                    << " video_capturer_device=" << cc.video_capturer_device
@@ -156,6 +159,7 @@ bool Sora::DoConnect(const Sora::ConnectConfig& cc) {
   RTCManagerConfig config;
   config.audio_recording_device = cc.audio_recording_device;
   config.audio_playout_device = cc.audio_playout_device;
+  config.simulcast = cc.simulcast;
 
   if (cc.role == "sendonly" || cc.role == "sendrecv") {
     // 送信側は capturer を設定する。送信のみの場合は playout の設定はしない
@@ -203,6 +207,9 @@ bool Sora::DoConnect(const Sora::ConnectConfig& cc) {
                             ? SoraSignalingConfig::Role::Recvonly
                             : SoraSignalingConfig::Role::Sendrecv;
     config.multistream = cc.multistream;
+    config.spotlight = cc.spotlight;
+    config.spotlight_number = cc.spotlight_number;
+    config.simulcast = cc.simulcast;
     config.signaling_url = signaling_url_;
     config.channel_id = channel_id_;
     config.video_codec = cc.video_codec;

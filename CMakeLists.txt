@@ -76,6 +76,7 @@ target_sources(SoraUnitySdk
     src/rtc/rtc_manager.cpp
     src/rtc/rtc_ssl_verifier.cpp
     src/rtc/scalable_track_source.cpp
+    src/rtc/simulcast_video_encoder_factory.cpp
 )
 
 string(SUBSTRING ${SORA_UNITY_SDK_COMMIT} 0 8 SORA_UNITY_SDK_COMMIT_SHORT)

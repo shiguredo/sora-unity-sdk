@@ -49,6 +49,7 @@ class RTCConnection {
 
   void SetEncodingParameters(
       std::vector<webrtc::RtpEncodingParameters> encodings);
+  void ResetEncodingParameters();
 
   rtc::scoped_refptr<webrtc::PeerConnectionInterface> GetConnection() const;
 
@@ -65,8 +66,10 @@ class RTCConnection {
   RTCMessageSender* sender_;
   std::unique_ptr<PeerConnectionObserver> observer_;
   rtc::scoped_refptr<webrtc::PeerConnectionInterface> connection_;
+  std::vector<webrtc::RtpEncodingParameters> encodings_;
+  std::string mid_;
 };
 
-}
+}  // namespace sora
 
 #endif
