@@ -55,7 +55,11 @@ set -x
 INSTALL_DIR="`pwd`/_install"
 MODULE_PATH="`pwd`/cmake"
 
-source "$INSTALL_DIR/$PACKAGE/webrtc/VERSIONS"
+if [ -e "$INSTALL_DIR/$PACKAGE/webrtc/VERSIONS" ]; then
+  source "$INSTALL_DIR/$PACKAGE/webrtc/VERSIONS"
+else
+  source "$INSTALL_DIR/$PACKAGE/webrtc/release/VERSIONS"
+fi
 source "`pwd`/VERSIONS"
 SORA_UNITY_SDK_COMMIT="`git rev-parse HEAD`"
 
