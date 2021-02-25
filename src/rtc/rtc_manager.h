@@ -1,9 +1,10 @@
 #ifndef SORA_RTC_MANAGER_H_
 #define SORA_RTC_MANAGER_H_
 
-#include "api/peer_connection_interface.h"
-#include "api/video/video_frame.h"
-#include "pc/video_track_source.h"
+// WebRTC
+#include <api/peer_connection_interface.h>
+#include <api/video/video_frame.h>
+#include <pc/video_track_source.h>
 
 #include "rtc_connection.h"
 #include "scalable_track_source.h"
@@ -30,6 +31,9 @@ struct RTCManagerConfig {
   // webrtc::DegradationPreference::MAINTAIN_FRAMERATE;
   webrtc::DegradationPreference priority =
       webrtc::DegradationPreference::BALANCED;
+
+  bool insecure = false;
+  bool simulcast = false;
 };
 
 class RTCManager {
@@ -55,9 +59,10 @@ class RTCManager {
 
  public:
   ~RTCManager();
-  std::shared_ptr<RTCConnection> createConnection(
+  std::shared_ptr<RTCConnection> CreateConnection(
       webrtc::PeerConnectionInterface::RTCConfiguration rtc_config,
       RTCMessageSender* sender);
+  void InitTracks(RTCConnection* conn);
 
  private:
   static bool InitADM(rtc::scoped_refptr<webrtc::AudioDeviceModule> adm,

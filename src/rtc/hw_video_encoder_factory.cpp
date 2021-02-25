@@ -1,14 +1,15 @@
 #include "hw_video_encoder_factory.h"
 
-#include "absl/memory/memory.h"
-#include "absl/strings/match.h"
-#include "api/video_codecs/sdp_video_format.h"
-#include "media/base/codec.h"
-#include "media/base/media_constants.h"
-#include "modules/video_coding/codecs/h264/include/h264.h"
-#include "modules/video_coding/codecs/vp8/include/vp8.h"
-#include "modules/video_coding/codecs/vp9/include/vp9.h"
-#include "rtc_base/logging.h"
+#include <absl/memory/memory.h>
+#include <absl/strings/match.h>
+#include <api/video_codecs/sdp_video_format.h>
+#include <media/base/codec.h>
+#include <media/base/media_constants.h>
+#include <media/engine/simulcast_encoder_adapter.h>
+#include <modules/video_coding/codecs/h264/include/h264.h>
+#include <modules/video_coding/codecs/vp8/include/vp8.h>
+#include <modules/video_coding/codecs/vp9/include/vp9.h>
+#include <rtc_base/logging.h>
 
 #include "h264_format.h"
 #if defined(SORA_UNITY_SDK_WINDOWS)

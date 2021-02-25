@@ -12,7 +12,8 @@
                 "${workspaceFolder}/_install/webrtc/include/third_party/abseil-cpp",
                 "${workspaceFolder}/_install/webrtc/include/third_party/boringssl/src/include",
                 "${workspaceFolder}/_install/webrtc/include/third_party/libyuv/include",
-                "${workspaceFolder}/_install/cuda/nvcc/include"
+                "${workspaceFolder}/_install/cuda/nvcc/include",
+                "${workspaceFolder}/build"
             ],
             "defines": [
                 "_DEBUG",
@@ -22,7 +23,8 @@
                 "_WIN32_WINNT=0x0A00",
                 "WEBRTC_WIN",
                 "NOMINMAX",
-                "WIN32_LEAN_AND_MEAN"
+                "WIN32_LEAN_AND_MEAN",
+                "SORA_UNITY_SDK_WINDOWS"
             ],
             "windowsSdkVersion": "10.0.18362.0",
             "compilerPath": "C:/Program Files (x86)/Microsoft Visual Studio/2019/Community/VC/Tools/MSVC/14.25.28610/bin/Hostx64/x64/cl.exe",

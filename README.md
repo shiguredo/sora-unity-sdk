@@ -1,16 +1,17 @@
 # Sora Unity SDK
 
-[![libwebrtc](https://img.shields.io/badge/libwebrtc-m87.4270-blue.svg)](https://chromium.googlesource.com/external/webrtc/+/branch-heads/4270)
+[![libwebrtc](https://img.shields.io/badge/libwebrtc-m89.4389-blue.svg)](https://chromium.googlesource.com/external/webrtc/+/branch-heads/4389)
 [![GitHub tag](https://img.shields.io/github/tag/shiguredo/sora-unity-sdk.svg)](https://github.com/shiguredo/sora-unity-sdk)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Actions Status](https://github.com/shiguredo/sora-unity-sdk/workflows/build/badge.svg)](https://github.com/shiguredo/sora-unity-sdk/actions)
 
 Sora Unity SDK は [WebRTC SFU Sora](https://sora.shiguredo.jp/) の Unity クライアントアプリケーションを開発するためのライブラリです。
 
-## About Support
+## About Shiguredo's open source software
 
-We check PRs or Issues only when written in JAPANESE.
-In other languages, we won't be able to deal with them. Thank you for your understanding.
+We will not respond to PRs or issues that have not been discussed on Discord. Also, Discord is only available in Japanese.
+
+Please read https://github.com/shiguredo/oss/blob/master/README.en.md before use.
 
 ## 時雨堂のオープンソースソフトウェアについて
 
@@ -22,6 +23,8 @@ Sora Unity SDK を使ってみたい人は [USE.md](doc/USE.md) をお読みく�
 
 ## ビルド方法
 
+**ビルド方法の詳細は GitHub Actions をご確認ください、ビルドに関しての問い合わせは受け付けておりません**
+
 - Windows でのビルド方法は [BUILD_WINDOWS.md](doc/BUILD_WINDOWS.md) をお読みください
 - macOS でのビルド方法は [BUILD_MACOS.md](doc/BUILD_MACOS.md) をお読みください
 
@@ -31,17 +34,12 @@ Sora Unity SDK を使ってみたい人は [USE.md](doc/USE.md) をお読みく�
 
 ### サンプル動作例
 
-- [「こんな感じに Unity のカメラ映像を WebRTC で配信できるようになりました https://t\.co/R98ZmZTFOK」 / Twitter](https://twitter.com/melponn/status/1193406538494275592?s=20)
-- [「ちゃんとリアルタイムで配信してます（モーション作るのが面倒だったのでシーンエディタから動かしてる）。Unity 側が配信で、ブラウザ（右上）で受信してる。 https://t\.co/TIL7NYroZm」 / Twitter](https://twitter.com/melponn/status/1193411591183552512?s=20)
+- [「こんな感じに Unity のカメラ映像を WebRTC で配信できるようになりました https://t\.co/R98ZmZTFOK」 / Twitter](https://twitter.com/melponn/status/1193406538494275592)
+- [「ちゃんとリアルタイムで配信してます（モーション作るのが面倒だったのでシーンエディタから動かしてる）。Unity 側が配信で、ブラウザ（右上）で受信してる。 https://t\.co/TIL7NYroZm」 / Twitter](https://twitter.com/melponn/status/1193411591183552512)
 - [「Momo (on Jetson Nano) -> Sora-Labo -> Sora-Unity と Sora-Js 同時受信。ここまでがお手軽すぎてやばい。」 / Twitter](https://twitter.com/izmhrats/status/1203299775354851328?s=20)
-
 ## 対応 Unity バージョン
 
-- Unity 2019.1
-- Unity 2019.2
-- Unity 2019.3
-- Unity 2019.4
-- Unity 2020.1
+- Unity 2019.4 (LTS)
 
 ## 対応プラットフォーム
 
@@ -77,7 +75,9 @@ Sora Unity SDK を使ってみたい人は [USE.md](doc/USE.md) をお読みく�
 - Sora メタデータへの対応
 - Sora シグナリング開始時の音声コーデック/ビットレート指定に対応
 - Sora シグナリング開始時の映像コーデック/ビットレート指定に対応
-- シグナリング通知への対応
+- Sora シグナリング通知への対応
+- Sora サイマルキャストへの対応
+- Sora スポットライトへの対応
 - Apple VideoToolbox
     - H.264 ハードウェアエンコードへの対応
     - H.264 ハードウェアデコードへの対応
@@ -126,6 +126,7 @@ Sora Unity SDK ではソフトウェアでの H.264 エンコード/デコード
 
 - VP8 のハードウェアデコードへの対応
 - VP9 のハードウェアデコードへの対応
+- AV1 のハードウェアデコードへの対応
 - Ubuntu 18.04 への対応
 
 ### INTEL Media SDK 対応
@@ -142,8 +143,8 @@ Sora Unity SDK ではソフトウェアでの H.264 エンコード/デコード
 Apache License 2.0
 
 ```
-Copyright 2019-2020, Wandbox LLC (Original Author)
-Copyright 2019-2020, Shiguredo Inc.
+Copyright 2019-2021, Wandbox LLC (Original Author)
+Copyright 2019-2021, Shiguredo Inc.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.

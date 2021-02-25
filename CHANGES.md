@@ -11,6 +11,19 @@
 
 ## develop
 
+## 2021.1
+
+- [ADD] サイマルキャスト機能に対応する
+    - @melpon @torikizi
+- [ADD] スポットライト機能に対応する
+    - @melpon @torikizi
+- [UPDATE] WebRTC のバージョンを M89 (4389@{#5}) に上げる
+    - @melpon @torikizi @voluntas
+- [UPDATE] Boost のバージョンを 1.75.0 に上げる
+    - @voluntas
+- [UPDATE] nlohmann/json を Boost.JSON に変更
+    - @melpon
+
 ## 2020.10
 
 - [UPDATE] WebRTC のバージョンを M87 (4280@{#10}) に上げる

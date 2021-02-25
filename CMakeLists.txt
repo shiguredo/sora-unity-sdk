@@ -23,7 +23,6 @@ set(CMAKE_FIND_ROOT_PATH_MODE_PACKAGE BOTH)
 
 find_package(WebRTC REQUIRED)
 find_package(Boost REQUIRED)
-find_package(JSON REQUIRED)
 
 set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)
 set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
@@ -58,21 +57,26 @@ set_target_properties(SoraUnitySdk PROPERTIES CXX_STANDARD 14 C_STANDARD 99)
 
 target_sources(SoraUnitySdk
   PRIVATE
-    src/sora_signaling.cpp
-    src/unity.cpp
-    src/sora.cpp
+    src/boost_json.cpp
     src/id_pointer.cpp
+    src/sora.cpp
+    src/sora_signaling.cpp
+    src/ssl_verifier.cpp
+    src/unity.cpp
+    src/unity_camera_capturer.cpp
     src/unity_context.cpp
     src/unity_renderer.cpp
-    src/unity_camera_capturer.cpp
+    src/websocket.cpp
     src/rtc/device_list.cpp
     src/rtc/device_video_capturer.cpp
+    src/rtc/h264_format.cpp
     src/rtc/native_buffer.cpp
-    src/rtc/observer.cpp
+    src/rtc/peer_connection_observer.cpp
     src/rtc/rtc_connection.cpp
     src/rtc/rtc_manager.cpp
+    src/rtc/rtc_ssl_verifier.cpp
     src/rtc/scalable_track_source.cpp
-    src/rtc/h264_format.cpp
+    src/rtc/simulcast_video_encoder_factory.cpp
 )
 
 string(SUBSTRING ${SORA_UNITY_SDK_COMMIT} 0 8 SORA_UNITY_SDK_COMMIT_SHORT)
@@ -92,7 +96,6 @@ target_link_libraries(SoraUnitySdk
   PRIVATE
     WebRTC::WebRTC
     Boost::boost
-    JSON::JSON
 )
 
 if (SORA_UNITY_SDK_PACKAGE STREQUAL "windows")
@@ -232,6 +235,7 @@ elseif (SORA_UNITY_SDK_PACKAGE STREQUAL "macos")
       "-framework CoreGraphics"
       "-framework CoreMedia"
       "-framework CoreVideo"
+      "-framework QuartzCore"
       "-framework VideoToolbox"
       "-framework AppKit"
       "-framework Metal"
@@ -317,11 +321,13 @@ elseif (SORA_UNITY_SDK_PACKAGE STREQUAL "android")
   target_link_options(SoraUnitySdk
     PRIVATE
       -fuse-ld=gold
-      -Wl,--wrap=malloc
-      -Wl,--wrap=calloc
-      -Wl,--wrap=memalign
-      -Wl,--wrap=realloc
-      -Wl,--wrap=free
+      #-Wl,--wrap=malloc
+      #-Wl,--wrap=calloc
+      #-Wl,--wrap=memalign
+      #-Wl,--wrap=realloc
+      #-Wl,--wrap=free
+      #-Wl,--wrap=realpath
+      #-Wl,--wrap=getcwd
       ${_WEBRTC_ANDROID_LDFLAGS}
   )
 endif ()

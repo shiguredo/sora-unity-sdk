@@ -70,6 +70,9 @@ class Sora {
     std::string metadata;
     std::string role;
     bool multistream;
+    bool spotlight;
+    int spotlight_number;
+    bool simulcast;
     int capturer_type;
     void* unity_camera_texture;
     std::string video_capturer_device;
@@ -95,7 +98,7 @@ class Sora {
   void ProcessAudio(const void* p, int offset, int samples);
   void SetOnHandleAudio(std::function<void(const int16_t*, int, int)> f);
 
-  void GetStats(std::function<void (std::string)> on_get_stats);
+  void GetStats(std::function<void(std::string)> on_get_stats);
 
  private:
   bool DoConnect(const ConnectConfig& config);

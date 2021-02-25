@@ -4,8 +4,8 @@
 #include <boost/asio/connect.hpp>
 #include <boost/beast/core/buffers_to_string.hpp>
 #include <boost/beast/websocket/stream.hpp>
+#include <boost/json.hpp>
 #include <boost/preprocessor/stringize.hpp>
-#include <nlohmann/json.hpp>
 
 namespace {
 
@@ -33,8 +33,6 @@ std::string iceConnectionStateToString(
 }
 
 }  // namespace
-
-using json = nlohmann::json;
 
 namespace sora {
 
@@ -70,53 +68,22 @@ SoraSignaling::SoraSignaling(boost::asio::io_context& ioc,
                              SoraSignalingConfig config,
                              std::function<void(std::string)> on_notify)
     : ioc_(ioc),
-      resolver_(ioc),
       manager_(manager),
       config_(config),
       on_notify_(std::move(on_notify)) {}
 
 bool SoraSignaling::Init() {
-  if (!URLParts::parse(config_.signaling_url, parts_)) {
-    RTC_LOG(LS_ERROR) << "Invalid Signaling URL: " << config_.signaling_url;
-    return false;
-  }
-
-  if (parts_.scheme != "wss") {
-    RTC_LOG(LS_ERROR) << "Signaling URL Scheme is not secure web socket (wss): "
-                      << config_.signaling_url;
-    return false;
-  }
-
-  boost::asio::ssl::context ssl_ctx(boost::asio::ssl::context::tlsv12);
-  ssl_ctx.set_default_verify_paths();
-  ssl_ctx.set_options(boost::asio::ssl::context::default_workarounds |
-                      boost::asio::ssl::context::no_sslv2 |
-                      boost::asio::ssl::context::no_sslv3 |
-                      boost::asio::ssl::context::single_dh_use);
-
-  wss_.reset(new ssl_websocket_t(ioc_, ssl_ctx));
-  wss_->write_buffer_bytes(8192);
-
-  // SNI の設定を行う
-  if (!SSL_set_tlsext_host_name(wss_->next_layer().native_handle(),
-                                parts_.host.c_str())) {
-    boost::system::error_code ec{static_cast<int>(::ERR_get_error()),
-                                 boost::asio::error::get_ssl_category()};
-    RTC_LOG(LS_ERROR) << "Failed SSL_set_tlsext_host_name: ec=" << ec;
-    return false;
-  }
-
   return true;
 }
 
-void SoraSignaling::release() {
+void SoraSignaling::Release() {
   // connection_ を nullptr にした上で解放する
   // デストラクタ中にコールバックが呼ばれて解放中の connection_ にアクセスしてしまうことがあるため
   auto connection = std::move(connection_);
   connection = nullptr;
 }
 
-bool SoraSignaling::connect() {
+bool SoraSignaling::Connect() {
   RTC_LOG(LS_INFO) << __FUNCTION__;
 
   if (connected_) {
@@ -128,64 +95,29 @@ bool SoraSignaling::connect() {
     port = parts_.port;
   }
 
-  RTC_LOG(LS_INFO) << "Start to resolve DNS: host=" << parts_.host
-                   << " port=" << port;
+  RTC_LOG(LS_INFO) << "Connect to " << parts_.host;
 
-  // DNS ルックアップ
-  resolver_.async_resolve(parts_.host, port,
-                          boost::beast::bind_front_handler(
-                              &SoraSignaling::onResolve, shared_from_this()));
+  URLParts parts;
+  if (!URLParts::Parse(config_.signaling_url, parts)) {
+    RTC_LOG(LS_ERROR) << "Invalid Signaling URL: " << config_.signaling_url;
+    return false;
+  }
+  if (parts.scheme == "ws") {
+    ws_.reset(new Websocket(ioc_));
+  } else if (parts.scheme == "wss") {
+    ws_.reset(new Websocket(Websocket::ssl_tag(), ioc_, config_.insecure));
+  } else {
+    return false;
+  }
+
+  ws_->Connect(config_.signaling_url,
+               std::bind(&SoraSignaling::OnConnect, shared_from_this(),
+                         std::placeholders::_1));
 
   return true;
 }
 
-void SoraSignaling::onResolve(
-    boost::system::error_code ec,
-    boost::asio::ip::tcp::resolver::results_type results) {
-  RTC_LOG(LS_INFO) << __FUNCTION__;
-
-  if (ec) {
-    RTC_LOG(LS_ERROR) << "Failed to resolve DNS: " << ec;
-    return;
-  }
-
-  // DNS ルックアップで得られたエンドポイントに対して接続する
-  boost::asio::async_connect(
-      wss_->next_layer().next_layer(), results.begin(), results.end(),
-      std::bind(&SoraSignaling::onSSLConnect, shared_from_this(),
-                std::placeholders::_1));
-}
-
-void SoraSignaling::onSSLConnect(boost::system::error_code ec) {
-  RTC_LOG(LS_INFO) << __FUNCTION__;
-
-  if (ec) {
-    RTC_LOG(LS_ERROR) << "Failed to connect: " << ec;
-    return;
-  }
-
-  // SSL のハンドシェイク
-  wss_->next_layer().async_handshake(
-      boost::asio::ssl::stream_base::client,
-      boost::beast::bind_front_handler(&SoraSignaling::onSSLHandshake,
-                                       shared_from_this()));
-}
-
-void SoraSignaling::onSSLHandshake(boost::system::error_code ec) {
-  RTC_LOG(LS_INFO) << __FUNCTION__;
-
-  if (ec) {
-    RTC_LOG(LS_ERROR) << "Failed SSL handshake: " << ec;
-    return;
-  }
-
-  // Websocket のハンドシェイク
-  wss_->async_handshake(parts_.host, parts_.path_query_fragment,
-                        boost::beast::bind_front_handler(
-                            &SoraSignaling::onHandshake, shared_from_this()));
-}
-
-void SoraSignaling::onHandshake(boost::system::error_code ec) {
+void SoraSignaling::OnConnect(boost::system::error_code ec) {
   RTC_LOG(LS_INFO) << __FUNCTION__;
 
   if (ec) {
@@ -196,8 +128,8 @@ void SoraSignaling::onHandshake(boost::system::error_code ec) {
   connected_ = true;
   RTC_LOG(LS_INFO) << "Signaling Websocket is connected";
 
-  doRead();
-  doSendConnect();
+  DoRead();
+  DoSendConnect();
 }
 
 #define SORA_CLIENT \
@@ -206,15 +138,18 @@ void SoraSignaling::onHandshake(boost::system::error_code ec) {
   "Shiguredo-build " WEBRTC_READABLE_VERSION " (" WEBRTC_BUILD_VERSION \
   " " WEBRTC_SRC_COMMIT_SHORT ")"
 
-void SoraSignaling::doSendConnect() {
+void SoraSignaling::DoSendConnect() {
   std::string role =
-    config_.role == SoraSignalingConfig::Role::Sendonly ? "sendonly" :
-    config_.role == SoraSignalingConfig::Role::Recvonly ? "recvonly" : "sendrecv";
+      config_.role == SoraSignalingConfig::Role::Sendonly   ? "sendonly"
+      : config_.role == SoraSignalingConfig::Role::Recvonly ? "recvonly"
+                                                            : "sendrecv";
 
-  json json_message = {
+  boost::json::object json_message = {
       {"type", "connect"},
       {"role", role},
       {"multistream", config_.multistream},
+      {"spotlight", config_.spotlight},
+      {"simulcast", config_.simulcast},
       {"channel_id", config_.channel_id},
       {"sora_client", SORA_CLIENT},
       {"libwebrtc", LIBWEBRTC},
@@ -226,42 +161,48 @@ void SoraSignaling::doSendConnect() {
     json_message["metadata"] = config_.metadata;
   }
 
-  json_message["video"]["codec_type"] = config_.video_codec;
+  json_message["video"] = boost::json::object();
+  json_message["video"].as_object()["codec_type"] = config_.video_codec;
   if (config_.video_bitrate != 0) {
-    json_message["video"]["bit_rate"] = config_.video_bitrate;
+    json_message["video"].as_object()["bit_rate"] = config_.video_bitrate;
   }
 
-  json_message["audio"]["codec_type"] = config_.audio_codec;
+  json_message["audio"] = boost::json::object();
+  json_message["audio"].as_object()["codec_type"] = config_.audio_codec;
   if (config_.audio_bitrate != 0) {
-    json_message["audio"]["bit_rate"] = config_.audio_bitrate;
+    json_message["audio"].as_object()["bit_rate"] = config_.audio_bitrate;
   }
 
-  sendText(json_message.dump());
+  if (config_.spotlight && config_.spotlight_number > 0) {
+    json_message["spotlight_number"] = config_.spotlight_number;
+  }
+
+  ws_->WriteText(boost::json::serialize(json_message));
 }
-void SoraSignaling::doSendPong() {
-  json json_message = {{"type", "pong"}};
-  sendText(json_message.dump());
+void SoraSignaling::DoSendPong() {
+  boost::json::value json_message = {{"type", "pong"}};
+  ws_->WriteText(boost::json::serialize(json_message));
 }
-void SoraSignaling::doSendPong(
+void SoraSignaling::DoSendPong(
     const rtc::scoped_refptr<const webrtc::RTCStatsReport>& report) {
   std::string stats = report->ToJson();
-  json json_message = {{"type", "pong"}, {"stats", stats}};
   std::string str = R"({"type":"pong","stats":)" + stats + "}";
-  sendText(std::move(str));
+  ws_->WriteText(std::move(str));
 }
 
-void SoraSignaling::createPeerFromConfig(json jconfig) {
+std::shared_ptr<sora::RTCConnection> SoraSignaling::CreateRTCConnection(
+    boost::json::value jconfig) {
   webrtc::PeerConnectionInterface::RTCConfiguration rtc_config;
   webrtc::PeerConnectionInterface::IceServers ice_servers;
 
-  auto jservers = jconfig["iceServers"];
-  for (auto jserver : jservers) {
-    const std::string username = jserver["username"];
-    const std::string credential = jserver["credential"];
-    auto jurls = jserver["urls"];
-    for (const std::string url : jurls) {
+  auto jservers = jconfig.at("iceServers");
+  for (auto jserver : jservers.as_array()) {
+    const std::string username = jserver.at("username").as_string().c_str();
+    const std::string credential = jserver.at("credential").as_string().c_str();
+    auto jurls = jserver.at("urls");
+    for (const auto url : jurls.as_array()) {
       webrtc::PeerConnectionInterface::IceServer ice_server;
-      ice_server.uri = url;
+      ice_server.uri = url.as_string().c_str();
       ice_server.username = username;
       ice_server.password = credential;
       ice_servers.push_back(ice_server);
@@ -270,30 +211,30 @@ void SoraSignaling::createPeerFromConfig(json jconfig) {
 
   rtc_config.servers = ice_servers;
 
-  connection_ = manager_->createConnection(rtc_config, this);
+  return manager_->CreateConnection(rtc_config, this);
 }
 
-void SoraSignaling::close() {
-  wss_->async_close(boost::beast::websocket::close_code::normal,
-                    boost::beast::bind_front_handler(&SoraSignaling::onClose,
-                                                     shared_from_this()));
+void SoraSignaling::Close() {
+  ws_->Close(std::bind(&SoraSignaling::OnClose, shared_from_this(),
+                       std::placeholders::_1));
 }
 
-void SoraSignaling::onClose(boost::system::error_code ec) {
+void SoraSignaling::OnClose(boost::system::error_code ec) {
   if (ec) {
     RTC_LOG(LS_ERROR) << "Failed to close: ec=" << ec;
     return;
   }
 }
 
-void SoraSignaling::doRead() {
-  wss_->async_read(read_buffer_,
-                   boost::beast::bind_front_handler(&SoraSignaling::onRead,
-                                                    shared_from_this()));
+void SoraSignaling::DoRead() {
+  ws_->Read(std::bind(&SoraSignaling::OnRead, shared_from_this(),
+                      std::placeholders::_1, std::placeholders::_2,
+                      std::placeholders::_3));
 }
 
-void SoraSignaling::onRead(boost::system::error_code ec,
-                           std::size_t bytes_transferred) {
+void SoraSignaling::OnRead(boost::system::error_code ec,
+                           std::size_t bytes_transferred,
+                           std::string text) {
   boost::ignore_unused(bytes_transferred);
 
   if (ec == boost::asio::error::operation_aborted) {
@@ -305,21 +246,88 @@ void SoraSignaling::onRead(boost::system::error_code ec,
     return;
   }
 
-  const auto text = boost::beast::buffers_to_string(read_buffer_.data());
-  read_buffer_.consume(read_buffer_.size());
-
   RTC_LOG(LS_INFO) << __FUNCTION__ << ": text=" << text;
 
-  auto json_message = json::parse(text);
-  const std::string type = json_message["type"];
+  auto json_message = boost::json::parse(text);
+  const std::string type = json_message.at("type").as_string().c_str();
   if (type == "offer") {
-    answer_sent_ = false;
-    createPeerFromConfig(json_message["config"]);
-    const std::string sdp = json_message["sdp"];
-    connection_->setOffer(sdp);
+    connection_ = CreateRTCConnection(json_message.at("config"));
+    const std::string sdp = json_message.at("sdp").as_string().c_str();
+    connection_->SetOffer(sdp, [this, json_message]() {
+      // simulcast では offer の setRemoteDescription が終わった後に
+      // トラックを追加する必要があるため、ここで初期化する
+      manager_->InitTracks(connection_.get());
+
+      if (config_.simulcast &&
+          json_message.as_object().count("encodings") != 0) {
+        std::vector<webrtc::RtpEncodingParameters> encoding_parameters;
+
+        // "encodings" キーの各内容を webrtc::RtpEncodingParameters に変換する
+        auto encodings_json = json_message.at("encodings");
+        for (auto v : encodings_json.as_array()) {
+          auto p = v.as_object();
+          webrtc::RtpEncodingParameters params;
+          // absl::optional<uint32_t> ssrc;
+          // double bitrate_priority = kDefaultBitratePriority;
+          // enum class Priority { kVeryLow, kLow, kMedium, kHigh };
+          // Priority network_priority = Priority::kLow;
+          // absl::optional<int> max_bitrate_bps;
+          // absl::optional<int> min_bitrate_bps;
+          // absl::optional<double> max_framerate;
+          // absl::optional<int> num_temporal_layers;
+          // absl::optional<double> scale_resolution_down_by;
+          // bool active = true;
+          // std::string rid;
+          // bool adaptive_ptime = false;
+          params.rid = p.at("rid").as_string().c_str();
+          if (p.count("maxBitrate") != 0) {
+            params.max_bitrate_bps = p["maxBitrate"].to_number<int>();
+          }
+          if (p.count("minBitrate") != 0) {
+            params.min_bitrate_bps = p["minBitrate"].to_number<int>();
+          }
+          if (p.count("scaleResolutionDownBy") != 0) {
+            params.scale_resolution_down_by =
+                p["scaleResolutionDownBy"].to_number<double>();
+          }
+          if (p.count("maxFramerate") != 0) {
+            params.max_framerate = p["maxFramerate"].to_number<double>();
+          }
+          if (p.count("active") != 0) {
+            params.active = p["active"].as_bool();
+          }
+          if (p.count("adaptivePtime") != 0) {
+            params.adaptive_ptime = p["adaptivePtime"].as_bool();
+          }
+          encoding_parameters.push_back(params);
+        }
+        connection_->SetEncodingParameters(std::move(encoding_parameters));
+      }
+
+      connection_->CreateAnswer([this](
+                                    webrtc::SessionDescriptionInterface* desc) {
+        std::string sdp;
+        desc->ToString(&sdp);
+        boost::json::value json_message = {{"type", "answer"}, {"sdp", sdp}};
+        ws_->WriteText(boost::json::serialize(json_message));
+      });
+    });
   } else if (type == "update") {
-    const std::string sdp = json_message["sdp"];
-    connection_->setOffer(sdp);
+    const std::string sdp = json_message.at("sdp").as_string().c_str();
+    connection_->SetOffer(sdp, [this]() {
+      // エンコーディングパラメータの情報がクリアされるので設定し直す
+      if (config_.simulcast) {
+        connection_->ResetEncodingParameters();
+      }
+
+      connection_->CreateAnswer([this](
+                                    webrtc::SessionDescriptionInterface* desc) {
+        std::string sdp;
+        desc->ToString(&sdp);
+        boost::json::value json_message = {{"type", "update"}, {"sdp", sdp}};
+        ws_->WriteText(boost::json::serialize(json_message));
+      });
+    });
   } else if (type == "notify") {
     if (on_notify_) {
       on_notify_(text);
@@ -327,115 +335,40 @@ void SoraSignaling::onRead(boost::system::error_code ec,
   } else if (type == "ping") {
     if (rtc_state_ != webrtc::PeerConnectionInterface::IceConnectionState::
                           kIceConnectionConnected) {
-      doRead();
+      DoRead();
       return;
     }
-    bool stats = json_message.value("stats", false);
-    if (stats) {
-      connection_->getStats(
+    auto it = json_message.as_object().find("stats");
+    if (it != json_message.as_object().end() && it->value().as_bool()) {
+      connection_->GetStats(
           [this](
               const rtc::scoped_refptr<const webrtc::RTCStatsReport>& report) {
-            doSendPong(report);
+            DoSendPong(report);
           });
     } else {
-      doSendPong();
+      DoSendPong();
     }
   }
 
-  doRead();
-}
-
-void SoraSignaling::sendText(std::string text) {
-  RTC_LOG(LS_INFO) << __FUNCTION__;
-
-  boost::asio::post(boost::beast::bind_front_handler(
-      &SoraSignaling::doSendText, shared_from_this(), std::move(text)));
-}
-
-void SoraSignaling::doSendText(std::string text) {
-  RTC_LOG(LS_INFO) << __FUNCTION__ << ": " << text;
-
-  bool empty = write_buffer_.empty();
-  boost::beast::flat_buffer buffer;
-
-  const auto n = boost::asio::buffer_copy(buffer.prepare(text.size()),
-                                          boost::asio::buffer(text));
-  buffer.commit(n);
-
-  write_buffer_.push_back(std::move(buffer));
-
-  if (empty) {
-    doWrite();
-  }
-}
-
-void SoraSignaling::doWrite() {
-  RTC_LOG(LS_INFO) << __FUNCTION__;
-
-  auto& buffer = write_buffer_.front();
-
-  wss_->text(true);
-  wss_->async_write(buffer.data(),
-                    boost::beast::bind_front_handler(&SoraSignaling::onWrite,
-                                                     shared_from_this()));
-}
-
-void SoraSignaling::onWrite(boost::system::error_code ec,
-                            std::size_t bytes_transferred) {
-  RTC_LOG(LS_INFO) << __FUNCTION__;
-
-  if (ec == boost::asio::error::operation_aborted) {
-    return;
-  }
-
-  if (ec) {
-    RTC_LOG(LS_ERROR) << "Failed to write: ec=" << ec;
-    return;
-  }
-
-  write_buffer_.erase(write_buffer_.begin());
-
-  if (!write_buffer_.empty()) {
-    doWrite();
-  }
+  DoRead();
 }
 
 // WebRTC からのコールバック
 // これらは別スレッドからやってくるので取り扱い注意
-void SoraSignaling::onIceConnectionStateChange(
+void SoraSignaling::OnIceConnectionStateChange(
     webrtc::PeerConnectionInterface::IceConnectionState new_state) {
   RTC_LOG(LS_INFO) << __FUNCTION__ << " state:" << new_state;
   boost::asio::post(boost::beast::bind_front_handler(
-      &SoraSignaling::doIceConnectionStateChange, shared_from_this(),
+      &SoraSignaling::DoIceConnectionStateChange, shared_from_this(),
       new_state));
 }
-void SoraSignaling::onIceCandidate(const std::string sdp_mid,
+void SoraSignaling::OnIceCandidate(const std::string sdp_mid,
                                    const int sdp_mlineindex,
                                    const std::string sdp) {
-  json json_message = {{"type", "candidate"}, {"candidate", sdp}};
-  sendText(json_message.dump());
+  boost::json::value json_message = {{"type", "candidate"}, {"candidate", sdp}};
+  ws_->WriteText(boost::json::serialize(json_message));
 }
-void SoraSignaling::onCreateDescription(webrtc::SdpType type,
-                                        const std::string sdp) {
-  // 最初の1回目は answer を送り、以降は update を送る
-  if (!answer_sent_) {
-    answer_sent_ = true;
-    json json_message = {{"type", "answer"}, {"sdp", sdp}};
-    sendText(json_message.dump());
-  } else {
-    json json_message = {{"type", "update"}, {"sdp", sdp}};
-    sendText(json_message.dump());
-  }
-}
-void SoraSignaling::onSetDescription(webrtc::SdpType type) {
-  RTC_LOG(LS_INFO) << __FUNCTION__
-                   << " SdpType: " << webrtc::SdpTypeToString(type);
-  if (connection_ && type == webrtc::SdpType::kOffer) {
-    connection_->createAnswer();
-  }
-}
-
-void SoraSignaling::doIceConnectionStateChange(
+void SoraSignaling::DoIceConnectionStateChange(
     webrtc::PeerConnectionInterface::IceConnectionState new_state) {
   RTC_LOG(LS_INFO) << __FUNCTION__
                    << ": oldState=" << iceConnectionStateToString(rtc_state_)

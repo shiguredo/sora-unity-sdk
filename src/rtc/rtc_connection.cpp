@@ -1,6 +1,9 @@
-#include "rtc_base/logging.h"
-
 #include "rtc_connection.h"
+
+// WebRTC
+#include <api/peer_connection_interface.h>
+#include <api/scoped_refptr.h>
+#include <rtc_base/ref_counted_object.h>
 
 namespace sora {
 
@@ -30,11 +33,91 @@ class RTCStatsCallback : public webrtc::RTCStatsCollectorCallback {
   ResultCallback result_callback_;
 };
 
+// CreateSessionDescriptionObserver のコールバックを関数オブジェクトで扱えるようにするためのクラス
+class CreateSessionDescriptionThunk
+    : public webrtc::CreateSessionDescriptionObserver {
+ public:
+  typedef RTCConnection::OnCreateSuccessFunc OnSuccessFunc;
+  typedef RTCConnection::OnCreateFailureFunc OnFailureFunc;
+
+  static rtc::scoped_refptr<CreateSessionDescriptionThunk> Create(
+      OnSuccessFunc on_success,
+      OnFailureFunc on_failure) {
+    return new rtc::RefCountedObject<CreateSessionDescriptionThunk>(
+        std::move(on_success), std::move(on_failure));
+  }
+
+ protected:
+  CreateSessionDescriptionThunk(OnSuccessFunc on_success,
+                                OnFailureFunc on_failure)
+      : on_success_(std::move(on_success)),
+        on_failure_(std::move(on_failure)) {}
+  void OnSuccess(webrtc::SessionDescriptionInterface* desc) override {
+    auto f = std::move(on_success_);
+    if (f) {
+      f(desc);
+    }
+  }
+  void OnFailure(webrtc::RTCError error) override {
+    RTC_LOG(LS_ERROR) << "Failed to create session description : "
+                      << webrtc::ToString(error.type()) << ": "
+                      << error.message();
+    auto f = std::move(on_failure_);
+    if (f) {
+      f(error);
+    }
+  }
+
+ private:
+  OnSuccessFunc on_success_;
+  OnFailureFunc on_failure_;
+};
+
+// SetSessionDescriptionObserver のコールバックを関数オブジェクトで扱えるようにするためのクラス
+class SetSessionDescriptionThunk
+    : public webrtc::SetSessionDescriptionObserver {
+ public:
+  typedef RTCConnection::OnSetSuccessFunc OnSuccessFunc;
+  typedef RTCConnection::OnSetFailureFunc OnFailureFunc;
+
+  static rtc::scoped_refptr<SetSessionDescriptionThunk> Create(
+      OnSuccessFunc on_success,
+      OnFailureFunc on_failure) {
+    return new rtc::RefCountedObject<SetSessionDescriptionThunk>(
+        std::move(on_success), std::move(on_failure));
+  }
+
+ protected:
+  SetSessionDescriptionThunk(OnSuccessFunc on_success, OnFailureFunc on_failure)
+      : on_success_(std::move(on_success)),
+        on_failure_(std::move(on_failure)) {}
+  void OnSuccess() override {
+    auto f = std::move(on_success_);
+    if (f) {
+      f();
+    }
+  }
+  void OnFailure(webrtc::RTCError error) override {
+    RTC_LOG(LS_ERROR) << "Failed to set session description : "
+                      << webrtc::ToString(error.type()) << ": "
+                      << error.message();
+    auto f = std::move(on_failure_);
+    if (f) {
+      f(error);
+    }
+  }
+
+ private:
+  OnSuccessFunc on_success_;
+  OnFailureFunc on_failure_;
+};
+
 RTCConnection::~RTCConnection() {
   connection_->Close();
 }
 
-void RTCConnection::createOffer() {
+void RTCConnection::CreateOffer(OnCreateSuccessFunc on_success,
+                                OnCreateFailureFunc on_failure) {
   using RTCOfferAnswerOptions =
       webrtc::PeerConnectionInterface::RTCOfferAnswerOptions;
   RTCOfferAnswerOptions options = RTCOfferAnswerOptions();
@@ -42,11 +125,27 @@ void RTCConnection::createOffer() {
       RTCOfferAnswerOptions::kOfferToReceiveMediaTrue;
   options.offer_to_receive_audio =
       RTCOfferAnswerOptions::kOfferToReceiveMediaTrue;
+
+  auto with_set_local_desc = [this, on_success = std::move(on_success)](
+                                 webrtc::SessionDescriptionInterface* desc) {
+    std::string sdp;
+    desc->ToString(&sdp);
+    RTC_LOG(LS_INFO) << "Created session description : " << sdp;
+    connection_->SetLocalDescription(
+        SetSessionDescriptionThunk::Create(nullptr, nullptr), desc);
+    if (on_success) {
+      on_success(desc);
+    }
+  };
   connection_->CreateOffer(
-      CreateSessionDescriptionObserver::Create(sender_, connection_), options);
+      CreateSessionDescriptionThunk::Create(std::move(with_set_local_desc),
+                                            std::move(on_failure)),
+      options);
 }
 
-void RTCConnection::setOffer(const std::string sdp) {
+void RTCConnection::SetOffer(const std::string sdp,
+                             OnSetSuccessFunc on_success,
+                             OnSetFailureFunc on_failure) {
   webrtc::SdpParseError error;
   std::unique_ptr<webrtc::SessionDescriptionInterface> session_description =
       webrtc::CreateSessionDescription(webrtc::SdpType::kOffer, sdp, &error);
@@ -58,18 +157,33 @@ void RTCConnection::setOffer(const std::string sdp) {
     return;
   }
   connection_->SetRemoteDescription(
-      SetSessionDescriptionObserver::Create(session_description->GetType(),
-                                            sender_),
+      SetSessionDescriptionThunk::Create(std::move(on_success),
+                                         std::move(on_failure)),
       session_description.release());
 }
 
-void RTCConnection::createAnswer() {
+void RTCConnection::CreateAnswer(OnCreateSuccessFunc on_success,
+                                 OnCreateFailureFunc on_failure) {
+  auto with_set_local_desc = [this, on_success = std::move(on_success)](
+                                 webrtc::SessionDescriptionInterface* desc) {
+    std::string sdp;
+    desc->ToString(&sdp);
+    RTC_LOG(LS_INFO) << "Created session description : " << sdp;
+    connection_->SetLocalDescription(
+        SetSessionDescriptionThunk::Create(nullptr, nullptr), desc);
+    if (on_success) {
+      on_success(desc);
+    }
+  };
   connection_->CreateAnswer(
-      CreateSessionDescriptionObserver::Create(sender_, connection_),
+      CreateSessionDescriptionThunk::Create(std::move(with_set_local_desc),
+                                            std::move(on_failure)),
       webrtc::PeerConnectionInterface::RTCOfferAnswerOptions());
 }
 
-void RTCConnection::setAnswer(const std::string sdp) {
+void RTCConnection::SetAnswer(const std::string sdp,
+                              OnSetSuccessFunc on_success,
+                              OnSetFailureFunc on_failure) {
   webrtc::SdpParseError error;
   std::unique_ptr<webrtc::SessionDescriptionInterface> session_description =
       webrtc::CreateSessionDescription(webrtc::SdpType::kAnswer, sdp, &error);
@@ -81,12 +195,12 @@ void RTCConnection::setAnswer(const std::string sdp) {
     return;
   }
   connection_->SetRemoteDescription(
-      SetSessionDescriptionObserver::Create(session_description->GetType(),
-                                            sender_),
+      SetSessionDescriptionThunk::Create(std::move(on_success),
+                                         std::move(on_failure)),
       session_description.release());
 }
 
-void RTCConnection::addIceCandidate(const std::string sdp_mid,
+void RTCConnection::AddIceCandidate(const std::string sdp_mid,
                                     const int sdp_mlineindex,
                                     const std::string sdp) {
   webrtc::SdpParseError error;
@@ -98,38 +212,40 @@ void RTCConnection::addIceCandidate(const std::string sdp_mid,
                       << "\nline: " << error.line.c_str();
     return;
   }
-  if (!connection_->AddIceCandidate(candidate.get())) {
-    RTC_LOG(LS_WARNING) << __FUNCTION__
-                        << "Failed to apply the received candidate : " << sdp;
-    return;
-  }
+  connection_->AddIceCandidate(
+      std::move(candidate), [sdp](webrtc::RTCError error) {
+        RTC_LOG(LS_WARNING)
+            << __FUNCTION__ << " Failed to apply the received candidate. type="
+            << webrtc::ToString(error.type()) << " message=" << error.message()
+            << " sdp=" << sdp;
+      });
 }
 
-bool RTCConnection::setAudioEnabled(bool enabled) {
-  return setMediaEnabled(getLocalAudioTrack(), enabled);
+bool RTCConnection::SetAudioEnabled(bool enabled) {
+  return SetMediaEnabled(GetLocalAudioTrack(), enabled);
 }
 
-bool RTCConnection::setVideoEnabled(bool enabled) {
-  return setMediaEnabled(getLocalVideoTrack(), enabled);
+bool RTCConnection::SetVideoEnabled(bool enabled) {
+  return SetMediaEnabled(GetLocalVideoTrack(), enabled);
 }
 
-bool RTCConnection::isAudioEnabled() {
-  return isMediaEnabled(getLocalAudioTrack());
+bool RTCConnection::IsAudioEnabled() {
+  return IsMediaEnabled(GetLocalAudioTrack());
 }
 
-bool RTCConnection::isVideoEnabled() {
-  return isMediaEnabled(getLocalVideoTrack());
+bool RTCConnection::IsVideoEnabled() {
+  return IsMediaEnabled(GetLocalVideoTrack());
 }
 
 rtc::scoped_refptr<webrtc::MediaStreamInterface>
-RTCConnection::getLocalStream() {
+RTCConnection::GetLocalStream() {
   return connection_->local_streams()->at(0);
 }
 
 rtc::scoped_refptr<webrtc::AudioTrackInterface>
-RTCConnection::getLocalAudioTrack() {
+RTCConnection::GetLocalAudioTrack() {
   rtc::scoped_refptr<webrtc::MediaStreamInterface> local_stream =
-      getLocalStream();
+      GetLocalStream();
   if (!local_stream) {
     return nullptr;
   }
@@ -145,9 +261,9 @@ RTCConnection::getLocalAudioTrack() {
 }
 
 rtc::scoped_refptr<webrtc::VideoTrackInterface>
-RTCConnection::getLocalVideoTrack() {
+RTCConnection::GetLocalVideoTrack() {
   rtc::scoped_refptr<webrtc::MediaStreamInterface> local_stream =
-      getLocalStream();
+      GetLocalStream();
   if (!local_stream) {
     return nullptr;
   }
@@ -162,7 +278,7 @@ RTCConnection::getLocalVideoTrack() {
   return nullptr;
 }
 
-bool RTCConnection::setMediaEnabled(
+bool RTCConnection::SetMediaEnabled(
     rtc::scoped_refptr<webrtc::MediaStreamTrackInterface> track,
     bool enabled) {
   if (track) {
@@ -171,7 +287,7 @@ bool RTCConnection::setMediaEnabled(
   return false;
 }
 
-bool RTCConnection::isMediaEnabled(
+bool RTCConnection::IsMediaEnabled(
     rtc::scoped_refptr<webrtc::MediaStreamTrackInterface> track) {
   if (track) {
     return track->enabled();
@@ -179,10 +295,145 @@ bool RTCConnection::isMediaEnabled(
   return false;
 }
 
-void RTCConnection::getStats(
+void RTCConnection::GetStats(
     std::function<void(const rtc::scoped_refptr<const webrtc::RTCStatsReport>&)>
         callback) {
   connection_->GetStats(RTCStatsCallback::Create(std::move(callback)));
+}
+
+std::string RtpTransceiverDirectionToString(
+    webrtc::RtpTransceiverDirection dir) {
+  switch (dir) {
+    case webrtc::RtpTransceiverDirection::kSendRecv:
+      return "kSendRecv";
+    case webrtc::RtpTransceiverDirection::kSendOnly:
+      return "kSendOnly";
+    case webrtc::RtpTransceiverDirection::kRecvOnly:
+      return "kRecvOnly";
+    case webrtc::RtpTransceiverDirection::kInactive:
+      return "kInactive";
+    case webrtc::RtpTransceiverDirection::kStopped:
+      return "kStopped";
+    default:
+      return "UNKNOWN";
+  }
+}
+
+void RTCConnection::SetEncodingParameters(
+    std::vector<webrtc::RtpEncodingParameters> encodings) {
+  for (auto transceiver : connection_->GetTransceivers()) {
+    RTC_LOG(LS_INFO) << "transceiver mid="
+                     << transceiver->mid().value_or("nullopt") << " direction="
+                     << RtpTransceiverDirectionToString(
+                            transceiver->direction())
+                     << " current_direction="
+                     << (transceiver->current_direction()
+                             ? RtpTransceiverDirectionToString(
+                                   *transceiver->current_direction())
+                             : "nullopt")
+                     << " media_type="
+                     << cricket::MediaTypeToString(transceiver->media_type())
+                     << " sender_encoding_count="
+                     << transceiver->sender()->GetParameters().encodings.size();
+  }
+
+  for (auto enc : encodings) {
+    RTC_LOG(LS_INFO) << "SetEncodingParameters: rid=" << enc.rid
+                     << " active=" << (enc.active ? "true" : "false")
+                     << " max_framerate="
+                     << (enc.max_framerate ? std::to_string(*enc.max_framerate)
+                                           : std::string("nullopt"))
+                     << " scale_resolution_down_by="
+                     << (enc.scale_resolution_down_by
+                             ? std::to_string(*enc.scale_resolution_down_by)
+                             : std::string("nullopt"));
+  }
+
+  // setRD のあとの direction は recv only になる。
+  // 現状 sender.track.streamIds を取れないので connection ID との比較もできない。
+  // video upstream 持っているときは、ひとつめの video type transceiver を
+  // 自分が send すべき transceiver と決め打ちする。
+  rtc::scoped_refptr<webrtc::RtpTransceiverInterface> video_transceiver;
+  for (auto transceiver : connection_->GetTransceivers()) {
+    if (transceiver->media_type() == cricket::MediaType::MEDIA_TYPE_VIDEO) {
+      video_transceiver = transceiver;
+      break;
+    }
+  }
+
+  if (video_transceiver == nullptr) {
+    RTC_LOG(LS_ERROR) << "video transceiver not found";
+    return;
+  }
+
+  rtc::scoped_refptr<webrtc::RtpSenderInterface> sender =
+      video_transceiver->sender();
+  webrtc::RtpParameters parameters = sender->GetParameters();
+  parameters.encodings = encodings;
+  sender->SetParameters(parameters);
+  mid_ = *video_transceiver->mid();
+
+  encodings_ = encodings;
+}
+
+void RTCConnection::ResetEncodingParameters() {
+  if (encodings_.empty() || mid_.empty()) {
+    return;
+  }
+
+  for (auto enc : encodings_) {
+    RTC_LOG(LS_INFO) << "ResetEncodingParameters: rid=" << enc.rid
+                     << " active=" << (enc.active ? "true" : "false")
+                     << " max_framerate="
+                     << (enc.max_framerate ? std::to_string(*enc.max_framerate)
+                                           : std::string("nullopt"))
+                     << " scale_resolution_down_by="
+                     << (enc.scale_resolution_down_by
+                             ? std::to_string(*enc.scale_resolution_down_by)
+                             : std::string("nullopt"));
+  }
+
+  rtc::scoped_refptr<webrtc::RtpTransceiverInterface> video_transceiver;
+  for (auto transceiver : connection_->GetTransceivers()) {
+    if (transceiver->mid() == mid_) {
+      video_transceiver = transceiver;
+      break;
+    }
+  }
+
+  if (video_transceiver == nullptr) {
+    RTC_LOG(LS_ERROR) << "video transceiver not found";
+    return;
+  }
+
+  rtc::scoped_refptr<webrtc::RtpSenderInterface> sender =
+      video_transceiver->sender();
+  webrtc::RtpParameters parameters = sender->GetParameters();
+  std::vector<webrtc::RtpEncodingParameters> new_encodings = encodings_;
+
+  // ssrc を上書きする
+  for (auto& enc : new_encodings) {
+    auto it =
+        std::find_if(parameters.encodings.begin(), parameters.encodings.end(),
+                     [&enc](const webrtc::RtpEncodingParameters& p) {
+                       return p.rid == enc.rid;
+                     });
+    if (it == parameters.encodings.end()) {
+      RTC_LOG(LS_WARNING) << "Specified rid [" << enc.rid << "] not found";
+      return;
+    }
+    RTC_LOG(LS_INFO) << "Set ssrc: rid=" << enc.rid << " ssrc="
+                     << (it->ssrc ? std::to_string(*it->ssrc)
+                                  : std::string("nullopt"));
+    enc.ssrc = it->ssrc;
+  }
+  parameters.encodings = new_encodings;
+  sender->SetParameters(parameters);
+}
+
+rtc::scoped_refptr<webrtc::PeerConnectionInterface>
+RTCConnection::GetConnection() const {
+  return connection_;
 }
 
 }  // namespace sora

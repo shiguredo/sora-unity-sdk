@@ -16,11 +16,12 @@
 #include <boost/beast/core/multi_buffer.hpp>
 #include <boost/beast/websocket/ssl.hpp>
 #include <boost/beast/websocket/stream.hpp>
-#include <nlohmann/json.hpp>
+#include <boost/json.hpp>
 
 #include "rtc/rtc_manager.h"
 #include "rtc/rtc_message_sender.h"
 #include "url_parts.h"
+#include "websocket.h"
 
 namespace sora {
 
@@ -29,7 +30,7 @@ struct SoraSignalingConfig {
   std::string signaling_url;
   std::string channel_id;
 
-  nlohmann::json metadata;
+  boost::json::value metadata;
   std::string video_codec = "VP9";
   int video_bitrate = 0;
 
@@ -39,20 +40,17 @@ struct SoraSignalingConfig {
   enum class Role { Sendonly, Recvonly, Sendrecv };
   Role role = Role::Sendonly;
   bool multistream = false;
+  bool spotlight = false;
+  int spotlight_number = 0;
+  bool simulcast = false;
+
+  bool insecure = false;
 };
 
 class SoraSignaling : public std::enable_shared_from_this<SoraSignaling>,
                       public RTCMessageSender {
   boost::asio::io_context& ioc_;
-
-  boost::asio::ip::tcp::resolver resolver_;
-
-  typedef boost::beast::websocket::stream<
-      boost::asio::ssl::stream<boost::asio::ip::tcp::socket>>
-      ssl_websocket_t;
-  std::unique_ptr<ssl_websocket_t> wss_;
-  boost::beast::multi_buffer read_buffer_;
-  std::vector<boost::beast::flat_buffer> write_buffer_;
+  std::unique_ptr<Websocket> ws_;
 
   URLParts parts_;
 
@@ -64,7 +62,6 @@ class SoraSignaling : public std::enable_shared_from_this<SoraSignaling>,
   webrtc::PeerConnectionInterface::IceConnectionState rtc_state_;
 
   bool connected_ = false;
-  bool answer_sent_ = false;
 
  public:
   webrtc::PeerConnectionInterface::IceConnectionState getRTCConnectionState()
@@ -85,53 +82,43 @@ class SoraSignaling : public std::enable_shared_from_this<SoraSignaling>,
   bool Init();
 
  public:
-  bool connect();
-  void close();
+  bool Connect();
+  void Close();
 
   // connection_ = nullptr すると直ちに onIceConnectionStateChange コールバックが呼ばれるが、
   // この中で使っている shared_from_this() がデストラクタ内で使えないため、デストラクタで connection_ = nullptr すると実行時エラーになる。
-  // なのでこのクラスを解放する前に明示的に release() 関数を呼んでもらうことにする。.
-  void release();
+  // なのでこのクラスを解放する前に明示的に Release() 関数を呼んでもらうことにする。.
+  void Release();
 
  private:
-  void onResolve(boost::system::error_code ec,
-                 boost::asio::ip::tcp::resolver::results_type results);
-  void onSSLConnect(boost::system::error_code ec);
-  void onSSLHandshake(boost::system::error_code ec);
-  void onHandshake(boost::system::error_code ec);
+  void OnConnect(boost::system::error_code ec);
 
-  void doSendConnect();
-  void doSendPong();
-  void doSendPong(
+  void DoSendConnect();
+  void DoSendPong();
+  void DoSendPong(
       const rtc::scoped_refptr<const webrtc::RTCStatsReport>& report);
-  void createPeerFromConfig(nlohmann::json jconfig);
+  std::shared_ptr<sora::RTCConnection> CreateRTCConnection(
+      boost::json::value jconfig);
 
  private:
-  void onClose(boost::system::error_code ec);
+  void OnClose(boost::system::error_code ec);
 
-  void doRead();
-  void onRead(boost::system::error_code ec, std::size_t bytes_transferred);
-
-  void sendText(std::string text);
-  void doSendText(std::string text);
-
-  void doWrite();
-  void onWrite(boost::system::error_code ec, std::size_t bytes_transferred);
+  void DoRead();
+  void OnRead(boost::system::error_code ec,
+              std::size_t bytes_transferred,
+              std::string text);
 
  private:
   // WebRTC からのコールバック
   // これらは別スレッドからやってくるので取り扱い注意.
-  void onIceConnectionStateChange(
+  void OnIceConnectionStateChange(
       webrtc::PeerConnectionInterface::IceConnectionState new_state) override;
-  void onIceCandidate(const std::string sdp_mid,
+  void OnIceCandidate(const std::string sdp_mid,
                       const int sdp_mlineindex,
                       const std::string sdp) override;
-  void onCreateDescription(webrtc::SdpType type,
-                           const std::string sdp) override;
-  void onSetDescription(webrtc::SdpType type) override;
 
  private:
-  void doIceConnectionStateChange(
+  void DoIceConnectionStateChange(
       webrtc::PeerConnectionInterface::IceConnectionState new_state);
 };
 }  // namespace sora
