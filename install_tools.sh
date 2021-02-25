@@ -115,7 +115,7 @@ if [ ! -e $INSTALL_DIR/android/webrtc.ldflags ]; then
 fi
 
 # 特定バージョンの libcxx, libcxxabi を取得
-source $INSTALL_DIR/macos/webrtc/VERSIONS
+source $INSTALL_DIR/macos/webrtc/release/VERSIONS
 if [ ! -e $INSTALL_DIR/libcxx/.git ]; then
   git clone $WEBRTC_SRC_BUILDTOOLS_THIRD_PARTY_LIBCXX_TRUNK_URL $INSTALL_DIR/libcxx
 fi

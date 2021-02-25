@@ -321,13 +321,13 @@ elseif (SORA_UNITY_SDK_PACKAGE STREQUAL "android")
   target_link_options(SoraUnitySdk
     PRIVATE
       -fuse-ld=gold
-      -Wl,--wrap=malloc
-      -Wl,--wrap=calloc
-      -Wl,--wrap=memalign
-      -Wl,--wrap=realloc
-      -Wl,--wrap=free
-      -Wl,--wrap=realpath
-      -Wl,--wrap=getcwd
+      #-Wl,--wrap=malloc
+      #-Wl,--wrap=calloc
+      #-Wl,--wrap=memalign
+      #-Wl,--wrap=realloc
+      #-Wl,--wrap=free
+      #-Wl,--wrap=realpath
+      #-Wl,--wrap=getcwd
       ${_WEBRTC_ANDROID_LDFLAGS}
   )
 endif ()
