@@ -11,8 +11,10 @@
 
 ## develop
 
-- [UPDATE] WebRTC のバージョンを M88 (4324@{#3}) に上げる
-    - @melpon @torikizi
+- [ADD] サイマルキャスト機能に対応する
+- [ADD] スポットライト機能に対応する
+- [UPDATE] WebRTC のバージョンを M89 (4389@{#5}) に上げる
+    - @melpon @torikizi @voluntas
 - [UPDATE] Boost のバージョンを 1.75.0 に上げる
 - [UPDATE] nlohmann/json を Boost.JSON に変更
 
