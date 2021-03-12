@@ -49,9 +49,6 @@ bool NvCodecVideoDecoder::IsSupported(cudaVideoCodec codec_id) {
 int32_t NvCodecVideoDecoder::InitDecode(
     const webrtc::VideoCodec* codec_settings,
     int32_t number_of_cores) {
-  width_ = codec_settings->width;
-  height_ = codec_settings->height;
-
   return InitNvCodec();
 }
 
