@@ -13,14 +13,14 @@
 NvCodecVideoDecoder::NvCodecVideoDecoder(cudaVideoCodec codec_id)
     : codec_id_(codec_id),
       decode_complete_callback_(nullptr),
-      buffer_pool_(false, 300 /* max_number_of_buffers*/) {
-}
+      buffer_pool_(false, 300 /* max_number_of_buffers*/) {}
 
 NvCodecVideoDecoder::~NvCodecVideoDecoder() {
   Release();
 }
 
-void NvCodecVideoDecoder::Log(NvCodecVideoDecoderCuda::LogType type, const std::string& log) {
+void NvCodecVideoDecoder::Log(NvCodecVideoDecoderCuda::LogType type,
+                              const std::string& log) {
   if (type == NvCodecVideoDecoderCuda::LogType::LOG_INFO) {
     RTC_LOG(LS_INFO) << log;
   } else if (type == NvCodecVideoDecoderCuda::LogType::LOG_WARNING) {
@@ -41,12 +41,14 @@ bool NvCodecVideoDecoder::IsSupported(cudaVideoCodec codec_id) {
     return false;
   }
 
-  auto decoder = NvCodecVideoDecoderCuda::Create(codec_id, &NvCodecVideoDecoder::Log);
+  auto decoder =
+      NvCodecVideoDecoderCuda::Create(codec_id, &NvCodecVideoDecoder::Log);
   return decoder != nullptr;
 }
 
-int32_t NvCodecVideoDecoder::InitDecode(const webrtc::VideoCodec* codec_settings,
-                                     int32_t number_of_cores) {
+int32_t NvCodecVideoDecoder::InitDecode(
+    const webrtc::VideoCodec* codec_settings,
+    int32_t number_of_cores) {
   width_ = codec_settings->width;
   height_ = codec_settings->height;
 
@@ -54,8 +56,8 @@ int32_t NvCodecVideoDecoder::InitDecode(const webrtc::VideoCodec* codec_settings
 }
 
 int32_t NvCodecVideoDecoder::Decode(const webrtc::EncodedImage& input_image,
-                                 bool missing_frames,
-                                 int64_t render_time_ms) {
+                                    bool missing_frames,
+                                    int64_t render_time_ms) {
   if (decoder_ == nullptr) {
     return WEBRTC_VIDEO_CODEC_UNINITIALIZED;
   }
@@ -68,7 +70,8 @@ int32_t NvCodecVideoDecoder::Decode(const webrtc::EncodedImage& input_image,
 
   uint8_t** frames = nullptr;
   int frame_count = 0;
-  decoder_->Decode(input_image.data(), (int)input_image.size(), frames, frame_count);
+  decoder_->Decode(input_image.data(), (int)input_image.size(), frames,
+                   frame_count);
   if (frames == nullptr || frame_count == 0) {
     return WEBRTC_VIDEO_CODEC_OK;
   }
@@ -85,13 +88,14 @@ int32_t NvCodecVideoDecoder::Decode(const webrtc::EncodedImage& input_image,
 
   // NV12 から I420 に変換
   rtc::scoped_refptr<webrtc::I420Buffer> i420_buffer =
-      buffer_pool_.CreateI420Buffer(width_, height_);
-  libyuv::NV12ToI420(frames[0], nvdec->GetDeviceFramePitch(),
-                     frames[0] + nvdec->GetHeight() * nvdec->GetDeviceFramePitch(), nvdec->GetDeviceFramePitch(),
-                     i420_buffer->MutableDataY(), i420_buffer->StrideY(),
-                     i420_buffer->MutableDataU(), i420_buffer->StrideU(),
-                     i420_buffer->MutableDataV(), i420_buffer->StrideV(),
-                     width_, height_);
+      buffer_pool_.CreateI420Buffer(nvdec->GetWidth(), nvdec->GetHeight());
+  libyuv::NV12ToI420(
+      frames[0], nvdec->GetDeviceFramePitch(),
+      frames[0] + nvdec->GetHeight() * nvdec->GetDeviceFramePitch(),
+      nvdec->GetDeviceFramePitch(), i420_buffer->MutableDataY(),
+      i420_buffer->StrideY(), i420_buffer->MutableDataU(),
+      i420_buffer->StrideU(), i420_buffer->MutableDataV(),
+      i420_buffer->StrideV(), nvdec->GetWidth(), nvdec->GetHeight());
 
   webrtc::VideoFrame decoded_image = webrtc::VideoFrame::Builder()
                                          .set_video_frame_buffer(i420_buffer)
@@ -99,6 +103,9 @@ int32_t NvCodecVideoDecoder::Decode(const webrtc::EncodedImage& input_image,
                                          .build();
   decode_complete_callback_->Decoded(decoded_image, absl::nullopt,
                                      absl::nullopt);
+
+  // 次のフレームで縦横サイズが変わったときに追従するためのマジックコード
+  nvdec->setReconfigParams(nullptr, nullptr);
 
   return WEBRTC_VIDEO_CODEC_OK;
 }
@@ -124,7 +131,8 @@ const char* NvCodecVideoDecoder::ImplementationName() const {
 }
 
 int32_t NvCodecVideoDecoder::InitNvCodec() {
-  decoder_ = NvCodecVideoDecoderCuda::Create(codec_id_, &NvCodecVideoDecoder::Log);
+  decoder_ =
+      NvCodecVideoDecoderCuda::Create(codec_id_, &NvCodecVideoDecoder::Log);
   output_info_ = false;
   return WEBRTC_VIDEO_CODEC_OK;
 }
