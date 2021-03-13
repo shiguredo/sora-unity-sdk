@@ -11,11 +11,18 @@
 
 ## develop
 
+## 2021.1.1
+
+- [FIX] 4K 状態での回転を考慮して縦の最大サイズも 3840 にする
+    - @melpon @torikizi
+- [FIX] H.264 でデコードした際に内部的な縦横サイズが変わらないのを修正
+    - @melpon @torikizi
+
 ## 2021.1
 
-- [ADD] サイマルキャスト機能に対応する
+- [UPDATE] サイマルキャスト機能に対応する
     - @melpon @torikizi
-- [ADD] スポットライト機能に対応する
+- [UPDATE] スポットライト機能に対応する
     - @melpon @torikizi
 - [UPDATE] WebRTC のバージョンを M89 (4389@{#5}) に上げる
     - @melpon @torikizi @voluntas

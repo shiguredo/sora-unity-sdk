@@ -38,13 +38,12 @@ class NvCodecVideoDecoder : public webrtc::VideoDecoder {
   const char* ImplementationName() const override;
 
  private:
-  static void NvCodecVideoDecoder::Log(NvCodecVideoDecoderCuda::LogType type, const std::string& log);
+  static void NvCodecVideoDecoder::Log(NvCodecVideoDecoderCuda::LogType type,
+                                       const std::string& log);
 
   int32_t InitNvCodec();
   void ReleaseNvCodec();
 
-  int width_ = 0;
-  int height_ = 0;
   webrtc::DecodedImageCallback* decode_complete_callback_ = nullptr;
   webrtc::VideoFrameBufferPool buffer_pool_;
 
