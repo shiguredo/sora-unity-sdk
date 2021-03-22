@@ -11,6 +11,12 @@
 
 ## develop
 
+## 2021.1.2
+
+- [FIX] OpenSSLCertificate では無くなったので BoringSSLCertificate を利用するように修正
+    - TURN-TLS でセグフォする問題を解決
+    - @melpon
+
 ## 2021.1.1
 
 - [FIX] 4K 状態での回転を考慮して縦の最大サイズも 3840 にする
