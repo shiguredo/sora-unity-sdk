@@ -19,6 +19,7 @@ public class Sora : IDisposable
         VP9,
         VP8,
         H264,
+        AV1,
     }
     public enum AudioCodec
     {

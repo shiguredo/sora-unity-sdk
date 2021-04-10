@@ -13,6 +13,8 @@
 
 - [UPDATE] WebRTC のバージョンを M90 (4430@{#3}) に上げる
     - @melpon
+- [ADD] AV1 に対応
+    - @melpon
 
 ## 2021.1.2
 

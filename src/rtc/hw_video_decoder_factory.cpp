@@ -10,19 +10,20 @@
 
 #include "hw_video_decoder_factory.h"
 
-#include "absl/strings/match.h"
-#include "api/video_codecs/sdp_video_format.h"
-#include "media/base/codec.h"
-#include "media/base/media_constants.h"
-#include "modules/video_coding/codecs/h264/include/h264.h"
-#include "modules/video_coding/codecs/vp8/include/vp8.h"
-#include "modules/video_coding/codecs/vp9/include/vp9.h"
-#include "rtc_base/checks.h"
-#include "rtc_base/logging.h"
+#include <absl/strings/match.h>
+#include <api/video_codecs/sdp_video_format.h>
+#include <media/base/codec.h>
+#include <media/base/media_constants.h>
+#include <modules/video_coding/codecs/av1/libaom_av1_decoder.h>
+#include <modules/video_coding/codecs/h264/include/h264.h>
+#include <modules/video_coding/codecs/vp8/include/vp8.h>
+#include <modules/video_coding/codecs/vp9/include/vp9.h>
+#include <rtc_base/checks.h>
+#include <rtc_base/logging.h>
 
 #if defined(SORA_UNITY_SDK_WINDOWS)
-#include "hwenc_nvcodec/nvcodec_video_decoder.h"
 #include "h264_format.h"
+#include "hwenc_nvcodec/nvcodec_video_decoder.h"
 #endif
 
 namespace {
@@ -50,6 +51,8 @@ std::vector<webrtc::SdpVideoFormat> HWVideoDecoderFactory::GetSupportedFormats()
   formats.push_back(webrtc::SdpVideoFormat(cricket::kVp8CodecName));
   for (const webrtc::SdpVideoFormat& format : webrtc::SupportedVP9Codecs())
     formats.push_back(format);
+
+  formats.push_back(webrtc::SdpVideoFormat(cricket::kAv1CodecName));
 
 #if defined(SORA_UNITY_SDK_WINDOWS)
   if (!NvCodecVideoDecoder::IsSupported(cudaVideoCodec_H264)) {
@@ -84,6 +87,8 @@ std::unique_ptr<webrtc::VideoDecoder> HWVideoDecoderFactory::CreateVideoDecoder(
     return webrtc::VP8Decoder::Create();
   if (absl::EqualsIgnoreCase(format.name, cricket::kVp9CodecName))
     return webrtc::VP9Decoder::Create();
+  if (absl::EqualsIgnoreCase(format.name, cricket::kAv1CodecName))
+    return webrtc::CreateLibaomAv1Decoder();
 #if defined(SORA_UNITY_SDK_WINDOWS)
   if (absl::EqualsIgnoreCase(format.name, cricket::kH264CodecName))
     return std::unique_ptr<webrtc::VideoDecoder>(
@@ -94,4 +99,4 @@ std::unique_ptr<webrtc::VideoDecoder> HWVideoDecoderFactory::CreateVideoDecoder(
   return nullptr;
 }
 
-}
+}  // namespace sora
