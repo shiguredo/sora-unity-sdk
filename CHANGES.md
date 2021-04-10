@@ -11,6 +11,9 @@
 
 ## develop
 
+- [UPDATE] WebRTC のバージョンを M90 (4430@{#3}) に上げる
+    - @melpon
+
 ## 2021.1.2
 
 - [FIX] OpenSSLCertificate では無くなったので BoringSSLCertificate を利用するように修正

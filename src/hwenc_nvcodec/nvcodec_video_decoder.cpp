@@ -119,10 +119,6 @@ int32_t NvCodecVideoDecoder::Release() {
   return WEBRTC_VIDEO_CODEC_OK;
 }
 
-bool NvCodecVideoDecoder::PrefersLateDecoding() const {
-  return true;
-}
-
 const char* NvCodecVideoDecoder::ImplementationName() const {
   return "NVIDIA VIDEO CODEC SDK";
 }
