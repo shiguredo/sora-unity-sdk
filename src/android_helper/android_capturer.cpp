@@ -2,6 +2,7 @@
 
 #include "api/media_stream_interface.h"
 #include "rtc_base/logging.h"
+#include "rtc_base/ref_counted_object.h"
 #include "rtc_base/thread.h"
 #include "sdk/android/native_api/jni/class_loader.h"
 #include "sdk/android/native_api/jni/scoped_java_ref.h"
