@@ -14,4 +14,4 @@
 
 ### AV1 を設定して配信したい
 
-- 現在 AV1 が動作するのは Windows/MacOS(intel)/iOS/iPadOS のみです。 Android は動作しません。
+- 現在 AV1 が動作するのは Windows / MacOS ( intel 64-bit ) / iOS / iPadOS のみです。 Android は動作しません。
