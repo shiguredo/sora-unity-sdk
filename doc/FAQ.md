@@ -11,3 +11,7 @@
 ### Android で Graphics APIs に Vulkan 以外を設定したい
 
 - 現在 Graphics APIs を Vulkan 以外に設定することは出来ません。 Vulkan 以外を設定した場合最悪アプリがクラッシュします。 fork して実装して下さい。
+
+### AV1 を設定して配信したい
+
+- 現在 AV1 が動作するのは Windows/MacOS(intel)/iOS/iPadOS のみです。 Android は動作しません。
