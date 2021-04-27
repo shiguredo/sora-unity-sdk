@@ -11,6 +11,15 @@
 
 ## develop
 
+## 2021.2
+
+- [UPDATE] WebRTC のバージョンを M90 (4430@{#3}) に上げる
+    - @melpon
+- [UPDATE] Boost のバージョンを 1.76.0 に上げる
+    - @voluntas
+- [ADD] AV1 に対応
+    - @melpon
+
 ## 2021.1.2
 
 - [FIX] OpenSSLCertificate では無くなったので BoringSSLCertificate を利用するように修正

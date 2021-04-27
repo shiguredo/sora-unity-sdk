@@ -6,6 +6,7 @@
 #include <media/base/codec.h>
 #include <media/base/media_constants.h>
 #include <media/engine/simulcast_encoder_adapter.h>
+#include <modules/video_coding/codecs/av1/libaom_av1_encoder.h>
 #include <modules/video_coding/codecs/h264/include/h264.h>
 #include <modules/video_coding/codecs/vp8/include/vp8.h>
 #include <modules/video_coding/codecs/vp9/include/vp9.h>
@@ -24,6 +25,8 @@ std::vector<webrtc::SdpVideoFormat> HWVideoEncoderFactory::GetSupportedFormats()
   supported_codecs.push_back(webrtc::SdpVideoFormat(cricket::kVp8CodecName));
   for (const webrtc::SdpVideoFormat& format : webrtc::SupportedVP9Codecs())
     supported_codecs.push_back(format);
+
+  supported_codecs.push_back(webrtc::SdpVideoFormat(cricket::kAv1CodecName));
 
 #if defined(SORA_UNITY_SDK_WINDOWS)
   if (NvCodecH264Encoder::IsSupported()) {
@@ -52,6 +55,10 @@ std::unique_ptr<webrtc::VideoEncoder> HWVideoEncoderFactory::CreateVideoEncoder(
 
   if (absl::EqualsIgnoreCase(format.name, cricket::kVp9CodecName))
     return webrtc::VP9Encoder::Create(cricket::VideoCodec(format));
+
+  if (absl::EqualsIgnoreCase(format.name, cricket::kAv1CodecName)) {
+    return webrtc::CreateLibaomAv1Encoder();
+  }
 
 #if defined(SORA_UNITY_SDK_WINDOWS)
   if (absl::EqualsIgnoreCase(format.name, cricket::kH264CodecName)) {
