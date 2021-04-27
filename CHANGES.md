@@ -11,6 +11,8 @@
 
 ## develop
 
+## 2021.2
+
 - [UPDATE] WebRTC のバージョンを M90 (4430@{#3}) に上げる
     - @melpon
 - [UPDATE] Boost のバージョンを 1.76.0 に上げる
