@@ -51,6 +51,7 @@ Sora Unity SDK を使ってみたい人は [USE.md](doc/USE.md) をお読みく�
 
 ## 対応機能
 
+- AV1 への対応
 - Windows への対応
 - macOS への対応
 - Android への対応
