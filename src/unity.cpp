@@ -63,6 +63,13 @@ void sora_set_on_notify(void* p, notify_cb_t on_notify, void* userdata) {
   });
 }
 
+void sora_set_on_push(void* p, push_cb_t on_push, void* userdata) {
+  auto sora = (sora::Sora*)p;
+  sora->SetOnPush([on_push, userdata](std::string json) {
+    on_push(json.c_str(), (int)json.size(), userdata);
+  });
+}
+
 void sora_dispatch_events(void* p) {
   auto sora = (sora::Sora*)p;
   sora->DispatchEvents();

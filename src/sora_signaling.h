@@ -58,6 +58,7 @@ class SoraSignaling : public std::enable_shared_from_this<SoraSignaling>,
   std::shared_ptr<RTCConnection> connection_;
   SoraSignalingConfig config_;
   std::function<void(std::string)> on_notify_;
+  std::function<void(std::string)> on_push_;
 
   webrtc::PeerConnectionInterface::IceConnectionState rtc_state_;
 
@@ -72,13 +73,15 @@ class SoraSignaling : public std::enable_shared_from_this<SoraSignaling>,
       boost::asio::io_context& ioc,
       RTCManager* manager,
       SoraSignalingConfig config,
-      std::function<void(std::string)> on_notify);
+      std::function<void(std::string)> on_notify,
+      std::function<void(std::string)> on_push);
 
  private:
   SoraSignaling(boost::asio::io_context& ioc,
                 RTCManager* manager,
                 SoraSignalingConfig config,
-                std::function<void(std::string)> on_notify);
+                std::function<void(std::string)> on_notify,
+                std::function<void(std::string)> on_push);
   bool Init();
 
  public:

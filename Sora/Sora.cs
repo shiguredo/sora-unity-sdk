@@ -55,6 +55,7 @@ public class Sora : IDisposable
     GCHandle onAddTrackHandle;
     GCHandle onRemoveTrackHandle;
     GCHandle onNotifyHandle;
+    GCHandle onPushHandle;
     GCHandle onHandleAudioHandle;
     UnityEngine.Rendering.CommandBuffer commandBuffer;
     UnityEngine.Camera unityCamera;
@@ -74,6 +75,11 @@ public class Sora : IDisposable
         if (onNotifyHandle.IsAllocated)
         {
             onNotifyHandle.Free();
+        }
+
+        if (onPushHandle.IsAllocated)
+        {
+            onPushHandle.Free();
         }
 
         if (p != IntPtr.Zero)
@@ -208,6 +214,29 @@ public class Sora : IDisposable
 
             onNotifyHandle = GCHandle.Alloc(value);
             sora_set_on_notify(p, NotifyCallback, GCHandle.ToIntPtr(onNotifyHandle));
+        }
+    }
+
+    private delegate void PushCallbackDelegate(string json, int size, IntPtr userdata);
+
+    [AOT.MonoPInvokeCallback(typeof(PushCallbackDelegate))]
+    static private void PushCallback(string json, int size, IntPtr userdata)
+    {
+        var callback = GCHandle.FromIntPtr(userdata).Target as Action<string>;
+        callback(json);
+    }
+
+    public Action<string> OnPush
+    {
+        set
+        {
+            if (onPushHandle.IsAllocated)
+            {
+                onPushHandle.Free();
+            }
+
+            onPushHandle = GCHandle.Alloc(value);
+            sora_set_on_push(p, PushCallback, GCHandle.ToIntPtr(onPushHandle));
         }
     }
 
@@ -378,6 +407,12 @@ public class Sora : IDisposable
     [DllImport("SoraUnitySdk")]
 #endif
     private static extern void sora_set_on_notify(IntPtr p, NotifyCallbackDelegate on_notify, IntPtr userdata);
+#if UNITY_IOS && !UNITY_EDITOR
+    [DllImport("__Internal")]
+#else
+    [DllImport("SoraUnitySdk")]
+#endif
+    private static extern void sora_set_on_push(IntPtr p, PushCallbackDelegate on_push, IntPtr userdata);
 #if UNITY_IOS && !UNITY_EDITOR
     [DllImport("__Internal")]
 #else

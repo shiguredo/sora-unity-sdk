@@ -43,6 +43,7 @@ class Sora {
   std::function<void(ptrid_t)> on_add_track_;
   std::function<void(ptrid_t)> on_remove_track_;
   std::function<void(std::string)> on_notify_;
+  std::function<void(std::string)> on_push_;
   std::function<void(const int16_t*, int, int)> on_handle_audio_;
 
   std::mutex event_mutex_;
@@ -61,6 +62,7 @@ class Sora {
   void SetOnAddTrack(std::function<void(ptrid_t)> on_add_track);
   void SetOnRemoveTrack(std::function<void(ptrid_t)> on_remove_track);
   void SetOnNotify(std::function<void(std::string)> on_notify);
+  void SetOnPush(std::function<void(std::string)> on_push);
   void DispatchEvents();
 
   struct ConnectConfig {

@@ -54,9 +54,10 @@ std::shared_ptr<SoraSignaling> SoraSignaling::Create(
     boost::asio::io_context& ioc,
     RTCManager* manager,
     SoraSignalingConfig config,
-    std::function<void(std::string)> on_notify) {
-  auto p = std::shared_ptr<SoraSignaling>(
-      new SoraSignaling(ioc, manager, config, std::move(on_notify)));
+    std::function<void(std::string)> on_notify,
+    std::function<void(std::string)> on_push) {
+  auto p = std::shared_ptr<SoraSignaling>(new SoraSignaling(
+      ioc, manager, config, std::move(on_notify), std::move(on_push)));
   if (!p->Init()) {
     return nullptr;
   }
@@ -66,11 +67,13 @@ std::shared_ptr<SoraSignaling> SoraSignaling::Create(
 SoraSignaling::SoraSignaling(boost::asio::io_context& ioc,
                              RTCManager* manager,
                              SoraSignalingConfig config,
-                             std::function<void(std::string)> on_notify)
+                             std::function<void(std::string)> on_notify,
+                             std::function<void(std::string)> on_push)
     : ioc_(ioc),
       manager_(manager),
       config_(config),
-      on_notify_(std::move(on_notify)) {}
+      on_notify_(std::move(on_notify)),
+      on_push_(std::move(on_push)) {}
 
 bool SoraSignaling::Init() {
   return true;
@@ -331,6 +334,10 @@ void SoraSignaling::OnRead(boost::system::error_code ec,
   } else if (type == "notify") {
     if (on_notify_) {
       on_notify_(text);
+    }
+  } else if (type == "push") {
+    if (on_push_) {
+      on_push_(text);
     }
   } else if (type == "ping") {
     if (rtc_state_ != webrtc::PeerConnectionInterface::IceConnectionState::
