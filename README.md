@@ -78,6 +78,7 @@ Sora Unity SDK を使ってみたい人は [USE.md](doc/USE.md) をお読みく�
 - Sora シグナリング開始時の音声コーデック/ビットレート指定に対応
 - Sora シグナリング開始時の映像コーデック/ビットレート指定に対応
 - Sora シグナリング通知への対応
+- Sora プッシュ通知への対応
 - Sora サイマルキャストへの対応
 - Sora スポットライトへの対応
 - Apple VideoToolbox
