@@ -13,6 +13,7 @@ typedef unsigned int ptrid_t;
 
 typedef void (*track_cb_t)(ptrid_t track_id, void* userdata);
 typedef void (*notify_cb_t)(const char* json, int size, void* userdata);
+typedef void (*push_cb_t)(const char* json, int size, void* userdata);
 typedef void (*stats_cb_t)(const char* json, int size, void* userdata);
 
 typedef int32_t unity_bool_t;
@@ -26,6 +27,9 @@ UNITY_INTERFACE_EXPORT void sora_set_on_remove_track(void* p,
                                                      void* userdata);
 UNITY_INTERFACE_EXPORT void sora_set_on_notify(void* p,
                                                notify_cb_t on_notify,
+                                               void* userdata);
+UNITY_INTERFACE_EXPORT void sora_set_on_push(void* p,
+                                               push_cb_t on_push,
                                                void* userdata);
 UNITY_INTERFACE_EXPORT void sora_dispatch_events(void* p);
 UNITY_INTERFACE_EXPORT int sora_connect(void* p,

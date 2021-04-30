@@ -62,6 +62,9 @@ void Sora::SetOnRemoveTrack(std::function<void(ptrid_t)> on_remove_track) {
 void Sora::SetOnNotify(std::function<void(std::string)> on_notify) {
   on_notify_ = std::move(on_notify);
 }
+void Sora::SetOnPush(std::function<void(std::string)> on_push) {
+  on_push_ = std::move(on_push);
+}
 
 void Sora::DispatchEvents() {
   while (!event_queue_.empty()) {
@@ -201,11 +204,9 @@ bool Sora::DoConnect(const Sora::ConnectConfig& cc) {
                      << " channel_id=" << channel_id_;
     SoraSignalingConfig config;
     config.unity_version = cc.unity_version;
-    config.role = cc.role == "sendonly"
-                      ? SoraSignalingConfig::Role::Sendonly
-                      : cc.role == "recvonly"
-                            ? SoraSignalingConfig::Role::Recvonly
-                            : SoraSignalingConfig::Role::Sendrecv;
+    config.role = cc.role == "sendonly"   ? SoraSignalingConfig::Role::Sendonly
+                  : cc.role == "recvonly" ? SoraSignalingConfig::Role::Recvonly
+                                          : SoraSignalingConfig::Role::Sendrecv;
     config.multistream = cc.multistream;
     config.spotlight = cc.spotlight;
     config.spotlight_number = cc.spotlight_number;
@@ -227,16 +228,26 @@ bool Sora::DoConnect(const Sora::ConnectConfig& cc) {
     }
 
     ioc_.reset(new boost::asio::io_context(1));
-    signaling_ = SoraSignaling::Create(
-        *ioc_, rtc_manager_.get(), config, [this](std::string json) {
-          std::lock_guard<std::mutex> guard(event_mutex_);
-          event_queue_.push_back([this, json = std::move(json)]() {
-            // ここは Unity スレッドから呼ばれる
-            if (on_notify_) {
-              on_notify_(std::move(json));
-            }
-          });
-        });
+    auto on_notify = [this](std::string json) {
+      std::lock_guard<std::mutex> guard(event_mutex_);
+      event_queue_.push_back([this, json = std::move(json)]() {
+        // ここは Unity スレッドから呼ばれる
+        if (on_notify_) {
+          on_notify_(std::move(json));
+        }
+      });
+    };
+    auto on_push = [this](std::string json) {
+      std::lock_guard<std::mutex> guard(event_mutex_);
+      event_queue_.push_back([this, json = std::move(json)]() {
+        // ここは Unity スレッドから呼ばれる
+        if (on_push_) {
+          on_push_(std::move(json));
+        }
+      });
+    };
+    signaling_ = SoraSignaling::Create(*ioc_, rtc_manager_.get(), config,
+                                       on_notify, on_push);
     if (signaling_ == nullptr) {
       return false;
     }
