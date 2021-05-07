@@ -287,13 +287,17 @@ RTCManager::~RTCManager() {
   rtc::CleanupSSL();
 }
 
+void RTCManager::SetDataManager(RTCDataManager* data_manager) {
+  data_manager_ = data_manager;
+}
+
 std::shared_ptr<RTCConnection> RTCManager::CreateConnection(
     webrtc::PeerConnectionInterface::RTCConfiguration rtc_config,
     RTCMessageSender* sender) {
   rtc_config.enable_dtls_srtp = true;
   rtc_config.sdp_semantics = webrtc::SdpSemantics::kUnifiedPlan;
   std::unique_ptr<PeerConnectionObserver> observer(
-      new PeerConnectionObserver(sender, receiver_));
+      new PeerConnectionObserver(sender, receiver_, data_manager_));
   webrtc::PeerConnectionDependencies dependencies(observer.get());
 
   // WebRTC の SSL 接続の検証は自前のルート証明書(rtc_base/ssl_roots.h)でやっていて、

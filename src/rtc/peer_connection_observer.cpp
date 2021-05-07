@@ -13,7 +13,11 @@ PeerConnectionObserver::~PeerConnectionObserver() {
 }
 
 void PeerConnectionObserver::OnDataChannel(
-    rtc::scoped_refptr<webrtc::DataChannelInterface> data_channel) {}
+    rtc::scoped_refptr<webrtc::DataChannelInterface> data_channel) {
+  if (data_manager_ != nullptr) {
+    data_manager_->OnDataChannel(data_channel);
+  }
+}
 
 void PeerConnectionObserver::OnStandardizedIceConnectionChange(
     webrtc::PeerConnectionInterface::IceConnectionState new_state) {

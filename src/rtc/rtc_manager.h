@@ -7,6 +7,7 @@
 #include <pc/video_track_source.h>
 
 #include "rtc_connection.h"
+#include "rtc_data_manager.h"
 #include "scalable_track_source.h"
 #include "video_track_receiver.h"
 
@@ -59,6 +60,7 @@ class RTCManager {
 
  public:
   ~RTCManager();
+  void SetDataManager(RTCDataManager* data_manager);
   std::shared_ptr<RTCConnection> CreateConnection(
       webrtc::PeerConnectionInterface::RTCConfiguration rtc_config,
       RTCMessageSender* sender);
@@ -78,6 +80,7 @@ class RTCManager {
   std::unique_ptr<rtc::Thread> worker_thread_;
   std::unique_ptr<rtc::Thread> signaling_thread_;
   RTCManagerConfig config_;
+  RTCDataManager* data_manager_;
 };
 
 }  // namespace sora
