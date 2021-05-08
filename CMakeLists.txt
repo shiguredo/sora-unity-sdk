@@ -66,6 +66,7 @@ target_sources(SoraUnitySdk
     src/unity_camera_capturer.cpp
     src/unity_context.cpp
     src/unity_renderer.cpp
+    src/watchdog.cpp
     src/websocket.cpp
     src/rtc/device_list.cpp
     src/rtc/device_video_capturer.cpp

@@ -44,9 +44,6 @@ Sora::~Sora() {
     thread_->Stop();
     thread_.reset();
   }
-  if (signaling_) {
-    signaling_->Release();
-  }
   signaling_.reset();
   ioc_.reset();
   rtc_manager_.reset();
@@ -213,10 +210,10 @@ bool Sora::DoConnect(const Sora::ConnectConfig& cc) {
     config.simulcast = cc.simulcast;
     config.signaling_url = signaling_url_;
     config.channel_id = channel_id_;
-    config.video_codec = cc.video_codec;
-    config.video_bitrate = cc.video_bitrate;
-    config.audio_codec = cc.audio_codec;
-    config.audio_bitrate = cc.audio_bitrate;
+    config.video_codec_type = cc.video_codec_type;
+    config.video_bit_rate = cc.video_bit_rate;
+    config.audio_codec_type = cc.audio_codec_type;
+    config.audio_bit_rate = cc.audio_bit_rate;
     if (!cc.metadata.empty()) {
       boost::json::error_code ec;
       auto md = boost::json::parse(cc.metadata, ec);

@@ -90,14 +90,14 @@ int sora_connect(void* p,
                  const char* video_capturer_device,
                  int video_width,
                  int video_height,
-                 const char* video_codec,
-                 int video_bitrate,
+                 const char* video_codec_type,
+                 int video_bit_rate,
                  unity_bool_t unity_audio_input,
                  unity_bool_t unity_audio_output,
                  const char* audio_recording_device,
                  const char* audio_playout_device,
-                 const char* audio_codec,
-                 int audio_bitrate) {
+                 const char* audio_codec_type,
+                 int audio_bit_rate) {
   auto sora = (sora::Sora*)p;
   sora::Sora::ConnectConfig config;
   config.unity_version = unity_version;
@@ -114,14 +114,14 @@ int sora_connect(void* p,
   config.video_capturer_device = video_capturer_device;
   config.video_width = video_width;
   config.video_height = video_height;
-  config.video_codec = video_codec;
-  config.video_bitrate = video_bitrate;
+  config.video_codec_type = video_codec_type;
+  config.video_bit_rate = video_bit_rate;
   config.unity_audio_input = unity_audio_input;
   config.unity_audio_output = unity_audio_output;
   config.audio_recording_device = audio_recording_device;
   config.audio_playout_device = audio_playout_device;
-  config.audio_codec = audio_codec;
-  config.audio_bitrate = audio_bitrate;
+  config.audio_codec_type = audio_codec_type;
+  config.audio_bit_rate = audio_bit_rate;
   if (!sora->Connect(config)) {
     return -1;
   }
