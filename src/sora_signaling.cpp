@@ -81,7 +81,8 @@ SoraSignaling::~SoraSignaling() {
   destructed_ = true;
   // 一応閉じる努力はする
   if (dc_) {
-    dc_->Close([]() {});
+    dc_->Close([dc = dc_]() {});
+    dc_ = nullptr;
     std::this_thread::sleep_for(std::chrono::milliseconds(300));
   }
   // ここで OnIceConnectionStateChange が呼ばれる
@@ -282,6 +283,8 @@ void SoraSignaling::Close(std::function<void()> on_close) {
   dc_ = nullptr;
   auto ws = std::move(ws_);
   ws_ = nullptr;
+  auto connection = std::move(connection_);
+  connection_ = nullptr;
 
   auto on_ws_close = [this, ws, on_close](boost::system::error_code ec) {
     if (ec) {
@@ -292,8 +295,11 @@ void SoraSignaling::Close(std::function<void()> on_close) {
   };
 
   if (dc && ws) {
-    dc->Close(
-        [dc, ws = std::move(ws), on_ws_close]() { ws->Close(on_ws_close); });
+    dc->Close([dc, connection, ws = std::move(ws), on_ws_close]() {
+      ws->Close(on_ws_close);
+    });
+  } else if (dc && !ws) {
+    dc->Close([dc, connection, on_close]() { on_close(); });
   } else if (!dc && ws) {
     ws->Close(on_ws_close);
   } else {
