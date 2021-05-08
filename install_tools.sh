@@ -51,7 +51,7 @@ fi
 
 if [ ! -e $INSTALL_DIR/boost/include/boost/version.hpp ]; then
   _VERSION_UNDERSCORE=${BOOST_VERSION//./_}
-  _URL=https://dl.bintray.com/boostorg/release/${BOOST_VERSION}/source/boost_${_VERSION_UNDERSCORE}.tar.gz
+  _URL=https://boostorg.jfrog.io/artifactory/main/release/${BOOST_VERSION}/source/boost_${_VERSION_UNDERSCORE}.tar.gz
   _FILE=$BUILD_DIR/boost_${_VERSION_UNDERSCORE}.tar.gz
   if [ ! -e $_FILE ]; then
     echo "file(DOWNLOAD $_URL $_FILE)" > $BUILD_DIR/tmp.cmake
