@@ -14,14 +14,14 @@ public class Sora : IDisposable
         DeviceCamera = 0,
         UnityCamera = 1,
     }
-    public enum VideoCodec
+    public enum VideoCodecType
     {
         VP9,
         VP8,
         H264,
         AV1,
     }
-    public enum AudioCodec
+    public enum AudioCodecType
     {
         OPUS,
     }
@@ -41,14 +41,14 @@ public class Sora : IDisposable
         public string VideoCapturerDevice = "";
         public int VideoWidth = 640;
         public int VideoHeight = 480;
-        public VideoCodec VideoCodec = VideoCodec.VP9;
-        public int VideoBitrate = 0;
+        public VideoCodecType VideoCodecType = VideoCodecType.VP9;
+        public int VideoBitRate = 0;
         public bool UnityAudioInput = false;
         public bool UnityAudioOutput = false;
         public string AudioRecordingDevice = "";
         public string AudioPlayoutDevice = "";
-        public AudioCodec AudioCodec = AudioCodec.OPUS;
-        public int AudioBitrate = 0;
+        public AudioCodecType AudioCodecType = AudioCodecType.OPUS;
+        public int AudioBitRate = 0;
 
         // DataChannel を使ったシグナリングを利用するかどうか
         public bool DataChannelSignaling = false;
