@@ -14,14 +14,14 @@ public class Sora : IDisposable
         DeviceCamera = 0,
         UnityCamera = 1,
     }
-    public enum VideoCodec
+    public enum VideoCodecType
     {
         VP9,
         VP8,
         H264,
         AV1,
     }
-    public enum AudioCodec
+    public enum AudioCodecType
     {
         OPUS,
     }
@@ -41,14 +41,24 @@ public class Sora : IDisposable
         public string VideoCapturerDevice = "";
         public int VideoWidth = 640;
         public int VideoHeight = 480;
-        public VideoCodec VideoCodec = VideoCodec.VP9;
-        public int VideoBitrate = 0;
+        public VideoCodecType VideoCodecType = VideoCodecType.VP9;
+        public int VideoBitRate = 0;
         public bool UnityAudioInput = false;
         public bool UnityAudioOutput = false;
         public string AudioRecordingDevice = "";
         public string AudioPlayoutDevice = "";
-        public AudioCodec AudioCodec = AudioCodec.OPUS;
-        public int AudioBitrate = 0;
+        public AudioCodecType AudioCodecType = AudioCodecType.OPUS;
+        public int AudioBitRate = 0;
+
+        // DataChannel を使ったシグナリングを利用するかどうか
+        public bool DataChannelSignaling = false;
+        // DataChannel のデータが何秒間やって来なければ切断したとみなすか
+        public int DataChannelSignalingTimeout = 30;
+        // DataChannel の接続が確立した後は、WebSocket が切断されても Sora との接続を確立したままとするかどうか
+        public bool IgnoreDisconnectWebsocket = false;
+        // DataChannel の接続が確立したら、クライアントから明示的に WebSocket を切断するかどうか
+        // （IgnoreDisconnectWebsocket=true の場合のみ有効）
+        public bool CloseWebsocket = true;
     }
 
     IntPtr p;
@@ -133,14 +143,18 @@ public class Sora : IDisposable
             config.VideoCapturerDevice,
             config.VideoWidth,
             config.VideoHeight,
-            config.VideoCodec.ToString(),
-            config.VideoBitrate,
+            config.VideoCodecType.ToString(),
+            config.VideoBitRate,
             config.UnityAudioInput ? 1 : 0,
             config.UnityAudioOutput ? 1 : 0,
             config.AudioRecordingDevice,
             config.AudioPlayoutDevice,
-            config.AudioCodec.ToString(),
-            config.AudioBitrate) == 0;
+            config.AudioCodecType.ToString(),
+            config.AudioBitRate,
+            config.DataChannelSignaling ? 1 : 0,
+            config.DataChannelSignalingTimeout,
+            config.IgnoreDisconnectWebsocket ? 1 : 0,
+            config.CloseWebsocket ? 1 : 0) == 0;
     }
 
     // Unity 側でレンダリングが完了した時（yield return new WaitForEndOfFrame() の後）に呼ぶイベント
@@ -447,7 +461,11 @@ public class Sora : IDisposable
         string audio_recording_device,
         string audio_playout_device,
         string audio_codec,
-        int audio_bitrate);
+        int audio_bitrate,
+        int data_channel_signaling,
+        int data_channel_signaling_timeout,
+        int ignore_disconnect_websocket,
+        int close_websocket);
 #if UNITY_IOS && !UNITY_EDITOR
     [DllImport("__Internal")]
 #else

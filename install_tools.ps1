@@ -25,7 +25,7 @@ if (!(Test-Path $BOOST_VERSION_FILE) -Or ("$BOOST_VERSION" -ne (Get-Content $BOO
 
 if ($BOOST_CHANGED -Or !(Test-Path "$INSTALL_DIR\boost\include\boost\version.hpp")) {
   $_BOOST_UNDERSCORE_VERSION = $BOOST_VERSION.Replace(".", "_")
-  $_URL = "https://dl.bintray.com/boostorg/release/${BOOST_VERSION}/source/boost_${_BOOST_UNDERSCORE_VERSION}.zip"
+  $_URL = "https://boostorg.jfrog.io/artifactory/main/release/${BOOST_VERSION}/source/boost_${_BOOST_UNDERSCORE_VERSION}.zip"
   $_FILE = "boost_${_BOOST_UNDERSCORE_VERSION}.zip"
   # ダウンロードと展開
   Push-Location $BUILD_DIR
