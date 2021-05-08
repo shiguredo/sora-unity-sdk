@@ -173,6 +173,16 @@ void sora_set_video_enabled(void* p, int status) {
   sora->SetVideoEnabled(status == 1 ? true : false);
 }
 
+unity_bool_t sora_is_audio_enabled(void* p) {
+  auto sora = (sora::Sora*)p;
+  return sora->IsAudioEnabled();
+}
+
+unity_bool_t sora_is_video_enabled(void* p) {
+  auto sora = (sora::Sora*)p;
+  return sora->IsVideoEnabled();
+}
+
 unity_bool_t sora_device_enum_video_capturer(device_enum_cb_t f,
                                              void* userdata) {
   return sora::DeviceList::EnumVideoCapturer(

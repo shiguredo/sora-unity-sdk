@@ -104,6 +104,8 @@ class Sora {
 
   void SetAudioEnabled(bool status);
   void SetVideoEnabled(bool status);
+  bool IsAudioEnabled();
+  bool IsVideoEnabled();
 
  private:
   bool DoConnect(const ConnectConfig& config);

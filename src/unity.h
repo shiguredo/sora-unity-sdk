@@ -83,6 +83,10 @@ UNITY_INTERFACE_EXPORT void sora_set_audio_enabled(void* p,
 UNITY_INTERFACE_EXPORT void sora_set_video_enabled(void* p,
                                                    int status);
 
+UNITY_INTERFACE_EXPORT unity_bool_t sora_is_audio_enabled(void* p);
+
+UNITY_INTERFACE_EXPORT unity_bool_t sora_is_video_enabled(void* p);
+
 typedef void (*device_enum_cb_t)(const char* device_name,
                                  const char* unique_name,
                                  void* userdata);

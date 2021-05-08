@@ -420,4 +420,20 @@ void Sora::SetVideoEnabled(bool status) {
   conn->SetVideoEnabled(status);
 }
 
+bool Sora::IsAudioEnabled() {
+  auto conn = signaling_ == nullptr ? nullptr : signaling_->getRTCConnection();
+  if (signaling_ == nullptr || conn == nullptr) {
+    return false;
+  }
+  return conn->IsAudioEnabled();
+}
+
+bool Sora::IsVideoEnabled() {
+  auto conn = signaling_ == nullptr ? nullptr : signaling_->getRTCConnection();
+  if (signaling_ == nullptr || conn == nullptr) {
+    return false;
+  }
+  return conn->IsVideoEnabled();
+}
+
 }  // namespace sora
