@@ -241,15 +241,14 @@ void SoraSignaling::DoSendPong(
     ws_->WriteText(std::move(str));
   }
 }
-void SoraSignaling::DoSendUpdate(const std::string& sdp) {
+void SoraSignaling::DoSendUpdate(const std::string& sdp, std::string type) {
+  boost::json::value json_message = {{"type", type}, {"sdp", sdp}};
   if (dc_ && dc_->IsOpen("signaling")) {
-    // DataChannel が使える場合は type: re-answer で DataChannel に送る
-    boost::json::value json_message = {{"type", "re-answer"}, {"sdp", sdp}};
+    // DataChannel が使える場合は DataChannel に送る
     webrtc::DataBuffer data(
         rtc::CopyOnWriteBuffer(boost::json::serialize(json_message)), false);
     dc_->Send("signaling", data);
   } else {
-    boost::json::value json_message = {{"type", "update"}, {"sdp", sdp}};
     ws_->WriteText(boost::json::serialize(json_message));
   }
 }
@@ -438,10 +437,11 @@ void SoraSignaling::OnRead(boost::system::error_code ec,
             });
       });
     });
-  } else if (type == "update") {
+  } else if (type == "update" || type == "re-offer") {
+    std::string answer_type = type == "update" ? "update" : "re-answer";
     const std::string sdp = json_message.at("sdp").as_string().c_str();
-    connection_->SetOffer(sdp, [self = shared_from_this()]() {
-      boost::asio::post([self]() {
+    connection_->SetOffer(sdp, [self = shared_from_this(), answer_type]() {
+      boost::asio::post([self, answer_type]() {
         if (!self->connection_) {
           return;
         }
@@ -452,14 +452,10 @@ void SoraSignaling::OnRead(boost::system::error_code ec,
         }
 
         self->connection_->CreateAnswer(
-            [self](webrtc::SessionDescriptionInterface* desc) {
+            [self, answer_type](webrtc::SessionDescriptionInterface* desc) {
               std::string sdp;
               desc->ToString(&sdp);
-              boost::asio::post([self, sdp]() {
-                boost::json::value json_message = {{"type", "update"},
-                                                   {"sdp", sdp}};
-                self->ws_->WriteText(boost::json::serialize(json_message));
-              });
+              self->DoSendUpdate(sdp, answer_type);
             });
       });
     });
@@ -539,7 +535,7 @@ void SoraSignaling::OnMessage(
                   if (!self->connection_) {
                     return;
                   }
-                  self->DoSendUpdate(sdp);
+                  self->DoSendUpdate(sdp, "re-answer");
                 });
               });
         });

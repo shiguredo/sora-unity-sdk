@@ -115,7 +115,7 @@ class SoraSignaling : public std::enable_shared_from_this<SoraSignaling>,
   void DoSendPong();
   void DoSendPong(
       const rtc::scoped_refptr<const webrtc::RTCStatsReport>& report);
-  void DoSendUpdate(const std::string& sdp);
+  void DoSendUpdate(const std::string& sdp, std::string type);
   std::shared_ptr<sora::RTCConnection> CreateRTCConnection(
       boost::json::value jconfig);
 
