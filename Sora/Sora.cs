@@ -505,13 +505,13 @@ public class Sora : IDisposable
 #else
     [DllImport("SoraUnitySdk")]
 #endif
-    private static extern void sora_set_audio_enabled(void* p, int status);
+    private static extern void sora_set_audio_enabled(IntPtr p, int status);
 #if UNITY_IOS && !UNITY_EDITOR
     [DllImport("__Internal")]
 #else
     [DllImport("SoraUnitySdk")]
 #endif
-    private static extern sora_set_video_enabled(void* p, int status);
+    private static extern void sora_set_video_enabled(IntPtr p, int status);
 #if UNITY_IOS && !UNITY_EDITOR
     [DllImport("__Internal")]
 #else
