@@ -20,7 +20,9 @@
 
 #include "rtc/rtc_manager.h"
 #include "rtc/rtc_message_sender.h"
+#include "sora_data_channel_on_asio.h"
 #include "url_parts.h"
+#include "watchdog.h"
 #include "websocket.h"
 
 namespace sora {
@@ -31,11 +33,14 @@ struct SoraSignalingConfig {
   std::string channel_id;
 
   boost::json::value metadata;
-  std::string video_codec = "VP9";
-  int video_bitrate = 0;
 
-  std::string audio_codec = "OPUS";
-  int audio_bitrate = 0;
+  bool video = true;
+  std::string video_codec_type = "";
+  int video_bit_rate = 0;
+
+  bool audio = true;
+  std::string audio_codec_type = "";
+  int audio_bit_rate = 0;
 
   enum class Role { Sendonly, Recvonly, Sendrecv };
   Role role = Role::Sendonly;
@@ -43,14 +48,21 @@ struct SoraSignalingConfig {
   bool spotlight = false;
   int spotlight_number = 0;
   bool simulcast = false;
+  bool data_channel_signaling = false;
+  int data_channel_signaling_timeout = 30;
+  bool ignore_disconnect_websocket = false;
+  bool close_websocket = true;
 
   bool insecure = false;
 };
 
 class SoraSignaling : public std::enable_shared_from_this<SoraSignaling>,
-                      public RTCMessageSender {
+                      public RTCMessageSender,
+                      public SoraDataChannelObserver {
   boost::asio::io_context& ioc_;
-  std::unique_ptr<Websocket> ws_;
+  std::shared_ptr<Websocket> ws_;
+  std::shared_ptr<SoraDataChannelOnAsio> dc_;
+  bool ignore_disconnect_websocket_;
 
   URLParts parts_;
 
@@ -63,6 +75,9 @@ class SoraSignaling : public std::enable_shared_from_this<SoraSignaling>,
   webrtc::PeerConnectionInterface::IceConnectionState rtc_state_;
 
   bool connected_ = false;
+  bool destructed_ = false;
+
+  WatchDog watchdog_;
 
  public:
   webrtc::PeerConnectionInterface::IceConnectionState getRTCConnectionState()
@@ -85,31 +100,37 @@ class SoraSignaling : public std::enable_shared_from_this<SoraSignaling>,
   bool Init();
 
  public:
-  bool Connect();
-  void Close();
+  ~SoraSignaling();
 
-  // connection_ = nullptr すると直ちに onIceConnectionStateChange コールバックが呼ばれるが、
-  // この中で使っている shared_from_this() がデストラクタ内で使えないため、デストラクタで connection_ = nullptr すると実行時エラーになる。
-  // なのでこのクラスを解放する前に明示的に Release() 関数を呼んでもらうことにする。.
-  void Release();
+ public:
+  bool Connect();
+  void Close(std::function<void()> on_close);
 
  private:
+  void OnWatchdogExpired();
+
   void OnConnect(boost::system::error_code ec);
 
   void DoSendConnect();
   void DoSendPong();
   void DoSendPong(
       const rtc::scoped_refptr<const webrtc::RTCStatsReport>& report);
+  void DoSendUpdate(const std::string& sdp, std::string type);
   std::shared_ptr<sora::RTCConnection> CreateRTCConnection(
       boost::json::value jconfig);
 
  private:
-  void OnClose(boost::system::error_code ec);
-
   void DoRead();
   void OnRead(boost::system::error_code ec,
               std::size_t bytes_transferred,
               std::string text);
+
+ private:
+  // DataChannel 周りのコールバック
+  void OnStateChange(
+      rtc::scoped_refptr<webrtc::DataChannelInterface> data_channel) override;
+  void OnMessage(rtc::scoped_refptr<webrtc::DataChannelInterface> data_channel,
+                 const webrtc::DataBuffer& buffer) override;
 
  private:
   // WebRTC からのコールバック

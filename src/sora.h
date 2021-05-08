@@ -80,14 +80,18 @@ class Sora {
     std::string video_capturer_device;
     int video_width;
     int video_height;
-    std::string video_codec;
-    int video_bitrate;
+    std::string video_codec_type;
+    int video_bit_rate;
     bool unity_audio_input;
     bool unity_audio_output;
     std::string audio_recording_device;
     std::string audio_playout_device;
-    std::string audio_codec;
-    int audio_bitrate;
+    std::string audio_codec_type;
+    int audio_bit_rate;
+    bool data_channel_signaling;
+    int data_channel_signaling_timeout;
+    bool ignore_disconnect_websocket;
+    bool close_websocket;
   };
 
   bool Connect(const ConnectConfig& config);

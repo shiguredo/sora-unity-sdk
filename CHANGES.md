@@ -11,7 +11,21 @@
 
 ## develop
 
+- [CHANGE] `Sora.Config` のフィールド名および `Sora.VideoCodec`, `Sora.AudioCodec` の名前を変更しました。本バージョンを利用する際には以下のように名前を変更してください。
+    - `VideoCodec` → `VideoCodecType`
+    - `VideoBitrate` → `VideoBitRate`
+    - `AudioCodec` → `AudioCodecType`
+    - `AudioBitrate` → `AudioBitRate`
+    - @melpon
 - [ADD] プッシュ通知に対応
+    - @melpon
+- [ADD] DataChannel を使ったシグナリングに対応し、`Sora.Config` に以下のフィールドを追加
+    - `DataChannelSignaling`
+    - `DataChannelSignalingTimeout`
+    - `IgnoreDisconnectWebsocket`
+    - `CloseWebsocket`
+    - @melpon
+- [ADD] WS の re-offer に対応
     - @melpon
 
 ## 2021.2

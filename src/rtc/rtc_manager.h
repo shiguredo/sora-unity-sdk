@@ -7,6 +7,7 @@
 #include <pc/video_track_source.h>
 
 #include "rtc_connection.h"
+#include "rtc_data_manager.h"
 #include "scalable_track_source.h"
 #include "video_track_receiver.h"
 
@@ -57,8 +58,24 @@ class RTCManager {
             std::unique_ptr<rtc::Thread> signaling_thread,
             std::unique_ptr<rtc::Thread> worker_thread);
 
+  // RTCDataManager が生きてる場合だけ OnDataChannel を呼ぶためのプロキシ
+  struct RTCDataManagerProxy : RTCDataManager {
+    void SetDataManager(std::shared_ptr<RTCDataManager> data_manager) {
+      data_manager_ = data_manager;
+    }
+    void OnDataChannel(rtc::scoped_refptr<webrtc::DataChannelInterface>
+                           data_channel) override {
+      auto data_manager = data_manager_.lock();
+      if (data_manager) {
+        data_manager->OnDataChannel(data_channel);
+      }
+    };
+    std::weak_ptr<RTCDataManager> data_manager_;
+  };
+
  public:
   ~RTCManager();
+  void SetDataManager(std::shared_ptr<RTCDataManager> data_manager);
   std::shared_ptr<RTCConnection> CreateConnection(
       webrtc::PeerConnectionInterface::RTCConfiguration rtc_config,
       RTCMessageSender* sender);
@@ -78,6 +95,7 @@ class RTCManager {
   std::unique_ptr<rtc::Thread> worker_thread_;
   std::unique_ptr<rtc::Thread> signaling_thread_;
   RTCManagerConfig config_;
+  RTCDataManagerProxy data_manager_proxy_;
 };
 
 }  // namespace sora
