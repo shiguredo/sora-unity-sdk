@@ -54,9 +54,8 @@ class RTCConnection {
   rtc::scoped_refptr<webrtc::PeerConnectionInterface> GetConnection() const;
 
  private:
-  rtc::scoped_refptr<webrtc::MediaStreamInterface> GetLocalStream();
-  rtc::scoped_refptr<webrtc::AudioTrackInterface> GetLocalAudioTrack();
-  rtc::scoped_refptr<webrtc::VideoTrackInterface> GetLocalVideoTrack();
+  rtc::scoped_refptr<webrtc::MediaStreamTrackInterface> GetLocalAudioTrack();
+  rtc::scoped_refptr<webrtc::MediaStreamTrackInterface> GetLocalVideoTrack();
   bool SetMediaEnabled(
       rtc::scoped_refptr<webrtc::MediaStreamTrackInterface> track,
       bool enabled);

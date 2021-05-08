@@ -404,4 +404,20 @@ void Sora::GetStats(std::function<void(std::string)> on_get_stats) {
       });
 }
 
+void Sora::SetAudioEnabled(bool status) {
+  auto conn = signaling_ == nullptr ? nullptr : signaling_->getRTCConnection();
+  if (signaling_ == nullptr || conn == nullptr) {
+    return;
+  }
+  conn->SetAudioEnabled(status);
+}
+
+void Sora::SetVideoEnabled(bool status) {
+  auto conn = signaling_ == nullptr ? nullptr : signaling_->getRTCConnection();
+  if (signaling_ == nullptr || conn == nullptr) {
+    return;
+  }
+  conn->SetVideoEnabled(status);
+}
+
 }  // namespace sora

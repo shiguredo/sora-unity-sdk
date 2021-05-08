@@ -292,6 +292,16 @@ public class Sora : IDisposable
         sora_get_stats(p, StatsCallback, GCHandle.ToIntPtr(handle));
     }
 
+    public void SetAudioEnabled(bool status)
+    {
+        sora_set_audio_enabled(p, status ? 1 : 0);
+    }
+
+    public void SetVideoEnabled(bool status)
+    {
+        sora_set_video_enabled(p, status ? 1 : 0);
+    }
+
     private delegate void DeviceEnumCallbackDelegate(string device_name, string unique_name, IntPtr userdata);
 
     [AOT.MonoPInvokeCallback(typeof(DeviceEnumCallbackDelegate))]
@@ -490,6 +500,18 @@ public class Sora : IDisposable
     [DllImport("SoraUnitySdk")]
 #endif
     private static extern void sora_get_stats(IntPtr p, StatsCallbackDelegate on_get_stats, IntPtr userdata);
+#if UNITY_IOS && !UNITY_EDITOR
+    [DllImport("__Internal")]
+#else
+    [DllImport("SoraUnitySdk")]
+#endif
+    private static extern void sora_set_audio_enabled(void* p, int status);
+#if UNITY_IOS && !UNITY_EDITOR
+    [DllImport("__Internal")]
+#else
+    [DllImport("SoraUnitySdk")]
+#endif
+    private static extern sora_set_video_enabled(void* p, int status);
 #if UNITY_IOS && !UNITY_EDITOR
     [DllImport("__Internal")]
 #else

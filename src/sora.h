@@ -102,6 +102,9 @@ class Sora {
 
   void GetStats(std::function<void(std::string)> on_get_stats);
 
+  void SetAudioEnabled(bool status);
+  void SetVideoEnabled(bool status);
+
  private:
   bool DoConnect(const ConnectConfig& config);
 

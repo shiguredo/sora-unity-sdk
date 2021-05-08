@@ -237,42 +237,23 @@ bool RTCConnection::IsVideoEnabled() {
   return IsMediaEnabled(GetLocalVideoTrack());
 }
 
-rtc::scoped_refptr<webrtc::MediaStreamInterface>
-RTCConnection::GetLocalStream() {
-  return connection_->local_streams()->at(0);
-}
-
-rtc::scoped_refptr<webrtc::AudioTrackInterface>
+rtc::scoped_refptr<webrtc::MediaStreamTrackInterface>
 RTCConnection::GetLocalAudioTrack() {
-  rtc::scoped_refptr<webrtc::MediaStreamInterface> local_stream =
-      GetLocalStream();
-  if (!local_stream) {
-    return nullptr;
-  }
-
-  if (local_stream->GetAudioTracks().size() > 0) {
-    rtc::scoped_refptr<webrtc::AudioTrackInterface> audio_track(
-        local_stream->GetAudioTracks()[0]);
-    if (audio_track) {
-      return audio_track;
+  std::vector<rtc::scoped_refptr<webrtc::RtpSenderInterface>> senders = connection_->GetSenders();
+  for (const auto& sender : senders) {
+    if (sender->media_type() == cricket::MediaType::MEDIA_TYPE_AUDIO) {
+      return sender->track();
     }
   }
   return nullptr;
 }
 
-rtc::scoped_refptr<webrtc::VideoTrackInterface>
+rtc::scoped_refptr<webrtc::MediaStreamTrackInterface>
 RTCConnection::GetLocalVideoTrack() {
-  rtc::scoped_refptr<webrtc::MediaStreamInterface> local_stream =
-      GetLocalStream();
-  if (!local_stream) {
-    return nullptr;
-  }
-
-  if (local_stream->GetVideoTracks().size() > 0) {
-    rtc::scoped_refptr<webrtc::VideoTrackInterface> video_track(
-        local_stream->GetVideoTracks()[0]);
-    if (video_track) {
-      return video_track;
+  std::vector<rtc::scoped_refptr<webrtc::RtpSenderInterface>> senders = connection_->GetSenders();
+  for (const auto& sender : senders) {
+    if (sender->media_type() == cricket::MediaType::MEDIA_TYPE_VIDEO) {
+      return sender->track();
     }
   }
   return nullptr;

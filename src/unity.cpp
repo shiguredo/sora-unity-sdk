@@ -163,6 +163,16 @@ void sora_get_stats(void* p, stats_cb_t f, void* userdata) {
   });
 }
 
+void sora_set_audio_enabled(void* p, int status) {
+  auto sora = (sora::Sora*)p;
+  sora->SetAudioEnabled(status == 1 ? true : false);
+}
+
+void sora_set_video_enabled(void* p, int status) {
+  auto sora = (sora::Sora*)p;
+  sora->SetVideoEnabled(status == 1 ? true : false);
+}
+
 unity_bool_t sora_device_enum_video_capturer(device_enum_cb_t f,
                                              void* userdata) {
   return sora::DeviceList::EnumVideoCapturer(
