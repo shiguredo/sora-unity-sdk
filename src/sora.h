@@ -88,6 +88,10 @@ class Sora {
     std::string audio_playout_device;
     std::string audio_codec_type;
     int audio_bit_rate;
+    bool data_channel_signaling;
+    int data_channel_signaling_timeout;
+    bool ignore_disconnect_websocket;
+    bool close_websocket;
   };
 
   bool Connect(const ConnectConfig& config);

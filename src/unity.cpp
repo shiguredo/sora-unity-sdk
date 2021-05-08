@@ -97,7 +97,11 @@ int sora_connect(void* p,
                  const char* audio_recording_device,
                  const char* audio_playout_device,
                  const char* audio_codec_type,
-                 int audio_bit_rate) {
+                 int audio_bit_rate,
+                 unity_bool_t data_channel_signaling,
+                 int data_channel_signaling_timeout,
+                 unity_bool_t ignore_disconnect_websocket,
+                 unity_bool_t close_websocket) {
   auto sora = (sora::Sora*)p;
   sora::Sora::ConnectConfig config;
   config.unity_version = unity_version;
@@ -122,6 +126,10 @@ int sora_connect(void* p,
   config.audio_playout_device = audio_playout_device;
   config.audio_codec_type = audio_codec_type;
   config.audio_bit_rate = audio_bit_rate;
+  config.data_channel_signaling = data_channel_signaling;
+  config.data_channel_signaling_timeout = data_channel_signaling_timeout;
+  config.ignore_disconnect_websocket = ignore_disconnect_websocket;
+  config.close_websocket = close_websocket;
   if (!sora->Connect(config)) {
     return -1;
   }
