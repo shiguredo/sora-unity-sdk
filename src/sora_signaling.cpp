@@ -233,7 +233,7 @@ void SoraSignaling::DoSendPong(
   std::string stats = report->ToJson();
   if (dc_ && dc_->IsOpen("stats")) {
     // DataChannel が使える場合は type: stats で DataChannel に送る
-    std::string str = R"({"type":"stats","stats":)" + stats + "}";
+    std::string str = R"({"type":"stats","reports":)" + stats + "}";
     webrtc::DataBuffer data(rtc::CopyOnWriteBuffer(str), false);
     dc_->Send("stats", data);
   } else {
