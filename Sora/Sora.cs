@@ -53,7 +53,7 @@ public class Sora : IDisposable
         // DataChannel を使ったシグナリングを利用するかどうか
         public bool DataChannelSignaling = false;
         // DataChannel のデータが何秒間やって来なければ切断したとみなすか
-        public int DataChannelSignalingTimeout = 30;
+        public int DataChannelSignalingTimeout = 180;
         // DataChannel の接続が確立した後は、WebSocket が切断されても Sora との接続を確立したままとするかどうか
         public bool IgnoreDisconnectWebsocket = false;
         // DataChannel の接続が確立したら、クライアントから明示的に WebSocket を切断するかどうか
