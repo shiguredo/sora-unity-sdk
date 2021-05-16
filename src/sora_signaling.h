@@ -63,7 +63,6 @@ class SoraSignaling : public std::enable_shared_from_this<SoraSignaling>,
   std::shared_ptr<Websocket> ws_;
   std::shared_ptr<SoraDataChannelOnAsio> dc_;
   bool ignore_disconnect_websocket_;
-  std::vector<std::string> data_channel_lables_;
 
   URLParts parts_;
 
