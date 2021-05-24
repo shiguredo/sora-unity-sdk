@@ -175,6 +175,36 @@ void SoraSignaling::DoSendConnect() {
     json_message["spotlight_number"] = config_.spotlight_number;
   }
 
+  std::string spotlight_focus_rid =
+      config_.spotlight_focus_rid ==
+              SoraSignalingConfig::Spotlight_focus_rid::Unspecified
+          ? "unspecified"
+      : config_.spotlight_focus_rid ==
+              SoraSignalingConfig::Spotlight_focus_rid::None
+          ? "none"
+      : config_.spotlight_focus_rid ==
+              SoraSignalingConfig::Spotlight_focus_rid::R0
+          ? "r0"
+      : config_.spotlight_focus_rid ==
+              SoraSignalingConfig::Spotlight_focus_rid::R1
+          ? "r1"
+          : "r2";
+
+  std::string spotlight_unfocus_rid =
+      config_.spotlight_unfocus_rid ==
+              SoraSignalingConfig::Spotlight_unfocus_rid::Unspecified
+          ? "unspecified"
+      : config_.spotlight_unfocus_rid ==
+              SoraSignalingConfig::Spotlight_unfocus_rid::None
+          ? "none"
+      : config_.spotlight_unfocus_rid ==
+              SoraSignalingConfig::Spotlight_unfocus_rid::R0
+          ? "r0"
+      : config_.spotlight_unfocus_rid ==
+              SoraSignalingConfig::Spotlight_unfocus_rid::R1
+          ? "r1"
+          : "r2";
+
   if (!config_.metadata.is_null()) {
     json_message["metadata"] = config_.metadata;
   }
