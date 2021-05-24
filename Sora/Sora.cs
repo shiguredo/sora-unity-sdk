@@ -29,17 +29,17 @@ public class Sora : IDisposable
     {
         Unspecified,
 		None,
-        r0,
-        r1,
-        r2,
+        R0,
+        R1,
+        R2,
     }
     public enum Spotlight_unfocus_rid
     {
         Unspecified,
 		None,
-        r0,
-        r1,
-        r2,
+        R0,
+        R1,
+        R2,
     }
     public class Config
     {
