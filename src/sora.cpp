@@ -210,25 +210,25 @@ bool Sora::DoConnect(const Sora::ConnectConfig& cc) {
     config.spotlight = cc.spotlight;
     config.spotlight_number = cc.spotlight_number;
     config.spotlight_focus_rid =
-        cc.spotlight_focus_rid == "Unspecified"
-            ? SoraSignalingConfig::Spotlight_focus_rid::Unspecified
-        : cc.spotlight_focus_rid == "None"
-            ? SoraSignalingConfig::Spotlight_focus_rid::None
-        : cc.spotlight_focus_rid == "R0"
-            ? SoraSignalingConfig::Spotlight_focus_rid::R0
-        : cc.spotlight_focus_rid == "R1"
-            ? SoraSignalingConfig::Spotlight_focus_rid::R1
-            : SoraSignalingConfig::Spotlight_focus_rid::R2;
+        cc.spotlight_focus_rid == "unspecified"
+            ? SoraSignalingConfig::Spotlight_focus_rid::unspecified
+        : cc.spotlight_focus_rid == "none"
+            ? SoraSignalingConfig::Spotlight_focus_rid::none
+        : cc.spotlight_focus_rid == "r0"
+            ? SoraSignalingConfig::Spotlight_focus_rid::r0
+        : cc.spotlight_focus_rid == "r1"
+            ? SoraSignalingConfig::Spotlight_focus_rid::r1
+            : SoraSignalingConfig::Spotlight_focus_rid::r2;
     config.spotlight_unfocus_rid =
-        cc.spotlight_unfocus_rid == "Unspecified"
-            ? SoraSignalingConfig::Spotlight_unfocus_rid::Unspecified
-        : cc.spotlight_unfocus_rid == "None"
-            ? SoraSignalingConfig::Spotlight_unfocus_rid::None
-        : cc.spotlight_unfocus_rid == "R0"
-            ? SoraSignalingConfig::Spotlight_unfocus_rid::R0
-        : cc.spotlight_unfocus_rid == "R1"
-            ? SoraSignalingConfig::Spotlight_unfocus_rid::R1
-            : SoraSignalingConfig::Spotlight_unfocus_rid::R2;
+        cc.spotlight_unfocus_rid == "unspecified"
+            ? SoraSignalingConfig::Spotlight_unfocus_rid::unspecified
+        : cc.spotlight_unfocus_rid == "none"
+            ? SoraSignalingConfig::Spotlight_unfocus_rid::none
+        : cc.spotlight_unfocus_rid == "r0"
+            ? SoraSignalingConfig::Spotlight_unfocus_rid::r0
+        : cc.spotlight_unfocus_rid == "r1"
+            ? SoraSignalingConfig::Spotlight_unfocus_rid::r1
+            : SoraSignalingConfig::Spotlight_unfocus_rid::r2;
     config.simulcast = cc.simulcast;
     config.signaling_url = signaling_url_;
     config.channel_id = channel_id_;

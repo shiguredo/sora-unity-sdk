@@ -47,11 +47,11 @@ struct SoraSignalingConfig {
   bool multistream = false;
   bool spotlight = false;
   int spotlight_number = 0;
-  enum class Spotlight_focus_rid { Unspecified, None, R0, R1, R2 };
-  Spotlight_focus_rid spotlight_focus_rid = Spotlight_focus_rid::Unspecified;
-  enum class Spotlight_unfocus_rid { Unspecified, None, R0, R1, R2 };
+  enum class Spotlight_focus_rid { unspecified, none, r0, r1, r2 };
+  Spotlight_focus_rid spotlight_focus_rid = Spotlight_focus_rid::unspecified;
+  enum class Spotlight_unfocus_rid { unspecified, none, r0, r1, r2 };
   Spotlight_unfocus_rid spotlight_unfocus_rid =
-      Spotlight_unfocus_rid::Unspecified;
+      Spotlight_unfocus_rid::unspecified;
   bool simulcast = false;
   bool data_channel_signaling = false;
   int data_channel_signaling_timeout = 180;

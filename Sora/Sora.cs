@@ -27,19 +27,19 @@ public class Sora : IDisposable
     }
     public enum Spotlight_focus_rid
     {
-        Unspecified,
-		None,
-        R0,
-        R1,
-        R2,
+        unspecified,
+		none,
+        r0,
+        r1,
+        r2,
     }
     public enum Spotlight_unfocus_rid
     {
-        Unspecified,
-		None,
-        R0,
-        R1,
-        R2,
+        unspecified,
+		none,
+        r0,
+        r1,
+        r2,
     }
     public class Config
     {
@@ -146,17 +146,21 @@ public class Sora : IDisposable
             config.Role == Role.Sendonly ? "sendonly" :
             config.Role == Role.Recvonly ? "recvonly" : "sendrecv";
 
-        var spotlight_focus_rid =
-            config.spotlight_focus_rid == Spotlight_focus_rid.Unspecified ? "unspecified" :
-            config.spotlight_focus_rid == Spotlight_focus_rid.None ? "none" :
-            config.spotlight_focus_rid == Spotlight_focus_rid.R0 ? "r0" :
-            config.spotlight_focus_rid == Spotlight_focus_rid.R1 ? "r1" : "r2";
+        if (config.spotlight_focus_rid != Spotlight_focus_rid.unspecified)
+        {
+            var spotlight_focus_rid =
+                config.spotlight_focus_rid == Spotlight_focus_rid.none ? "none" :
+                config.spotlight_focus_rid == Spotlight_focus_rid.r0 ? "r0" :
+                config.spotlight_focus_rid == Spotlight_focus_rid.r1 ? "r1" : "r2";
+        }
 
-        var spotlight_unfocus_rid =
-            config.spotlight_unfocus_rid == Spotlight_unfocus_rid.Unspecified ? "unspecified" :
-            config.spotlight_unfocus_rid == Spotlight_unfocus_rid.None ? "none" :
-            config.spotlight_unfocus_rid == Spotlight_unfocus_rid.R0 ? "r0" :
-            config.spotlight_unfocus_rid == Spotlight_unfocus_rid.R1 ? "r1" : "r2";
+        if (config.spotlight_unfocus_rid != Spotlight_unfocus_rid.unspecified)
+        {
+            var spotlight_unfocus_rid =
+                config.spotlight_unfocus_rid == Spotlight_unfocus_rid.none ? "none" :
+                config.spotlight_unfocus_rid == Spotlight_unfocus_rid.r0 ? "r0" :
+                config.spotlight_unfocus_rid == Spotlight_unfocus_rid.r1 ? "r1" : "r2";
+        }
 
         return sora_connect(
             p,
