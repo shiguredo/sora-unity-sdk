@@ -47,7 +47,9 @@ struct SoraSignalingConfig {
   bool multistream = false;
   bool spotlight = false;
   int spotlight_number = 0;
+  // デフォルトは rid を設定しないため unspecified (未指定)
   std::string spotlight_focus_rid = "unspecified";
+  // デフォルトは rid を設定しないため unspecified (未指定)
   std::string spotlight_unfocus_rid = "unspecified";
   bool simulcast = false;
   bool data_channel_signaling = false;
