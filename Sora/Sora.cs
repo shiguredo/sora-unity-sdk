@@ -50,8 +50,8 @@ public class Sora : IDisposable
         public bool Multistream = false;
         public bool Spotlight = false;
         public int SpotlightNumber = 0;
-	    public Spotlight_focus_rid spotlight_focus_rid;
-	    public Spotlight_unfocus_rid spotlight_unfocus_rid;
+	    public Spotlight_focus_rid Spotlight_focus_rid = Spotlight_focus_rid.unspecified;
+	    public Spotlight_unfocus_rid Spotlight_unfocus_rid = Spotlight_unfocus_rid.unspecified;
         public bool Simulcast = false;
         public CapturerType CapturerType = Sora.CapturerType.DeviceCamera;
         public UnityEngine.Camera UnityCamera = null;
@@ -146,22 +146,6 @@ public class Sora : IDisposable
             config.Role == Role.Sendonly ? "sendonly" :
             config.Role == Role.Recvonly ? "recvonly" : "sendrecv";
 
-        if (config.spotlight_focus_rid != Spotlight_focus_rid.unspecified)
-        {
-            var spotlight_focus_rid =
-                config.spotlight_focus_rid == Spotlight_focus_rid.none ? "none" :
-                config.spotlight_focus_rid == Spotlight_focus_rid.r0 ? "r0" :
-                config.spotlight_focus_rid == Spotlight_focus_rid.r1 ? "r1" : "r2";
-        }
-
-        if (config.spotlight_unfocus_rid != Spotlight_unfocus_rid.unspecified)
-        {
-            var spotlight_unfocus_rid =
-                config.spotlight_unfocus_rid == Spotlight_unfocus_rid.none ? "none" :
-                config.spotlight_unfocus_rid == Spotlight_unfocus_rid.r0 ? "r0" :
-                config.spotlight_unfocus_rid == Spotlight_unfocus_rid.r1 ? "r1" : "r2";
-        }
-
         return sora_connect(
             p,
             UnityEngine.Application.unityVersion,
@@ -172,8 +156,8 @@ public class Sora : IDisposable
             config.Multistream ? 1 : 0,
             config.Spotlight ? 1 : 0,
             config.SpotlightNumber,
-			spotlight_focus_rid,
-			spotlight_unfocus_rid,
+			config.Spotlight_focus_rid.ToString(),
+			config.Spotlight_unfocus_rid.ToString(),
             config.Simulcast ? 1 : 0,
             (int)config.CapturerType,
             unityCameraTexture,
