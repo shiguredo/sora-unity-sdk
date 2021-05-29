@@ -27,16 +27,18 @@ public class Sora : IDisposable
     }
     public enum Spotlight_focus_rid
     {
+        // 未指定
         unspecified,
-		none,
+        none,
         r0,
         r1,
         r2,
     }
     public enum Spotlight_unfocus_rid
     {
+        // 未指定
         unspecified,
-		none,
+        none,
         r0,
         r1,
         r2,
@@ -50,8 +52,8 @@ public class Sora : IDisposable
         public bool Multistream = false;
         public bool Spotlight = false;
         public int SpotlightNumber = 0;
-	    public Spotlight_focus_rid Spotlight_focus_rid = Spotlight_focus_rid.unspecified;
-	    public Spotlight_unfocus_rid Spotlight_unfocus_rid = Spotlight_unfocus_rid.unspecified;
+        public Spotlight_focus_rid Spotlight_focus_rid = Spotlight_focus_rid.unspecified;
+        public Spotlight_unfocus_rid Spotlight_unfocus_rid = Spotlight_unfocus_rid.unspecified;
         public bool Simulcast = false;
         public CapturerType CapturerType = Sora.CapturerType.DeviceCamera;
         public UnityEngine.Camera UnityCamera = null;
@@ -156,8 +158,8 @@ public class Sora : IDisposable
             config.Multistream ? 1 : 0,
             config.Spotlight ? 1 : 0,
             config.SpotlightNumber,
-			config.Spotlight_focus_rid.ToString(),
-			config.Spotlight_unfocus_rid.ToString(),
+            config.Spotlight_focus_rid.ToString(),
+            config.Spotlight_unfocus_rid.ToString(),
             config.Simulcast ? 1 : 0,
             (int)config.CapturerType,
             unityCameraTexture,
@@ -469,8 +471,8 @@ public class Sora : IDisposable
         int multistream,
         int spotlight,
         int spotlight_number,
-		string spotlight_focus_rid,
-		string spotlight_unfocus_rid,
+        string spotlight_focus_rid,
+        string spotlight_unfocus_rid,
         int simulcast,
         int capturer_type,
         IntPtr unity_camera_texture,

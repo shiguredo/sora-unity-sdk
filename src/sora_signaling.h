@@ -47,8 +47,8 @@ struct SoraSignalingConfig {
   bool multistream = false;
   bool spotlight = false;
   int spotlight_number = 0;
-  std::string spotlight_focus_rid = "";
-  std::string spotlight_unfocus_rid = "";
+  std::string spotlight_focus_rid = "unspecified";
+  std::string spotlight_unfocus_rid = "unspecified";
   bool simulcast = false;
   bool data_channel_signaling = false;
   int data_channel_signaling_timeout = 180;
