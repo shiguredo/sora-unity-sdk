@@ -175,13 +175,13 @@ void SoraSignaling::DoSendConnect() {
     json_message["spotlight_number"] = config_.spotlight_number;
   }
 
-  // unspecified (未指定)の場合は rid を設定しない
-  if (config_.spotlight_focus_rid != "unspecified") {
+  // 空文字(未指定)の場合は rid を設定しない
+  if (config_.spotlight_focus_rid != "") {
     json_message["spotlight_focus_rid"] = config_.spotlight_focus_rid;
   }
 
-  // unspecified (未指定)の場合は rid を設定しない
-  if (config_.spotlight_unfocus_rid != "unspecified") {
+  // 空文字(未指定)の場合は rid を設定しない
+  if (config_.spotlight_unfocus_rid != "") {
     json_message["spotlight_unfocus_rid"] = config_.spotlight_unfocus_rid;
   }
 

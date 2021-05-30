@@ -25,24 +25,15 @@ public class Sora : IDisposable
     {
         OPUS,
     }
-    public enum Spotlight_focus_rid
+    // SpotlightFocusRid と SpotlightUnfocusRid のためのパラメータ
+    public enum SpotlightFocusRidType
     {
-        // 未指定
-        unspecified,
         none,
         r0,
         r1,
         r2,
     }
-    public enum Spotlight_unfocus_rid
-    {
-        // 未指定
-        unspecified,
-        none,
-        r0,
-        r1,
-        r2,
-    }
+
     public class Config
     {
         public string SignalingUrl = "";
@@ -52,8 +43,10 @@ public class Sora : IDisposable
         public bool Multistream = false;
         public bool Spotlight = false;
         public int SpotlightNumber = 0;
-        public Spotlight_focus_rid Spotlight_focus_rid = Spotlight_focus_rid.unspecified;
-        public Spotlight_unfocus_rid Spotlight_unfocus_rid = Spotlight_unfocus_rid.unspecified;
+        // 指定しない場合は rid を Sora へ送らないため null を設定しておく    
+        public SpotlightFocusRidType? SpotlightFocusRid = null;
+        // 指定しない場合は rid を Sora へ送らないため null を設定しておく    
+        public SpotlightFocusRidType? SpotlightUnfocusRid = null;
         public bool Simulcast = false;
         public CapturerType CapturerType = Sora.CapturerType.DeviceCamera;
         public UnityEngine.Camera UnityCamera = null;
@@ -158,8 +151,8 @@ public class Sora : IDisposable
             config.Multistream ? 1 : 0,
             config.Spotlight ? 1 : 0,
             config.SpotlightNumber,
-            config.Spotlight_focus_rid.ToString(),
-            config.Spotlight_unfocus_rid.ToString(),
+            config.SpotlightFocusRid.ToString(),
+            config.SpotlightUnfocusRid.ToString(),
             config.Simulcast ? 1 : 0,
             (int)config.CapturerType,
             unityCameraTexture,
