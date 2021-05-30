@@ -28,10 +28,10 @@ public class Sora : IDisposable
     // SpotlightFocusRid と SpotlightUnfocusRid のためのパラメータ
     public enum SpotlightFocusRidType
     {
-        none,
-        r0,
-        r1,
-        r2,
+        None,
+        R0,
+        R1,
+        R2,
     }
 
     public class Config
@@ -151,8 +151,8 @@ public class Sora : IDisposable
             config.Multistream ? 1 : 0,
             config.Spotlight ? 1 : 0,
             config.SpotlightNumber,
-            config.SpotlightFocusRid.ToString(),
-            config.SpotlightUnfocusRid.ToString(),
+            config.SpotlightFocusRid == null ? "" : config.SpotlightFocusRid.Value.ToString().ToLower(),
+            config.SpotlightUnfocusRid == null ? "" : config.SpotlightUnfocusRid.Value.ToString().ToLower(),
             config.Simulcast ? 1 : 0,
             (int)config.CapturerType,
             unityCameraTexture,
