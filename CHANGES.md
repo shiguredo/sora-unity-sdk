@@ -11,6 +11,10 @@
 
 ## develop
 
+- [ADD] `spotlight_focus_rid` と `spotlight_unfocus_rid` に対応し、 `Sora.config` に以下のフィールドを追加
+    - `SpotlightFocusRid`
+    - `SpotlightUnfocusRid`
+    - @torikizi
 - [CHANGE] `Sora.Config` のフィールド名および `Sora.VideoCodec`, `Sora.AudioCodec` の名前を変更しました。本バージョンを利用する際には以下のように名前を変更してください。
     - `VideoCodec` → `VideoCodecType`
     - `VideoBitrate` → `VideoBitRate`
