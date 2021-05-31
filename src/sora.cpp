@@ -106,6 +106,8 @@ bool Sora::DoConnect(const Sora::ConnectConfig& cc) {
                    << " multistream=" << cc.multistream
                    << " spotlight=" << cc.spotlight
                    << " spotlight_number=" << cc.spotlight_number
+                   << " spotlight_focus_rid=" << cc.spotlight_focus_rid
+                   << " spotlight_unfocus_rid=" << cc.spotlight_unfocus_rid
                    << " simulcast=" << cc.simulcast
                    << " capturer_type=" << cc.capturer_type
                    << " unity_camera_texture=0x" << cc.unity_camera_texture
@@ -207,6 +209,8 @@ bool Sora::DoConnect(const Sora::ConnectConfig& cc) {
     config.multistream = cc.multistream;
     config.spotlight = cc.spotlight;
     config.spotlight_number = cc.spotlight_number;
+    config.spotlight_focus_rid = cc.spotlight_focus_rid;
+    config.spotlight_unfocus_rid = cc.spotlight_unfocus_rid;
     config.simulcast = cc.simulcast;
     config.signaling_url = signaling_url_;
     config.channel_id = channel_id_;

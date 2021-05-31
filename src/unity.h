@@ -42,6 +42,8 @@ UNITY_INTERFACE_EXPORT int sora_connect(
     unity_bool_t multistream,
     unity_bool_t spotlight,
     int spotlight_number,
+    const char* spotlight_focus_rid,
+    const char* spotlight_unfocus_rid,
     unity_bool_t simulcast,
     int capturer_type,
     void* unity_camera_texture,

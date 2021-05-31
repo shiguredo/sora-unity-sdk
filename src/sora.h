@@ -74,6 +74,8 @@ class Sora {
     bool multistream;
     bool spotlight;
     int spotlight_number;
+    std::string spotlight_focus_rid;
+    std::string spotlight_unfocus_rid;
     bool simulcast;
     int capturer_type;
     void* unity_camera_texture;

@@ -84,6 +84,8 @@ int sora_connect(void* p,
                  unity_bool_t multistream,
                  unity_bool_t spotlight,
                  int spotlight_number,
+                 const char* spotlight_focus_rid,
+                 const char* spotlight_unfocus_rid,
                  unity_bool_t simulcast,
                  int capturer_type,
                  void* unity_camera_texture,
@@ -112,6 +114,8 @@ int sora_connect(void* p,
   config.multistream = multistream;
   config.spotlight = spotlight;
   config.spotlight_number = spotlight_number;
+  config.spotlight_focus_rid = spotlight_focus_rid;
+  config.spotlight_unfocus_rid = spotlight_unfocus_rid;
   config.simulcast = simulcast;
   config.capturer_type = capturer_type;
   config.unity_camera_texture = unity_camera_texture;
