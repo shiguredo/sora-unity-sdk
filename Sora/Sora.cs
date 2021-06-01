@@ -38,6 +38,7 @@ public class Sora : IDisposable
     {
         public string SignalingUrl = "";
         public string ChannelId = "";
+        public string ClientId = "";
         public string Metadata = "";
         public Role Role = Sora.Role.Sendonly;
         public bool Multistream = false;
@@ -146,6 +147,7 @@ public class Sora : IDisposable
             UnityEngine.Application.unityVersion,
             config.SignalingUrl,
             config.ChannelId,
+            config.ClientId,
             config.Metadata,
             role,
             config.Multistream ? 1 : 0,
@@ -459,6 +461,7 @@ public class Sora : IDisposable
         string unity_version,
         string signaling_url,
         string channel_id,
+        string client_id,
         string metadata,
         string role,
         int multistream,

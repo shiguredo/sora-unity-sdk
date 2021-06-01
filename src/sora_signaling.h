@@ -31,6 +31,7 @@ struct SoraSignalingConfig {
   std::string unity_version;
   std::string signaling_url;
   std::string channel_id;
+  std::string client_id = "";
 
   boost::json::value metadata;
 

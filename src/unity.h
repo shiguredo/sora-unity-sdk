@@ -37,6 +37,7 @@ UNITY_INTERFACE_EXPORT int sora_connect(
     const char* unity_version,
     const char* signaling_url,
     const char* channel_id,
+    const char* client_id,
     const char* metadata,
     const char* role,
     unity_bool_t multistream,
