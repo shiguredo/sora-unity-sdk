@@ -11,6 +11,8 @@
 
 ## develop
 
+- [ADD] `clientId` に対応し、 `Sora.config` に `ClientId` を追加
+    - @torikizi
 - [ADD] `spotlight_focus_rid` と `spotlight_unfocus_rid` に対応し、 `Sora.config` に以下のフィールドを追加
     - `SpotlightFocusRid`
     - `SpotlightUnfocusRid`
