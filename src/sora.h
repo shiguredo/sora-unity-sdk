@@ -69,6 +69,7 @@ class Sora {
     std::string unity_version;
     std::string signaling_url;
     std::string channel_id;
+    std::string client_id;
     std::string metadata;
     std::string role;
     bool multistream;

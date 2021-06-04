@@ -79,6 +79,7 @@ int sora_connect(void* p,
                  const char* unity_version,
                  const char* signaling_url,
                  const char* channel_id,
+                 const char* client_id,
                  const char* metadata,
                  const char* role,
                  unity_bool_t multistream,
@@ -109,6 +110,7 @@ int sora_connect(void* p,
   config.unity_version = unity_version;
   config.signaling_url = signaling_url;
   config.channel_id = channel_id;
+  config.client_id = client_id;
   config.metadata = metadata;
   config.role = role;
   config.multistream = multistream;

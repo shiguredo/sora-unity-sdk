@@ -102,6 +102,7 @@ bool Sora::DoConnect(const Sora::ConnectConfig& cc) {
   RTC_LOG(LS_INFO) << "Sora::Connect unity_version=" << cc.unity_version
                    << " signaling_url =" << signaling_url_
                    << " channel_id=" << channel_id_
+                   << " client_id=" << cc.client_id
                    << " metadata=" << cc.metadata << " role=" << cc.role
                    << " multistream=" << cc.multistream
                    << " spotlight=" << cc.spotlight
@@ -214,6 +215,7 @@ bool Sora::DoConnect(const Sora::ConnectConfig& cc) {
     config.simulcast = cc.simulcast;
     config.signaling_url = signaling_url_;
     config.channel_id = channel_id_;
+    config.client_id = cc.client_id;
     config.video_codec_type = cc.video_codec_type;
     config.video_bit_rate = cc.video_bit_rate;
     config.audio_codec_type = cc.audio_codec_type;

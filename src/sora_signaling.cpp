@@ -171,6 +171,10 @@ void SoraSignaling::DoSendConnect() {
        "Unity " + config_.unity_version + " for " SORA_UNITY_SDK_PLATFORM},
   };
 
+  if (config_.client_id != "") {
+    json_message["client_id"] = config_.client_id;
+  }
+
   if (config_.spotlight && config_.spotlight_number > 0) {
     json_message["spotlight_number"] = config_.spotlight_number;
   }
