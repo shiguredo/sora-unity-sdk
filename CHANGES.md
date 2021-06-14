@@ -28,10 +28,12 @@
 - [ADD] プッシュ通知に対応
     - @melpon
 - [ADD] DataChannel を使ったシグナリングに対応し、`Sora.Config` に以下のフィールドを追加
+    - `EnableDataChannelSignaling`
     - `DataChannelSignaling`
     - `DataChannelSignalingTimeout`
+    - `EnableIgnoreDisconnectWebsocket`
     - `IgnoreDisconnectWebsocket`
-    - `CloseWebsocket`
+    - `DisconnectWaitTimeout`
     - @melpon
 - [ADD] WS の re-offer に対応
     - @melpon

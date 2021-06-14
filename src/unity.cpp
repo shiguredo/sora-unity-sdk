@@ -101,10 +101,12 @@ int sora_connect(void* p,
                  const char* audio_playout_device,
                  const char* audio_codec_type,
                  int audio_bit_rate,
+                 unity_bool_t enable_data_channel_signaling,
                  unity_bool_t data_channel_signaling,
                  int data_channel_signaling_timeout,
+                 unity_bool_t enable_ignore_disconnect_websocket,
                  unity_bool_t ignore_disconnect_websocket,
-                 unity_bool_t close_websocket) {
+                 int disconnect_wait_timeout) {
   auto sora = (sora::Sora*)p;
   sora::Sora::ConnectConfig config;
   config.unity_version = unity_version;
@@ -132,10 +134,13 @@ int sora_connect(void* p,
   config.audio_playout_device = audio_playout_device;
   config.audio_codec_type = audio_codec_type;
   config.audio_bit_rate = audio_bit_rate;
+  config.enable_data_channel_signaling = enable_data_channel_signaling;
   config.data_channel_signaling = data_channel_signaling;
   config.data_channel_signaling_timeout = data_channel_signaling_timeout;
+  config.enable_ignore_disconnect_websocket =
+      enable_ignore_disconnect_websocket;
   config.ignore_disconnect_websocket = ignore_disconnect_websocket;
-  config.close_websocket = close_websocket;
+  config.disconnect_wait_timeout = disconnect_wait_timeout;
   if (!sora->Connect(config)) {
     return -1;
   }

@@ -91,10 +91,12 @@ class Sora {
     std::string audio_playout_device;
     std::string audio_codec_type;
     int audio_bit_rate;
+    bool enable_data_channel_signaling;
     bool data_channel_signaling;
     int data_channel_signaling_timeout;
+    bool enable_ignore_disconnect_websocket;
     bool ignore_disconnect_websocket;
-    bool close_websocket;
+    int disconnect_wait_timeout;
   };
 
   bool Connect(const ConnectConfig& config);

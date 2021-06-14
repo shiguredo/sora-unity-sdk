@@ -5,6 +5,7 @@
 #include <cstdlib>
 #include <functional>
 #include <memory>
+#include <set>
 #include <string>
 
 #include <boost/asio/io_context.hpp>
@@ -53,10 +54,10 @@ struct SoraSignalingConfig {
   // デフォルトは rid を設定しないため空文字(未指定)
   std::string spotlight_unfocus_rid = "";
   bool simulcast = false;
-  bool data_channel_signaling = false;
+  boost::optional<bool> data_channel_signaling;
   int data_channel_signaling_timeout = 180;
-  bool ignore_disconnect_websocket = false;
-  bool close_websocket = true;
+  boost::optional<bool> ignore_disconnect_websocket;
+  int disconnect_wait_timeout = 5;
 
   bool insecure = false;
 };
@@ -67,7 +68,8 @@ class SoraSignaling : public std::enable_shared_from_this<SoraSignaling>,
   boost::asio::io_context& ioc_;
   std::shared_ptr<Websocket> ws_;
   std::shared_ptr<SoraDataChannelOnAsio> dc_;
-  bool ignore_disconnect_websocket_;
+  bool using_datachannel_ = false;
+  std::set<std::string> compressed_labels_;
 
   URLParts parts_;
 
@@ -81,8 +83,6 @@ class SoraSignaling : public std::enable_shared_from_this<SoraSignaling>,
 
   bool connected_ = false;
   bool destructed_ = false;
-
-  WatchDog watchdog_;
 
  public:
   webrtc::PeerConnectionInterface::IceConnectionState getRTCConnectionState()
@@ -129,6 +129,9 @@ class SoraSignaling : public std::enable_shared_from_this<SoraSignaling>,
   void OnRead(boost::system::error_code ec,
               std::size_t bytes_transferred,
               std::string text);
+
+ private:
+  void SendDataChannel(const std::string& label, const std::string& input);
 
  private:
   // DataChannel 周りのコールバック

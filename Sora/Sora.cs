@@ -64,15 +64,18 @@ public class Sora : IDisposable
         public AudioCodecType AudioCodecType = AudioCodecType.OPUS;
         public int AudioBitRate = 0;
 
+        // DataChannelSignaling を有効にするかどうか
+        public bool EnableDataChannelSignaling = false;
         // DataChannel を使ったシグナリングを利用するかどうか
         public bool DataChannelSignaling = false;
         // DataChannel のデータが何秒間やって来なければ切断したとみなすか
         public int DataChannelSignalingTimeout = 180;
+        // IgnoreDisconnectWebsocket を有効にするかどうか
+        public bool EnableIgnoreDisconnectWebsocket = false;
         // DataChannel の接続が確立した後は、WebSocket が切断されても Sora との接続を確立したままとするかどうか
         public bool IgnoreDisconnectWebsocket = false;
-        // DataChannel の接続が確立したら、クライアントから明示的に WebSocket を切断するかどうか
-        // （IgnoreDisconnectWebsocket=true の場合のみ有効）
-        public bool CloseWebsocket = true;
+        // DataChannel を閉じる際に最大で何秒間待つか
+        public int DisconnectWaitTimeout = 5;
     }
 
     IntPtr p;
@@ -169,10 +172,12 @@ public class Sora : IDisposable
             config.AudioPlayoutDevice,
             config.AudioCodecType.ToString(),
             config.AudioBitRate,
+            config.EnableDataChannelSignaling ? 1 : 0,
             config.DataChannelSignaling ? 1 : 0,
             config.DataChannelSignalingTimeout,
+            config.EnableIgnoreDisconnectWebsocket ? 1 : 0,
             config.IgnoreDisconnectWebsocket ? 1 : 0,
-            config.CloseWebsocket ? 1 : 0) == 0;
+            config.DisconnectWaitTimeout) == 0;
     }
 
     // Unity 側でレンダリングが完了した時（yield return new WaitForEndOfFrame() の後）に呼ぶイベント
@@ -483,10 +488,12 @@ public class Sora : IDisposable
         string audio_playout_device,
         string audio_codec,
         int audio_bitrate,
+        int enable_data_channel_signaling,
         int data_channel_signaling,
         int data_channel_signaling_timeout,
+        int enable_ignore_disconnect_websocket,
         int ignore_disconnect_websocket,
-        int close_websocket);
+        int disconnect_wait_timeout);
 #if UNITY_IOS && !UNITY_EDITOR
     [DllImport("__Internal")]
 #else

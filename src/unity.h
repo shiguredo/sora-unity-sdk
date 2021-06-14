@@ -59,10 +59,12 @@ UNITY_INTERFACE_EXPORT int sora_connect(
     const char* audio_playout_device,
     const char* audio_codec,
     int audio_bitrate,
+    unity_bool_t enable_data_channel_signaling,
     unity_bool_t data_channel_signaling,
     int data_channel_signaling_timeout,
+    unity_bool_t enable_ignore_disconnect_websocket,
     unity_bool_t ignore_disconnect_websocket,
-    unity_bool_t close_websocket);
+    int disconnect_wait_timeout);
 UNITY_INTERFACE_EXPORT void* sora_get_texture_update_callback();
 UNITY_INTERFACE_EXPORT void sora_destroy(void* sora);
 
