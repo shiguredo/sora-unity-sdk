@@ -279,6 +279,7 @@ elseif (SORA_UNITY_SDK_PACKAGE STREQUAL "android")
   find_library(ANDROID_LIB_ANDROID android)
   find_library(ANDROID_LIB_OPENSLES OpenSLES)
   find_library(ANDROID_LIB_VULKAN vulkan)
+  find_library(ANDROID_LIB_EGL EGL)
 
   target_sources(SoraUnitySdk
     PRIVATE
@@ -317,6 +318,7 @@ elseif (SORA_UNITY_SDK_PACKAGE STREQUAL "android")
       ${ANDROID_LIB_ANDROID}
       ${ANDROID_LIB_OPENSLES}
       ${ANDROID_LIB_VULKAN}
+      ${ANDROID_LIB_EGL}
   )
   file(READ ${_INSTALL_DIR}/android/webrtc.ldflags _WEBRTC_ANDROID_LDFLAGS)
   string(REGEX REPLACE "\n" ";" _WEBRTC_ANDROID_LDFLAGS "${_WEBRTC_ANDROID_LDFLAGS}")
