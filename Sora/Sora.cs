@@ -89,6 +89,12 @@ public class Sora : IDisposable
 
     public void Dispose()
     {
+        if (p != IntPtr.Zero)
+        {
+            sora_destroy(p);
+            p = IntPtr.Zero;
+        }
+
         if (onAddTrackHandle.IsAllocated)
         {
             onAddTrackHandle.Free();
@@ -109,14 +115,6 @@ public class Sora : IDisposable
             onPushHandle.Free();
         }
 
-        if (p != IntPtr.Zero)
-        {
-            sora_destroy(p);
-            p = IntPtr.Zero;
-        }
-
-        // Sora が別スレッドからコールバックを呼びまくっているので、
-        // Sora を破棄した後に解放しないとエラーになってしまう。
         if (onHandleAudioHandle.IsAllocated)
         {
             onHandleAudioHandle.Free();
