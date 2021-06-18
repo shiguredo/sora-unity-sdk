@@ -44,11 +44,9 @@ class SoraDataChannel : public RTCDataManager {
  public:
   SoraDataChannel(SoraDataChannelObserver* observer) : observer_(observer) {}
   bool IsOpen(std::string label) const {
-    webrtc::MutexLock lock(&mutex_);
     return labels_.find(label) != labels_.end();
   }
   void Send(std::string label, const webrtc::DataBuffer& data) {
-    webrtc::MutexLock lock(&mutex_);
     auto it = labels_.find(label);
     if (it == labels_.end()) {
       return;
@@ -61,27 +59,21 @@ class SoraDataChannel : public RTCDataManager {
     auto data_channel = it->second;
     data_channel->Send(data);
   }
-  void Close(std::function<void()> on_close) {
-    webrtc::MutexLock lock(&mutex_);
+  void Close(const webrtc::DataBuffer& disconnect_message,
+             std::function<void()> on_close) {
     auto it = labels_.find("signaling");
     if (it == labels_.end()) {
-      mutex_.Unlock();
       on_close();
-      mutex_.Lock();
       return;
     }
     on_close_ = on_close;
-    std::string str = R"({"type":"disconnect})";
-    RTC_LOG(LS_INFO) << "Send DataChannel label=signaling data=" << str;
-    webrtc::DataBuffer data(rtc::CopyOnWriteBuffer(str), false);
     auto data_channel = it->second;
-    data_channel->Send(data);
+    data_channel->Send(disconnect_message);
   }
 
  public:
   void OnDataChannel(
       rtc::scoped_refptr<webrtc::DataChannelInterface> data_channel) override {
-    webrtc::MutexLock lock(&mutex_);
     std::shared_ptr<Thunk> thunk(new Thunk());
     thunk->p = this;
     thunk->dc = data_channel;
@@ -92,7 +84,6 @@ class SoraDataChannel : public RTCDataManager {
 
  private:
   void OnStateChange(std::shared_ptr<Thunk> thunk) {
-    webrtc::MutexLock lock(&mutex_);
     auto data_channel = thunks_.at(thunk);
     if (data_channel->state() == webrtc::DataChannelInterface::kClosed) {
       labels_.erase(data_channel->label());
@@ -106,24 +97,19 @@ class SoraDataChannel : public RTCDataManager {
     if (on_close != nullptr && empty) {
       on_close_ = nullptr;
     }
-    mutex_.Unlock();
     observer->OnStateChange(data_channel);
     // すべての Data Channel が閉じたら通知する
     if (on_close != nullptr && empty) {
       RTC_LOG(LS_INFO) << "DataChannel closed all";
       on_close();
     }
-    mutex_.Lock();
   }
 
   void OnMessage(std::shared_ptr<Thunk> thunk,
                  const webrtc::DataBuffer& buffer) {
-    webrtc::MutexLock lock(&mutex_);
     auto observer = observer_;
     auto data_channel = thunks_.at(thunk);
-    mutex_.Unlock();
     observer->OnMessage(data_channel, buffer);
-    mutex_.Lock();
   }
   void OnBufferedAmountChange(std::shared_ptr<Thunk> thunk,
                               uint64_t previous_amount) {}
@@ -136,7 +122,6 @@ class SoraDataChannel : public RTCDataManager {
       labels_;
   SoraDataChannelObserver* observer_;
   std::function<void()> on_close_;
-  mutable webrtc::Mutex mutex_;
 };
 
 }  // namespace sora

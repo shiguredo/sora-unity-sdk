@@ -277,6 +277,7 @@ bool RTCManager::InitADM(rtc::scoped_refptr<webrtc::AudioDeviceModule> adm,
 }
 
 RTCManager::~RTCManager() {
+  RTC_LOG(LS_INFO) << "RTCManager::~RTCManager started";
   audio_track_ = nullptr;
   video_track_ = nullptr;
   factory_ = nullptr;
@@ -285,6 +286,7 @@ RTCManager::~RTCManager() {
   signaling_thread_->Stop();
 
   rtc::CleanupSSL();
+  RTC_LOG(LS_INFO) << "RTCManager::~RTCManager completed";
 }
 
 void RTCManager::SetDataManager(std::shared_ptr<RTCDataManager> data_manager) {

@@ -131,6 +131,8 @@ class SoraSignaling : public std::enable_shared_from_this<SoraSignaling>,
               std::string text);
 
  private:
+  webrtc::DataBuffer ConvertToDataBuffer(const std::string& label,
+                                         const std::string& input);
   void SendDataChannel(const std::string& label, const std::string& input);
 
  private:
