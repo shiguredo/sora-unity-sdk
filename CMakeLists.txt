@@ -70,7 +70,6 @@ target_sources(SoraUnitySdk
     src/websocket.cpp
     src/rtc/device_list.cpp
     src/rtc/device_video_capturer.cpp
-    src/rtc/h264_format.cpp
     src/rtc/native_buffer.cpp
     src/rtc/peer_connection_observer.cpp
     src/rtc/rtc_connection.cpp

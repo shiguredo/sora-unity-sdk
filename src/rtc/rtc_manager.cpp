@@ -147,7 +147,6 @@ bool RTCManager::Init(
   }
 
   webrtc::PeerConnectionFactoryInterface::Options factory_options;
-  factory_options.disable_sctp_data_channels = false;
   factory_options.disable_encryption = false;
   factory_options.ssl_max_version = rtc::SSL_PROTOCOL_DTLS_12;
   factory_->SetOptions(factory_options);

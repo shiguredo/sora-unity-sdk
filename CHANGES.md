@@ -25,6 +25,8 @@
     - @melpon
 - [UPDATE] libwebrtc のバージョンを M91 (4472@{#0}) に上げる
     - @voluntas
+- [UPDATE] libwebrtc のバージョンを M92 (4515@{#9}) に上げる
+    - @melpon
 - [ADD] プッシュ通知に対応
     - @melpon
 - [ADD] DataChannel を使ったシグナリングに対応し、`Sora.Config` に以下のフィールドを追加
