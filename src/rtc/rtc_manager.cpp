@@ -308,15 +308,16 @@ std::shared_ptr<RTCConnection> RTCManager::CreateConnection(
   dependencies.tls_cert_verifier = std::unique_ptr<rtc::SSLCertificateVerifier>(
       new RTCSSLVerifier(config_.insecure));
 
-  rtc::scoped_refptr<webrtc::PeerConnectionInterface> connection =
-      factory_->CreatePeerConnection(rtc_config, std::move(dependencies));
-  if (!connection) {
+  webrtc::RTCErrorOr<rtc::scoped_refptr<webrtc::PeerConnectionInterface>>
+      connection = factory_->CreatePeerConnectionOrError(
+          rtc_config, std::move(dependencies));
+  if (!connection.ok()) {
     RTC_LOG(LS_ERROR) << __FUNCTION__ << ": CreatePeerConnection failed";
     return nullptr;
   }
 
   return std::make_shared<RTCConnection>(sender, std::move(observer),
-                                         connection);
+                                         connection.value());
 }
 
 void RTCManager::InitTracks(RTCConnection* conn) {
@@ -325,7 +326,7 @@ void RTCManager::InitTracks(RTCConnection* conn) {
   std::string stream_id = GenerateRandomChars();
 
   if (audio_track_) {
-    webrtc::RTCErrorOr<rtc::scoped_refptr<webrtc::RtpSenderInterface> >
+    webrtc::RTCErrorOr<rtc::scoped_refptr<webrtc::RtpSenderInterface>>
         audio_sender = connection->AddTrack(audio_track_, {stream_id});
     if (!audio_sender.ok()) {
       RTC_LOG(LS_WARNING) << __FUNCTION__ << ": Cannot add audio_track_";
@@ -333,7 +334,7 @@ void RTCManager::InitTracks(RTCConnection* conn) {
   }
 
   if (video_track_) {
-    webrtc::RTCErrorOr<rtc::scoped_refptr<webrtc::RtpSenderInterface> >
+    webrtc::RTCErrorOr<rtc::scoped_refptr<webrtc::RtpSenderInterface>>
         video_add_result = connection->AddTrack(video_track_, {stream_id});
     if (video_add_result.ok()) {
       rtc::scoped_refptr<webrtc::RtpSenderInterface> video_sender =
