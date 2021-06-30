@@ -54,9 +54,9 @@ jobs:
       uses: actions/cache@v2
       with:
         path: _install
-        key: macos-v2-${{ hashFiles('VERSIONS') }}
+        key: macos-v3-${{ hashFiles('VERSIONS') }}
         restore-keys: |
-          macos-v2-
+          macos-v3-
     - name: install_tools.sh
       run: ./install_tools.sh
     - name: cmake.sh

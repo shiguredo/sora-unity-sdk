@@ -38,6 +38,8 @@ for name in macos android ios; do
 
     rm -rf $INSTALL_DIR/libcxx/
     rm -rf $INSTALL_DIR/libcxxabi/
+
+    rm -f $INSTALL_DIR/android/webrtc.ldflags
   fi
 done
 echo $WEBRTC_BUILD_VERSION > $WEBRTC_VERSION_FILE
