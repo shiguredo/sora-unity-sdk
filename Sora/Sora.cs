@@ -25,6 +25,14 @@ public class Sora : IDisposable
     {
         OPUS,
     }
+    // SimulcastRid のためのパラメータ
+    public enum SimulcastRidType
+    {
+        R0,
+        R1,
+        R2,
+    }
+
     // SpotlightFocusRid と SpotlightUnfocusRid のためのパラメータ
     public enum SpotlightFocusRidType
     {
@@ -49,6 +57,8 @@ public class Sora : IDisposable
         // 指定しない場合は rid を Sora へ送らないため null を設定しておく    
         public SpotlightFocusRidType? SpotlightUnfocusRid = null;
         public bool Simulcast = false;
+        // 指定しない場合は rid を Sora へ送らないため null を設定しておく    
+        public SimulcastRidType? SimulcastRid = null;
         public CapturerType CapturerType = Sora.CapturerType.DeviceCamera;
         public UnityEngine.Camera UnityCamera = null;
         public int UnityCameraRenderTargetDepthBuffer = 16;
@@ -157,6 +167,7 @@ public class Sora : IDisposable
             config.SpotlightFocusRid == null ? "" : config.SpotlightFocusRid.Value.ToString().ToLower(),
             config.SpotlightUnfocusRid == null ? "" : config.SpotlightUnfocusRid.Value.ToString().ToLower(),
             config.Simulcast ? 1 : 0,
+            config.SimulcastRid == null ? "" : config.SimulcastRid.Value.ToString().ToLower(),
             (int)config.CapturerType,
             unityCameraTexture,
             config.VideoCapturerDevice,
@@ -473,6 +484,7 @@ public class Sora : IDisposable
         string spotlight_focus_rid,
         string spotlight_unfocus_rid,
         int simulcast,
+        string Simulcast_rid,
         int capturer_type,
         IntPtr unity_camera_texture,
         string video_capturer_device,

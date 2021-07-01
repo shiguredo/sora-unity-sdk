@@ -88,6 +88,7 @@ int sora_connect(void* p,
                  const char* spotlight_focus_rid,
                  const char* spotlight_unfocus_rid,
                  unity_bool_t simulcast,
+                 const char* simulcast_rid,
                  int capturer_type,
                  void* unity_camera_texture,
                  const char* video_capturer_device,
@@ -121,6 +122,7 @@ int sora_connect(void* p,
   config.spotlight_focus_rid = spotlight_focus_rid;
   config.spotlight_unfocus_rid = spotlight_unfocus_rid;
   config.simulcast = simulcast;
+  config.simulcast_rid = simulcast_rid;
   config.capturer_type = capturer_type;
   config.unity_camera_texture = unity_camera_texture;
   config.video_capturer_device = video_capturer_device;

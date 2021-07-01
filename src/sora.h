@@ -78,6 +78,7 @@ class Sora {
     std::string spotlight_focus_rid;
     std::string spotlight_unfocus_rid;
     bool simulcast;
+    std::string simulcast_rid;
     int capturer_type;
     void* unity_camera_texture;
     std::string video_capturer_device;

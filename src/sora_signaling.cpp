@@ -193,6 +193,11 @@ void SoraSignaling::DoSendConnect() {
     json_message["spotlight_unfocus_rid"] = config_.spotlight_unfocus_rid;
   }
 
+  // 空文字(未指定)の場合は rid を設定しない
+  if (config_.simulcast_rid != "") {
+    json_message["simulcast_rid"] = config_.simulcast_rid;
+  }
+
   if (!config_.metadata.is_null()) {
     json_message["metadata"] = config_.metadata;
   }
