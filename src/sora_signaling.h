@@ -54,6 +54,8 @@ struct SoraSignalingConfig {
   // デフォルトは rid を設定しないため空文字(未指定)
   std::string spotlight_unfocus_rid = "";
   bool simulcast = false;
+  // デフォルトは rid を設定しないため空文字(未指定)
+  std::string simulcast_rid = "";
   boost::optional<bool> data_channel_signaling;
   int data_channel_signaling_timeout = 180;
   boost::optional<bool> ignore_disconnect_websocket;

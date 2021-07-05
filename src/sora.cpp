@@ -110,6 +110,7 @@ bool Sora::DoConnect(const Sora::ConnectConfig& cc) {
                    << " spotlight_focus_rid=" << cc.spotlight_focus_rid
                    << " spotlight_unfocus_rid=" << cc.spotlight_unfocus_rid
                    << " simulcast=" << cc.simulcast
+                   << " simulcast_rid=" << cc.simulcast_rid
                    << " capturer_type=" << cc.capturer_type
                    << " unity_camera_texture=0x" << cc.unity_camera_texture
                    << " video_capturer_device=" << cc.video_capturer_device
@@ -213,6 +214,7 @@ bool Sora::DoConnect(const Sora::ConnectConfig& cc) {
     config.spotlight_focus_rid = cc.spotlight_focus_rid;
     config.spotlight_unfocus_rid = cc.spotlight_unfocus_rid;
     config.simulcast = cc.simulcast;
+    config.simulcast_rid = cc.simulcast_rid;
     config.signaling_url = signaling_url_;
     config.channel_id = channel_id_;
     config.client_id = cc.client_id;
