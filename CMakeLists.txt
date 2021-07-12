@@ -83,7 +83,7 @@ target_sources(SoraUnitySdk
 
 file(MAKE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/proto")
 file(MAKE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/proto/cpp")
-file(MAKE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/Sora/Generated")
+file(MAKE_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/Sora/Generated")
 if (WIN32)
   set(EXE_EXT ".exe")
 endif()
