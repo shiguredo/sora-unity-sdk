@@ -1,7 +1,0 @@
-syntax = "proto3";
-
-package sora;
-
-message ConnectConfig {
-    string unity_version = 1;
-}

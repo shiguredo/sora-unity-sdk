@@ -75,7 +75,7 @@ void Sora::DispatchEvents() {
   }
 }
 
-bool Sora::Connect(const Sora::ConnectConfig& cc) {
+bool Sora::Connect(const sora_conf::ConnectConfig& cc) {
 #if defined(SORA_UNITY_SDK_IOS)
   // iOS でマイクを使用する場合、マイクの初期化の設定をしてから DoConnect する。
 
@@ -95,31 +95,11 @@ bool Sora::Connect(const Sora::ConnectConfig& cc) {
 #endif
 }
 
-bool Sora::DoConnect(const Sora::ConnectConfig& cc) {
+bool Sora::DoConnect(const sora_conf::ConnectConfig& cc) {
   signaling_url_ = std::move(cc.signaling_url);
   channel_id_ = std::move(cc.channel_id);
 
-  RTC_LOG(LS_INFO) << "Sora::Connect unity_version=" << cc.unity_version
-                   << " signaling_url =" << signaling_url_
-                   << " channel_id=" << channel_id_
-                   << " client_id=" << cc.client_id
-                   << " metadata=" << cc.metadata << " role=" << cc.role
-                   << " multistream=" << cc.multistream
-                   << " spotlight=" << cc.spotlight
-                   << " spotlight_number=" << cc.spotlight_number
-                   << " spotlight_focus_rid=" << cc.spotlight_focus_rid
-                   << " spotlight_unfocus_rid=" << cc.spotlight_unfocus_rid
-                   << " simulcast=" << cc.simulcast
-                   << " simulcast_rid=" << cc.simulcast_rid
-                   << " capturer_type=" << cc.capturer_type
-                   << " unity_camera_texture=0x" << cc.unity_camera_texture
-                   << " video_capturer_device=" << cc.video_capturer_device
-                   << " video_width=" << cc.video_width
-                   << " video_height=" << cc.video_height
-                   << " unity_audio_input=" << cc.unity_audio_input
-                   << " unity_audio_output=" << cc.unity_audio_output
-                   << " audio_recording_device=" << cc.audio_recording_device
-                   << " audio_playout_device=" << cc.audio_playout_device;
+  RTC_LOG(LS_INFO) << "Sora::Connect " << jsonif::to_json(cc);
 
   if (cc.role != "sendonly" && cc.role != "recvonly" && cc.role != "sendrecv") {
     RTC_LOG(LS_ERROR) << "Invalid role: " << cc.role;
@@ -168,7 +148,7 @@ bool Sora::DoConnect(const Sora::ConnectConfig& cc) {
   if (cc.role == "sendonly" || cc.role == "sendrecv") {
     // 送信側は capturer を設定する。送信のみの場合は playout の設定はしない
     rtc::scoped_refptr<rtc::AdaptedVideoTrackSource> capturer =
-        CreateVideoCapturer(cc.capturer_type, cc.unity_camera_texture,
+        CreateVideoCapturer(cc.capturer_type, (void*)cc.unity_camera_texture,
                             cc.video_capturer_device, cc.video_width,
                             cc.video_height, signaling_thread.get());
     if (!capturer) {

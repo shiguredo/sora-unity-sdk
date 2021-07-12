@@ -8,6 +8,7 @@
                 "${workspaceFolder}/_install/json/include",
                 "${workspaceFolder}/NvCodec/include",
                 "${workspaceFolder}/NvCodec/NvCodec",
+                "${workspaceFolder}/build/proto/cpp",
                 "${workspaceFolder}/_install/webrtc/include",
                 "${workspaceFolder}/_install/webrtc/include/third_party/zlib",
                 "${workspaceFolder}/_install/webrtc/include/third_party/abseil-cpp",

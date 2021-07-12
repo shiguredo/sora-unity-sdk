@@ -22,6 +22,7 @@
 // sora
 #include "id_pointer.h"
 #include "rtc/rtc_manager.h"
+#include "sora_conf.json.h"
 #include "sora_signaling.h"
 #include "unity.h"
 #include "unity_audio_device.h"
@@ -65,42 +66,7 @@ class Sora {
   void SetOnPush(std::function<void(std::string)> on_push);
   void DispatchEvents();
 
-  struct ConnectConfig {
-    std::string unity_version;
-    std::string signaling_url;
-    std::string channel_id;
-    std::string client_id;
-    std::string metadata;
-    std::string role;
-    bool multistream;
-    bool spotlight;
-    int spotlight_number;
-    std::string spotlight_focus_rid;
-    std::string spotlight_unfocus_rid;
-    bool simulcast;
-    std::string simulcast_rid;
-    int capturer_type;
-    void* unity_camera_texture;
-    std::string video_capturer_device;
-    int video_width;
-    int video_height;
-    std::string video_codec_type;
-    int video_bit_rate;
-    bool unity_audio_input;
-    bool unity_audio_output;
-    std::string audio_recording_device;
-    std::string audio_playout_device;
-    std::string audio_codec_type;
-    int audio_bit_rate;
-    bool enable_data_channel_signaling;
-    bool data_channel_signaling;
-    int data_channel_signaling_timeout;
-    bool enable_ignore_disconnect_websocket;
-    bool ignore_disconnect_websocket;
-    int disconnect_wait_timeout;
-  };
-
-  bool Connect(const ConnectConfig& config);
+  bool Connect(const sora_conf::ConnectConfig& config);
 
   static void UNITY_INTERFACE_API RenderCallbackStatic(int event_id);
   int GetRenderCallbackEventID() const;
@@ -113,7 +79,7 @@ class Sora {
   void GetStats(std::function<void(std::string)> on_get_stats);
 
  private:
-  bool DoConnect(const ConnectConfig& config);
+  bool DoConnect(const sora_conf::ConnectConfig& config);
 
   static rtc::scoped_refptr<UnityAudioDevice> CreateADM(
       webrtc::TaskQueueFactory* task_queue_factory,

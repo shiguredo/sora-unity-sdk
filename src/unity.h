@@ -32,40 +32,7 @@ UNITY_INTERFACE_EXPORT void sora_set_on_push(void* p,
                                              push_cb_t on_push,
                                              void* userdata);
 UNITY_INTERFACE_EXPORT void sora_dispatch_events(void* p);
-UNITY_INTERFACE_EXPORT int sora_connect(
-    void* p,
-    const char* unity_version,
-    const char* signaling_url,
-    const char* channel_id,
-    const char* client_id,
-    const char* metadata,
-    const char* role,
-    unity_bool_t multistream,
-    unity_bool_t spotlight,
-    int spotlight_number,
-    const char* spotlight_focus_rid,
-    const char* spotlight_unfocus_rid,
-    unity_bool_t simulcast,
-    const char* simulcast_rid,
-    int capturer_type,
-    void* unity_camera_texture,
-    const char* video_capturer_device,
-    int video_width,
-    int video_height,
-    const char* video_codec,
-    int video_bitrate,
-    unity_bool_t unity_audio_input,
-    unity_bool_t unity_audio_output,
-    const char* audio_recording_device,
-    const char* audio_playout_device,
-    const char* audio_codec,
-    int audio_bitrate,
-    unity_bool_t enable_data_channel_signaling,
-    unity_bool_t data_channel_signaling,
-    int data_channel_signaling_timeout,
-    unity_bool_t enable_ignore_disconnect_websocket,
-    unity_bool_t ignore_disconnect_websocket,
-    int disconnect_wait_timeout);
+UNITY_INTERFACE_EXPORT int sora_connect(void* p, const char* config);
 UNITY_INTERFACE_EXPORT void* sora_get_texture_update_callback();
 UNITY_INTERFACE_EXPORT void sora_destroy(void* sora);
 
