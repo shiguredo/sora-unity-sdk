@@ -153,40 +153,40 @@ public class Sora : IDisposable
             config.Role == Role.Sendonly ? "sendonly" :
             config.Role == Role.Recvonly ? "recvonly" : "sendrecv";
 
-        return sora_connect(
-            p,
-            UnityEngine.Application.unityVersion,
-            config.SignalingUrl,
-            config.ChannelId,
-            config.ClientId,
-            config.Metadata,
-            role,
-            config.Multistream ? 1 : 0,
-            config.Spotlight ? 1 : 0,
-            config.SpotlightNumber,
-            config.SpotlightFocusRid == null ? "" : config.SpotlightFocusRid.Value.ToString().ToLower(),
-            config.SpotlightUnfocusRid == null ? "" : config.SpotlightUnfocusRid.Value.ToString().ToLower(),
-            config.Simulcast ? 1 : 0,
-            config.SimulcastRid == null ? "" : config.SimulcastRid.Value.ToString().ToLower(),
-            (int)config.CapturerType,
-            unityCameraTexture,
-            config.VideoCapturerDevice,
-            config.VideoWidth,
-            config.VideoHeight,
-            config.VideoCodecType.ToString(),
-            config.VideoBitRate,
-            config.UnityAudioInput ? 1 : 0,
-            config.UnityAudioOutput ? 1 : 0,
-            config.AudioRecordingDevice,
-            config.AudioPlayoutDevice,
-            config.AudioCodecType.ToString(),
-            config.AudioBitRate,
-            config.EnableDataChannelSignaling ? 1 : 0,
-            config.DataChannelSignaling ? 1 : 0,
-            config.DataChannelSignalingTimeout,
-            config.EnableIgnoreDisconnectWebsocket ? 1 : 0,
-            config.IgnoreDisconnectWebsocket ? 1 : 0,
-            config.DisconnectWaitTimeout) == 0;
+        var cc = new SoraConf.ConnectConfig();
+        cc.unity_version = UnityEngine.Application.unityVersion;
+        cc.signaling_url = config.SignalingUrl;
+        cc.channel_id = config.ChannelId;
+        cc.client_id = config.ClientId;
+        cc.metadata = config.Metadata;
+        cc.role = role;
+        cc.multistream = config.Multistream;
+        cc.spotlight = config.Spotlight;
+        cc.spotlight_number = config.SpotlightNumber;
+        cc.spotlight_focus_rid = config.SpotlightFocusRid == null ? "" : config.SpotlightFocusRid.Value.ToString().ToLower();
+        cc.spotlight_unfocus_rid = config.SpotlightUnfocusRid == null ? "" : config.SpotlightUnfocusRid.Value.ToString().ToLower();
+        cc.simulcast = config.Simulcast;
+        cc.simulcast_rid = config.SimulcastRid == null ? "" : config.SimulcastRid.Value.ToString().ToLower();
+        cc.capturer_type = (int)config.CapturerType;
+        cc.unity_camera_texture = unityCameraTexture.ToInt64();
+        cc.video_capturer_device = config.VideoCapturerDevice;
+        cc.video_width = config.VideoWidth;
+        cc.video_height = config.VideoHeight;
+        cc.video_codec_type = config.VideoCodecType.ToString();
+        cc.video_bit_rate = config.VideoBitRate;
+        cc.unity_audio_input = config.UnityAudioInput;
+        cc.unity_audio_output = config.UnityAudioOutput;
+        cc.audio_recording_device = config.AudioRecordingDevice;
+        cc.audio_playout_device = config.AudioPlayoutDevice;
+        cc.audio_codec_type = config.AudioCodecType.ToString();
+        cc.audio_bit_rate = config.AudioBitRate;
+        cc.enable_data_channel_signaling = config.EnableDataChannelSignaling;
+        cc.data_channel_signaling = config.DataChannelSignaling;
+        cc.data_channel_signaling_timeout = config.DataChannelSignalingTimeout;
+        cc.enable_ignore_disconnect_websocket = config.EnableIgnoreDisconnectWebsocket;
+        cc.ignore_disconnect_websocket = config.IgnoreDisconnectWebsocket;
+        cc.disconnect_wait_timeout = config.DisconnectWaitTimeout;
+        return sora_connect(p, Jsonif.Json.ToJson(cc)) == 0;
     }
 
     // Unity 側でレンダリングが完了した時（yield return new WaitForEndOfFrame() の後）に呼ぶイベント
@@ -470,40 +470,7 @@ public class Sora : IDisposable
 #else
     [DllImport("SoraUnitySdk")]
 #endif
-    private static extern int sora_connect(
-        IntPtr p,
-        string unity_version,
-        string signaling_url,
-        string channel_id,
-        string client_id,
-        string metadata,
-        string role,
-        int multistream,
-        int spotlight,
-        int spotlight_number,
-        string spotlight_focus_rid,
-        string spotlight_unfocus_rid,
-        int simulcast,
-        string Simulcast_rid,
-        int capturer_type,
-        IntPtr unity_camera_texture,
-        string video_capturer_device,
-        int video_width,
-        int video_height,
-        string video_codec,
-        int video_bitrate,
-        int unity_audio_input,
-        int unity_audio_output,
-        string audio_recording_device,
-        string audio_playout_device,
-        string audio_codec,
-        int audio_bitrate,
-        int enable_data_channel_signaling,
-        int data_channel_signaling,
-        int data_channel_signaling_timeout,
-        int enable_ignore_disconnect_websocket,
-        int ignore_disconnect_websocket,
-        int disconnect_wait_timeout);
+    private static extern int sora_connect(IntPtr p, string config);
 #if UNITY_IOS && !UNITY_EDITOR
     [DllImport("__Internal")]
 #else

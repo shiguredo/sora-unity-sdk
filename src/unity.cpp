@@ -1,6 +1,7 @@
 #include "unity.h"
 #include "rtc/device_list.h"
 #include "sora.h"
+#include "sora_conf.json.h"
 
 #if defined(SORA_UNITY_SDK_WINDOWS)
 #include "hwenc_nvcodec/nvcodec_h264_encoder.h"
@@ -75,74 +76,9 @@ void sora_dispatch_events(void* p) {
   sora->DispatchEvents();
 }
 
-int sora_connect(void* p,
-                 const char* unity_version,
-                 const char* signaling_url,
-                 const char* channel_id,
-                 const char* client_id,
-                 const char* metadata,
-                 const char* role,
-                 unity_bool_t multistream,
-                 unity_bool_t spotlight,
-                 int spotlight_number,
-                 const char* spotlight_focus_rid,
-                 const char* spotlight_unfocus_rid,
-                 unity_bool_t simulcast,
-                 const char* simulcast_rid,
-                 int capturer_type,
-                 void* unity_camera_texture,
-                 const char* video_capturer_device,
-                 int video_width,
-                 int video_height,
-                 const char* video_codec_type,
-                 int video_bit_rate,
-                 unity_bool_t unity_audio_input,
-                 unity_bool_t unity_audio_output,
-                 const char* audio_recording_device,
-                 const char* audio_playout_device,
-                 const char* audio_codec_type,
-                 int audio_bit_rate,
-                 unity_bool_t enable_data_channel_signaling,
-                 unity_bool_t data_channel_signaling,
-                 int data_channel_signaling_timeout,
-                 unity_bool_t enable_ignore_disconnect_websocket,
-                 unity_bool_t ignore_disconnect_websocket,
-                 int disconnect_wait_timeout) {
+int sora_connect(void* p, const char* config_json) {
   auto sora = (sora::Sora*)p;
-  sora::Sora::ConnectConfig config;
-  config.unity_version = unity_version;
-  config.signaling_url = signaling_url;
-  config.channel_id = channel_id;
-  config.client_id = client_id;
-  config.metadata = metadata;
-  config.role = role;
-  config.multistream = multistream;
-  config.spotlight = spotlight;
-  config.spotlight_number = spotlight_number;
-  config.spotlight_focus_rid = spotlight_focus_rid;
-  config.spotlight_unfocus_rid = spotlight_unfocus_rid;
-  config.simulcast = simulcast;
-  config.simulcast_rid = simulcast_rid;
-  config.capturer_type = capturer_type;
-  config.unity_camera_texture = unity_camera_texture;
-  config.video_capturer_device = video_capturer_device;
-  config.video_width = video_width;
-  config.video_height = video_height;
-  config.video_codec_type = video_codec_type;
-  config.video_bit_rate = video_bit_rate;
-  config.unity_audio_input = unity_audio_input;
-  config.unity_audio_output = unity_audio_output;
-  config.audio_recording_device = audio_recording_device;
-  config.audio_playout_device = audio_playout_device;
-  config.audio_codec_type = audio_codec_type;
-  config.audio_bit_rate = audio_bit_rate;
-  config.enable_data_channel_signaling = enable_data_channel_signaling;
-  config.data_channel_signaling = data_channel_signaling;
-  config.data_channel_signaling_timeout = data_channel_signaling_timeout;
-  config.enable_ignore_disconnect_websocket =
-      enable_ignore_disconnect_websocket;
-  config.ignore_disconnect_websocket = ignore_disconnect_websocket;
-  config.disconnect_wait_timeout = disconnect_wait_timeout;
+  auto config = jsonif::from_json<sora_conf::ConnectConfig>(config_json);
   if (!sora->Connect(config)) {
     return -1;
   }
