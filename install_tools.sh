@@ -157,10 +157,11 @@ if [ $PROTOBUF_CHANGED -eq 1 -o ! -e $INSTALL_DIR/protobuf/bin/protoc ]; then
   fi
   rm -rf $BUILD_DIR/protoc
   rm -rf $INSTALL_DIR/protoc
-  pushd $BUILD_DIR
+  mkdir $BUILD_DIR/protoc
+  pushd $BUILD_DIR/protoc
     unzip $_FILE
-    mv protoc $INSTALL_DIR/protoc
   popd
+  mv $BUILD_DIR/protoc $INSTALL_DIR/protoc
 fi
 echo $PROTOBUF_VERSION > $PROTOBUF_VERSION_FILE
 
@@ -190,6 +191,7 @@ if [ $PROTOC_GEN_JSONIF_CHANGED -eq 1 -o ! -e $INSTALL_DIR/protoc-gen-jsonif/bin
     else
       cp -r $INSTALL_DIR/protoc-gen-jsonif/linux/amd64 $INSTALL_DIR/protoc-gen-jsonif/bin
     fi
+    chmod +x $INSTALL_DIR/protoc-gen-jsonif/bin/*
   popd
 fi
-echo $PROTOC_GEN_JSONIF_VERSION > $PROTOC_GEN_JSONIF_FILE
+echo $PROTOC_GEN_JSONIF_VERSION > $PROTOC_GEN_JSONIF_VERSION_FILE
