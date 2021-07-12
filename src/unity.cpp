@@ -1,6 +1,7 @@
 #include "unity.h"
 #include "rtc/device_list.h"
 #include "sora.h"
+#include "sora.json.h"
 
 #if defined(SORA_UNITY_SDK_WINDOWS)
 #include "hwenc_nvcodec/nvcodec_h264_encoder.h"
