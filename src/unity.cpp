@@ -60,15 +60,23 @@ void sora_set_on_remove_track(void* p,
 void sora_set_on_notify(void* p, notify_cb_t on_notify, void* userdata) {
   auto sora = (sora::Sora*)p;
   sora->SetOnNotify([on_notify, userdata](std::string json) {
-    on_notify(json.c_str(), (int)json.size(), userdata);
+    on_notify(json.c_str(), userdata);
   });
 }
 
 void sora_set_on_push(void* p, push_cb_t on_push, void* userdata) {
   auto sora = (sora::Sora*)p;
   sora->SetOnPush([on_push, userdata](std::string json) {
-    on_push(json.c_str(), (int)json.size(), userdata);
+    on_push(json.c_str(), userdata);
   });
+}
+
+void sora_set_on_message(void* p, message_cb_t on_message, void* userdata) {
+  auto sora = (sora::Sora*)p;
+  sora->SetOnMessage(
+      [on_message, userdata](std::string label, std::string data) {
+        on_message(label.c_str(), data.c_str(), (int)data.size(), userdata);
+      });
 }
 
 void sora_dispatch_events(void* p) {
@@ -115,9 +123,14 @@ void sora_set_on_handle_audio(void* p, handle_audio_cb_t f, void* userdata) {
 
 void sora_get_stats(void* p, stats_cb_t f, void* userdata) {
   auto sora = (sora::Sora*)p;
-  sora->GetStats([f, userdata](std::string json) {
-    f(json.c_str(), json.size(), userdata);
-  });
+  sora->GetStats(
+      [f, userdata](std::string json) { f(json.c_str(), userdata); });
+}
+
+void sora_send_message(void* p, const char* label, void* buf, int size) {
+  auto sora = (sora::Sora*)p;
+  const char* s = (const char*)buf;
+  sora->SendMessage(label, std::string(s, s + size));
 }
 
 unity_bool_t sora_device_enum_video_capturer(device_enum_cb_t f,

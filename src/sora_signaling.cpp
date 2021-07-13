@@ -56,25 +56,30 @@ std::shared_ptr<SoraSignaling> SoraSignaling::Create(
     RTCManager* manager,
     SoraSignalingConfig config,
     std::function<void(std::string)> on_notify,
-    std::function<void(std::string)> on_push) {
-  auto p = std::shared_ptr<SoraSignaling>(new SoraSignaling(
-      ioc, manager, config, std::move(on_notify), std::move(on_push)));
+    std::function<void(std::string)> on_push,
+    std::function<void(std::string, std::string)> on_message) {
+  auto p = std::shared_ptr<SoraSignaling>(
+      new SoraSignaling(ioc, manager, config, std::move(on_notify),
+                        std::move(on_push), std::move(on_message)));
   if (!p->Init()) {
     return nullptr;
   }
   return p;
 }
 
-SoraSignaling::SoraSignaling(boost::asio::io_context& ioc,
-                             RTCManager* manager,
-                             SoraSignalingConfig config,
-                             std::function<void(std::string)> on_notify,
-                             std::function<void(std::string)> on_push)
+SoraSignaling::SoraSignaling(
+    boost::asio::io_context& ioc,
+    RTCManager* manager,
+    SoraSignalingConfig config,
+    std::function<void(std::string)> on_notify,
+    std::function<void(std::string)> on_push,
+    std::function<void(std::string, std::string)> on_message)
     : ioc_(ioc),
       manager_(manager),
       config_(config),
       on_notify_(std::move(on_notify)),
-      on_push_(std::move(on_push)) {}
+      on_push_(std::move(on_push)),
+      on_message_(std::move(on_message)) {}
 
 SoraSignaling::~SoraSignaling() {
   RTC_LOG(LS_INFO) << "SoraSignaling::~SoraSignaling started";
@@ -245,6 +250,32 @@ void SoraSignaling::DoSendConnect() {
         *config_.ignore_disconnect_websocket;
   }
 
+  if (!config_.data_channel_messaging.empty()) {
+    boost::json::array ar;
+    for (const auto& m : config_.data_channel_messaging) {
+      boost::json::object obj;
+      obj["label"] = m.label;
+      obj["direction"] = m.direction;
+      if (m.enable_ordered) {
+        obj["ordered"] = m.ordered;
+      }
+      if (m.enable_max_packet_life_time) {
+        obj["max_packet_life_time"] = m.max_packet_life_time;
+      }
+      if (m.enable_max_retransmits) {
+        obj["max_retransmits"] = m.max_retransmits;
+      }
+      if (m.enable_protocol) {
+        obj["protocol"] = m.protocol;
+      }
+      if (m.enable_compress) {
+        obj["compress"] = m.compress;
+      }
+      ar.push_back(obj);
+    }
+    json_message["data_channel_messaging"] = ar;
+  }
+
   ws_->WriteText(boost::json::serialize(json_message));
 }
 void SoraSignaling::DoSendPong() {
@@ -339,6 +370,10 @@ void SoraSignaling::Close(std::function<void()> on_close) {
     connected_ = false;
     on_close();
   }
+}
+void SoraSignaling::SendMessage(const std::string& label,
+                                const std::string& data) {
+  SendDataChannel(label, data);
 }
 
 void SoraSignaling::OnWatchdogExpired() {
@@ -532,7 +567,7 @@ webrtc::DataBuffer SoraSignaling::ConvertToDataBuffer(
   RTC_LOG(LS_INFO) << "Convert to DataChannel label=" << label
                    << " compressed=" << compressed << " input=" << input;
   const std::string& str = compressed ? ZlibHelper::Compress(input) : input;
-  return webrtc::DataBuffer(rtc::CopyOnWriteBuffer(str), compressed);
+  return webrtc::DataBuffer(rtc::CopyOnWriteBuffer(str), true);
 }
 
 void SoraSignaling::SendDataChannel(const std::string& label,
@@ -623,6 +658,12 @@ void SoraSignaling::OnMessage(
   if (label == "push") {
     if (on_push_) {
       on_push_(data);
+    }
+  }
+
+  if (!label.empty() && label[0] == '#') {
+    if (on_message_) {
+      on_message_(label, data);
     }
   }
 }

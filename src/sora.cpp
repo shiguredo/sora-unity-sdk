@@ -62,6 +62,10 @@ void Sora::SetOnNotify(std::function<void(std::string)> on_notify) {
 void Sora::SetOnPush(std::function<void(std::string)> on_push) {
   on_push_ = std::move(on_push);
 }
+void Sora::SetOnMessage(
+    std::function<void(std::string, std::string)> on_message) {
+  on_message_ = std::move(on_message);
+}
 
 void Sora::DispatchEvents() {
   while (!event_queue_.empty()) {
@@ -210,6 +214,7 @@ bool Sora::DoConnect(const sora_conf::ConnectConfig& cc) {
       config.ignore_disconnect_websocket = cc.ignore_disconnect_websocket;
     }
     config.disconnect_wait_timeout = cc.disconnect_wait_timeout;
+    config.data_channel_messaging = cc.data_channel_messaging;
     if (!cc.metadata.empty()) {
       boost::json::error_code ec;
       auto md = boost::json::parse(cc.metadata, ec);
@@ -239,8 +244,18 @@ bool Sora::DoConnect(const sora_conf::ConnectConfig& cc) {
         }
       });
     };
+    auto on_message = [this](std::string label, std::string data) {
+      std::lock_guard<std::mutex> guard(event_mutex_);
+      event_queue_.push_back(
+          [this, label = std::move(label), data = std::move(data)]() {
+            // ここは Unity スレッドから呼ばれる
+            if (on_message_) {
+              on_message_(std::move(label), std::move(data));
+            }
+          });
+    };
     signaling_ = SoraSignaling::Create(*ioc_, rtc_manager_.get(), config,
-                                       on_notify, on_push);
+                                       on_notify, on_push, on_message);
     if (signaling_ == nullptr) {
       return false;
     }
@@ -395,6 +410,13 @@ void Sora::GetStats(std::function<void(std::string)> on_get_stats) {
               on_get_stats(std::move(json));
             });
       });
+}
+
+void Sora::SendMessage(const std::string& label, const std::string& data) {
+  if (signaling_ == nullptr) {
+    return;
+  }
+  signaling_->SendMessage(label, data);
 }
 
 }  // namespace sora

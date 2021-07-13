@@ -37,6 +37,8 @@
     - `IgnoreDisconnectWebsocket`
     - `DisconnectWaitTimeout`
     - @melpon
+- [ADD] DataChannel を使ったメッセージングに対応し、`Sora.Config` に `List<DataChannelMessaging>` 型のフィールドを追加
+    - @melpon
 - [ADD] WS の re-offer に対応
     - @melpon
 
