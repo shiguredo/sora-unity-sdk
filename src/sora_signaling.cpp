@@ -599,7 +599,7 @@ void SoraSignaling::OnMessage(
 
   // ハンドリングする必要のあるラベル以外は何もしない
   if (label != "signaling" && label != "stats" && label != "push" &&
-      label != "notify") {
+      label != "notify" && (label.empty() || label[0] != '#')) {
     return;
   }
 
