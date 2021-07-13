@@ -603,6 +603,14 @@ void SoraSignaling::OnMessage(
     return;
   }
 
+  // ユーザ定義のラベルは JSON ではないので JSON パース前に処理して終わる
+  if (!label.empty() && label[0] == '#') {
+    if (on_message_) {
+      on_message_(label, data);
+    }
+    return;
+  }
+
   boost::json::error_code ec;
   auto json = boost::json::parse(data, ec);
   if (ec) {
@@ -658,12 +666,6 @@ void SoraSignaling::OnMessage(
   if (label == "push") {
     if (on_push_) {
       on_push_(data);
-    }
-  }
-
-  if (!label.empty() && label[0] == '#') {
-    if (on_message_) {
-      on_message_(label, data);
     }
   }
 }
