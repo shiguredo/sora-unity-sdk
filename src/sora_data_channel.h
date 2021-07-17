@@ -80,6 +80,7 @@ class SoraDataChannel : public RTCDataManager {
     data_channel->RegisterObserver(thunk.get());
     thunks_.insert(std::make_pair(thunk, data_channel));
     labels_.insert(std::make_pair(data_channel->label(), data_channel));
+    RTC_LOG(LS_INFO) << "DataChannel opened label=" << data_channel->label();
   }
 
  private:

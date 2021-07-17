@@ -274,6 +274,7 @@ bool Sora::DoConnect(const sora_conf::ConnectConfig& cc) {
     return false;
   }
   thread_->PostTask(RTC_FROM_HERE, [this]() {
+    auto guard = boost::asio::make_work_guard(*ioc_);
     RTC_LOG(LS_INFO) << "io_context started";
     ioc_->run();
     RTC_LOG(LS_INFO) << "io_context finished";
