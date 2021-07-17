@@ -6,6 +6,11 @@
 // zlib
 #include <zlib.h>
 
+// compress は zlib で定義されるけど、
+// これのせいで compress 変数が使えなくなっているので undef しておく
+#undef compress
+// 他にも問題がある単語があればここに追加していく
+
 class ZlibHelper {
  public:
   static std::string Compress(const std::string& input,

@@ -10,13 +10,16 @@ extern "C" {
 #endif
 
 typedef unsigned int ptrid_t;
+typedef int32_t unity_bool_t;
 
 typedef void (*track_cb_t)(ptrid_t track_id, void* userdata);
-typedef void (*notify_cb_t)(const char* json, int size, void* userdata);
-typedef void (*push_cb_t)(const char* json, int size, void* userdata);
-typedef void (*stats_cb_t)(const char* json, int size, void* userdata);
-
-typedef int32_t unity_bool_t;
+typedef void (*notify_cb_t)(const char* json, void* userdata);
+typedef void (*push_cb_t)(const char* json, void* userdata);
+typedef void (*stats_cb_t)(const char* json, void* userdata);
+typedef void (*message_cb_t)(const char* label,
+                             const void* buf,
+                             int size,
+                             void* userdata);
 
 UNITY_INTERFACE_EXPORT void* sora_create();
 UNITY_INTERFACE_EXPORT void sora_set_on_add_track(void* p,
@@ -31,6 +34,9 @@ UNITY_INTERFACE_EXPORT void sora_set_on_notify(void* p,
 UNITY_INTERFACE_EXPORT void sora_set_on_push(void* p,
                                              push_cb_t on_push,
                                              void* userdata);
+UNITY_INTERFACE_EXPORT void sora_set_on_message(void* p,
+                                                message_cb_t on_message,
+                                                void* userdata);
 UNITY_INTERFACE_EXPORT void sora_dispatch_events(void* p);
 UNITY_INTERFACE_EXPORT int sora_connect(void* p, const char* config);
 UNITY_INTERFACE_EXPORT void* sora_get_texture_update_callback();
@@ -54,6 +60,11 @@ UNITY_INTERFACE_EXPORT void sora_set_on_handle_audio(void* p,
 UNITY_INTERFACE_EXPORT void sora_get_stats(void* p,
                                            stats_cb_t f,
                                            void* userdata);
+
+UNITY_INTERFACE_EXPORT void sora_send_message(void* p,
+                                              const char* label,
+                                              void* buf,
+                                              int size);
 
 typedef void (*device_enum_cb_t)(const char* device_name,
                                  const char* unique_name,

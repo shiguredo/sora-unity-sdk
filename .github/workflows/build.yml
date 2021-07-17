@@ -31,6 +31,8 @@ jobs:
         mkdir windows
         Copy-Item build\Release\SoraUnitySdk.dll windows
         Copy-Item _install\webrtc\NOTICE windows
+        # ソースコード（生成した分も含む）も一緒に入れておく
+        Copy-Item -Recurse Sora windows\Sora
     - name: Upload Windows Artifact
       uses: actions/upload-artifact@v2
       with:
@@ -116,8 +118,8 @@ jobs:
         mkdir -p SoraUnitySdk/Plugins/SoraUnitySdk/macos
         mkdir -p SoraUnitySdk/Plugins/SoraUnitySdk/ios
         mkdir -p SoraUnitySdk/Plugins/SoraUnitySdk/android/arm64-v8a
-        cp -r Sora/ SoraUnitySdk/SoraUnitySdk/
         cp windows/SoraUnitySdk.dll SoraUnitySdk/Plugins/SoraUnitySdk/windows/x86_64/
+        cp -r windows/Sora/ SoraUnitySdk/SoraUnitySdk/
         cp -r macos/SoraUnitySdk.bundle SoraUnitySdk/Plugins/SoraUnitySdk/macos/SoraUnitySdk.bundle
         cp android/libSoraUnitySdk.so SoraUnitySdk/Plugins/SoraUnitySdk/android/arm64-v8a/
         cp android/webrtc.jar SoraUnitySdk/Plugins/SoraUnitySdk/android/

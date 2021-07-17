@@ -21,6 +21,7 @@
 
 #include "rtc/rtc_manager.h"
 #include "rtc/rtc_message_sender.h"
+#include "sora_conf.json.h"
 #include "sora_data_channel_on_asio.h"
 #include "url_parts.h"
 #include "watchdog.h"
@@ -60,6 +61,7 @@ struct SoraSignalingConfig {
   int data_channel_signaling_timeout = 180;
   boost::optional<bool> ignore_disconnect_websocket;
   int disconnect_wait_timeout = 5;
+  std::vector<sora_conf::DataChannelMessaging> data_channel_messaging;
 
   bool insecure = false;
 };
@@ -80,6 +82,7 @@ class SoraSignaling : public std::enable_shared_from_this<SoraSignaling>,
   SoraSignalingConfig config_;
   std::function<void(std::string)> on_notify_;
   std::function<void(std::string)> on_push_;
+  std::function<void(std::string, std::string)> on_message_;
 
   webrtc::PeerConnectionInterface::IceConnectionState rtc_state_;
 
@@ -96,14 +99,16 @@ class SoraSignaling : public std::enable_shared_from_this<SoraSignaling>,
       RTCManager* manager,
       SoraSignalingConfig config,
       std::function<void(std::string)> on_notify,
-      std::function<void(std::string)> on_push);
+      std::function<void(std::string)> on_push,
+      std::function<void(std::string, std::string)> on_message);
 
  private:
   SoraSignaling(boost::asio::io_context& ioc,
                 RTCManager* manager,
                 SoraSignalingConfig config,
                 std::function<void(std::string)> on_notify,
-                std::function<void(std::string)> on_push);
+                std::function<void(std::string)> on_push,
+                std::function<void(std::string, std::string)> on_message);
   bool Init();
 
  public:
@@ -112,6 +117,7 @@ class SoraSignaling : public std::enable_shared_from_this<SoraSignaling>,
  public:
   bool Connect();
   void Close(std::function<void()> on_close);
+  void SendMessage(const std::string& label, const std::string& data);
 
  private:
   void OnWatchdogExpired();

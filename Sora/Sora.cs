@@ -1,9 +1,16 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Runtime.InteropServices;
 
 public class Sora : IDisposable
 {
     public enum Role
+    {
+        Sendonly,
+        Recvonly,
+        Sendrecv,
+    }
+    public enum Direction
     {
         Sendonly,
         Recvonly,
@@ -40,6 +47,19 @@ public class Sora : IDisposable
         R0,
         R1,
         R2,
+    }
+
+    public class DataChannelMessaging
+    {
+        // 以下は設定必須
+        public string Label = "";
+        public Direction Direction = Sora.Direction.Sendrecv;
+        // 以下は null でない場合のみ設定される
+        public bool? Ordered;
+        public int? MaxPacketLifeTime;
+        public int? MaxRetransmits;
+        public string Protocol;
+        public bool? Compress;
     }
 
     public class Config
@@ -86,6 +106,9 @@ public class Sora : IDisposable
         public bool IgnoreDisconnectWebsocket = false;
         // DataChannel を閉じる際に最大で何秒間待つか
         public int DisconnectWaitTimeout = 5;
+
+        // DataChannel メッセージング
+        public List<DataChannelMessaging> DataChannelMessaging = new List<DataChannelMessaging>();
     }
 
     IntPtr p;
@@ -93,6 +116,7 @@ public class Sora : IDisposable
     GCHandle onRemoveTrackHandle;
     GCHandle onNotifyHandle;
     GCHandle onPushHandle;
+    GCHandle onMessageHandle;
     GCHandle onHandleAudioHandle;
     UnityEngine.Rendering.CommandBuffer commandBuffer;
     UnityEngine.Camera unityCamera;
@@ -123,6 +147,11 @@ public class Sora : IDisposable
         if (onPushHandle.IsAllocated)
         {
             onPushHandle.Free();
+        }
+
+        if (onMessageHandle.IsAllocated)
+        {
+            onMessageHandle.Free();
         }
 
         if (onHandleAudioHandle.IsAllocated)
@@ -186,6 +215,37 @@ public class Sora : IDisposable
         cc.enable_ignore_disconnect_websocket = config.EnableIgnoreDisconnectWebsocket;
         cc.ignore_disconnect_websocket = config.IgnoreDisconnectWebsocket;
         cc.disconnect_wait_timeout = config.DisconnectWaitTimeout;
+        foreach (var m in config.DataChannelMessaging) {
+            var direction =
+                m.Direction == Direction.Sendonly ? "sendonly" :
+                m.Direction == Direction.Recvonly ? "recvonly" : "sendrecv";
+            var c = new SoraConf.DataChannelMessaging() {
+                label = m.Label,
+                direction = direction,
+            };
+            if (m.Ordered != null) {
+                c.enable_ordered = true;
+                c.ordered = m.Ordered.Value;
+            }
+            if (m.MaxPacketLifeTime != null) {
+                c.enable_max_packet_life_time = true;
+                c.max_packet_life_time = m.MaxPacketLifeTime.Value;
+            }
+            if (m.MaxRetransmits != null) {
+                c.enable_max_retransmits = true;
+                c.max_retransmits = m.MaxRetransmits.Value;
+            }
+            if (m.Protocol != null) {
+                c.enable_protocol = true;
+                c.protocol = m.Protocol;
+            }
+            if (m.Compress != null) {
+                c.enable_compress = true;
+                c.compress = m.Compress.Value;
+            }
+            cc.data_channel_messaging.Add(c);
+        }
+
         return sora_connect(p, Jsonif.Json.ToJson(cc)) == 0;
     }
 
@@ -240,10 +300,10 @@ public class Sora : IDisposable
         }
     }
 
-    private delegate void NotifyCallbackDelegate(string json, int size, IntPtr userdata);
+    private delegate void NotifyCallbackDelegate(string json, IntPtr userdata);
 
     [AOT.MonoPInvokeCallback(typeof(NotifyCallbackDelegate))]
-    static private void NotifyCallback(string json, int size, IntPtr userdata)
+    static private void NotifyCallback(string json, IntPtr userdata)
     {
         var callback = GCHandle.FromIntPtr(userdata).Target as Action<string>;
         callback(json);
@@ -263,10 +323,10 @@ public class Sora : IDisposable
         }
     }
 
-    private delegate void PushCallbackDelegate(string json, int size, IntPtr userdata);
+    private delegate void PushCallbackDelegate(string json, IntPtr userdata);
 
     [AOT.MonoPInvokeCallback(typeof(PushCallbackDelegate))]
-    static private void PushCallback(string json, int size, IntPtr userdata)
+    static private void PushCallback(string json, IntPtr userdata)
     {
         var callback = GCHandle.FromIntPtr(userdata).Target as Action<string>;
         callback(json);
@@ -283,6 +343,31 @@ public class Sora : IDisposable
 
             onPushHandle = GCHandle.Alloc(value);
             sora_set_on_push(p, PushCallback, GCHandle.ToIntPtr(onPushHandle));
+        }
+    }
+
+    private delegate void MessageCallbackDelegate(string label, IntPtr buf, int size, IntPtr userdata);
+
+    [AOT.MonoPInvokeCallback(typeof(MessageCallbackDelegate))]
+    static private void MessageCallback(string label, IntPtr buf, int size, IntPtr userdata)
+    {
+        var callback = GCHandle.FromIntPtr(userdata).Target as Action<string, byte[]>;
+        byte[] data = new byte[size];
+        Marshal.Copy(buf, data, 0, size);
+        callback(label, data);
+    }
+
+    public Action<string, byte[]> OnMessage
+    {
+        set
+        {
+            if (onMessageHandle.IsAllocated)
+            {
+                onMessageHandle.Free();
+            }
+
+            onMessageHandle = GCHandle.Alloc(value);
+            sora_set_on_message(p, MessageCallback, GCHandle.ToIntPtr(onMessageHandle));
         }
     }
 
@@ -321,10 +406,10 @@ public class Sora : IDisposable
         }
     }
 
-    private delegate void StatsCallbackDelegate(string json, int size, IntPtr userdata);
+    private delegate void StatsCallbackDelegate(string json, IntPtr userdata);
 
     [AOT.MonoPInvokeCallback(typeof(StatsCallbackDelegate))]
-    static private void StatsCallback(string json, int size, IntPtr userdata)
+    static private void StatsCallback(string json, IntPtr userdata)
     {
         GCHandle handle = GCHandle.FromIntPtr(userdata);
         var callback = GCHandle.FromIntPtr(userdata).Target as Action<string>;
@@ -336,6 +421,11 @@ public class Sora : IDisposable
     {
         GCHandle handle = GCHandle.Alloc(onGetStats);
         sora_get_stats(p, StatsCallback, GCHandle.ToIntPtr(handle));
+    }
+
+    public void SendMessage(string label, byte[] buf)
+    {
+        sora_send_message(p, label, buf, buf.Length);
     }
 
     private delegate void DeviceEnumCallbackDelegate(string device_name, string unique_name, IntPtr userdata);
@@ -430,111 +520,49 @@ public class Sora : IDisposable
     }
 
 #if UNITY_IOS && !UNITY_EDITOR
-    [DllImport("__Internal")]
+    private const string DllName = "__Internal";
 #else
-    [DllImport("SoraUnitySdk")]
+    private const string DllName = "SoraUnitySdk";
 #endif
+
+    [DllImport(DllName)]
     private static extern IntPtr sora_create();
-#if UNITY_IOS && !UNITY_EDITOR
-    [DllImport("__Internal")]
-#else
-    [DllImport("SoraUnitySdk")]
-#endif
+    [DllImport(DllName)]
     private static extern void sora_set_on_add_track(IntPtr p, TrackCallbackDelegate on_add_track, IntPtr userdata);
-#if UNITY_IOS && !UNITY_EDITOR
-    [DllImport("__Internal")]
-#else
-    [DllImport("SoraUnitySdk")]
-#endif
+    [DllImport(DllName)]
     private static extern void sora_set_on_remove_track(IntPtr p, TrackCallbackDelegate on_remove_track, IntPtr userdata);
-#if UNITY_IOS && !UNITY_EDITOR
-    [DllImport("__Internal")]
-#else
-    [DllImport("SoraUnitySdk")]
-#endif
+    [DllImport(DllName)]
     private static extern void sora_set_on_notify(IntPtr p, NotifyCallbackDelegate on_notify, IntPtr userdata);
-#if UNITY_IOS && !UNITY_EDITOR
-    [DllImport("__Internal")]
-#else
-    [DllImport("SoraUnitySdk")]
-#endif
+    [DllImport(DllName)]
     private static extern void sora_set_on_push(IntPtr p, PushCallbackDelegate on_push, IntPtr userdata);
-#if UNITY_IOS && !UNITY_EDITOR
-    [DllImport("__Internal")]
-#else
-    [DllImport("SoraUnitySdk")]
-#endif
+    [DllImport(DllName)]
+    private static extern void sora_set_on_message(IntPtr p, MessageCallbackDelegate on_message, IntPtr userdata);
+    [DllImport(DllName)]
     private static extern void sora_dispatch_events(IntPtr p);
-#if UNITY_IOS && !UNITY_EDITOR
-    [DllImport("__Internal")]
-#else
-    [DllImport("SoraUnitySdk")]
-#endif
+    [DllImport(DllName)]
     private static extern int sora_connect(IntPtr p, string config);
-#if UNITY_IOS && !UNITY_EDITOR
-    [DllImport("__Internal")]
-#else
-    [DllImport("SoraUnitySdk")]
-#endif
+    [DllImport(DllName)]
     private static extern IntPtr sora_get_texture_update_callback();
-#if UNITY_IOS && !UNITY_EDITOR
-    [DllImport("__Internal")]
-#else
-    [DllImport("SoraUnitySdk")]
-#endif
+    [DllImport(DllName)]
     private static extern void sora_destroy(IntPtr p);
-#if UNITY_IOS && !UNITY_EDITOR
-    [DllImport("__Internal")]
-#else
-    [DllImport("SoraUnitySdk")]
-#endif
+    [DllImport(DllName)]
     private static extern IntPtr sora_get_render_callback();
-#if UNITY_IOS && !UNITY_EDITOR
-    [DllImport("__Internal")]
-#else
-    [DllImport("SoraUnitySdk")]
-#endif
+    [DllImport(DllName)]
     private static extern int sora_get_render_callback_event_id(IntPtr p);
-#if UNITY_IOS && !UNITY_EDITOR
-    [DllImport("__Internal")]
-#else
-    [DllImport("SoraUnitySdk")]
-#endif
+    [DllImport(DllName)]
     private static extern void sora_process_audio(IntPtr p, [In] float[] data, int offset, int samples);
-#if UNITY_IOS && !UNITY_EDITOR
-    [DllImport("__Internal")]
-#else
-    [DllImport("SoraUnitySdk")]
-#endif
+    [DllImport(DllName)]
     private static extern void sora_set_on_handle_audio(IntPtr p, HandleAudioCallbackDelegate on_handle_audio, IntPtr userdata);
-#if UNITY_IOS && !UNITY_EDITOR
-    [DllImport("__Internal")]
-#else
-    [DllImport("SoraUnitySdk")]
-#endif
+    [DllImport(DllName)]
     private static extern void sora_get_stats(IntPtr p, StatsCallbackDelegate on_get_stats, IntPtr userdata);
-#if UNITY_IOS && !UNITY_EDITOR
-    [DllImport("__Internal")]
-#else
-    [DllImport("SoraUnitySdk")]
-#endif
+    [DllImport(DllName)]
+    private static extern void sora_send_message(IntPtr p, string label, [In] byte[] buf, int size);
+    [DllImport(DllName)]
     private static extern int sora_device_enum_video_capturer(DeviceEnumCallbackDelegate f, IntPtr userdata);
-#if UNITY_IOS && !UNITY_EDITOR
-    [DllImport("__Internal")]
-#else
-    [DllImport("SoraUnitySdk")]
-#endif
+    [DllImport(DllName)]
     private static extern int sora_device_enum_audio_recording(DeviceEnumCallbackDelegate f, IntPtr userdata);
-#if UNITY_IOS && !UNITY_EDITOR
-    [DllImport("__Internal")]
-#else
-    [DllImport("SoraUnitySdk")]
-#endif
+    [DllImport(DllName)]
     private static extern int sora_device_enum_audio_playout(DeviceEnumCallbackDelegate f, IntPtr userdata);
-#if UNITY_IOS && !UNITY_EDITOR
-    [DllImport("__Internal")]
-#else
-    [DllImport("SoraUnitySdk")]
-#endif
+    [DllImport(DllName)]
     private static extern int sora_is_h264_supported();
 }

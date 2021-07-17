@@ -2,6 +2,28 @@ syntax = "proto3";
 
 package sora_conf;
 
+message DataChannelMessaging {
+    // required
+    string label = 1;
+    string direction = 2;
+
+    // optional
+    bool enable_ordered = 3;
+    bool ordered = 4;
+
+    bool enable_max_packet_life_time = 5;
+    int32 max_packet_life_time = 6;
+
+    bool enable_max_retransmits = 7;
+    int32 max_retransmits = 8;
+
+    bool enable_protocol = 9;
+    string protocol = 10;
+
+    bool enable_compress = 11;
+    bool compress = 12;
+}
+
 message ConnectConfig {
     string unity_version = 1;
     string signaling_url = 2;
@@ -35,4 +57,5 @@ message ConnectConfig {
     bool enable_ignore_disconnect_websocket = 30;
     bool ignore_disconnect_websocket = 31;
     int32 disconnect_wait_timeout = 32;
+    repeated DataChannelMessaging data_channel_messaging = 33;
 }
