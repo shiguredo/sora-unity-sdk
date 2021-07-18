@@ -69,7 +69,7 @@ class Websocket {
 
   void Read(read_callback_t on_read);
   void WriteText(std::string text, write_callback_t on_write = nullptr);
-  void Close(close_callback_t on_close);
+  void Close(close_callback_t on_close, int timeout_seconds = 0);
 
   websocket_t& NativeSocket();
   ssl_websocket_t& NativeSecureSocket();
@@ -90,7 +90,7 @@ class Websocket {
               boost::system::error_code ec,
               std::size_t bytes_transferred);
 
-  void DoClose(close_callback_t on_close);
+  void DoClose(close_callback_t on_close, int timeout_seconds);
   void OnClose(close_callback_t on_close, boost::system::error_code ec);
 
  private:
@@ -115,6 +115,9 @@ class Websocket {
     bool text;
   };
   std::vector<std::unique_ptr<WriteData>> write_data_;
+
+  boost::asio::deadline_timer close_timeout_timer_;
+  bool closed_ = false;
 };
 
 }  // namespace sora

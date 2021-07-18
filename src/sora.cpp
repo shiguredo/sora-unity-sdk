@@ -39,7 +39,6 @@ Sora::~Sora() {
   if (ioc_ != nullptr) {
     ioc_->stop();
   }
-
   if (thread_) {
     thread_->Stop();
     thread_.reset();
@@ -66,6 +65,10 @@ void Sora::SetOnMessage(
     std::function<void(std::string, std::string)> on_message) {
   on_message_ = std::move(on_message);
 }
+void Sora::SetOnDisconnect(
+    std::function<void(int, std::string)> on_disconnect) {
+  on_disconnect_ = std::move(on_disconnect);
+}
 
 void Sora::DispatchEvents() {
   while (!event_queue_.empty()) {
@@ -79,27 +82,41 @@ void Sora::DispatchEvents() {
   }
 }
 
-bool Sora::Connect(const sora_conf::ConnectConfig& cc) {
+void Sora::Connect(const sora_conf::internal::ConnectConfig& cc) {
+  auto on_disconnect = [this](int error_code, std::string reason) {
+    std::lock_guard<std::mutex> guard(event_mutex_);
+    event_queue_.push_back([this, error_code, reason = std::move(reason)]() {
+      // ここは Unity スレッドから呼ばれる
+      if (on_disconnect_) {
+        on_disconnect_(error_code, std::move(reason));
+      }
+    });
+  };
+
 #if defined(SORA_UNITY_SDK_IOS)
   // iOS でマイクを使用する場合、マイクの初期化の設定をしてから DoConnect する。
 
   if (cc.role == "recvonly" || cc.unity_audio_input) {
     // この場合マイクを利用しないのですぐに DoConnect
-    return DoConnect(cc);
+    DoConnect(cc, std::move(on_disconnect));
+    return;
   }
 
   IosAudioInit([this](std::string error) {
     if (!error.empty()) {
       RTC_LOG(LS_ERROR) << "Failed to IosAudioInit: error=" << error;
+      on_disconnect(sora_conf::ErrorCode::INTERNAL_ERROR,
+                    "Failed to IosAudioInit: error=" + std::to_string(error));
     }
   });
-  return DoConnect(cc);
+  DoConnect(cc, std::move(on_disconnect));
 #else
-  return DoConnect(cc);
+  DoConnect(cc, std::move(on_disconnect));
 #endif
 }
 
-bool Sora::DoConnect(const sora_conf::ConnectConfig& cc) {
+void Sora::DoConnect(const sora_conf::internal::ConnectConfig& cc,
+                     std::function<void(int, std::string)> on_disconnect) {
   signaling_url_ = std::move(cc.signaling_url);
   channel_id_ = std::move(cc.channel_id);
 
@@ -107,7 +124,9 @@ bool Sora::DoConnect(const sora_conf::ConnectConfig& cc) {
 
   if (cc.role != "sendonly" && cc.role != "recvonly" && cc.role != "sendrecv") {
     RTC_LOG(LS_ERROR) << "Invalid role: " << cc.role;
-    return false;
+    on_disconnect((int)sora_conf::ErrorCode::INTERNAL_ERROR,
+                  "Invalid role: " + cc.role);
+    return;
   }
 
   renderer_.reset(new UnityRenderer(
@@ -139,7 +158,8 @@ bool Sora::DoConnect(const sora_conf::ConnectConfig& cc) {
                          cc.audio_recording_device, cc.audio_playout_device,
                          worker_thread.get());
   if (!unity_adm_) {
-    return false;
+    on_disconnect((int)sora_conf::ErrorCode::INTERNAL_ERROR, "ADM Init Failed");
+    return;
   }
 
   std::unique_ptr<rtc::Thread> signaling_thread = rtc::Thread::Create();
@@ -156,7 +176,9 @@ bool Sora::DoConnect(const sora_conf::ConnectConfig& cc) {
                             cc.video_capturer_device, cc.video_width,
                             cc.video_height, signaling_thread.get());
     if (!capturer) {
-      return false;
+      on_disconnect((int)sora_conf::ErrorCode::INTERNAL_ERROR,
+                    "Capturer Init Failed");
+      return;
     }
 
     capturer_ = capturer;
@@ -254,24 +276,27 @@ bool Sora::DoConnect(const sora_conf::ConnectConfig& cc) {
             }
           });
     };
-    signaling_ = SoraSignaling::Create(*ioc_, rtc_manager_.get(), config,
-                                       on_notify, on_push, on_message);
-    if (signaling_ == nullptr) {
-      return false;
-    }
-    if (!signaling_->Connect()) {
-      return false;
-    }
+    config.on_notify = on_notify;
+    config.on_push = on_push;
+    config.on_message = on_message;
+    config.on_disconnect = on_disconnect;
+    signaling_ =
+        SoraSignaling::Create(*ioc_, rtc_manager_.get(), std::move(config));
+    signaling_->Connect();
   }
 
   thread_ = rtc::Thread::Create();
   if (!thread_->SetName("Sora IO Thread", nullptr)) {
     RTC_LOG(LS_INFO) << "Failed to set thread name";
-    return false;
+    on_disconnect((int)sora_conf::ErrorCode::INTERNAL_ERROR,
+                  "Failed to set thread name");
+    return;
   }
   if (!thread_->Start()) {
     RTC_LOG(LS_INFO) << "Failed to start thread";
-    return false;
+    on_disconnect((int)sora_conf::ErrorCode::INTERNAL_ERROR,
+                  "Failed to start thread");
+    return;
   }
   thread_->PostTask(RTC_FROM_HERE, [this]() {
     auto guard = boost::asio::make_work_guard(*ioc_);
@@ -279,8 +304,12 @@ bool Sora::DoConnect(const sora_conf::ConnectConfig& cc) {
     ioc_->run();
     RTC_LOG(LS_INFO) << "io_context finished";
   });
-
-  return true;
+}
+void Sora::Close() {
+  if (signaling_ == nullptr) {
+    return;
+  }
+  signaling_->Close();
 }
 
 void Sora::RenderCallbackStatic(int event_id) {
@@ -390,7 +419,7 @@ rtc::scoped_refptr<rtc::AdaptedVideoTrackSource> Sora::CreateVideoCapturer(
 }
 
 void Sora::GetStats(std::function<void(std::string)> on_get_stats) {
-  auto conn = signaling_ == nullptr ? nullptr : signaling_->getRTCConnection();
+  auto conn = signaling_ == nullptr ? nullptr : signaling_->GetRTCConnection();
   if (signaling_ == nullptr || conn == nullptr) {
     std::lock_guard<std::mutex> guard(event_mutex_);
     event_queue_.push_back([on_get_stats = std::move(on_get_stats)]() {

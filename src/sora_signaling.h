@@ -22,6 +22,7 @@
 #include "rtc/rtc_manager.h"
 #include "rtc/rtc_message_sender.h"
 #include "sora_conf.json.h"
+#include "sora_conf_internal.json.h"
 #include "sora_data_channel_on_asio.h"
 #include "url_parts.h"
 #include "watchdog.h"
@@ -61,9 +62,14 @@ struct SoraSignalingConfig {
   int data_channel_signaling_timeout = 180;
   boost::optional<bool> ignore_disconnect_websocket;
   int disconnect_wait_timeout = 5;
-  std::vector<sora_conf::DataChannelMessaging> data_channel_messaging;
+  std::vector<sora_conf::internal::DataChannelMessaging> data_channel_messaging;
 
   bool insecure = false;
+
+  std::function<void(std::string)> on_notify;
+  std::function<void(std::string)> on_push;
+  std::function<void(std::string, std::string)> on_message;
+  std::function<void(int, std::string)> on_disconnect;
 };
 
 class SoraSignaling : public std::enable_shared_from_this<SoraSignaling>,
@@ -80,49 +86,50 @@ class SoraSignaling : public std::enable_shared_from_this<SoraSignaling>,
   RTCManager* manager_;
   std::shared_ptr<RTCConnection> connection_;
   SoraSignalingConfig config_;
-  std::function<void(std::string)> on_notify_;
-  std::function<void(std::string)> on_push_;
-  std::function<void(std::string, std::string)> on_message_;
+  boost::asio::deadline_timer connection_timeout_timer_;
+  boost::asio::deadline_timer closing_timeout_timer_;
 
-  webrtc::PeerConnectionInterface::IceConnectionState rtc_state_;
+  webrtc::PeerConnectionInterface::IceConnectionState ice_state_ =
+      webrtc::PeerConnectionInterface::kIceConnectionNew;
+  webrtc::PeerConnectionInterface::PeerConnectionState connection_state_ =
+      webrtc::PeerConnectionInterface::PeerConnectionState::kNew;
 
+  enum State {
+    Init,
+    Connecting,
+    Connected,
+    Closing,
+    Closed,
+    Destructing,
+  };
+  State state_ = State::Init;
   bool connected_ = false;
   bool destructed_ = false;
 
  public:
-  webrtc::PeerConnectionInterface::IceConnectionState getRTCConnectionState()
-      const;
-  std::shared_ptr<RTCConnection> getRTCConnection() const;
-
-  static std::shared_ptr<SoraSignaling> Create(
-      boost::asio::io_context& ioc,
-      RTCManager* manager,
-      SoraSignalingConfig config,
-      std::function<void(std::string)> on_notify,
-      std::function<void(std::string)> on_push,
-      std::function<void(std::string, std::string)> on_message);
+  static std::shared_ptr<SoraSignaling> Create(boost::asio::io_context& ioc,
+                                               RTCManager* manager,
+                                               SoraSignalingConfig config);
 
  private:
   SoraSignaling(boost::asio::io_context& ioc,
                 RTCManager* manager,
-                SoraSignalingConfig config,
-                std::function<void(std::string)> on_notify,
-                std::function<void(std::string)> on_push,
-                std::function<void(std::string, std::string)> on_message);
-  bool Init();
+                SoraSignalingConfig config);
 
  public:
   ~SoraSignaling();
 
  public:
-  bool Connect();
-  void Close(std::function<void()> on_close);
+  std::shared_ptr<RTCConnection> GetRTCConnection() const;
+  void Connect();
+  void Close();
   void SendMessage(const std::string& label, const std::string& data);
 
  private:
-  void OnWatchdogExpired();
-
+  void DoConnect();
   void OnConnect(boost::system::error_code ec);
+
+  void DoClose();
 
   void DoSendConnect();
   void DoSendPong();
@@ -155,13 +162,15 @@ class SoraSignaling : public std::enable_shared_from_this<SoraSignaling>,
   // これらは別スレッドからやってくるので取り扱い注意.
   void OnIceConnectionStateChange(
       webrtc::PeerConnectionInterface::IceConnectionState new_state) override;
+  void OnConnectionChange(
+      webrtc::PeerConnectionInterface::PeerConnectionState new_state) override;
   void OnIceCandidate(const std::string sdp_mid,
                       const int sdp_mlineindex,
                       const std::string sdp) override;
 
  private:
-  void DoIceConnectionStateChange(
-      webrtc::PeerConnectionInterface::IceConnectionState new_state);
+  void DoConnectionChange(
+      webrtc::PeerConnectionInterface::PeerConnectionState new_state);
 };
 }  // namespace sora
 

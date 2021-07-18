@@ -22,12 +22,19 @@ void PeerConnectionObserver::OnDataChannel(
 void PeerConnectionObserver::OnStandardizedIceConnectionChange(
     webrtc::PeerConnectionInterface::IceConnectionState new_state) {
   RTC_LOG(LS_INFO) << __FUNCTION__ << " :" << new_state;
-  if (new_state == webrtc::PeerConnectionInterface::IceConnectionState::
-                       kIceConnectionDisconnected) {
+  if (sender_ != nullptr) {
+    sender_->OnIceConnectionStateChange(new_state);
+  }
+}
+
+void PeerConnectionObserver::OnConnectionChange(
+    webrtc::PeerConnectionInterface::PeerConnectionState new_state) {
+  if (new_state ==
+      webrtc::PeerConnectionInterface::PeerConnectionState::kFailed) {
     ClearAllRegisteredTracks();
   }
   if (sender_ != nullptr) {
-    sender_->OnIceConnectionStateChange(new_state);
+    sender_->OnConnectionChange(new_state);
   }
 }
 
