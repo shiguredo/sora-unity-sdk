@@ -74,6 +74,8 @@ class Websocket {
   websocket_t& NativeSocket();
   ssl_websocket_t& NativeSecureSocket();
 
+  const boost::beast::websocket::close_reason& reason() const;
+
  private:
   bool IsSSL() const;
 

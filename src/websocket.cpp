@@ -340,9 +340,14 @@ void Websocket::OnClose(close_callback_t on_close,
   }
 
   RTC_LOG(LS_INFO) << "Websocket::OnClose this=" << (void*)this
-                   << " ec=" << ec.message();
+                   << " ec=" << ec.message() << " code=" << reason().code
+                   << " reason=" << reason().reason;
   close_timeout_timer_.cancel();
   on_close(ec);
+}
+
+const boost::beast::websocket::close_reason& Websocket::reason() const {
+  return IsSSL() ? wss_->reason() : ws_->reason();
 }
 
 }  // namespace sora

@@ -452,9 +452,12 @@ void SoraSignaling::OnRead(boost::system::error_code ec,
       auto error_code = ec == boost::beast::websocket::error::closed
                             ? (int)sora_conf::ErrorCode::WEBSOCKET_ONCLOSE
                             : (int)sora_conf::ErrorCode::WEBSOCKET_ONERROR;
-      config_.on_disconnect(error_code,
-                            "Failed to read WebSocket: ec=" + ec.message());
-      RTC_LOG(LS_ERROR) << "Failed to read: ec=" << ec.message();
+      auto reason = ws_->reason();
+      std::string reason_str = " code=" + std::to_string(reason.code) +
+                               " reason=" + reason.reason.c_str();
+      config_.on_disconnect(error_code, "Failed to read WebSocket: ec=" +
+                                            ec.message() + reason_str);
+      RTC_LOG(LS_ERROR) << "Failed to read: ec=" << ec.message() + reason_str;
       return;
     }
     if (state_ == State::Connected && using_datachannel_ && !ws_connected_) {
@@ -471,23 +474,25 @@ void SoraSignaling::OnRead(boost::system::error_code ec,
       auto error_code = ec == boost::beast::websocket::error::closed
                             ? (int)sora_conf::ErrorCode::WEBSOCKET_ONCLOSE
                             : (int)sora_conf::ErrorCode::WEBSOCKET_ONERROR;
+      auto reason = ws_->reason();
+      std::string reason_str = " code=" + std::to_string(reason.code) +
+                               " reason=" + reason.reason.c_str();
       state_ = State::Closing;
       dc_->Close(
           disconnect,
-          [self = shared_from_this(), ec,
-           error_code](boost::system::error_code ec2) {
+          [self = shared_from_this(), ec, error_code,
+           reason_str](boost::system::error_code ec2) {
             if (ec2) {
               self->config_.on_disconnect(
                   error_code,
                   "Failed to read WebSocket and to close DataChannel: ec=" +
-                      ec.message() + " ec2=" + ec2.message());
-            } else {
-              self->config_.on_disconnect(
-                  error_code,
-                  "Failed to read WebSocket and succeeded to close "
-                  "DataChannel: ec=" +
-                      ec.message());
+                      ec.message() + " ec2=" + ec2.message() + reason_str);
             }
+            self->config_.on_disconnect(
+                error_code,
+                "Failed to read WebSocket and succeeded to close "
+                "DataChannel: ec=" +
+                    ec.message() + reason_str);
           },
           config_.disconnect_wait_timeout);
       return;
@@ -728,7 +733,12 @@ void SoraSignaling::DoInternalClose(boost::optional<int> force_error_code,
         [self = shared_from_this(), on_close, force_error_code,
          message](boost::system::error_code ec1) {
           self->ws_->Close(
-              [ec1, on_close](boost::system::error_code ec2) {
+              [self, ec1, on_close](boost::system::error_code ec2) {
+                auto ws_reason = self->ws_->reason();
+                std::string ws_reason_str =
+                    " ws_code=" + std::to_string(ws_reason.code) +
+                    " ws_reason=" + ws_reason.reason.c_str();
+
                 bool succeeded = true;
                 std::string message =
                     "Succeeded to close DataChannel and Websocket";
@@ -736,17 +746,18 @@ void SoraSignaling::DoInternalClose(boost::optional<int> force_error_code,
                 if (ec1 && ec2) {
                   succeeded = false;
                   message = "Failed to close DataChannel and WebSocket: ec1=" +
-                            ec1.message() + " ec2=" + ec2.message();
+                            ec1.message() + " ec2=" + ec2.message() +
+                            ws_reason_str;
                   error_code = (int)sora_conf::ErrorCode::CLOSE_FAILED;
                 } else if (ec1 && !ec2) {
                   succeeded = false;
                   message = "Failed to close DataChannel (WS succeeded): ec=" +
-                            ec1.message();
+                            ec1.message() + ws_reason_str;
                   error_code = (int)sora_conf::ErrorCode::CLOSE_FAILED;
                 } else if (!ec1 && ec2) {
                   succeeded = false;
                   message = "Failed to close WebSocket (DC succeeded): ec=" +
-                            ec2.message();
+                            ec2.message() + ws_reason_str;
                   error_code = (int)sora_conf::ErrorCode::CLOSE_FAILED;
                 }
                 on_close(succeeded, error_code, message);
@@ -782,13 +793,16 @@ void SoraSignaling::DoInternalClose(boost::optional<int> force_error_code,
                     ec.message());
           }
           self->ws_->Close(
-              [on_close](boost::system::error_code ec) {
+              [self, on_close](boost::system::error_code ec) {
                 if (ec) {
+                  auto reason = self->ws_->reason();
                   on_close(false, (int)sora_conf::ErrorCode::CLOSE_FAILED,
-                           "Failed to close WebSocket: ec=" + ec.message());
+                           "Failed to close WebSocket: ec=" + ec.message() +
+                               " code=" + std::to_string(reason.code) +
+                               " reason=" + reason.reason.c_str());
                 }
                 on_close(true, (int)sora_conf::ErrorCode::CLOSE_SUCCEEDED,
-                         "Succeeded to close DataChannel");
+                         "Succeeded to close WebSocket");
               },
               3);
         });
