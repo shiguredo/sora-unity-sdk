@@ -79,6 +79,7 @@ class SoraSignaling : public std::enable_shared_from_this<SoraSignaling>,
   std::shared_ptr<Websocket> ws_;
   std::shared_ptr<SoraDataChannelOnAsio> dc_;
   bool using_datachannel_ = false;
+  bool ws_connected_ = false;
   std::set<std::string> compressed_labels_;
 
   URLParts parts_;
@@ -103,8 +104,6 @@ class SoraSignaling : public std::enable_shared_from_this<SoraSignaling>,
     Destructing,
   };
   State state_ = State::Init;
-  bool connected_ = false;
-  bool destructed_ = false;
 
  public:
   static std::shared_ptr<SoraSignaling> Create(boost::asio::io_context& ioc,
@@ -130,6 +129,9 @@ class SoraSignaling : public std::enable_shared_from_this<SoraSignaling>,
   void OnConnect(boost::system::error_code ec);
 
   void DoClose();
+  void DoInternalClose(boost::optional<int> force_error_code,
+                       std::string reason,
+                       std::string message);
 
   void DoSendConnect();
   void DoSendPong();
@@ -144,6 +146,9 @@ class SoraSignaling : public std::enable_shared_from_this<SoraSignaling>,
   void OnRead(boost::system::error_code ec,
               std::size_t bytes_transferred,
               std::string text);
+
+ private:
+  std::function<void(webrtc::RTCError)> CreateIceError(std::string message);
 
  private:
   webrtc::DataBuffer ConvertToDataBuffer(const std::string& label,

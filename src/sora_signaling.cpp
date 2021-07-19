@@ -87,8 +87,7 @@ SoraSignaling::~SoraSignaling() {
           "signaling", R"({"type":"disconnect","reason":"INTERNAL-ERROR"})");
       dc_->Close(
           disconnect,
-          [promise](const boost::system::error_code&) { promise->set_value(); },
-          0.3);
+          [promise](boost::system::error_code) { promise->set_value(); }, 0.3);
     } else {
       promise->set_value();
     }
@@ -101,8 +100,10 @@ SoraSignaling::~SoraSignaling() {
   connection_ = nullptr;
   // ここで OnIceConnectionStateChange などが呼ばれる
   connection = nullptr;
-  dc_ = nullptr;
   ws_ = nullptr;
+  ws_connected_ = false;
+  dc_ = nullptr;
+  using_datachannel_ = false;
   state_ = State::Closed;
 
   RTC_LOG(LS_INFO) << "SoraSignaling::~SoraSignaling completed";
@@ -202,6 +203,7 @@ void SoraSignaling::OnConnect(boost::system::error_code ec) {
 
   RTC_LOG(LS_INFO) << "Signaling Websocket is connected";
   state_ = State::Connected;
+  ws_connected_ = true;
 
   DoRead();
   DoSendConnect();
@@ -328,31 +330,38 @@ void SoraSignaling::DoSendConnect() {
     json_message["data_channel_messaging"] = ar;
   }
 
-  ws_->WriteText(boost::json::serialize(json_message));
+  ws_->WriteText(
+      boost::json::serialize(json_message),
+      [self = shared_from_this()](boost::system::error_code, size_t) {});
 }
 void SoraSignaling::DoSendPong() {
   boost::json::value json_message = {{"type", "pong"}};
-  ws_->WriteText(boost::json::serialize(json_message));
+  ws_->WriteText(
+      boost::json::serialize(json_message),
+      [self = shared_from_this()](boost::system::error_code, size_t) {});
 }
 void SoraSignaling::DoSendPong(
     const rtc::scoped_refptr<const webrtc::RTCStatsReport>& report) {
   std::string stats = report->ToJson();
-  if (dc_ && using_datachannel_ && dc_->IsOpen("stats")) {
+  if (using_datachannel_ && dc_->IsOpen("stats")) {
     // DataChannel が使える場合は type: stats で DataChannel に送る
     std::string str = R"({"type":"stats","reports":)" + stats + "}";
     SendDataChannel("stats", str);
-  } else if (ws_) {
+  } else if (ws_connected_) {
     std::string str = R"({"type":"pong","stats":)" + stats + "}";
-    ws_->WriteText(std::move(str));
+    ws_->WriteText(std::move(str), [self = shared_from_this()](
+                                       boost::system::error_code, size_t) {});
   }
 }
 void SoraSignaling::DoSendUpdate(const std::string& sdp, std::string type) {
   boost::json::value json_message = {{"type", type}, {"sdp", sdp}};
-  if (dc_ && using_datachannel_ && dc_->IsOpen("signaling")) {
+  if (using_datachannel_ && dc_->IsOpen("signaling")) {
     // DataChannel が使える場合は DataChannel に送る
     SendDataChannel("signaling", boost::json::serialize(json_message));
-  } else if (ws_) {
-    ws_->WriteText(boost::json::serialize(json_message));
+  } else if (ws_connected_) {
+    ws_->WriteText(
+        boost::json::serialize(json_message),
+        [self = shared_from_this()](boost::system::error_code, size_t) {});
   }
 }
 
@@ -391,7 +400,7 @@ void SoraSignaling::DoClose() {
   if (state_ == State::Connecting) {
     connection_timeout_timer_.cancel();
     config_.on_disconnect((int)sora_conf::ErrorCode::CLOSE_SUCCEEDED,
-                          "Close was called during connecting");
+                          "Close was called in connecting");
     state_ = State::Closed;
     return;
   }
@@ -402,99 +411,7 @@ void SoraSignaling::DoClose() {
     return;
   }
 
-  assert(state_ == State::Connected);
-
-  state_ = State::Closing;
-
-  auto on_close = [self = shared_from_this()](bool succeeded, int error_code,
-                                              std::string message) {
-    if (!succeeded) {
-      RTC_LOG(LS_ERROR) << message;
-    }
-    self->connection_ = nullptr;
-    self->ws_ = nullptr;
-    self->dc_ = nullptr;
-    self->using_datachannel_ = false;
-    self->state_ = State::Closed;
-    self->config_.on_disconnect(error_code, message);
-  };
-
-  if (using_datachannel_ && ws_) {
-    webrtc::DataBuffer disconnect = ConvertToDataBuffer(
-        "signaling", R"({"type":"disconnect","reason":"NO-ERROR"})");
-    dc_->Close(
-        disconnect,
-        [self = shared_from_this(),
-         on_close](const boost::system::error_code& ec1) {
-          self->ws_->Close(
-              [ec1, on_close](const boost::system::error_code& ec2) {
-                bool succeeded = true;
-                std::string message =
-                    "Succeeded to close DataChannel and Websocket";
-                int error_code = (int)sora_conf::ErrorCode::CLOSE_SUCCEEDED;
-                if (ec1 && ec2) {
-                  succeeded = false;
-                  message = "Failed to close DataChannel and WebSocket: ec1=" +
-                            ec1.message() + " ec2=" + ec2.message();
-                  error_code = (int)sora_conf::ErrorCode::CLOSE_FAILED;
-                } else if (ec1 && !ec2) {
-                  succeeded = false;
-                  message = "Failed to close DataChannel (WS succeeded): ec=" +
-                            ec1.message();
-                  error_code = (int)sora_conf::ErrorCode::CLOSE_FAILED;
-                } else if (!ec1 && ec2) {
-                  succeeded = false;
-                  message = "Failed to close WebSocket (DC succeeded): ec=" +
-                            ec2.message();
-                  error_code = (int)sora_conf::ErrorCode::CLOSE_FAILED;
-                }
-                on_close(succeeded, error_code, message);
-              },
-              3);
-        },
-        config_.disconnect_wait_timeout);
-  } else if (using_datachannel_ && !ws_) {
-    webrtc::DataBuffer disconnect = ConvertToDataBuffer(
-        "signaling", R"({"type":"disconnect","reason":"NO-ERROR"})");
-    dc_->Close(
-        disconnect,
-        [on_close](const boost::system::error_code& ec) {
-          if (ec) {
-            on_close(false, (int)sora_conf::ErrorCode::CLOSE_FAILED,
-                     "Failed to close DataChannel: ec=" + ec.message());
-          }
-          on_close(true, (int)sora_conf::ErrorCode::CLOSE_SUCCEEDED,
-                   "Succeeded to close DataChannel");
-        },
-        config_.disconnect_wait_timeout);
-  } else if (!using_datachannel_ && ws_) {
-    boost::json::value disconnect = {{"type", "disconnect"},
-                                     {"reason", "NO-ERROR"}};
-    ws_->WriteText(
-        boost::json::serialize(disconnect),
-        [self = shared_from_this(), on_close](boost::system::error_code ec,
-                                              std::size_t) {
-          if (ec) {
-            on_close(
-                false, (int)sora_conf::ErrorCode::CLOSE_FAILED,
-                "Failed to write disconnect message to close WebSocket: ec=" +
-                    ec.message());
-          }
-          self->ws_->Close(
-              [on_close](boost::system::error_code ec) {
-                if (ec) {
-                  on_close(false, (int)sora_conf::ErrorCode::CLOSE_FAILED,
-                           "Failed to close WebSocket: ec=" + ec.message());
-                }
-                on_close(true, (int)sora_conf::ErrorCode::CLOSE_SUCCEEDED,
-                         "Succeeded to close DataChannel");
-              },
-              3);
-        });
-  } else {
-    on_close(false, (int)sora_conf::ErrorCode::INTERNAL_ERROR,
-             "Unknown state. WS and DC is already released.");
-  }
+  DoInternalClose(boost::none, "", "");
 }
 
 void SoraSignaling::SendMessage(const std::string& label,
@@ -505,9 +422,9 @@ void SoraSignaling::SendMessage(const std::string& label,
 }
 
 void SoraSignaling::DoRead() {
-  ws_->Read([self = shared_from_this(), ws = ws_](boost::system::error_code ec,
-                                                  std::size_t bytes_transferred,
-                                                  std::string text) {
+  ws_->Read([self = shared_from_this()](boost::system::error_code ec,
+                                        std::size_t bytes_transferred,
+                                        std::string text) {
     self->OnRead(ec, bytes_transferred, std::move(text));
   });
 }
@@ -530,33 +447,43 @@ void SoraSignaling::OnRead(boost::system::error_code ec,
     }
     if (state_ == State::Connected && !using_datachannel_) {
       // 何かエラーが起きたので切断する
+      ws_connected_ = false;
       state_ = State::Closed;
-      config_.on_disconnect((int)sora_conf::ErrorCode::WEBSOCKET_ONERROR,
+      auto error_code = ec == boost::beast::websocket::error::closed
+                            ? (int)sora_conf::ErrorCode::WEBSOCKET_ONCLOSE
+                            : (int)sora_conf::ErrorCode::WEBSOCKET_ONERROR;
+      config_.on_disconnect(error_code,
                             "Failed to read WebSocket: ec=" + ec.message());
       RTC_LOG(LS_ERROR) << "Failed to read: ec=" << ec.message();
       return;
     }
-    if (state_ == State::Connected && using_datachannel_ && !ws_) {
+    if (state_ == State::Connected && using_datachannel_ && !ws_connected_) {
       // ignore_disconnect_websocket による WS 切断なので何もしない
       return;
     }
-    if (state_ == State::Connected && using_datachannel_ && ws_) {
-      // DataChanel で "type": "disconnect", reason: "WEBSOCKET-CLOSED" を送る事を試みてから終了する
+    if (state_ == State::Connected && using_datachannel_ && ws_connected_) {
+      // DataChanel で reason: "WEBSOCKET-ONCLOSE" または "WEBSOCKET-ONERROR" を送る事を試みてから終了する
       webrtc::DataBuffer disconnect = ConvertToDataBuffer(
-          "signaling", R"({"type":"disconnect","reason":"WEBSOCKET-CLOSED"})");
+          "signaling",
+          ec == boost::beast::websocket::error::closed
+              ? R"({"type":"disconnect","reason":"WEBSOCKET-ONCLOSE"})"
+              : R"({"type":"disconnect","reason":"WEBSOCKET-ONERROR"})");
+      auto error_code = ec == boost::beast::websocket::error::closed
+                            ? (int)sora_conf::ErrorCode::WEBSOCKET_ONCLOSE
+                            : (int)sora_conf::ErrorCode::WEBSOCKET_ONERROR;
       state_ = State::Closing;
       dc_->Close(
           disconnect,
-          [self = shared_from_this(),
-           ec](const boost::system::error_code& ec2) {
+          [self = shared_from_this(), ec,
+           error_code](boost::system::error_code ec2) {
             if (ec2) {
               self->config_.on_disconnect(
-                  (int)sora_conf::ErrorCode::WEBSOCKET_ONERROR,
+                  error_code,
                   "Failed to read WebSocket and to close DataChannel: ec=" +
                       ec.message() + " ec2=" + ec2.message());
             } else {
               self->config_.on_disconnect(
-                  (int)sora_conf::ErrorCode::WEBSOCKET_ONERROR,
+                  error_code,
                   "Failed to read WebSocket and succeeded to close "
                   "DataChannel: ec=" +
                       ec.message());
@@ -567,6 +494,7 @@ void SoraSignaling::OnRead(boost::system::error_code ec,
     }
 
     // ここに来ることは無いはず
+    ws_connected_ = false;
     state_ = State::Closed;
     config_.on_disconnect((int)sora_conf::ErrorCode::INTERNAL_ERROR,
                           "Failed to read WebSocket: ec=" + ec.message());
@@ -606,106 +534,119 @@ void SoraSignaling::OnRead(boost::system::error_code ec,
     connection_ = CreateRTCConnection(json_message.at("config"));
     const std::string sdp = json_message.at("sdp").as_string().c_str();
 
-    connection_->SetOffer(sdp, [self = shared_from_this(), json_message]() {
-      boost::asio::post(self->ioc_, [self, json_message]() {
-        if (self->state_ != State::Connected) {
-          return;
-        }
+    connection_->SetOffer(
+        sdp,
+        [self = shared_from_this(), json_message]() {
+          boost::asio::post(self->ioc_, [self, json_message]() {
+            if (self->state_ != State::Connected) {
+              return;
+            }
 
-        // simulcast では offer の setRemoteDescription が終わった後に
-        // トラックを追加する必要があるため、ここで初期化する
-        self->manager_->InitTracks(self->connection_.get());
+            // simulcast では offer の setRemoteDescription が終わった後に
+            // トラックを追加する必要があるため、ここで初期化する
+            self->manager_->InitTracks(self->connection_.get());
 
-        if (self->config_.simulcast &&
-            json_message.as_object().count("encodings") != 0) {
-          std::vector<webrtc::RtpEncodingParameters> encoding_parameters;
+            if (self->config_.simulcast &&
+                json_message.as_object().count("encodings") != 0) {
+              std::vector<webrtc::RtpEncodingParameters> encoding_parameters;
 
-          // "encodings" キーの各内容を webrtc::RtpEncodingParameters に変換する
-          auto encodings_json = json_message.at("encodings");
-          for (auto v : encodings_json.as_array()) {
-            auto p = v.as_object();
-            webrtc::RtpEncodingParameters params;
-            // absl::optional<uint32_t> ssrc;
-            // double bitrate_priority = kDefaultBitratePriority;
-            // enum class Priority { kVeryLow, kLow, kMedium, kHigh };
-            // Priority network_priority = Priority::kLow;
-            // absl::optional<int> max_bitrate_bps;
-            // absl::optional<int> min_bitrate_bps;
-            // absl::optional<double> max_framerate;
-            // absl::optional<int> num_temporal_layers;
-            // absl::optional<double> scale_resolution_down_by;
-            // bool active = true;
-            // std::string rid;
-            // bool adaptive_ptime = false;
-            params.rid = p.at("rid").as_string().c_str();
-            if (p.count("maxBitrate") != 0) {
-              params.max_bitrate_bps = p["maxBitrate"].to_number<int>();
-            }
-            if (p.count("minBitrate") != 0) {
-              params.min_bitrate_bps = p["minBitrate"].to_number<int>();
-            }
-            if (p.count("scaleResolutionDownBy") != 0) {
-              params.scale_resolution_down_by =
-                  p["scaleResolutionDownBy"].to_number<double>();
-            }
-            if (p.count("maxFramerate") != 0) {
-              params.max_framerate = p["maxFramerate"].to_number<double>();
-            }
-            if (p.count("active") != 0) {
-              params.active = p["active"].as_bool();
-            }
-            if (p.count("adaptivePtime") != 0) {
-              params.adaptive_ptime = p["adaptivePtime"].as_bool();
-            }
-            encoding_parameters.push_back(params);
-          }
-          self->connection_->SetEncodingParameters(
-              std::move(encoding_parameters));
-        }
-
-        self->connection_->CreateAnswer(
-            [self](webrtc::SessionDescriptionInterface* desc) {
-              std::string sdp;
-              desc->ToString(&sdp);
-              boost::asio::post(self->ioc_, [self, sdp]() {
-                if (self->state_ != State::Connected) {
-                  return;
+              // "encodings" キーの各内容を webrtc::RtpEncodingParameters に変換する
+              auto encodings_json = json_message.at("encodings");
+              for (auto v : encodings_json.as_array()) {
+                auto p = v.as_object();
+                webrtc::RtpEncodingParameters params;
+                // absl::optional<uint32_t> ssrc;
+                // double bitrate_priority = kDefaultBitratePriority;
+                // enum class Priority { kVeryLow, kLow, kMedium, kHigh };
+                // Priority network_priority = Priority::kLow;
+                // absl::optional<int> max_bitrate_bps;
+                // absl::optional<int> min_bitrate_bps;
+                // absl::optional<double> max_framerate;
+                // absl::optional<int> num_temporal_layers;
+                // absl::optional<double> scale_resolution_down_by;
+                // bool active = true;
+                // std::string rid;
+                // bool adaptive_ptime = false;
+                params.rid = p.at("rid").as_string().c_str();
+                if (p.count("maxBitrate") != 0) {
+                  params.max_bitrate_bps = p["maxBitrate"].to_number<int>();
                 }
-                boost::json::value json_message = {{"type", "answer"},
-                                                   {"sdp", sdp}};
-                self->ws_->WriteText(boost::json::serialize(json_message));
-              });
-            });
-      });
-    });
+                if (p.count("minBitrate") != 0) {
+                  params.min_bitrate_bps = p["minBitrate"].to_number<int>();
+                }
+                if (p.count("scaleResolutionDownBy") != 0) {
+                  params.scale_resolution_down_by =
+                      p["scaleResolutionDownBy"].to_number<double>();
+                }
+                if (p.count("maxFramerate") != 0) {
+                  params.max_framerate = p["maxFramerate"].to_number<double>();
+                }
+                if (p.count("active") != 0) {
+                  params.active = p["active"].as_bool();
+                }
+                if (p.count("adaptivePtime") != 0) {
+                  params.adaptive_ptime = p["adaptivePtime"].as_bool();
+                }
+                encoding_parameters.push_back(params);
+              }
+              self->connection_->SetEncodingParameters(
+                  std::move(encoding_parameters));
+            }
+
+            self->connection_->CreateAnswer(
+                [self](webrtc::SessionDescriptionInterface* desc) {
+                  std::string sdp;
+                  desc->ToString(&sdp);
+                  boost::asio::post(self->ioc_, [self, sdp]() {
+                    if (self->state_ != State::Connected) {
+                      return;
+                    }
+                    boost::json::value json_message = {{"type", "answer"},
+                                                       {"sdp", sdp}};
+                    self->ws_->WriteText(
+                        boost::json::serialize(json_message),
+                        [self](boost::system::error_code, size_t) {});
+                  });
+                },
+                self->CreateIceError(
+                    "Failed to CreateAnswer in offer message via WebSocket"));
+          });
+        },
+        CreateIceError("Failed to SetOffer in offer message via WebSocket"));
   } else if (type == "update" || type == "re-offer") {
     std::string answer_type = type == "update" ? "update" : "re-answer";
     const std::string sdp = json_message.at("sdp").as_string().c_str();
-    connection_->SetOffer(sdp, [self = shared_from_this(), answer_type]() {
-      boost::asio::post(self->ioc_, [self, answer_type]() {
-        if (self->state_ != State::Connected) {
-          return;
-        }
+    connection_->SetOffer(
+        sdp,
+        [self = shared_from_this(), type, answer_type]() {
+          boost::asio::post(self->ioc_, [self, type, answer_type]() {
+            if (self->state_ != State::Connected) {
+              return;
+            }
 
-        // エンコーディングパラメータの情報がクリアされるので設定し直す
-        if (self->config_.simulcast) {
-          self->connection_->ResetEncodingParameters();
-        }
+            // エンコーディングパラメータの情報がクリアされるので設定し直す
+            if (self->config_.simulcast) {
+              self->connection_->ResetEncodingParameters();
+            }
 
-        self->connection_->CreateAnswer(
-            [self, answer_type](webrtc::SessionDescriptionInterface* desc) {
-              std::string sdp;
-              desc->ToString(&sdp);
-              boost::asio::post(self->ioc_, [self, sdp, answer_type]() {
-                if (self->state_ != State::Connected) {
-                  return;
-                }
+            self->connection_->CreateAnswer(
+                [self, answer_type](webrtc::SessionDescriptionInterface* desc) {
+                  std::string sdp;
+                  desc->ToString(&sdp);
+                  boost::asio::post(self->ioc_, [self, sdp, answer_type]() {
+                    if (self->state_ != State::Connected) {
+                      return;
+                    }
 
-                self->DoSendUpdate(sdp, answer_type);
-              });
-            });
-      });
-    });
+                    self->DoSendUpdate(sdp, answer_type);
+                  });
+                },
+                self->CreateIceError("Failed to CreateAnswer in " + type +
+                                     " message via WebSocket"));
+          });
+        },
+        CreateIceError("Failed to SetOffer in " + type +
+                       " message via WebSocket"));
   } else if (type == "notify") {
     if (config_.on_notify) {
       config_.on_notify(text);
@@ -735,16 +676,140 @@ void SoraSignaling::OnRead(boost::system::error_code ec,
 
     // ignore_disconnect_websocket == true の場合は WS を切断する
     auto it = json_message.as_object().find("ignore_disconnect_websocket");
-    if (it != json_message.as_object().end() && it->value().as_bool() && ws_) {
+    if (it != json_message.as_object().end() && it->value().as_bool() &&
+        ws_connected_) {
       RTC_LOG(LS_INFO) << "Close WebSocket for DataChannel";
-      auto ws = ws_;
-      ws_ = nullptr;
-      ws->Close([ws](boost::system::error_code) {});
+      ws_->Close([self = shared_from_this()](boost::system::error_code) {});
+      ws_connected_ = false;
       return;
     }
   }
 
   DoRead();
+}
+
+// 出来るだけサーバに type: disconnect を送ってから閉じる
+// force_error_code が設定されていない場合、NO-ERROR でサーバに送信し、ユーザにはデフォルトのエラーコードとメッセージでコールバックする。reason や message は無視される。
+// force_error_code が設定されている場合、reason でサーバに送信し、指定されたエラーコードと、message にデフォルトのメッセージを追加したメッセージでコールバックする。
+void SoraSignaling::DoInternalClose(boost::optional<int> force_error_code,
+                                    std::string reason,
+                                    std::string message) {
+  assert(state_ == State::Connected);
+
+  state_ = State::Closing;
+
+  auto on_close = [self = shared_from_this(), force_error_code,
+                   root_message = message](bool succeeded, int error_code,
+                                           std::string message) {
+    if (!succeeded) {
+      RTC_LOG(LS_ERROR) << message;
+    }
+    self->connection_ = nullptr;
+    self->using_datachannel_ = false;
+    self->ws_connected_ = false;
+    self->state_ = State::Closed;
+
+    if (force_error_code == boost::none) {
+      self->config_.on_disconnect(error_code, message);
+    } else {
+      self->config_.on_disconnect(
+          *force_error_code, root_message + ", internal_message=" + message);
+    }
+  };
+
+  if (using_datachannel_ && ws_connected_) {
+    webrtc::DataBuffer disconnect = ConvertToDataBuffer(
+        "signaling",
+        force_error_code == boost::none
+            ? R"({"type":"disconnect","reason":"NO-ERROR"})"
+            : R"({"type":"disconnect","reason":")" + reason + "\"}");
+    dc_->Close(
+        disconnect,
+        [self = shared_from_this(), on_close, force_error_code,
+         message](boost::system::error_code ec1) {
+          self->ws_->Close(
+              [ec1, on_close](boost::system::error_code ec2) {
+                bool succeeded = true;
+                std::string message =
+                    "Succeeded to close DataChannel and Websocket";
+                int error_code = (int)sora_conf::ErrorCode::CLOSE_SUCCEEDED;
+                if (ec1 && ec2) {
+                  succeeded = false;
+                  message = "Failed to close DataChannel and WebSocket: ec1=" +
+                            ec1.message() + " ec2=" + ec2.message();
+                  error_code = (int)sora_conf::ErrorCode::CLOSE_FAILED;
+                } else if (ec1 && !ec2) {
+                  succeeded = false;
+                  message = "Failed to close DataChannel (WS succeeded): ec=" +
+                            ec1.message();
+                  error_code = (int)sora_conf::ErrorCode::CLOSE_FAILED;
+                } else if (!ec1 && ec2) {
+                  succeeded = false;
+                  message = "Failed to close WebSocket (DC succeeded): ec=" +
+                            ec2.message();
+                  error_code = (int)sora_conf::ErrorCode::CLOSE_FAILED;
+                }
+                on_close(succeeded, error_code, message);
+              },
+              3);
+        },
+        config_.disconnect_wait_timeout);
+  } else if (using_datachannel_ && !ws_connected_) {
+    webrtc::DataBuffer disconnect = ConvertToDataBuffer(
+        "signaling", R"({"type":"disconnect","reason":"NO-ERROR"})");
+    dc_->Close(
+        disconnect,
+        [on_close](boost::system::error_code ec) {
+          if (ec) {
+            on_close(false, (int)sora_conf::ErrorCode::CLOSE_FAILED,
+                     "Failed to close DataChannel: ec=" + ec.message());
+          }
+          on_close(true, (int)sora_conf::ErrorCode::CLOSE_SUCCEEDED,
+                   "Succeeded to close DataChannel");
+        },
+        config_.disconnect_wait_timeout);
+  } else if (!using_datachannel_ && ws_connected_) {
+    boost::json::value disconnect = {{"type", "disconnect"},
+                                     {"reason", "NO-ERROR"}};
+    ws_->WriteText(
+        boost::json::serialize(disconnect),
+        [self = shared_from_this(), on_close](boost::system::error_code ec,
+                                              std::size_t) {
+          if (ec) {
+            on_close(
+                false, (int)sora_conf::ErrorCode::CLOSE_FAILED,
+                "Failed to write disconnect message to close WebSocket: ec=" +
+                    ec.message());
+          }
+          self->ws_->Close(
+              [on_close](boost::system::error_code ec) {
+                if (ec) {
+                  on_close(false, (int)sora_conf::ErrorCode::CLOSE_FAILED,
+                           "Failed to close WebSocket: ec=" + ec.message());
+                }
+                on_close(true, (int)sora_conf::ErrorCode::CLOSE_SUCCEEDED,
+                         "Succeeded to close DataChannel");
+              },
+              3);
+        });
+  } else {
+    on_close(false, (int)sora_conf::ErrorCode::INTERNAL_ERROR,
+             "Unknown state. WS and DC is already released.");
+  }
+}
+
+std::function<void(webrtc::RTCError)> SoraSignaling::CreateIceError(
+    std::string message) {
+  return [self = shared_from_this(), message](webrtc::RTCError error) {
+    boost::asio::post(self->ioc_, [self, message, error]() {
+      if (self->state_ != State::Connected) {
+        return;
+      }
+      self->DoInternalClose((int)sora_conf::ErrorCode::ICE_FAILED,
+                            "INTERNAL-ERROR",
+                            message + ": error=" + error.message());
+    });
+  };
 }
 
 webrtc::DataBuffer SoraSignaling::ConvertToDataBuffer(
@@ -809,30 +874,36 @@ void SoraSignaling::OnMessage(
     const std::string type = json.at("type").as_string().c_str();
     if (type == "re-offer") {
       const std::string sdp = json.at("sdp").as_string().c_str();
-      connection_->SetOffer(sdp, [self = shared_from_this()]() {
-        boost::asio::post(self->ioc_, [self]() {
-          if (!self->connection_) {
-            return;
-          }
+      connection_->SetOffer(
+          sdp,
+          [self = shared_from_this()]() {
+            boost::asio::post(self->ioc_, [self]() {
+              if (!self->connection_) {
+                return;
+              }
 
-          // エンコーディングパラメータの情報がクリアされるので設定し直す
-          if (self->config_.simulcast) {
-            self->connection_->ResetEncodingParameters();
-          }
+              // エンコーディングパラメータの情報がクリアされるので設定し直す
+              if (self->config_.simulcast) {
+                self->connection_->ResetEncodingParameters();
+              }
 
-          self->connection_->CreateAnswer(
-              [self](webrtc::SessionDescriptionInterface* desc) {
-                std::string sdp;
-                desc->ToString(&sdp);
-                boost::asio::post(self->ioc_, [self, sdp]() {
-                  if (!self->connection_) {
-                    return;
-                  }
-                  self->DoSendUpdate(sdp, "re-answer");
-                });
-              });
-        });
-      });
+              self->connection_->CreateAnswer(
+                  [self](webrtc::SessionDescriptionInterface* desc) {
+                    std::string sdp;
+                    desc->ToString(&sdp);
+                    boost::asio::post(self->ioc_, [self, sdp]() {
+                      if (!self->connection_) {
+                        return;
+                      }
+                      self->DoSendUpdate(sdp, "re-answer");
+                    });
+                  },
+                  self->CreateIceError("Failed to CreateAnswer in re-offer "
+                                       "message via WebSocket"));
+            });
+          },
+          CreateIceError(
+              "Failed to SetOffer in re-offer message via WebSocket"));
     }
   }
 
@@ -884,7 +955,9 @@ void SoraSignaling::OnIceCandidate(const std::string sdp_mid,
                                    const int sdp_mlineindex,
                                    const std::string sdp) {
   boost::json::value json_message = {{"type", "candidate"}, {"candidate", sdp}};
-  ws_->WriteText(boost::json::serialize(json_message));
+  ws_->WriteText(
+      boost::json::serialize(json_message),
+      [self = shared_from_this()](boost::system::error_code, size_t) {});
 }
 void SoraSignaling::DoConnectionChange(
     webrtc::PeerConnectionInterface::PeerConnectionState new_state) {
@@ -900,10 +973,9 @@ void SoraSignaling::DoConnectionChange(
       return;
     }
     // disconnect を送る必要は無い（そもそも failed になってるということは届かない）のでそのまま落とすだけ
-    dc_ = nullptr;
-    ws_ = nullptr;
     connection_ = nullptr;
     using_datachannel_ = false;
+    ws_connected_ = false;
     state_ = State::Closed;
     config_.on_disconnect(
         (int)sora_conf::ErrorCode::PEER_CONNECTION_STATE_FAILED,
