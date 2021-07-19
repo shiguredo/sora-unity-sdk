@@ -41,6 +41,10 @@
     - @melpon
 - [ADD] WS の re-offer に対応
     - @melpon
+- [Add] `Sora.Close` 関数と `Sora.OnDisconnect` コールバックを実装
+    - @melpon
+- [CHANGE] `Sora.Connect` 関数の戻り値を `bool` から `void` に変更しました。エラーハンドリングは `Sora.OnDisconnect` を利用して下さい。
+    - @melpon
 
 ## 2021.2
 

@@ -26,6 +26,8 @@ class PeerConnectionObserver : public webrtc::PeerConnectionObserver {
   void OnRenegotiationNeeded() override {}
   void OnStandardizedIceConnectionChange(
       webrtc::PeerConnectionInterface::IceConnectionState new_state) override;
+  void OnConnectionChange(
+      webrtc::PeerConnectionInterface::PeerConnectionState new_state) override;
   void OnIceGatheringChange(
       webrtc::PeerConnectionInterface::IceGatheringState new_state) override{};
   void OnIceCandidate(const webrtc::IceCandidateInterface* candidate) override;

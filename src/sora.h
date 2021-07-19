@@ -23,6 +23,7 @@
 #include "id_pointer.h"
 #include "rtc/rtc_manager.h"
 #include "sora_conf.json.h"
+#include "sora_conf_internal.json.h"
 #include "sora_signaling.h"
 #include "unity.h"
 #include "unity_audio_device.h"
@@ -46,6 +47,7 @@ class Sora {
   std::function<void(std::string)> on_notify_;
   std::function<void(std::string)> on_push_;
   std::function<void(std::string, std::string)> on_message_;
+  std::function<void(int, std::string)> on_disconnect_;
   std::function<void(const int16_t*, int, int)> on_handle_audio_;
 
   std::mutex event_mutex_;
@@ -66,9 +68,11 @@ class Sora {
   void SetOnNotify(std::function<void(std::string)> on_notify);
   void SetOnPush(std::function<void(std::string)> on_push);
   void SetOnMessage(std::function<void(std::string, std::string)> on_message);
+  void SetOnDisconnect(std::function<void(int, std::string)> on_disconnect);
   void DispatchEvents();
 
-  bool Connect(const sora_conf::ConnectConfig& config);
+  void Connect(const sora_conf::internal::ConnectConfig& config);
+  void Close();
 
   static void UNITY_INTERFACE_API RenderCallbackStatic(int event_id);
   int GetRenderCallbackEventID() const;
@@ -83,7 +87,8 @@ class Sora {
   void SendMessage(const std::string& label, const std::string& data);
 
  private:
-  bool DoConnect(const sora_conf::ConnectConfig& config);
+  void DoConnect(const sora_conf::internal::ConnectConfig& config,
+                 std::function<void(int, std::string)> on_disconnect);
 
   static rtc::scoped_refptr<UnityAudioDevice> CreateADM(
       webrtc::TaskQueueFactory* task_queue_factory,

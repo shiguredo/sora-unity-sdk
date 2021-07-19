@@ -117,6 +117,7 @@ public class Sora : IDisposable
     GCHandle onNotifyHandle;
     GCHandle onPushHandle;
     GCHandle onMessageHandle;
+    GCHandle onDisconnectHandle;
     GCHandle onHandleAudioHandle;
     UnityEngine.Rendering.CommandBuffer commandBuffer;
     UnityEngine.Camera unityCamera;
@@ -154,6 +155,11 @@ public class Sora : IDisposable
             onMessageHandle.Free();
         }
 
+        if (onDisconnectHandle.IsAllocated)
+        {
+            onDisconnectHandle.Free();
+        }
+
         if (onHandleAudioHandle.IsAllocated)
         {
             onHandleAudioHandle.Free();
@@ -166,7 +172,7 @@ public class Sora : IDisposable
         commandBuffer = new UnityEngine.Rendering.CommandBuffer();
     }
 
-    public bool Connect(Config config)
+    public void Connect(Config config)
     {
         IntPtr unityCameraTexture = IntPtr.Zero;
         if (config.CapturerType == CapturerType.UnityCamera)
@@ -182,7 +188,7 @@ public class Sora : IDisposable
             config.Role == Role.Sendonly ? "sendonly" :
             config.Role == Role.Recvonly ? "recvonly" : "sendrecv";
 
-        var cc = new SoraConf.ConnectConfig();
+        var cc = new SoraConf.Internal.ConnectConfig();
         cc.unity_version = UnityEngine.Application.unityVersion;
         cc.signaling_url = config.SignalingUrl;
         cc.channel_id = config.ChannelId;
@@ -215,38 +221,49 @@ public class Sora : IDisposable
         cc.enable_ignore_disconnect_websocket = config.EnableIgnoreDisconnectWebsocket;
         cc.ignore_disconnect_websocket = config.IgnoreDisconnectWebsocket;
         cc.disconnect_wait_timeout = config.DisconnectWaitTimeout;
-        foreach (var m in config.DataChannelMessaging) {
+        foreach (var m in config.DataChannelMessaging)
+        {
             var direction =
                 m.Direction == Direction.Sendonly ? "sendonly" :
                 m.Direction == Direction.Recvonly ? "recvonly" : "sendrecv";
-            var c = new SoraConf.DataChannelMessaging() {
+            var c = new SoraConf.Internal.DataChannelMessaging()
+            {
                 label = m.Label,
                 direction = direction,
             };
-            if (m.Ordered != null) {
+            if (m.Ordered != null)
+            {
                 c.enable_ordered = true;
                 c.ordered = m.Ordered.Value;
             }
-            if (m.MaxPacketLifeTime != null) {
+            if (m.MaxPacketLifeTime != null)
+            {
                 c.enable_max_packet_life_time = true;
                 c.max_packet_life_time = m.MaxPacketLifeTime.Value;
             }
-            if (m.MaxRetransmits != null) {
+            if (m.MaxRetransmits != null)
+            {
                 c.enable_max_retransmits = true;
                 c.max_retransmits = m.MaxRetransmits.Value;
             }
-            if (m.Protocol != null) {
+            if (m.Protocol != null)
+            {
                 c.enable_protocol = true;
                 c.protocol = m.Protocol;
             }
-            if (m.Compress != null) {
+            if (m.Compress != null)
+            {
                 c.enable_compress = true;
                 c.compress = m.Compress.Value;
             }
             cc.data_channel_messaging.Add(c);
         }
 
-        return sora_connect(p, Jsonif.Json.ToJson(cc)) == 0;
+        sora_connect(p, Jsonif.Json.ToJson(cc));
+    }
+    public void Close()
+    {
+        sora_close(p);
     }
 
     // Unity 側でレンダリングが完了した時（yield return new WaitForEndOfFrame() の後）に呼ぶイベント
@@ -368,6 +385,29 @@ public class Sora : IDisposable
 
             onMessageHandle = GCHandle.Alloc(value);
             sora_set_on_message(p, MessageCallback, GCHandle.ToIntPtr(onMessageHandle));
+        }
+    }
+
+    private delegate void DisconnectCallbackDelegate(int errorCode, string message, IntPtr userdata);
+
+    [AOT.MonoPInvokeCallback(typeof(DisconnectCallbackDelegate))]
+    static private void DisconnectCallback(int errorCode, string message, IntPtr userdata)
+    {
+        var callback = GCHandle.FromIntPtr(userdata).Target as Action<SoraConf.ErrorCode, string>;
+        callback((SoraConf.ErrorCode)errorCode, message);
+    }
+
+    public Action<SoraConf.ErrorCode, string> OnDisconnect
+    {
+        set
+        {
+            if (onDisconnectHandle.IsAllocated)
+            {
+                onDisconnectHandle.Free();
+            }
+
+            onDisconnectHandle = GCHandle.Alloc(value);
+            sora_set_on_disconnect(p, DisconnectCallback, GCHandle.ToIntPtr(onDisconnectHandle));
         }
     }
 
@@ -538,9 +578,13 @@ public class Sora : IDisposable
     [DllImport(DllName)]
     private static extern void sora_set_on_message(IntPtr p, MessageCallbackDelegate on_message, IntPtr userdata);
     [DllImport(DllName)]
+    private static extern void sora_set_on_disconnect(IntPtr p, DisconnectCallbackDelegate on_disconnect, IntPtr userdata);
+    [DllImport(DllName)]
     private static extern void sora_dispatch_events(IntPtr p);
     [DllImport(DllName)]
-    private static extern int sora_connect(IntPtr p, string config);
+    private static extern void sora_connect(IntPtr p, string config);
+    [DllImport(DllName)]
+    private static extern void sora_close(IntPtr p);
     [DllImport(DllName)]
     private static extern IntPtr sora_get_texture_update_callback();
     [DllImport(DllName)]

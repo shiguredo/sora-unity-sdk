@@ -2,6 +2,7 @@
 #include "rtc/device_list.h"
 #include "sora.h"
 #include "sora_conf.json.h"
+#include "sora_conf_internal.json.h"
 
 #if defined(SORA_UNITY_SDK_WINDOWS)
 #include "hwenc_nvcodec/nvcodec_h264_encoder.h"
@@ -79,18 +80,31 @@ void sora_set_on_message(void* p, message_cb_t on_message, void* userdata) {
       });
 }
 
+void sora_set_on_disconnect(void* p,
+                            disconnect_cb_t on_disconnect,
+                            void* userdata) {
+  auto sora = (sora::Sora*)p;
+  sora->SetOnDisconnect(
+      [on_disconnect, userdata](int error_code, std::string reason) {
+        on_disconnect(error_code, reason.c_str(), userdata);
+      });
+}
+
 void sora_dispatch_events(void* p) {
   auto sora = (sora::Sora*)p;
   sora->DispatchEvents();
 }
 
-int sora_connect(void* p, const char* config_json) {
+void sora_connect(void* p, const char* config_json) {
   auto sora = (sora::Sora*)p;
-  auto config = jsonif::from_json<sora_conf::ConnectConfig>(config_json);
-  if (!sora->Connect(config)) {
-    return -1;
-  }
-  return 0;
+  auto config =
+      jsonif::from_json<sora_conf::internal::ConnectConfig>(config_json);
+  sora->Connect(config);
+}
+
+void sora_close(void* p) {
+  auto sora = (sora::Sora*)p;
+  sora->Close();
 }
 
 void* sora_get_texture_update_callback() {

@@ -20,6 +20,9 @@ typedef void (*message_cb_t)(const char* label,
                              const void* buf,
                              int size,
                              void* userdata);
+typedef void (*disconnect_cb_t)(int error_code,
+                                const char* reason,
+                                void* userdata);
 
 UNITY_INTERFACE_EXPORT void* sora_create();
 UNITY_INTERFACE_EXPORT void sora_set_on_add_track(void* p,
@@ -37,8 +40,11 @@ UNITY_INTERFACE_EXPORT void sora_set_on_push(void* p,
 UNITY_INTERFACE_EXPORT void sora_set_on_message(void* p,
                                                 message_cb_t on_message,
                                                 void* userdata);
+UNITY_INTERFACE_EXPORT void
+sora_set_on_disconnect(void* p, disconnect_cb_t on_disconnect, void* userdata);
 UNITY_INTERFACE_EXPORT void sora_dispatch_events(void* p);
-UNITY_INTERFACE_EXPORT int sora_connect(void* p, const char* config);
+UNITY_INTERFACE_EXPORT void sora_connect(void* p, const char* config);
+UNITY_INTERFACE_EXPORT void sora_close(void* p);
 UNITY_INTERFACE_EXPORT void* sora_get_texture_update_callback();
 UNITY_INTERFACE_EXPORT void sora_destroy(void* sora);
 
