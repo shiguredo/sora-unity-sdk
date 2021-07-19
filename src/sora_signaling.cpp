@@ -453,8 +453,8 @@ void SoraSignaling::OnRead(boost::system::error_code ec,
                             ? (int)sora_conf::ErrorCode::WEBSOCKET_ONCLOSE
                             : (int)sora_conf::ErrorCode::WEBSOCKET_ONERROR;
       auto reason = ws_->reason();
-      std::string reason_str = " code=" + std::to_string(reason.code) +
-                               " reason=" + reason.reason.c_str();
+      std::string reason_str = " wscode=" + std::to_string(reason.code) +
+                               " wsreason=" + reason.reason.c_str();
       config_.on_disconnect(error_code, "Failed to read WebSocket: ec=" +
                                             ec.message() + reason_str);
       RTC_LOG(LS_ERROR) << "Failed to read: ec=" << ec.message() + reason_str;
@@ -475,8 +475,8 @@ void SoraSignaling::OnRead(boost::system::error_code ec,
                             ? (int)sora_conf::ErrorCode::WEBSOCKET_ONCLOSE
                             : (int)sora_conf::ErrorCode::WEBSOCKET_ONERROR;
       auto reason = ws_->reason();
-      std::string reason_str = " code=" + std::to_string(reason.code) +
-                               " reason=" + reason.reason.c_str();
+      std::string reason_str = " wscode=" + std::to_string(reason.code) +
+                               " wsreason=" + reason.reason.c_str();
       state_ = State::Closing;
       dc_->Close(
           disconnect,
@@ -736,8 +736,8 @@ void SoraSignaling::DoInternalClose(boost::optional<int> force_error_code,
               [self, ec1, on_close](boost::system::error_code ec2) {
                 auto ws_reason = self->ws_->reason();
                 std::string ws_reason_str =
-                    " ws_code=" + std::to_string(ws_reason.code) +
-                    " ws_reason=" + ws_reason.reason.c_str();
+                    " wscode=" + std::to_string(ws_reason.code) +
+                    " wsreason=" + ws_reason.reason.c_str();
 
                 bool succeeded = true;
                 std::string message =
@@ -798,8 +798,8 @@ void SoraSignaling::DoInternalClose(boost::optional<int> force_error_code,
                   auto reason = self->ws_->reason();
                   on_close(false, (int)sora_conf::ErrorCode::CLOSE_FAILED,
                            "Failed to close WebSocket: ec=" + ec.message() +
-                               " code=" + std::to_string(reason.code) +
-                               " reason=" + reason.reason.c_str());
+                               " wscode=" + std::to_string(reason.code) +
+                               " wsreason=" + reason.reason.c_str());
                 }
                 on_close(true, (int)sora_conf::ErrorCode::CLOSE_SUCCEEDED,
                          "Succeeded to close WebSocket");
