@@ -90,7 +90,9 @@ endif()
 add_custom_command(
   OUTPUT
     "${CMAKE_CURRENT_BINARY_DIR}/proto/cpp/sora_conf.json.h"
+    "${CMAKE_CURRENT_BINARY_DIR}/proto/cpp/sora_conf_internal.json.h"
     "${CMAKE_CURRENT_SOURCE_DIR}/Sora/Generated/SoraConf.cs"
+    "${CMAKE_CURRENT_SOURCE_DIR}/Sora/Generated/SoraConfInternal.cs"
     "${CMAKE_CURRENT_SOURCE_DIR}/Sora/Generated/Jsonif.cs"
   COMMAND
     "${_INSTALL_DIR}/protoc/bin/protoc${EXE_EXT}"
@@ -101,10 +103,16 @@ add_custom_command(
     --plugin=protoc-gen-jsonif-unity="${_INSTALL_DIR}/protoc-gen-jsonif/bin/protoc-gen-jsonif-unity${EXE_EXT}"
     -I "${CMAKE_CURRENT_SOURCE_DIR}/proto/"
     "${CMAKE_CURRENT_SOURCE_DIR}/proto/sora_conf.proto"
-  MAIN_DEPENDENCY
+    "${CMAKE_CURRENT_SOURCE_DIR}/proto/sora_conf_internal.proto"
+  DEPENDS
     "${CMAKE_CURRENT_SOURCE_DIR}/proto/sora_conf.proto"
+    "${CMAKE_CURRENT_SOURCE_DIR}/proto/sora_conf_internal.proto"
 )
-add_custom_target(sora_conf.json.h DEPENDS "${CMAKE_CURRENT_BINARY_DIR}/proto/cpp/sora_conf.json.h")
+add_custom_target(sora_conf.json.h
+  DEPENDS
+    "${CMAKE_CURRENT_BINARY_DIR}/proto/cpp/sora_conf.json.h"
+    "${CMAKE_CURRENT_BINARY_DIR}/proto/cpp/sora_conf_internal.json.h"
+)
 add_dependencies(SoraUnitySdk sora_conf.json.h)
 target_include_directories(SoraUnitySdk PRIVATE "${CMAKE_CURRENT_BINARY_DIR}/proto/cpp")
 

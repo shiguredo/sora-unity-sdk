@@ -2,60 +2,24 @@ syntax = "proto3";
 
 package sora_conf;
 
-message DataChannelMessaging {
-    // required
-    string label = 1;
-    string direction = 2;
-
-    // optional
-    bool enable_ordered = 3;
-    bool ordered = 4;
-
-    bool enable_max_packet_life_time = 5;
-    int32 max_packet_life_time = 6;
-
-    bool enable_max_retransmits = 7;
-    int32 max_retransmits = 8;
-
-    bool enable_protocol = 9;
-    string protocol = 10;
-
-    bool enable_compress = 11;
-    bool compress = 12;
-}
-
-message ConnectConfig {
-    string unity_version = 1;
-    string signaling_url = 2;
-    string channel_id = 3;
-    string client_id = 4;
-    string metadata = 5;
-    string role = 6;
-    bool multistream = 7;
-    bool spotlight = 8;
-    int32 spotlight_number = 9;
-    string spotlight_focus_rid = 10;
-    string spotlight_unfocus_rid = 11;
-    bool simulcast = 12;
-    string simulcast_rid = 13;
-    int32 capturer_type = 14;
-    int64 unity_camera_texture = 15;
-    string video_capturer_device = 16;
-    int32 video_width = 17;
-    int32 video_height = 18;
-    string video_codec_type = 19;
-    int32 video_bit_rate = 20;
-    bool unity_audio_input = 21;
-    bool unity_audio_output = 22;
-    string audio_recording_device = 23;
-    string audio_playout_device = 24;
-    string audio_codec_type = 25;
-    int32 audio_bit_rate = 26;
-    bool enable_data_channel_signaling = 27;
-    bool data_channel_signaling = 28;
-    int32 data_channel_signaling_timeout = 29;
-    bool enable_ignore_disconnect_websocket = 30;
-    bool ignore_disconnect_websocket = 31;
-    int32 disconnect_wait_timeout = 32;
-    repeated DataChannelMessaging data_channel_messaging = 33;
+enum ErrorCode {
+    NOT_SET = 0;
+    // ユーザが Close を呼び、それが正常に終了した
+    CLOSE_SUCCEEDED = 1;
+    // ユーザが Close を呼んだが、正常に終了しなかった
+    CLOSE_FAILED = 2;
+    // 内部的なエラー
+    INTERNAL_ERROR = 3;
+    // ユーザが渡したパラメータが何か間違っている
+    INVALID_PARAMETER = 4;
+    // WebSocket のハンドシェイクに失敗した
+    WEBSOCKET_HANDSHAKE_FAILED = 5;
+    // サーバからの切断が正常に行われた
+    WEBSOCKET_ONCLOSE = 6;
+    // 何らかの通信の問題が発生してサーバから切断された
+    WEBSOCKET_ONERROR = 7;
+    // PeerConnectionState が failed 状態になった
+    PEER_CONNECTION_STATE_FAILED = 8;
+    // ICE candidate の交換のどこかで失敗した
+    ICE_FAILED = 9;
 }

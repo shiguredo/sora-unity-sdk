@@ -29,7 +29,8 @@ static boost::asio::ssl::context CreateSSLContext() {
 Websocket::Websocket(boost::asio::io_context& ioc)
     : ws_(new websocket_t(ioc)),
       resolver_(new boost::asio::ip::tcp::resolver(ioc)),
-      strand_(ws_->get_executor()) {
+      strand_(ws_->get_executor()),
+      close_timeout_timer_(ioc) {
   ws_->write_buffer_bytes(8192);
 }
 Websocket::Websocket(Websocket::ssl_tag,
@@ -42,7 +43,8 @@ Websocket::Websocket(Websocket::ssl_tag,
                      boost::asio::ssl::context ssl_ctx)
     : wss_(new ssl_websocket_t(ioc, ssl_ctx)),
       resolver_(new boost::asio::ip::tcp::resolver(ioc)),
-      strand_(wss_->get_executor()) {
+      strand_(wss_->get_executor()),
+      close_timeout_timer_(ioc) {
   wss_->write_buffer_bytes(8192);
 
   wss_->next_layer().set_verify_mode(boost::asio::ssl::verify_peer);
@@ -60,7 +62,9 @@ Websocket::Websocket(Websocket::ssl_tag,
       });
 }
 Websocket::Websocket(boost::asio::ip::tcp::socket socket)
-    : ws_(new websocket_t(std::move(socket))), strand_(ws_->get_executor()) {
+    : ws_(new websocket_t(std::move(socket))),
+      strand_(ws_->get_executor()),
+      close_timeout_timer_(socket.get_executor()) {
   ws_->write_buffer_bytes(8192);
 }
 
@@ -298,12 +302,12 @@ void Websocket::OnWrite(boost::system::error_code ec,
   }
 }
 
-void Websocket::Close(close_callback_t on_close) {
-  boost::asio::post(strand_,
-                    std::bind(&Websocket::DoClose, this, std::move(on_close)));
+void Websocket::Close(close_callback_t on_close, int timeout_seconds) {
+  boost::asio::post(strand_, std::bind(&Websocket::DoClose, this,
+                                       std::move(on_close), timeout_seconds));
 }
 
-void Websocket::DoClose(close_callback_t on_close) {
+void Websocket::DoClose(close_callback_t on_close, int timeout_seconds) {
   if (IsSSL()) {
     wss_->async_close(boost::beast::websocket::close_code::normal,
                       std::bind(&Websocket::OnClose, this, std::move(on_close),
@@ -313,14 +317,37 @@ void Websocket::DoClose(close_callback_t on_close) {
                      std::bind(&Websocket::OnClose, this, std::move(on_close),
                                std::placeholders::_1));
   }
+
+  close_timeout_timer_.expires_from_now(
+      boost::posix_time::seconds(timeout_seconds));
+  close_timeout_timer_.async_wait([on_close, timeout_seconds,
+                                   this](boost::system::error_code ec) {
+    if (ec) {
+      return;
+    }
+    RTC_LOG(LS_INFO) << "Websocket::Close timeout this=" << (void*)this
+                     << " timeout_seconds=" << timeout_seconds;
+    closed_ = true;
+    on_close(
+        boost::system::errc::make_error_code(boost::system::errc::timed_out));
+  });
 }
 
 void Websocket::OnClose(close_callback_t on_close,
                         boost::system::error_code ec) {
-  RTC_LOG(LS_INFO) << "Websocket::OnClose this=" << (void*)this
-                   << " ec=" << ec.message();
+  if (closed_) {
+    return;
+  }
 
+  RTC_LOG(LS_INFO) << "Websocket::OnClose this=" << (void*)this
+                   << " ec=" << ec.message() << " code=" << reason().code
+                   << " reason=" << reason().reason;
+  close_timeout_timer_.cancel();
   on_close(ec);
 }
 
+const boost::beast::websocket::close_reason& Websocket::reason() const {
+  return IsSSL() ? wss_->reason() : ws_->reason();
 }
+
+}  // namespace sora
