@@ -309,13 +309,13 @@ void Websocket::Close(close_callback_t on_close, int timeout_seconds) {
 
 void Websocket::DoClose(close_callback_t on_close, int timeout_seconds) {
   if (IsSSL()) {
-    wss_->async_close(boost::beast::websocket::close_code::normal,
-                      std::bind(&Websocket::OnClose, this, std::move(on_close),
-                                std::placeholders::_1));
+    wss_->async_close(
+        boost::beast::websocket::close_code::normal,
+        std::bind(&Websocket::OnClose, this, on_close, std::placeholders::_1));
   } else {
-    ws_->async_close(boost::beast::websocket::close_code::normal,
-                     std::bind(&Websocket::OnClose, this, std::move(on_close),
-                               std::placeholders::_1));
+    ws_->async_close(
+        boost::beast::websocket::close_code::normal,
+        std::bind(&Websocket::OnClose, this, on_close, std::placeholders::_1));
   }
 
   close_timeout_timer_.expires_from_now(

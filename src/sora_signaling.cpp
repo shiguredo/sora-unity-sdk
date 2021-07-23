@@ -684,7 +684,7 @@ void SoraSignaling::OnRead(boost::system::error_code ec,
     if (it != json_message.as_object().end() && it->value().as_bool() &&
         ws_connected_) {
       RTC_LOG(LS_INFO) << "Close WebSocket for DataChannel";
-      ws_->Close([self = shared_from_this()](boost::system::error_code) {});
+      ws_->Close([self = shared_from_this()](boost::system::error_code) {}, 3);
       ws_connected_ = false;
       return;
     }

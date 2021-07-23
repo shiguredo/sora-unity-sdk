@@ -69,7 +69,7 @@ class Websocket {
 
   void Read(read_callback_t on_read);
   void WriteText(std::string text, write_callback_t on_write = nullptr);
-  void Close(close_callback_t on_close, int timeout_seconds = 0);
+  void Close(close_callback_t on_close, int timeout_seconds);
 
   websocket_t& NativeSocket();
   ssl_websocket_t& NativeSecureSocket();
