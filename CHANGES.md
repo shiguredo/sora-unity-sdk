@@ -11,25 +11,29 @@
 
 ## develop
 
-- [ADD] `clientId` に対応し、 `Sora.config` に `ClientId` を追加
-    - @torikizi
-- [ADD] `spotlight_focus_rid` と `spotlight_unfocus_rid` に対応し、 `Sora.config` に以下のフィールドを追加
-    - `SpotlightFocusRid`
-    - `SpotlightUnfocusRid`
-    - @torikizi
-- [CHANGE] `Sora.Config` のフィールド名および `Sora.VideoCodec`, `Sora.AudioCodec` の名前を変更しました。本バージョンを利用する際には以下のように名前を変更してください。
+- [CHANGE] `Sora.Config` のフィールド名および `Sora.VideoCodec`, `Sora.AudioCodec` の名前を変更する
+    - 今後は以下のように名前を変更してください
     - `VideoCodec` → `VideoCodecType`
     - `VideoBitrate` → `VideoBitRate`
     - `AudioCodec` → `AudioCodecType`
     - `AudioBitrate` → `AudioBitRate`
     - @melpon
+- [CHANGE] `Sora.Connect` 関数の戻り値を `bool` から `void` に変更する
+    - エラーハンドリングは `Sora.OnDisconnect` を利用してしてください
+    - @melpon
 - [UPDATE] libwebrtc のバージョンを M91 (4472@{#0}) に上げる
     - @voluntas
 - [UPDATE] libwebrtc のバージョンを M92 (4515@{#9}) に上げる
     - @melpon
-- [ADD] プッシュ通知に対応
+- [ADD] `clientId` に対応し、 `Sora.config` に `ClientId` を追加する
+    - @torikizi
+- [ADD] `spotlight_focus_rid` と `spotlight_unfocus_rid` に対応し、 `Sora.config` に以下のフィールドを追加する
+    - `SpotlightFocusRid`
+    - `SpotlightUnfocusRid`
+    - @torikizi
+- [ADD] プッシュ通知に対応する
     - @melpon
-- [ADD] DataChannel を使ったシグナリングに対応し、`Sora.Config` に以下のフィールドを追加
+- [ADD] DataChannel を使ったシグナリングに対応し、`Sora.Config` に以下のフィールドを追加する
     - `EnableDataChannelSignaling`
     - `DataChannelSignaling`
     - `DataChannelSignalingTimeout`
@@ -37,13 +41,11 @@
     - `IgnoreDisconnectWebsocket`
     - `DisconnectWaitTimeout`
     - @melpon
-- [ADD] DataChannel を使ったメッセージングに対応し、`Sora.Config` に `List<DataChannelMessaging>` 型のフィールドを追加
+- [ADD] DataChannel を使ったメッセージングに対応し、`Sora.Config` に `List<DataChannelMessaging>` 型のフィールドを追加する
     - @melpon
-- [ADD] WS の re-offer に対応
+- [ADD] WebSocket シグナリングの re-offer に対応する
     - @melpon
-- [Add] `Sora.Close` 関数と `Sora.OnDisconnect` コールバックを実装
-    - @melpon
-- [CHANGE] `Sora.Connect` 関数の戻り値を `bool` から `void` に変更しました。エラーハンドリングは `Sora.OnDisconnect` を利用して下さい。
+- [ADD] `Sora.Close` 関数と `Sora.OnDisconnect` コールバックを追加する
     - @melpon
 
 ## 2021.2
