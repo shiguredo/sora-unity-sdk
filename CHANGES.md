@@ -44,7 +44,7 @@
     - @melpon
 - [ADD] WebSocket シグナリングの re-offer に対応する
     - @melpon
-- [ADD] `Sora.Close` 関数と `Sora.OnDisconnect` コールバックを追加する
+- [ADD] `Sora.Disconnect` 関数と `Sora.OnDisconnect` コールバックを追加する
     - @melpon
 - [ADD] SRTP/SRTCP で AES-GCM 128/256 を利用可能にする
     - @melpon

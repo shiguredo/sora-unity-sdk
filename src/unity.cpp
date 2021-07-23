@@ -102,9 +102,9 @@ void sora_connect(void* p, const char* config_json) {
   sora->Connect(config);
 }
 
-void sora_close(void* p) {
+void sora_disconnect(void* p) {
   auto sora = (sora::Sora*)p;
-  sora->Close();
+  sora->Disconnect();
 }
 
 void* sora_get_texture_update_callback() {

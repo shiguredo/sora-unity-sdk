@@ -72,7 +72,7 @@ class Sora {
   void DispatchEvents();
 
   void Connect(const sora_conf::internal::ConnectConfig& config);
-  void Close();
+  void Disconnect();
 
   static void UNITY_INTERFACE_API RenderCallbackStatic(int event_id);
   int GetRenderCallbackEventID() const;

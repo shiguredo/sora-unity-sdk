@@ -306,11 +306,11 @@ void Sora::DoConnect(const sora_conf::internal::ConnectConfig& cc,
     RTC_LOG(LS_INFO) << "io_context finished";
   });
 }
-void Sora::Close() {
+void Sora::Disconnect() {
   if (signaling_ == nullptr) {
     return;
   }
-  signaling_->Close();
+  signaling_->Disconnect();
 }
 
 void Sora::RenderCallbackStatic(int event_id) {

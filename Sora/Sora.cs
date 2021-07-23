@@ -261,9 +261,9 @@ public class Sora : IDisposable
 
         sora_connect(p, Jsonif.Json.ToJson(cc));
     }
-    public void Close()
+    public void Disconnect()
     {
-        sora_close(p);
+        sora_disconnect(p);
     }
 
     // Unity 側でレンダリングが完了した時（yield return new WaitForEndOfFrame() の後）に呼ぶイベント
@@ -584,7 +584,7 @@ public class Sora : IDisposable
     [DllImport(DllName)]
     private static extern void sora_connect(IntPtr p, string config);
     [DllImport(DllName)]
-    private static extern void sora_close(IntPtr p);
+    private static extern void sora_disconnect(IntPtr p);
     [DllImport(DllName)]
     private static extern IntPtr sora_get_texture_update_callback();
     [DllImport(DllName)]

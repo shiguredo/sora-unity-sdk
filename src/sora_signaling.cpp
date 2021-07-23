@@ -391,10 +391,11 @@ std::shared_ptr<sora::RTCConnection> SoraSignaling::CreateRTCConnection(
   return manager_->CreateConnection(rtc_config, this);
 }
 
-void SoraSignaling::Close() {
-  boost::asio::post(ioc_, [self = shared_from_this()]() { self->DoClose(); });
+void SoraSignaling::Disconnect() {
+  boost::asio::post(ioc_,
+                    [self = shared_from_this()]() { self->DoDisconnect(); });
 }
-void SoraSignaling::DoClose() {
+void SoraSignaling::DoDisconnect() {
   if (state_ == State::Init) {
     state_ = State::Closed;
     return;
@@ -413,7 +414,7 @@ void SoraSignaling::DoClose() {
     return;
   }
 
-  DoInternalClose(boost::none, "", "");
+  DoInternalDisconnect(boost::none, "", "");
 }
 
 void SoraSignaling::SendMessage(const std::string& label,
@@ -702,9 +703,9 @@ void SoraSignaling::OnRead(boost::system::error_code ec,
 // 出来るだけサーバに type: disconnect を送ってから閉じる
 // force_error_code が設定されていない場合、NO-ERROR でサーバに送信し、ユーザにはデフォルトのエラーコードとメッセージでコールバックする。reason や message は無視される。
 // force_error_code が設定されている場合、reason でサーバに送信し、指定されたエラーコードと、message にデフォルトのメッセージを追加したメッセージでコールバックする。
-void SoraSignaling::DoInternalClose(boost::optional<int> force_error_code,
-                                    std::string reason,
-                                    std::string message) {
+void SoraSignaling::DoInternalDisconnect(boost::optional<int> force_error_code,
+                                         std::string reason,
+                                         std::string message) {
   assert(state_ == State::Connected);
 
   state_ = State::Closing;
@@ -848,9 +849,9 @@ std::function<void(webrtc::RTCError)> SoraSignaling::CreateIceError(
       if (self->state_ != State::Connected) {
         return;
       }
-      self->DoInternalClose((int)sora_conf::ErrorCode::ICE_FAILED,
-                            "INTERNAL-ERROR",
-                            message + ": error=" + error.message());
+      self->DoInternalDisconnect((int)sora_conf::ErrorCode::ICE_FAILED,
+                                 "INTERNAL-ERROR",
+                                 message + ": error=" + error.message());
     });
   };
 }

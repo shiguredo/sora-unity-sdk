@@ -44,7 +44,7 @@ UNITY_INTERFACE_EXPORT void
 sora_set_on_disconnect(void* p, disconnect_cb_t on_disconnect, void* userdata);
 UNITY_INTERFACE_EXPORT void sora_dispatch_events(void* p);
 UNITY_INTERFACE_EXPORT void sora_connect(void* p, const char* config);
-UNITY_INTERFACE_EXPORT void sora_close(void* p);
+UNITY_INTERFACE_EXPORT void sora_disconnect(void* p);
 UNITY_INTERFACE_EXPORT void* sora_get_texture_update_callback();
 UNITY_INTERFACE_EXPORT void sora_destroy(void* sora);
 
