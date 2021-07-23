@@ -12,14 +12,13 @@
 ## develop
 
 - [CHANGE] `Sora.Config` のフィールド名および `Sora.VideoCodec`, `Sora.AudioCodec` の名前を変更する
-    - 今後は以下のように名前を変更してください
     - `VideoCodec` → `VideoCodecType`
     - `VideoBitrate` → `VideoBitRate`
     - `AudioCodec` → `AudioCodecType`
     - `AudioBitrate` → `AudioBitRate`
     - @melpon
 - [CHANGE] `Sora.Connect` 関数の戻り値を `bool` から `void` に変更する
-    - エラーハンドリングは `Sora.OnDisconnect` を利用してしてください
+    - エラーハンドリングは `Sora.Connect` の戻り値ではなく `Sora.OnDisconnect` を利用する
     - @melpon
 - [UPDATE] libwebrtc のバージョンを M91 (4472@{#0}) に上げる
     - @voluntas
@@ -33,7 +32,11 @@
     - @torikizi
 - [ADD] プッシュ通知に対応する
     - @melpon
-- [ADD] DataChannel を使ったシグナリングに対応し、`Sora.Config` に以下のフィールドを追加する
+- [ADD] DataChannel を使ったメッセージングに対応しする
+    - @melpon
+- [ADD] `Sora.Config` に DataChannel メッセージング用の `List<DataChannelMessaging>` 型のフィールドを追加する
+    - @melpon
+- [ADD] `Sora.Config` に DataChannel メッセージング用のフィールドを追加する
     - `EnableDataChannelSignaling`
     - `DataChannelSignaling`
     - `DataChannelSignalingTimeout`
@@ -41,11 +44,11 @@
     - `IgnoreDisconnectWebsocket`
     - `DisconnectWaitTimeout`
     - @melpon
-- [ADD] DataChannel を使ったメッセージングに対応し、`Sora.Config` に `List<DataChannelMessaging>` 型のフィールドを追加する
-    - @melpon
 - [ADD] WebSocket シグナリングの re-offer に対応する
     - @melpon
 - [ADD] `Sora.Close` 関数と `Sora.OnDisconnect` コールバックを追加する
+    - @melpon
+- [ADD] SRTP/SRTCP で AES-GCM 128/256 を利用可能にする
     - @melpon
 
 ## 2021.2
