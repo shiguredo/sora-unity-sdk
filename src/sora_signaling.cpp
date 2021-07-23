@@ -10,6 +10,8 @@
 
 namespace {
 
+const int WS_TIMEOUT_SECONDS = 3;
+
 std::string ToString(
     webrtc::PeerConnectionInterface::IceConnectionState state) {
   switch (state) {
@@ -684,7 +686,8 @@ void SoraSignaling::OnRead(boost::system::error_code ec,
     if (it != json_message.as_object().end() && it->value().as_bool() &&
         ws_connected_) {
       RTC_LOG(LS_INFO) << "Close WebSocket for DataChannel";
-      ws_->Close([self = shared_from_this()](boost::system::error_code) {});
+      ws_->Close([self = shared_from_this()](boost::system::error_code) {},
+                 WS_TIMEOUT_SECONDS);
       ws_connected_ = false;
       return;
     }
@@ -762,7 +765,7 @@ void SoraSignaling::DoInternalClose(boost::optional<int> force_error_code,
                 }
                 on_close(succeeded, error_code, message);
               },
-              3);
+              WS_TIMEOUT_SECONDS);
         },
         config_.disconnect_wait_timeout);
   } else if (using_datachannel_ && !ws_connected_) {
@@ -804,7 +807,7 @@ void SoraSignaling::DoInternalClose(boost::optional<int> force_error_code,
                 on_close(true, (int)sora_conf::ErrorCode::CLOSE_SUCCEEDED,
                          "Succeeded to close WebSocket");
               },
-              3);
+              WS_TIMEOUT_SECONDS);
         });
   } else {
     on_close(false, (int)sora_conf::ErrorCode::INTERNAL_ERROR,
