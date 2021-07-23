@@ -56,6 +56,7 @@ Sora Unity SDK を使ってみたい人は [USE.md](doc/USE.md) をお読みく�
 - macOS への対応
 - Android への対応
 - iOS 対応
+- SRTP/SRTCP の AES-GCM 対応
 - Unity のカメラ映像を取得し Sora で送信
 - カメラから映像を取得し Sora に送信
 - カメラから映像を取得し Unity アプリに出力
@@ -82,6 +83,8 @@ Sora Unity SDK を使ってみたい人は [USE.md](doc/USE.md) をお読みく�
 - Sora サイマルキャストへの対応
 - Sora スポットライトへの対応
 - Sora データチャネルへの対応
+- Sora データチャネルメッセージングへの対応
+    - 実験的機能
 - Apple VideoToolbox
     - H.264 ハードウェアエンコードへの対応
     - H.264 ハードウェアデコードへの対応
@@ -101,7 +104,10 @@ Sora Unity SDK ではソフトウェアでの H.264 エンコード/デコード
 
 ## 今後
 
-- サイマルキャスト対応
+- Apple M1 対応
+- ミュート機能
+- 音声のみ送受信機能
+- サイマルキャスト rid 指定対応
 
 ## 有償での優先実装
 

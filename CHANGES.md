@@ -20,8 +20,6 @@
 - [CHANGE] `Sora.Connect` 関数の戻り値を `bool` から `void` に変更する
     - エラーハンドリングは `Sora.Connect` の戻り値ではなく `Sora.OnDisconnect` を利用する
     - @melpon
-- [UPDATE] libwebrtc のバージョンを M91 (4472@{#0}) に上げる
-    - @voluntas
 - [UPDATE] libwebrtc のバージョンを M92 (4515@{#9}) に上げる
     - @melpon
 - [ADD] `clientId` に対応し、 `Sora.config` に `ClientId` を追加する
