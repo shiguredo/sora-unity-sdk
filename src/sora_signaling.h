@@ -89,6 +89,7 @@ class SoraSignaling : public std::enable_shared_from_this<SoraSignaling>,
   SoraSignalingConfig config_;
   boost::asio::deadline_timer connection_timeout_timer_;
   boost::asio::deadline_timer closing_timeout_timer_;
+  std::function<void (boost::system::error_code ec)> on_ws_close_;
 
   webrtc::PeerConnectionInterface::IceConnectionState ice_state_ =
       webrtc::PeerConnectionInterface::kIceConnectionNew;
