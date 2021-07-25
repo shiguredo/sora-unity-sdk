@@ -50,6 +50,15 @@ Sora::~Sora() {
   renderer_.reset();
   RTC_LOG(LS_INFO) << "Sora object destroy finished";
 }
+void Sora::Release() {
+  ref_ -= 1;
+  if (ref_ != 0) {
+    return;
+  }
+
+  delete this;
+}
+
 void Sora::SetOnAddTrack(std::function<void(ptrid_t)> on_add_track) {
   on_add_track_ = on_add_track;
 }
@@ -72,15 +81,20 @@ void Sora::SetOnDisconnect(
 }
 
 void Sora::DispatchEvents() {
-  while (!event_queue_.empty()) {
+  ref_ += 1;
+  while (true) {
     std::function<void()> f;
     {
       std::lock_guard<std::mutex> guard(event_mutex_);
+      if (event_queue_.empty()) {
+        break;
+      }
       f = std::move(event_queue_.front());
       event_queue_.pop_front();
     }
     f();
   }
+  Release();
 }
 
 void Sora::Connect(const sora_conf::internal::ConnectConfig& cc) {

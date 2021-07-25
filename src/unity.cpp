@@ -112,7 +112,8 @@ void* sora_get_texture_update_callback() {
 }
 
 void sora_destroy(void* sora) {
-  delete (sora::Sora*)sora;
+  //delete (sora::Sora*)sora;
+  ((sora::Sora*)sora)->Release();
 }
 
 void* sora_get_render_callback() {

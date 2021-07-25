@@ -34,6 +34,7 @@
 namespace sora {
 
 class Sora {
+  int ref_ = 1;
   std::unique_ptr<boost::asio::io_context> ioc_;
   UnityContext* context_;
   std::string signaling_url_;
@@ -63,6 +64,8 @@ class Sora {
  public:
   Sora(UnityContext* context);
   ~Sora();
+  void Release();
+
   void SetOnAddTrack(std::function<void(ptrid_t)> on_add_track);
   void SetOnRemoveTrack(std::function<void(ptrid_t)> on_remove_track);
   void SetOnNotify(std::function<void(std::string)> on_notify);
