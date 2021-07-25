@@ -503,11 +503,16 @@ void SoraSignaling::OnRead(boost::system::error_code ec,
           disconnect,
           [self = shared_from_this(), ec, error_code,
            reason_str](boost::system::error_code ec2) {
+            self->ws_connected_ = false;
+            self->using_datachannel_ = false;
+            self->state_ = State::Closed;
+
             if (ec2) {
               self->config_.on_disconnect(
                   error_code,
                   "Failed to read WebSocket and to close DataChannel: ec=" +
                       ec.message() + " ec2=" + ec2.message() + reason_str);
+              return;
             }
             self->config_.on_disconnect(
                 error_code,
