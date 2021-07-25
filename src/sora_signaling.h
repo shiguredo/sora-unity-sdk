@@ -2,6 +2,7 @@
 #define SORA_SORA_SIGNALING_H_
 
 #include <algorithm>
+#include <atomic>
 #include <cstdlib>
 #include <functional>
 #include <memory>
@@ -81,6 +82,7 @@ class SoraSignaling : public std::enable_shared_from_this<SoraSignaling>,
   bool using_datachannel_ = false;
   bool ws_connected_ = false;
   std::set<std::string> compressed_labels_;
+  std::atomic_bool destroy_ = {false};
 
   URLParts parts_;
 
@@ -117,7 +119,14 @@ class SoraSignaling : public std::enable_shared_from_this<SoraSignaling>,
                 SoraSignalingConfig config);
 
  public:
+  // shared_from_this で寿命が伸びてデストラクタに来ないことがあるので、
+  // その場合でも終了中であることに気が付けるようにする
+  void Destroy();
   ~SoraSignaling();
+
+private:
+  // destroy_ フラグを確認してから boost::asio::post する
+  void Post(std::function<void ()> f);
 
  public:
   std::shared_ptr<RTCConnection> GetRTCConnection() const;

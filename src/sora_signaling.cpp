@@ -75,8 +75,13 @@ SoraSignaling::SoraSignaling(boost::asio::io_context& ioc,
       connection_timeout_timer_(ioc),
       closing_timeout_timer_(ioc) {}
 
-SoraSignaling::~SoraSignaling() {
-  RTC_LOG(LS_INFO) << "SoraSignaling::~SoraSignaling started";
+void SoraSignaling::Destroy() {
+  if (destroy_) {
+    return;
+  }
+  destroy_ = true;
+
+  RTC_LOG(LS_INFO) << "SoraSignaling::Destroy started";
 
   {
     std::shared_ptr<std::promise<void>> promise(new std::promise<void>());
@@ -108,7 +113,18 @@ SoraSignaling::~SoraSignaling() {
   using_datachannel_ = false;
   state_ = State::Closed;
 
-  RTC_LOG(LS_INFO) << "SoraSignaling::~SoraSignaling completed";
+  RTC_LOG(LS_INFO) << "SoraSignaling::Destroy completed";
+}
+
+SoraSignaling::~SoraSignaling() {
+  Destroy();
+}
+
+void SoraSignaling::Post(std::function<void()> f) {
+  if (destroy_) {
+    return;
+  }
+  boost::asio::post(ioc_, f);
 }
 
 std::shared_ptr<RTCConnection> SoraSignaling::GetRTCConnection() const {
@@ -127,7 +143,7 @@ std::shared_ptr<RTCConnection> SoraSignaling::GetRTCConnection() const {
 void SoraSignaling::Connect() {
   RTC_LOG(LS_INFO) << "SoraSignaling::Connect";
 
-  boost::asio::post(ioc_, [self = shared_from_this()]() { self->DoConnect(); });
+  Post([self = shared_from_this()]() { self->DoConnect(); });
 }
 
 void SoraSignaling::DoConnect() {
@@ -392,8 +408,7 @@ std::shared_ptr<sora::RTCConnection> SoraSignaling::CreateRTCConnection(
 }
 
 void SoraSignaling::Disconnect() {
-  boost::asio::post(ioc_,
-                    [self = shared_from_this()]() { self->DoDisconnect(); });
+  Post([self = shared_from_this()]() { self->DoDisconnect(); });
 }
 void SoraSignaling::DoDisconnect() {
   if (state_ == State::Init) {
@@ -419,7 +434,7 @@ void SoraSignaling::DoDisconnect() {
 
 void SoraSignaling::SendMessage(const std::string& label,
                                 const std::string& data) {
-  boost::asio::post(ioc_, [self = shared_from_this(), label, data]() {
+  Post([self = shared_from_this(), label, data]() {
     self->SendDataChannel(label, data);
   });
 }
@@ -548,7 +563,7 @@ void SoraSignaling::OnRead(boost::system::error_code ec,
     connection_->SetOffer(
         sdp,
         [self = shared_from_this(), json_message]() {
-          boost::asio::post(self->ioc_, [self, json_message]() {
+          self->Post([self, json_message]() {
             if (self->state_ != State::Connected) {
               return;
             }
@@ -608,7 +623,7 @@ void SoraSignaling::OnRead(boost::system::error_code ec,
                 [self](webrtc::SessionDescriptionInterface* desc) {
                   std::string sdp;
                   desc->ToString(&sdp);
-                  boost::asio::post(self->ioc_, [self, sdp]() {
+                  self->Post([self, sdp]() {
                     if (self->state_ != State::Connected) {
                       return;
                     }
@@ -630,7 +645,7 @@ void SoraSignaling::OnRead(boost::system::error_code ec,
     connection_->SetOffer(
         sdp,
         [self = shared_from_this(), type, answer_type]() {
-          boost::asio::post(self->ioc_, [self, type, answer_type]() {
+          self->Post([self, type, answer_type]() {
             if (self->state_ != State::Connected) {
               return;
             }
@@ -644,7 +659,7 @@ void SoraSignaling::OnRead(boost::system::error_code ec,
                 [self, answer_type](webrtc::SessionDescriptionInterface* desc) {
                   std::string sdp;
                   desc->ToString(&sdp);
-                  boost::asio::post(self->ioc_, [self, sdp, answer_type]() {
+                  self->Post([self, sdp, answer_type]() {
                     if (self->state_ != State::Connected) {
                       return;
                     }
@@ -845,7 +860,7 @@ void SoraSignaling::DoInternalDisconnect(boost::optional<int> force_error_code,
 std::function<void(webrtc::RTCError)> SoraSignaling::CreateIceError(
     std::string message) {
   return [self = shared_from_this(), message](webrtc::RTCError error) {
-    boost::asio::post(self->ioc_, [self, message, error]() {
+    self->Post([self, message, error]() {
       if (self->state_ != State::Connected) {
         return;
       }
@@ -921,7 +936,7 @@ void SoraSignaling::OnMessage(
       connection_->SetOffer(
           sdp,
           [self = shared_from_this()]() {
-            boost::asio::post(self->ioc_, [self]() {
+            self->Post([self]() {
               if (!self->connection_) {
                 return;
               }
@@ -935,7 +950,7 @@ void SoraSignaling::OnMessage(
                   [self](webrtc::SessionDescriptionInterface* desc) {
                     std::string sdp;
                     desc->ToString(&sdp);
-                    boost::asio::post(self->ioc_, [self, sdp]() {
+                    self->Post([self, sdp]() {
                       if (!self->connection_) {
                         return;
                       }
@@ -979,7 +994,7 @@ void SoraSignaling::OnIceConnectionStateChange(
   if (!connection_) {
     return;
   }
-  boost::asio::post(ioc_, [self = shared_from_this(), new_state]() {
+  Post([self = shared_from_this(), new_state]() {
     RTC_LOG(LS_INFO) << "IceConnectionStateChange: ["
                      << ToString(self->ice_state_) << "]->["
                      << ToString(new_state) << "]";
@@ -991,7 +1006,7 @@ void SoraSignaling::OnConnectionChange(
   if (!connection_) {
     return;
   }
-  boost::asio::post(ioc_, [self = shared_from_this(), new_state]() {
+  Post([self = shared_from_this(), new_state]() {
     self->DoConnectionChange(new_state);
   });
 }

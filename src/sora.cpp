@@ -43,6 +43,7 @@ Sora::~Sora() {
     thread_->Stop();
     thread_.reset();
   }
+  signaling_->Destroy();
   signaling_.reset();
   ioc_.reset();
   rtc_manager_.reset();
