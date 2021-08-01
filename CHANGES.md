@@ -24,6 +24,8 @@
     - @melpon
 - [UPDATE] libwebrtc のバージョンを M92 (4515@{#9}) に上げる
     - @melpon
+- [ADD] `simulcastRid` に対応する
+    - @torikizi
 - [ADD] `clientId` に対応し、 `Sora.config` に `ClientId` を追加する
     - @torikizi
 - [ADD] `spotlight_focus_rid` と `spotlight_unfocus_rid` に対応し、 `Sora.config` に以下のフィールドを追加する
