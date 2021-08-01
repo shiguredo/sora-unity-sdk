@@ -11,6 +11,8 @@
 
 ## develop
 
+## 2021.3
+
 - [CHANGE] `Sora.Config` のフィールド名および `Sora.VideoCodec`, `Sora.AudioCodec` の名前を変更する
     - `VideoCodec` → `VideoCodecType`
     - `VideoBitrate` → `VideoBitRate`
