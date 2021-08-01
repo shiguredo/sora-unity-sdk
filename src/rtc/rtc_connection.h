@@ -38,10 +38,6 @@ class RTCConnection {
   void AddIceCandidate(const std::string sdp_mid,
                        const int sdp_mlineindex,
                        const std::string sdp);
-  bool SetAudioEnabled(bool enabled);
-  bool SetVideoEnabled(bool enabled);
-  bool IsAudioEnabled();
-  bool IsVideoEnabled();
 
   void GetStats(
       std::function<void(
@@ -54,15 +50,6 @@ class RTCConnection {
   rtc::scoped_refptr<webrtc::PeerConnectionInterface> GetConnection() const;
 
  private:
-  rtc::scoped_refptr<webrtc::MediaStreamInterface> GetLocalStream();
-  rtc::scoped_refptr<webrtc::AudioTrackInterface> GetLocalAudioTrack();
-  rtc::scoped_refptr<webrtc::VideoTrackInterface> GetLocalVideoTrack();
-  bool SetMediaEnabled(
-      rtc::scoped_refptr<webrtc::MediaStreamTrackInterface> track,
-      bool enabled);
-  bool IsMediaEnabled(
-      rtc::scoped_refptr<webrtc::MediaStreamTrackInterface> track);
-
   RTCMessageSender* sender_;
   std::unique_ptr<PeerConnectionObserver> observer_;
   rtc::scoped_refptr<webrtc::PeerConnectionInterface> connection_;

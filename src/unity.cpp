@@ -1,6 +1,8 @@
 #include "unity.h"
 #include "rtc/device_list.h"
 #include "sora.h"
+#include "sora_conf.json.h"
+#include "sora_conf_internal.json.h"
 
 #if defined(SORA_UNITY_SDK_WINDOWS)
 #include "hwenc_nvcodec/nvcodec_h264_encoder.h"
@@ -59,8 +61,33 @@ void sora_set_on_remove_track(void* p,
 void sora_set_on_notify(void* p, notify_cb_t on_notify, void* userdata) {
   auto sora = (sora::Sora*)p;
   sora->SetOnNotify([on_notify, userdata](std::string json) {
-    on_notify(json.c_str(), (int)json.size(), userdata);
+    on_notify(json.c_str(), userdata);
   });
+}
+
+void sora_set_on_push(void* p, push_cb_t on_push, void* userdata) {
+  auto sora = (sora::Sora*)p;
+  sora->SetOnPush([on_push, userdata](std::string json) {
+    on_push(json.c_str(), userdata);
+  });
+}
+
+void sora_set_on_message(void* p, message_cb_t on_message, void* userdata) {
+  auto sora = (sora::Sora*)p;
+  sora->SetOnMessage(
+      [on_message, userdata](std::string label, std::string data) {
+        on_message(label.c_str(), data.c_str(), (int)data.size(), userdata);
+      });
+}
+
+void sora_set_on_disconnect(void* p,
+                            disconnect_cb_t on_disconnect,
+                            void* userdata) {
+  auto sora = (sora::Sora*)p;
+  sora->SetOnDisconnect(
+      [on_disconnect, userdata](int error_code, std::string reason) {
+        on_disconnect(error_code, reason.c_str(), userdata);
+      });
 }
 
 void sora_dispatch_events(void* p) {
@@ -68,57 +95,16 @@ void sora_dispatch_events(void* p) {
   sora->DispatchEvents();
 }
 
-int sora_connect(void* p,
-                 const char* unity_version,
-                 const char* signaling_url,
-                 const char* channel_id,
-                 const char* metadata,
-                 const char* role,
-                 unity_bool_t multistream,
-                 unity_bool_t spotlight,
-                 int spotlight_number,
-                 unity_bool_t simulcast,
-                 int capturer_type,
-                 void* unity_camera_texture,
-                 const char* video_capturer_device,
-                 int video_width,
-                 int video_height,
-                 const char* video_codec,
-                 int video_bitrate,
-                 unity_bool_t unity_audio_input,
-                 unity_bool_t unity_audio_output,
-                 const char* audio_recording_device,
-                 const char* audio_playout_device,
-                 const char* audio_codec,
-                 int audio_bitrate) {
+void sora_connect(void* p, const char* config_json) {
   auto sora = (sora::Sora*)p;
-  sora::Sora::ConnectConfig config;
-  config.unity_version = unity_version;
-  config.signaling_url = signaling_url;
-  config.channel_id = channel_id;
-  config.metadata = metadata;
-  config.role = role;
-  config.multistream = multistream;
-  config.spotlight = spotlight;
-  config.spotlight_number = spotlight_number;
-  config.simulcast = simulcast;
-  config.capturer_type = capturer_type;
-  config.unity_camera_texture = unity_camera_texture;
-  config.video_capturer_device = video_capturer_device;
-  config.video_width = video_width;
-  config.video_height = video_height;
-  config.video_codec = video_codec;
-  config.video_bitrate = video_bitrate;
-  config.unity_audio_input = unity_audio_input;
-  config.unity_audio_output = unity_audio_output;
-  config.audio_recording_device = audio_recording_device;
-  config.audio_playout_device = audio_playout_device;
-  config.audio_codec = audio_codec;
-  config.audio_bitrate = audio_bitrate;
-  if (!sora->Connect(config)) {
-    return -1;
-  }
-  return 0;
+  auto config =
+      jsonif::from_json<sora_conf::internal::ConnectConfig>(config_json);
+  sora->Connect(config);
+}
+
+void sora_disconnect(void* p) {
+  auto sora = (sora::Sora*)p;
+  sora->Disconnect();
 }
 
 void* sora_get_texture_update_callback() {
@@ -126,7 +112,8 @@ void* sora_get_texture_update_callback() {
 }
 
 void sora_destroy(void* sora) {
-  delete (sora::Sora*)sora;
+  //delete (sora::Sora*)sora;
+  ((sora::Sora*)sora)->Release();
 }
 
 void* sora_get_render_callback() {
@@ -151,9 +138,14 @@ void sora_set_on_handle_audio(void* p, handle_audio_cb_t f, void* userdata) {
 
 void sora_get_stats(void* p, stats_cb_t f, void* userdata) {
   auto sora = (sora::Sora*)p;
-  sora->GetStats([f, userdata](std::string json) {
-    f(json.c_str(), json.size(), userdata);
-  });
+  sora->GetStats(
+      [f, userdata](std::string json) { f(json.c_str(), userdata); });
+}
+
+void sora_send_message(void* p, const char* label, void* buf, int size) {
+  auto sora = (sora::Sora*)p;
+  const char* s = (const char*)buf;
+  sora->SendMessage(label, std::string(s, s + size));
 }
 
 unity_bool_t sora_device_enum_video_capturer(device_enum_cb_t f,

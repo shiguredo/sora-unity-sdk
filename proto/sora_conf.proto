@@ -1,0 +1,25 @@
+syntax = "proto3";
+
+package sora_conf;
+
+enum ErrorCode {
+    NOT_SET = 0;
+    // ユーザが Close を呼び、それが正常に終了した
+    CLOSE_SUCCEEDED = 1;
+    // ユーザが Close を呼んだが、正常に終了しなかった
+    CLOSE_FAILED = 2;
+    // 内部的なエラー
+    INTERNAL_ERROR = 3;
+    // ユーザが渡したパラメータが何か間違っている
+    INVALID_PARAMETER = 4;
+    // WebSocket のハンドシェイクに失敗した
+    WEBSOCKET_HANDSHAKE_FAILED = 5;
+    // サーバからの切断が正常に行われた
+    WEBSOCKET_ONCLOSE = 6;
+    // 何らかの通信の問題が発生してサーバから切断された
+    WEBSOCKET_ONERROR = 7;
+    // PeerConnectionState が failed 状態になった
+    PEER_CONNECTION_STATE_FAILED = 8;
+    // ICE candidate の交換のどこかで失敗した
+    ICE_FAILED = 9;
+}

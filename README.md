@@ -1,6 +1,6 @@
 # Sora Unity SDK
 
-[![libwebrtc](https://img.shields.io/badge/libwebrtc-m89.4389-blue.svg)](https://chromium.googlesource.com/external/webrtc/+/branch-heads/4389)
+[![libwebrtc](https://img.shields.io/badge/libwebrtc-m91.4472-blue.svg)](https://chromium.googlesource.com/external/webrtc/+/branch-heads/4472)
 [![GitHub tag](https://img.shields.io/github/tag/shiguredo/sora-unity-sdk.svg)](https://github.com/shiguredo/sora-unity-sdk)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Actions Status](https://github.com/shiguredo/sora-unity-sdk/workflows/build/badge.svg)](https://github.com/shiguredo/sora-unity-sdk/actions)
@@ -51,10 +51,12 @@ Sora Unity SDK を使ってみたい人は [USE.md](doc/USE.md) をお読みく�
 
 ## 対応機能
 
+- AV1 への対応
 - Windows への対応
 - macOS への対応
 - Android への対応
 - iOS 対応
+- SRTP/SRTCP の AES-GCM 対応
 - Unity のカメラ映像を取得し Sora で送信
 - カメラから映像を取得し Sora に送信
 - カメラから映像を取得し Unity アプリに出力
@@ -77,8 +79,12 @@ Sora Unity SDK を使ってみたい人は [USE.md](doc/USE.md) をお読みく�
 - Sora シグナリング開始時の音声コーデック/ビットレート指定に対応
 - Sora シグナリング開始時の映像コーデック/ビットレート指定に対応
 - Sora シグナリング通知への対応
+- Sora プッシュ通知への対応
 - Sora サイマルキャストへの対応
 - Sora スポットライトへの対応
+- Sora データチャネルへの対応
+- Sora データチャネルメッセージングへの対応
+    - 実験的機能
 - Apple VideoToolbox
     - H.264 ハードウェアエンコードへの対応
     - H.264 ハードウェアデコードへの対応
@@ -98,7 +104,10 @@ Sora Unity SDK ではソフトウェアでの H.264 エンコード/デコード
 
 ## 今後
 
-- サイマルキャスト対応
+- Apple M1 対応
+- ミュート機能
+- 音声のみ送受信機能
+- サイマルキャスト rid 指定対応
 
 ## 有償での優先実装
 
@@ -119,16 +128,20 @@ Sora Unity SDK ではソフトウェアでの H.264 エンコード/デコード
 - 可能であれば企業名の公開
     - 公開が難しい場合は `企業名非公開` と書かせていただきます
 
+### 機能
+
+- ミュート機能
+
 ### プラットフォーム
 
-- Ubuntu 18.04 への対応
+- Ubuntu 20.04 への対応
 
 ### NVIDIA VIDEO CODEC SDK
 
 - VP8 のハードウェアデコードへの対応
 - VP9 のハードウェアデコードへの対応
 - AV1 のハードウェアデコードへの対応
-- Ubuntu 18.04 への対応
+- Ubuntu 20.04 への対応
 
 ### INTEL Media SDK 対応
 

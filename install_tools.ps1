@@ -25,7 +25,7 @@ if (!(Test-Path $BOOST_VERSION_FILE) -Or ("$BOOST_VERSION" -ne (Get-Content $BOO
 
 if ($BOOST_CHANGED -Or !(Test-Path "$INSTALL_DIR\boost\include\boost\version.hpp")) {
   $_BOOST_UNDERSCORE_VERSION = $BOOST_VERSION.Replace(".", "_")
-  $_URL = "https://dl.bintray.com/boostorg/release/${BOOST_VERSION}/source/boost_${_BOOST_UNDERSCORE_VERSION}.zip"
+  $_URL = "https://boostorg.jfrog.io/artifactory/main/release/${BOOST_VERSION}/source/boost_${_BOOST_UNDERSCORE_VERSION}.zip"
   $_FILE = "boost_${_BOOST_UNDERSCORE_VERSION}.zip"
   # ダウンロードと展開
   Push-Location $BUILD_DIR
@@ -126,3 +126,65 @@ if ($CUDA_CHANGED -Or !(Test-Path "$INSTALL_DIR\cuda\nvcc")) {
   Pop-Location
 }
 Set-Content "$CUDA_VERSION_FILE" -Value "$CUDA_VERSION"
+
+
+# protobuf
+$PROTOBUF_VERSION_FILE = "$INSTALL_DIR\protobuf.version"
+$PROTOBUF_CHANGED = $FALSE
+if (!(Test-Path $PROTOBUF_VERSION_FILE) -Or ("$PROTOBUF_VERSION" -ne (Get-Content $PROTOBUF_VERSION_FILE))) {
+  $PROTOBUF_CHANGED = $TRUE
+}
+
+if ($PROTOBUF_CHANGED -Or !(Test-Path "$INSTALL_DIR\protobuf\bin\protoc.exe")) {
+  $_URL = "https://github.com/protocolbuffers/protobuf/releases/download/v$PROTOBUF_VERSION/protoc-$PROTOBUF_VERSION-win64.zip"
+  $_FILE = "$BUILD_DIR/protoc-$PROTOBUF_VERSION-win64.zip"
+
+  Push-Location $BUILD_DIR
+    if (!(Test-Path $_FILE)) {
+      Invoke-WebRequest -Uri $_URL -OutFile $_FILE
+    }
+  Pop-Location
+  if (Test-Path "$BUILD_DIR\protoc") {
+    Remove-Item "$BUILD_DIR\protoc" -Recurse -Force
+  }
+  mkdir $BUILD_DIR\protoc -Force
+  Push-Location $BUILD_DIR\protoc
+    7z x $_FILE
+  Pop-Location
+  if (Test-Path "$INSTALL_DIR\protoc") {
+    Remove-Item $INSTALL_DIR\protoc -Recurse -Force
+  }
+  Move-Item $BUILD_DIR\protoc $INSTALL_DIR\protoc
+}
+Set-Content "$PROTOBUF_VERSION_FILE" -Value "$PROTOBUF_VERSION"
+
+# protoc-gen-jsonif
+$PROTOC_GEN_JSONIF_VERSION_FILE = "$INSTALL_DIR\protoc-gen-jsonif.version"
+$PROTOC_GEN_JSONIF_CHANGED = $FALSE
+if (!(Test-Path $PROTOC_GEN_JSONIF_VERSION_FILE) -Or ("$PROTOC_GEN_JSONIF_VERSION" -ne (Get-Content $PROTOC_GEN_JSONIF_VERSION_FILE))) {
+  $PROTOC_GEN_JSONIF_CHANGED = $TRUE
+}
+
+if ($PROTOC_GEN_JSONIF_CHANGED -Or !(Test-Path "$INSTALL_DIR\protoc-gen-jsonif\bin\protoc-gen-jsonif-cpp.exe")) {
+  $_URL = "https://github.com/melpon/protoc-gen-jsonif/releases/download/$PROTOC_GEN_JSONIF_VERSION/protoc-gen-jsonif.zip"
+  $_FILE = "$BUILD_DIR/protoc-gen-jsonif.zip"
+
+  Push-Location $BUILD_DIR
+    if (!(Test-Path $_FILE)) {
+      Invoke-WebRequest -Uri $_URL -OutFile $_FILE
+    }
+  Pop-Location
+  if (Test-Path "$BUILD_DIR\protoc-gen-jsonif") {
+    Remove-Item "$BUILD_DIR\protoc-gen-jsonif" -Recurse -Force
+  }
+  mkdir $BUILD_DIR -Force
+  Push-Location $BUILD_DIR
+    7z x $_FILE
+    if (Test-Path "$INSTALL_DIR\protoc-gen-jsonif") {
+      Remove-Item $INSTALL_DIR\protoc-gen-jsonif -Recurse -Force
+    }
+    Move-Item protoc-gen-jsonif $INSTALL_DIR\protoc-gen-jsonif
+    Copy-Item -Recurse $INSTALL_DIR\protoc-gen-jsonif\windows\amd64 $INSTALL_DIR\protoc-gen-jsonif\bin
+  Pop-Location
+}
+Set-Content "$PROTOC_GEN_JSONIF_VERSION_FILE" -Value "$PROTOC_GEN_JSONIF_VERSION"

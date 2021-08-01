@@ -38,6 +38,8 @@ for name in macos android ios; do
 
     rm -rf $INSTALL_DIR/libcxx/
     rm -rf $INSTALL_DIR/libcxxabi/
+
+    rm -f $INSTALL_DIR/android/webrtc.ldflags
   fi
 done
 echo $WEBRTC_BUILD_VERSION > $WEBRTC_VERSION_FILE
@@ -49,9 +51,9 @@ if [ ! -e $BOOST_VERSION_FILE -o "$BOOST_VERSION" != "`cat $BOOST_VERSION_FILE`"
   BOOST_CHANGED=1
 fi
 
-if [ ! -e $INSTALL_DIR/boost/include/boost/version.hpp ]; then
+if [ $BOOST_CHANGED -eq 1 -o ! -e $INSTALL_DIR/boost/include/boost/version.hpp ]; then
   _VERSION_UNDERSCORE=${BOOST_VERSION//./_}
-  _URL=https://dl.bintray.com/boostorg/release/${BOOST_VERSION}/source/boost_${_VERSION_UNDERSCORE}.tar.gz
+  _URL=https://boostorg.jfrog.io/artifactory/main/release/${BOOST_VERSION}/source/boost_${_VERSION_UNDERSCORE}.tar.gz
   _FILE=$BUILD_DIR/boost_${_VERSION_UNDERSCORE}.tar.gz
   if [ ! -e $_FILE ]; then
     echo "file(DOWNLOAD $_URL $_FILE)" > $BUILD_DIR/tmp.cmake
@@ -131,3 +133,65 @@ pushd $INSTALL_DIR/libcxxabi
   git fetch
   git reset --hard $WEBRTC_SRC_BUILDTOOLS_THIRD_PARTY_LIBCXXABI_TRUNK_COMMIT
 popd
+
+# protobuf
+PROTOBUF_VERSION_FILE="$INSTALL_DIR/protobuf.version"
+PROTOBUF_CHANGED=0
+if [ ! -e $PROTOBUF_VERSION_FILE -o "$PROTOBUF_VERSION" != "`cat $PROTOBUF_VERSION_FILE`" ]; then
+  PROTOBUF_CHANGED=1
+fi
+
+if [ $PROTOBUF_CHANGED -eq 1 -o ! -e $INSTALL_DIR/protobuf/bin/protoc ]; then
+  if [ "`uname`" == "Darwin" ]; then
+    _URL=https://github.com/protocolbuffers/protobuf/releases/download/v$PROTOBUF_VERSION/protoc-$PROTOBUF_VERSION-osx-x86_64.zip
+    _FILE=$BUILD_DIR/protoc-$PROTOBUF_VERSION-osx-x86_64.zip
+  else
+    _URL=https://github.com/protocolbuffers/protobuf/releases/download/v$PROTOBUF_VERSION/protoc-$PROTOBUF_VERSION-linux-x86_64.zip
+    _FILE=$BUILD_DIR/protoc-$PROTOBUF_VERSION-linux-x86_64.zip
+  fi
+  mkdir -p $BUILD_DIR
+  if [ ! -e $_FILE ]; then
+    echo "file(DOWNLOAD $_URL $_FILE)" > $BUILD_DIR/tmp.cmake
+    cmake -P $BUILD_DIR/tmp.cmake
+    rm $BUILD_DIR/tmp.cmake
+  fi
+  rm -rf $BUILD_DIR/protoc
+  rm -rf $INSTALL_DIR/protoc
+  mkdir $BUILD_DIR/protoc
+  pushd $BUILD_DIR/protoc
+    unzip $_FILE
+  popd
+  mv $BUILD_DIR/protoc $INSTALL_DIR/protoc
+fi
+echo $PROTOBUF_VERSION > $PROTOBUF_VERSION_FILE
+
+# protoc-gen-jsonif
+PROTOC_GEN_JSONIF_VERSION_FILE="$INSTALL_DIR/protoc-gen-jsonif.version"
+PROTOC_GEN_JSONIF_CHANGED=0
+if [ ! -e $PROTOC_GEN_JSONIF_VERSION_FILE -o "$PROTOC_GEN_JSONIF_VERSION" != "`cat $PROTOC_GEN_JSONIF_VERSION_FILE`" ]; then
+  PROTOC_GEN_JSONIF_CHANGED=1
+fi
+
+if [ $PROTOC_GEN_JSONIF_CHANGED -eq 1 -o ! -e $INSTALL_DIR/protoc-gen-jsonif/bin/protoc ]; then
+  _URL=https://github.com/melpon/protoc-gen-jsonif/releases/download/$PROTOC_GEN_JSONIF_VERSION/protoc-gen-jsonif.tar.gz
+  _FILE=$BUILD_DIR/protoc-gen-jsonif.tar.gz
+  mkdir -p $BUILD_DIR
+  if [ ! -e $_FILE ]; then
+    echo "file(DOWNLOAD $_URL $_FILE)" > $BUILD_DIR/tmp.cmake
+    cmake -P $BUILD_DIR/tmp.cmake
+    rm $BUILD_DIR/tmp.cmake
+  fi
+  rm -rf $BUILD_DIR/protoc-gen-jsonif
+  rm -rf $INSTALL_DIR/protoc-gen-jsonif
+  pushd $BUILD_DIR
+    tar -xf $_FILE
+    mv protoc-gen-jsonif $INSTALL_DIR/protoc-gen-jsonif
+    if [ "`uname`" == "Darwin" ]; then
+      cp -r $INSTALL_DIR/protoc-gen-jsonif/darwin/amd64 $INSTALL_DIR/protoc-gen-jsonif/bin
+    else
+      cp -r $INSTALL_DIR/protoc-gen-jsonif/linux/amd64 $INSTALL_DIR/protoc-gen-jsonif/bin
+    fi
+    chmod +x $INSTALL_DIR/protoc-gen-jsonif/bin/*
+  popd
+fi
+echo $PROTOC_GEN_JSONIF_VERSION > $PROTOC_GEN_JSONIF_VERSION_FILE

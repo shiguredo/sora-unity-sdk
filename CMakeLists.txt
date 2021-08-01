@@ -13,6 +13,8 @@ if (SORA_UNITY_SDK_PACKAGE STREQUAL "android")
   set(ANDROID_STL none)
 endif()
 
+set(_INSTALL_DIR ${CMAKE_CURRENT_SOURCE_DIR}/_install)
+
 project(SoraUnitySdk C CXX)
 
 set(Boost_USE_STATIC_LIBS ON)
@@ -66,10 +68,10 @@ target_sources(SoraUnitySdk
     src/unity_camera_capturer.cpp
     src/unity_context.cpp
     src/unity_renderer.cpp
+    src/watchdog.cpp
     src/websocket.cpp
     src/rtc/device_list.cpp
     src/rtc/device_video_capturer.cpp
-    src/rtc/h264_format.cpp
     src/rtc/native_buffer.cpp
     src/rtc/peer_connection_observer.cpp
     src/rtc/rtc_connection.cpp
@@ -78,6 +80,41 @@ target_sources(SoraUnitySdk
     src/rtc/scalable_track_source.cpp
     src/rtc/simulcast_video_encoder_factory.cpp
 )
+
+file(MAKE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/proto")
+file(MAKE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/proto/cpp")
+file(MAKE_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/Sora/Generated")
+if (WIN32)
+  set(EXE_EXT ".exe")
+endif()
+add_custom_command(
+  OUTPUT
+    "${CMAKE_CURRENT_BINARY_DIR}/proto/cpp/sora_conf.json.h"
+    "${CMAKE_CURRENT_BINARY_DIR}/proto/cpp/sora_conf_internal.json.h"
+    "${CMAKE_CURRENT_SOURCE_DIR}/Sora/Generated/SoraConf.cs"
+    "${CMAKE_CURRENT_SOURCE_DIR}/Sora/Generated/SoraConfInternal.cs"
+    "${CMAKE_CURRENT_SOURCE_DIR}/Sora/Generated/Jsonif.cs"
+  COMMAND
+    "${_INSTALL_DIR}/protoc/bin/protoc${EXE_EXT}"
+  ARGS
+    --jsonif-cpp_out "${CMAKE_CURRENT_BINARY_DIR}/proto/cpp"
+    --jsonif-unity_out "${CMAKE_CURRENT_SOURCE_DIR}/Sora/Generated"
+    --plugin=protoc-gen-jsonif-cpp="${_INSTALL_DIR}/protoc-gen-jsonif/bin/protoc-gen-jsonif-cpp${EXE_EXT}"
+    --plugin=protoc-gen-jsonif-unity="${_INSTALL_DIR}/protoc-gen-jsonif/bin/protoc-gen-jsonif-unity${EXE_EXT}"
+    -I "${CMAKE_CURRENT_SOURCE_DIR}/proto/"
+    "${CMAKE_CURRENT_SOURCE_DIR}/proto/sora_conf.proto"
+    "${CMAKE_CURRENT_SOURCE_DIR}/proto/sora_conf_internal.proto"
+  DEPENDS
+    "${CMAKE_CURRENT_SOURCE_DIR}/proto/sora_conf.proto"
+    "${CMAKE_CURRENT_SOURCE_DIR}/proto/sora_conf_internal.proto"
+)
+add_custom_target(sora_conf.json.h
+  DEPENDS
+    "${CMAKE_CURRENT_BINARY_DIR}/proto/cpp/sora_conf.json.h"
+    "${CMAKE_CURRENT_BINARY_DIR}/proto/cpp/sora_conf_internal.json.h"
+)
+add_dependencies(SoraUnitySdk sora_conf.json.h)
+target_include_directories(SoraUnitySdk PRIVATE "${CMAKE_CURRENT_BINARY_DIR}/proto/cpp")
 
 string(SUBSTRING ${SORA_UNITY_SDK_COMMIT} 0 8 SORA_UNITY_SDK_COMMIT_SHORT)
 string(SUBSTRING ${WEBRTC_SRC_COMMIT} 0 8 WEBRTC_SRC_COMMIT_SHORT)
@@ -272,12 +309,11 @@ elseif (SORA_UNITY_SDK_PACKAGE STREQUAL "ios")
 
 elseif (SORA_UNITY_SDK_PACKAGE STREQUAL "android")
 
-  set(_INSTALL_DIR ${CMAKE_CURRENT_SOURCE_DIR}/_install)
-
   find_library(ANDROID_LIB_LOG log)
   find_library(ANDROID_LIB_ANDROID android)
   find_library(ANDROID_LIB_OPENSLES OpenSLES)
   find_library(ANDROID_LIB_VULKAN vulkan)
+  find_library(ANDROID_LIB_EGL EGL)
 
   target_sources(SoraUnitySdk
     PRIVATE
@@ -316,6 +352,7 @@ elseif (SORA_UNITY_SDK_PACKAGE STREQUAL "android")
       ${ANDROID_LIB_ANDROID}
       ${ANDROID_LIB_OPENSLES}
       ${ANDROID_LIB_VULKAN}
+      ${ANDROID_LIB_EGL}
   )
   file(READ ${_INSTALL_DIR}/android/webrtc.ldflags _WEBRTC_ANDROID_LDFLAGS)
   string(REGEX REPLACE "\n" ";" _WEBRTC_ANDROID_LDFLAGS "${_WEBRTC_ANDROID_LDFLAGS}")

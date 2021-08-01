@@ -11,6 +11,48 @@
 
 ## develop
 
+## 2021.3
+
+- [CHANGE] `Sora.Config` のフィールド名および `Sora.VideoCodec`, `Sora.AudioCodec` の名前を変更する
+    - `VideoCodec` → `VideoCodecType`
+    - `VideoBitrate` → `VideoBitRate`
+    - `AudioCodec` → `AudioCodecType`
+    - `AudioBitrate` → `AudioBitRate`
+    - @melpon
+- [CHANGE] `Sora.Connect` 関数の戻り値を `bool` から `void` に変更する
+    - エラーハンドリングは `Sora.Connect` の戻り値ではなく `Sora.OnDisconnect` を利用する
+    - @melpon
+- [UPDATE] libwebrtc のバージョンを M92 (4515@{#9}) に上げる
+    - @melpon
+- [ADD] `simulcastRid` に対応する
+    - @torikizi
+- [ADD] `clientId` に対応し、 `Sora.config` に `ClientId` を追加する
+    - @torikizi
+- [ADD] `spotlight_focus_rid` と `spotlight_unfocus_rid` に対応し、 `Sora.config` に以下のフィールドを追加する
+    - `SpotlightFocusRid`
+    - `SpotlightUnfocusRid`
+    - @torikizi
+- [ADD] プッシュ通知に対応する
+    - @melpon
+- [ADD] DataChannel を使ったメッセージングに対応しする
+    - @melpon
+- [ADD] `Sora.Config` に DataChannel メッセージング用の `List<DataChannelMessaging>` 型のフィールドを追加する
+    - @melpon
+- [ADD] `Sora.Config` に DataChannel メッセージング用のフィールドを追加する
+    - `EnableDataChannelSignaling`
+    - `DataChannelSignaling`
+    - `DataChannelSignalingTimeout`
+    - `EnableIgnoreDisconnectWebsocket`
+    - `IgnoreDisconnectWebsocket`
+    - `DisconnectWaitTimeout`
+    - @melpon
+- [ADD] WebSocket シグナリングの re-offer に対応する
+    - @melpon
+- [ADD] `Sora.Disconnect` 関数と `Sora.OnDisconnect` コールバックを追加する
+    - @melpon
+- [ADD] SRTP/SRTCP で AES-GCM 128/256 を利用可能にする
+    - @melpon
+
 ## 2021.2
 
 - [UPDATE] WebRTC のバージョンを M90 (4430@{#3}) に上げる

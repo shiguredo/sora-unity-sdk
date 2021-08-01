@@ -22,7 +22,6 @@
 #include <rtc_base/logging.h>
 
 #if defined(SORA_UNITY_SDK_WINDOWS)
-#include "h264_format.h"
 #include "hwenc_nvcodec/nvcodec_video_decoder.h"
 #endif
 
@@ -60,14 +59,14 @@ std::vector<webrtc::SdpVideoFormat> HWVideoDecoderFactory::GetSupportedFormats()
   }
 
   std::vector<webrtc::SdpVideoFormat> h264_codecs = {
-      CreateH264Format(webrtc::H264::kProfileBaseline, webrtc::H264::kLevel3_1,
-                       "1"),
-      CreateH264Format(webrtc::H264::kProfileBaseline, webrtc::H264::kLevel3_1,
-                       "0"),
-      CreateH264Format(webrtc::H264::kProfileConstrainedBaseline,
-                       webrtc::H264::kLevel3_1, "1"),
-      CreateH264Format(webrtc::H264::kProfileConstrainedBaseline,
-                       webrtc::H264::kLevel3_1, "0")};
+      CreateH264Format(webrtc::H264Profile::kProfileBaseline,
+                       webrtc::H264Level::kLevel3_1, "1"),
+      CreateH264Format(webrtc::H264Profile::kProfileBaseline,
+                       webrtc::H264Level::kLevel3_1, "0"),
+      CreateH264Format(webrtc::H264Profile::kProfileConstrainedBaseline,
+                       webrtc::H264Level::kLevel3_1, "1"),
+      CreateH264Format(webrtc::H264Profile::kProfileConstrainedBaseline,
+                       webrtc::H264Level::kLevel3_1, "0")};
 
   for (const webrtc::SdpVideoFormat& h264_format : h264_codecs)
     formats.push_back(h264_format);

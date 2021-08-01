@@ -147,9 +147,9 @@ bool RTCManager::Init(
   }
 
   webrtc::PeerConnectionFactoryInterface::Options factory_options;
-  factory_options.disable_sctp_data_channels = false;
   factory_options.disable_encryption = false;
   factory_options.ssl_max_version = rtc::SSL_PROTOCOL_DTLS_12;
+  factory_options.crypto_options.srtp.enable_gcm_crypto_suites = true;
   factory_->SetOptions(factory_options);
 
   if (!config_.no_recording) {
@@ -277,6 +277,7 @@ bool RTCManager::InitADM(rtc::scoped_refptr<webrtc::AudioDeviceModule> adm,
 }
 
 RTCManager::~RTCManager() {
+  RTC_LOG(LS_INFO) << "RTCManager::~RTCManager started";
   audio_track_ = nullptr;
   video_track_ = nullptr;
   factory_ = nullptr;
@@ -285,6 +286,11 @@ RTCManager::~RTCManager() {
   signaling_thread_->Stop();
 
   rtc::CleanupSSL();
+  RTC_LOG(LS_INFO) << "RTCManager::~RTCManager completed";
+}
+
+void RTCManager::SetDataManager(std::shared_ptr<RTCDataManager> data_manager) {
+  data_manager_proxy_.SetDataManager(data_manager);
 }
 
 std::shared_ptr<RTCConnection> RTCManager::CreateConnection(
@@ -293,7 +299,7 @@ std::shared_ptr<RTCConnection> RTCManager::CreateConnection(
   rtc_config.enable_dtls_srtp = true;
   rtc_config.sdp_semantics = webrtc::SdpSemantics::kUnifiedPlan;
   std::unique_ptr<PeerConnectionObserver> observer(
-      new PeerConnectionObserver(sender, receiver_));
+      new PeerConnectionObserver(sender, receiver_, &data_manager_proxy_));
   webrtc::PeerConnectionDependencies dependencies(observer.get());
 
   // WebRTC の SSL 接続の検証は自前のルート証明書(rtc_base/ssl_roots.h)でやっていて、
@@ -303,15 +309,16 @@ std::shared_ptr<RTCConnection> RTCManager::CreateConnection(
   dependencies.tls_cert_verifier = std::unique_ptr<rtc::SSLCertificateVerifier>(
       new RTCSSLVerifier(config_.insecure));
 
-  rtc::scoped_refptr<webrtc::PeerConnectionInterface> connection =
-      factory_->CreatePeerConnection(rtc_config, std::move(dependencies));
-  if (!connection) {
+  webrtc::RTCErrorOr<rtc::scoped_refptr<webrtc::PeerConnectionInterface>>
+      connection = factory_->CreatePeerConnectionOrError(
+          rtc_config, std::move(dependencies));
+  if (!connection.ok()) {
     RTC_LOG(LS_ERROR) << __FUNCTION__ << ": CreatePeerConnection failed";
     return nullptr;
   }
 
   return std::make_shared<RTCConnection>(sender, std::move(observer),
-                                         connection);
+                                         connection.value());
 }
 
 void RTCManager::InitTracks(RTCConnection* conn) {
@@ -320,7 +327,7 @@ void RTCManager::InitTracks(RTCConnection* conn) {
   std::string stream_id = GenerateRandomChars();
 
   if (audio_track_) {
-    webrtc::RTCErrorOr<rtc::scoped_refptr<webrtc::RtpSenderInterface> >
+    webrtc::RTCErrorOr<rtc::scoped_refptr<webrtc::RtpSenderInterface>>
         audio_sender = connection->AddTrack(audio_track_, {stream_id});
     if (!audio_sender.ok()) {
       RTC_LOG(LS_WARNING) << __FUNCTION__ << ": Cannot add audio_track_";
@@ -328,7 +335,7 @@ void RTCManager::InitTracks(RTCConnection* conn) {
   }
 
   if (video_track_) {
-    webrtc::RTCErrorOr<rtc::scoped_refptr<webrtc::RtpSenderInterface> >
+    webrtc::RTCErrorOr<rtc::scoped_refptr<webrtc::RtpSenderInterface>>
         video_add_result = connection->AddTrack(video_track_, {stream_id});
     if (video_add_result.ok()) {
       rtc::scoped_refptr<webrtc::RtpSenderInterface> video_sender =

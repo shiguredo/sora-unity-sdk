@@ -2,9 +2,11 @@
 #define SORA_SORA_SIGNALING_H_
 
 #include <algorithm>
+#include <atomic>
 #include <cstdlib>
 #include <functional>
 #include <memory>
+#include <set>
 #include <string>
 
 #include <boost/asio/io_context.hpp>
@@ -20,7 +22,11 @@
 
 #include "rtc/rtc_manager.h"
 #include "rtc/rtc_message_sender.h"
+#include "sora_conf.json.h"
+#include "sora_conf_internal.json.h"
+#include "sora_data_channel_on_asio.h"
 #include "url_parts.h"
+#include "watchdog.h"
 #include "websocket.h"
 
 namespace sora {
@@ -29,97 +35,157 @@ struct SoraSignalingConfig {
   std::string unity_version;
   std::string signaling_url;
   std::string channel_id;
+  std::string client_id = "";
 
   boost::json::value metadata;
-  std::string video_codec = "VP9";
-  int video_bitrate = 0;
 
-  std::string audio_codec = "OPUS";
-  int audio_bitrate = 0;
+  bool video = true;
+  std::string video_codec_type = "";
+  int video_bit_rate = 0;
+
+  bool audio = true;
+  std::string audio_codec_type = "";
+  int audio_bit_rate = 0;
 
   enum class Role { Sendonly, Recvonly, Sendrecv };
   Role role = Role::Sendonly;
   bool multistream = false;
   bool spotlight = false;
   int spotlight_number = 0;
+  // デフォルトは rid を設定しないため空文字(未指定)
+  std::string spotlight_focus_rid = "";
+  // デフォルトは rid を設定しないため空文字(未指定)
+  std::string spotlight_unfocus_rid = "";
   bool simulcast = false;
+  // デフォルトは rid を設定しないため空文字(未指定)
+  std::string simulcast_rid = "";
+  boost::optional<bool> data_channel_signaling;
+  int data_channel_signaling_timeout = 180;
+  boost::optional<bool> ignore_disconnect_websocket;
+  int disconnect_wait_timeout = 5;
+  std::vector<sora_conf::internal::DataChannelMessaging> data_channel_messaging;
 
   bool insecure = false;
+
+  std::function<void(std::string)> on_notify;
+  std::function<void(std::string)> on_push;
+  std::function<void(std::string, std::string)> on_message;
+  std::function<void(int, std::string)> on_disconnect;
 };
 
 class SoraSignaling : public std::enable_shared_from_this<SoraSignaling>,
-                      public RTCMessageSender {
+                      public RTCMessageSender,
+                      public SoraDataChannelObserver {
   boost::asio::io_context& ioc_;
-  std::unique_ptr<Websocket> ws_;
+  std::shared_ptr<Websocket> ws_;
+  std::shared_ptr<SoraDataChannelOnAsio> dc_;
+  bool using_datachannel_ = false;
+  bool ws_connected_ = false;
+  std::set<std::string> compressed_labels_;
+  std::atomic_bool destroy_ = {false};
 
   URLParts parts_;
 
   RTCManager* manager_;
   std::shared_ptr<RTCConnection> connection_;
   SoraSignalingConfig config_;
-  std::function<void(std::string)> on_notify_;
+  boost::asio::deadline_timer connection_timeout_timer_;
+  boost::asio::deadline_timer closing_timeout_timer_;
+  std::function<void(boost::system::error_code ec)> on_ws_close_;
 
-  webrtc::PeerConnectionInterface::IceConnectionState rtc_state_;
+  webrtc::PeerConnectionInterface::IceConnectionState ice_state_ =
+      webrtc::PeerConnectionInterface::kIceConnectionNew;
+  webrtc::PeerConnectionInterface::PeerConnectionState connection_state_ =
+      webrtc::PeerConnectionInterface::PeerConnectionState::kNew;
 
-  bool connected_ = false;
+  enum State {
+    Init,
+    Connecting,
+    Connected,
+    Closing,
+    Closed,
+    Destructing,
+  };
+  State state_ = State::Init;
 
  public:
-  webrtc::PeerConnectionInterface::IceConnectionState getRTCConnectionState()
-      const;
-  std::shared_ptr<RTCConnection> getRTCConnection() const;
-
-  static std::shared_ptr<SoraSignaling> Create(
-      boost::asio::io_context& ioc,
-      RTCManager* manager,
-      SoraSignalingConfig config,
-      std::function<void(std::string)> on_notify);
+  static std::shared_ptr<SoraSignaling> Create(boost::asio::io_context& ioc,
+                                               RTCManager* manager,
+                                               SoraSignalingConfig config);
 
  private:
   SoraSignaling(boost::asio::io_context& ioc,
                 RTCManager* manager,
-                SoraSignalingConfig config,
-                std::function<void(std::string)> on_notify);
-  bool Init();
+                SoraSignalingConfig config);
 
  public:
-  bool Connect();
-  void Close();
+  // shared_from_this で寿命が伸びてデストラクタに来ないことがあるので、
+  // その場合でも終了中であることに気が付けるようにする
+  void Destroy();
+  ~SoraSignaling();
 
-  // connection_ = nullptr すると直ちに onIceConnectionStateChange コールバックが呼ばれるが、
-  // この中で使っている shared_from_this() がデストラクタ内で使えないため、デストラクタで connection_ = nullptr すると実行時エラーになる。
-  // なのでこのクラスを解放する前に明示的に Release() 関数を呼んでもらうことにする。.
-  void Release();
+private:
+  // destroy_ フラグを確認してから boost::asio::post する
+  void Post(std::function<void ()> f);
+
+ public:
+  std::shared_ptr<RTCConnection> GetRTCConnection() const;
+  void Connect();
+  void Disconnect();
+  void SendMessage(const std::string& label, const std::string& data);
 
  private:
+  void DoConnect();
   void OnConnect(boost::system::error_code ec);
+
+  void DoDisconnect();
+  void DoInternalDisconnect(boost::optional<int> force_error_code,
+                            std::string reason,
+                            std::string message);
 
   void DoSendConnect();
   void DoSendPong();
   void DoSendPong(
       const rtc::scoped_refptr<const webrtc::RTCStatsReport>& report);
+  void DoSendUpdate(const std::string& sdp, std::string type);
   std::shared_ptr<sora::RTCConnection> CreateRTCConnection(
       boost::json::value jconfig);
 
  private:
-  void OnClose(boost::system::error_code ec);
-
   void DoRead();
   void OnRead(boost::system::error_code ec,
               std::size_t bytes_transferred,
               std::string text);
 
  private:
+  std::function<void(webrtc::RTCError)> CreateIceError(std::string message);
+
+ private:
+  webrtc::DataBuffer ConvertToDataBuffer(const std::string& label,
+                                         const std::string& input);
+  void SendDataChannel(const std::string& label, const std::string& input);
+
+ private:
+  // DataChannel 周りのコールバック
+  void OnStateChange(
+      rtc::scoped_refptr<webrtc::DataChannelInterface> data_channel) override;
+  void OnMessage(rtc::scoped_refptr<webrtc::DataChannelInterface> data_channel,
+                 const webrtc::DataBuffer& buffer) override;
+
+ private:
   // WebRTC からのコールバック
   // これらは別スレッドからやってくるので取り扱い注意.
   void OnIceConnectionStateChange(
       webrtc::PeerConnectionInterface::IceConnectionState new_state) override;
+  void OnConnectionChange(
+      webrtc::PeerConnectionInterface::PeerConnectionState new_state) override;
   void OnIceCandidate(const std::string sdp_mid,
                       const int sdp_mlineindex,
                       const std::string sdp) override;
 
  private:
-  void DoIceConnectionStateChange(
-      webrtc::PeerConnectionInterface::IceConnectionState new_state);
+  void DoConnectionChange(
+      webrtc::PeerConnectionInterface::PeerConnectionState new_state);
 };
 }  // namespace sora
 

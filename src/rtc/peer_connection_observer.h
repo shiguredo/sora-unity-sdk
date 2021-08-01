@@ -4,6 +4,7 @@
 // WebRTC
 #include <api/peer_connection_interface.h>
 
+#include "rtc_data_manager.h"
 #include "rtc_message_sender.h"
 #include "video_track_receiver.h"
 
@@ -11,8 +12,10 @@ namespace sora {
 
 class PeerConnectionObserver : public webrtc::PeerConnectionObserver {
  public:
-  PeerConnectionObserver(RTCMessageSender* sender, VideoTrackReceiver* receiver)
-      : sender_(sender), receiver_(receiver) {}
+  PeerConnectionObserver(RTCMessageSender* sender,
+                         VideoTrackReceiver* receiver,
+                         RTCDataManager* data_manager)
+      : sender_(sender), receiver_(receiver), data_manager_(data_manager) {}
   ~PeerConnectionObserver();
 
  private:
@@ -23,6 +26,8 @@ class PeerConnectionObserver : public webrtc::PeerConnectionObserver {
   void OnRenegotiationNeeded() override {}
   void OnStandardizedIceConnectionChange(
       webrtc::PeerConnectionInterface::IceConnectionState new_state) override;
+  void OnConnectionChange(
+      webrtc::PeerConnectionInterface::PeerConnectionState new_state) override;
   void OnIceGatheringChange(
       webrtc::PeerConnectionInterface::IceGatheringState new_state) override{};
   void OnIceCandidate(const webrtc::IceCandidateInterface* candidate) override;
@@ -36,6 +41,7 @@ class PeerConnectionObserver : public webrtc::PeerConnectionObserver {
 
   RTCMessageSender* sender_;
   VideoTrackReceiver* receiver_;
+  RTCDataManager* data_manager_;
   std::vector<webrtc::VideoTrackInterface*> video_tracks_;
 };
 
