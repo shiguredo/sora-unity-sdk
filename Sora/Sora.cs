@@ -65,6 +65,7 @@ public class Sora : IDisposable
     public class Config
     {
         public string SignalingUrl = "";
+        public string[] SignalingUrlCandidate = new string[0];
         public string ChannelId = "";
         public string ClientId = "";
         public string Metadata = "";
@@ -190,7 +191,17 @@ public class Sora : IDisposable
 
         var cc = new SoraConf.Internal.ConnectConfig();
         cc.unity_version = UnityEngine.Application.unityVersion;
-        cc.signaling_url = config.SignalingUrl;
+        if (config.SignalingUrl.Trim().Length != 0)
+        {
+            cc.signaling_url.Add(config.SignalingUrl.Trim());
+        }
+        foreach (var url in config.SignalingUrlCandidate)
+        {
+            if (url.Trim().Length != 0)
+            {
+                cc.signaling_url.Add(url.Trim());
+            }
+        }
         cc.channel_id = config.ChannelId;
         cc.client_id = config.ClientId;
         cc.metadata = config.Metadata;
