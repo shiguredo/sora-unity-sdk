@@ -11,6 +11,11 @@
 
 ## develop
 
+- [UPDATE] signaling mid 対応
+    - @melpon
+- [ADD] `Sora.Config.SignalingUrlCandidate` に複数のシグナリング URL 指定を可能にし、type: redirect に対応することでクラスタリングに対応
+    - @melpon
+
 ## 2021.3
 
 - [CHANGE] `Sora.Config` のフィールド名および `Sora.VideoCodec`, `Sora.AudioCodec` の名前を変更する
