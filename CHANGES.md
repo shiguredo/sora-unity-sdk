@@ -11,6 +11,7 @@
 
 ## develop
 
+- [UPDATE] libwebrtc を `93.4577.8.1` に上げる
 - [UPDATE] signaling mid 対応
     - @melpon
 - [ADD] `Sora.Config.SignalingUrlCandidate` に複数のシグナリング URL 指定を可能にし、type: redirect に対応することでクラスタリングに対応
