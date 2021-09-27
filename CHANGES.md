@@ -11,6 +11,8 @@
 
 ## develop
 
+- [UPDATE] Boost のバージョンを 1.77.0 に上げる
+    - @voluntas
 - [UPDATE] signaling mid 対応
     - @melpon
 - [ADD] `Sora.Config.SignalingUrlCandidate` に複数のシグナリング URL 指定を可能にし、type: redirect に対応することでクラスタリングに対応
