@@ -134,6 +134,16 @@ pushd $INSTALL_DIR/libcxxabi
   git reset --hard $WEBRTC_SRC_BUILDTOOLS_THIRD_PARTY_LIBCXXABI_TRUNK_COMMIT
 popd
 
+# __config_site のために特定バージョンの buildtools を取得する
+if [ ! -e $INSTALL_DIR/buildtools/.git ]; then
+  git clone $WEBRTC_SRC_BUILDTOOLS_URL $INSTALL_DIR/buildtools
+fi
+pushd $INSTALL_DIR/buildtools
+  git fetch
+  git reset --hard $WEBRTC_SRC_BUILDTOOLS_COMMIT
+  cp third_party/libc++/__config_site $INSTALL_DIR/libcxx/include/
+popd
+
 # protobuf
 PROTOBUF_VERSION_FILE="$INSTALL_DIR/protobuf.version"
 PROTOBUF_CHANGED=0
