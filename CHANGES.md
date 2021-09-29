@@ -11,6 +11,8 @@
 
 ## develop
 
+- [UPDATE] libwebrtc を `93.4577.8.1` に上げる
+    - @melpon @torikizi @voluntas
 - [UPDATE] Boost のバージョンを 1.77.0 に上げる
     - @voluntas
 - [UPDATE] signaling mid 対応
