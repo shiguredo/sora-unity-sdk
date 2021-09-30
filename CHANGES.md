@@ -17,7 +17,9 @@
     - @voluntas
 - [UPDATE] signaling mid 対応
     - @melpon
-- [ADD] `Sora.Config.SignalingUrlCandidate` に複数のシグナリング URL 指定を可能にし、type: redirect に対応することでクラスタリングに対応
+- [ADD] `Sora.Config.SignalingUrlCandidate` に複数のシグナリング URL 指定を可能にする
+    - @melpon
+- [ADD] `"type": "redirect"` でクラスター機能でのリダイレクトに対応
     - @melpon
 
 ## 2021.3
