@@ -11,6 +11,11 @@
 
 ## develop
 
+## 2021.3.1
+
+- [FIX] Let's Encrypt な証明書の SSL 接続が失敗する問題を修正する
+    - @melpon
+
 ## 2021.3
 
 - [CHANGE] `Sora.Config` のフィールド名および `Sora.VideoCodec`, `Sora.AudioCodec` の名前を変更する
