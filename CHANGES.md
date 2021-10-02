@@ -20,6 +20,10 @@
 - [ADD] `Sora.Config.SignalingUrlCandidate` に複数のシグナリング URL 指定を可能にする
     - @melpon
 - [ADD] `"type": "redirect"` でクラスター機能でのリダイレクトに対応
+
+## 2021.3.1
+
+- [FIX] Let's Encrypt な証明書の SSL 接続が失敗する問題を修正する
     - @melpon
 
 ## 2021.3
