@@ -59,10 +59,10 @@ void Sora::Release() {
   delete this;
 }
 
-void Sora::SetOnAddTrack(std::function<void(ptrid_t)> on_add_track) {
+void Sora::SetOnAddTrack(std::function<void(ptrid_t, std::string)> on_add_track) {
   on_add_track_ = on_add_track;
 }
-void Sora::SetOnRemoveTrack(std::function<void(ptrid_t)> on_remove_track) {
+void Sora::SetOnRemoveTrack(std::function<void(ptrid_t, std::string)> on_remove_track) {
   on_remove_track_ = on_remove_track;
 }
 void Sora::SetOnNotify(std::function<void(std::string)> on_notify) {
@@ -133,34 +133,37 @@ void Sora::Connect(const sora_conf::internal::ConnectConfig& cc) {
 
 void Sora::DoConnect(const sora_conf::internal::ConnectConfig& cc,
                      std::function<void(int, std::string)> on_disconnect) {
-  signaling_url_ = std::move(cc.signaling_url);
-  channel_id_ = std::move(cc.channel_id);
-
   RTC_LOG(LS_INFO) << "Sora::Connect " << jsonif::to_json(cc);
 
   if (cc.role != "sendonly" && cc.role != "recvonly" && cc.role != "sendrecv") {
     RTC_LOG(LS_ERROR) << "Invalid role: " << cc.role;
-    on_disconnect((int)sora_conf::ErrorCode::INTERNAL_ERROR,
+    on_disconnect((int)sora_conf::ErrorCode::INVALID_PARAMETER,
                   "Invalid role: " + cc.role);
+    return;
+  }
+  if (cc.signaling_url.empty()) {
+    RTC_LOG(LS_ERROR) << "Signaling URL is empty";
+    on_disconnect((int)sora_conf::ErrorCode::INVALID_PARAMETER,
+                  "Signaling URL is empty");
     return;
   }
 
   renderer_.reset(new UnityRenderer(
-      [this](ptrid_t track_id) {
+      [this](ptrid_t track_id, std::string connection_id) {
         std::lock_guard<std::mutex> guard(event_mutex_);
-        event_queue_.push_back([this, track_id]() {
+        event_queue_.push_back([this, track_id, connection_id = std::move(connection_id)]() {
           // ここは Unity スレッドから呼ばれる
           if (on_add_track_) {
-            on_add_track_(track_id);
+            on_add_track_(track_id, connection_id);
           }
         });
       },
-      [this](ptrid_t track_id) {
+      [this](ptrid_t track_id, std::string connection_id) {
         std::lock_guard<std::mutex> guard(event_mutex_);
-        event_queue_.push_back([this, track_id]() {
+        event_queue_.push_back([this, track_id, connection_id = std::move(connection_id)]() {
           // ここは Unity スレッドから呼ばれる
           if (on_remove_track_) {
-            on_remove_track_(track_id);
+            on_remove_track_(track_id, connection_id);
           }
         });
       }));
@@ -223,8 +226,7 @@ void Sora::DoConnect(const sora_conf::internal::ConnectConfig& cc,
   }
 
   {
-    RTC_LOG(LS_INFO) << "Start Signaling: url=" << signaling_url_
-                     << " channel_id=" << channel_id_;
+    RTC_LOG(LS_INFO) << "Start Signaling: cc=" << jsonif::to_json(cc);
     SoraSignalingConfig config;
     config.unity_version = cc.unity_version;
     config.role = cc.role == "sendonly"   ? SoraSignalingConfig::Role::Sendonly
@@ -237,8 +239,8 @@ void Sora::DoConnect(const sora_conf::internal::ConnectConfig& cc,
     config.spotlight_unfocus_rid = cc.spotlight_unfocus_rid;
     config.simulcast = cc.simulcast;
     config.simulcast_rid = cc.simulcast_rid;
-    config.signaling_url = signaling_url_;
-    config.channel_id = channel_id_;
+    config.signaling_url = cc.signaling_url;
+    config.channel_id = cc.channel_id;
     config.client_id = cc.client_id;
     config.video_codec_type = cc.video_codec_type;
     config.video_bit_rate = cc.video_bit_rate;

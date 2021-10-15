@@ -37,14 +37,12 @@ class Sora {
   int ref_ = 1;
   std::unique_ptr<boost::asio::io_context> ioc_;
   UnityContext* context_;
-  std::string signaling_url_;
-  std::string channel_id_;
   std::unique_ptr<RTCManager> rtc_manager_;
   std::shared_ptr<SoraSignaling> signaling_;
   std::unique_ptr<rtc::Thread> thread_;
   std::unique_ptr<UnityRenderer> renderer_;
-  std::function<void(ptrid_t)> on_add_track_;
-  std::function<void(ptrid_t)> on_remove_track_;
+  std::function<void(ptrid_t, std::string)> on_add_track_;
+  std::function<void(ptrid_t, std::string)> on_remove_track_;
   std::function<void(std::string)> on_notify_;
   std::function<void(std::string)> on_push_;
   std::function<void(std::string, std::string)> on_message_;
@@ -66,8 +64,8 @@ class Sora {
   ~Sora();
   void Release();
 
-  void SetOnAddTrack(std::function<void(ptrid_t)> on_add_track);
-  void SetOnRemoveTrack(std::function<void(ptrid_t)> on_remove_track);
+  void SetOnAddTrack(std::function<void(ptrid_t, std::string)> on_add_track);
+  void SetOnRemoveTrack(std::function<void(ptrid_t, std::string)> on_remove_track);
   void SetOnNotify(std::function<void(std::string)> on_notify);
   void SetOnPush(std::function<void(std::string)> on_push);
   void SetOnMessage(std::function<void(std::string, std::string)> on_message);

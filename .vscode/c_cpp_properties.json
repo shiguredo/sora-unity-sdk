@@ -5,7 +5,6 @@
             "includePath": [
                 "${workspaceFolder}/src",
                 "${workspaceFolder}/_install/boost/include",
-                "${workspaceFolder}/_install/json/include",
                 "${workspaceFolder}/NvCodec/include",
                 "${workspaceFolder}/NvCodec/NvCodec",
                 "${workspaceFolder}/build/proto/cpp",

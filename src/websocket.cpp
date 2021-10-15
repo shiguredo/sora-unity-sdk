@@ -240,6 +240,8 @@ void Websocket::OnRead(read_callback_t on_read,
   const auto text = boost::beast::buffers_to_string(read_buffer_.data());
   read_buffer_.consume(read_buffer_.size());
 
+  RTC_LOG(LS_INFO) << "Websocket::OnRead this=" << (void*)this
+                   << " text=" << text;
   std::move(on_read)(ec, bytes_transferred, std::move(text));
 }
 
@@ -266,8 +268,8 @@ void Websocket::DoWriteText(std::string text, write_callback_t on_write) {
 void Websocket::DoWrite() {
   auto& data = write_data_.front();
 
-  RTC_LOG(LS_VERBOSE) << __FUNCTION__ << ": "
-                      << boost::beast::buffers_to_string(data->buffer.data());
+  RTC_LOG(LS_INFO) << __FUNCTION__ << ": "
+                   << boost::beast::buffers_to_string(data->buffer.data());
 
   if (IsSSL()) {
     wss_->text(data->text);
