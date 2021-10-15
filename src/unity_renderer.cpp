@@ -16,6 +16,9 @@ UnityRenderer::Sink::~Sink() {
 ptrid_t UnityRenderer::Sink::GetSinkID() const {
   return ptrid_;
 }
+std::string UnityRenderer::Sink::GetID() const {
+  return track_->id();
+}
 
 rtc::scoped_refptr<webrtc::VideoFrameBuffer>
 UnityRenderer::Sink::GetFrameBuffer() {
@@ -79,15 +82,16 @@ void UnityRenderer::Sink::TextureUpdateCallback(int eventID, void* data) {
   }
 }
 
-UnityRenderer::UnityRenderer(std::function<void(ptrid_t)> on_add_track,
-                             std::function<void(ptrid_t)> on_remove_track)
+UnityRenderer::UnityRenderer(std::function<void(ptrid_t, std::string)> on_add_track,
+                             std::function<void(ptrid_t, std::string)> on_remove_track)
     : on_add_track_(on_add_track), on_remove_track_(on_remove_track) {}
 
 void UnityRenderer::AddTrack(webrtc::VideoTrackInterface* track) {
   std::unique_ptr<Sink> sink(new Sink(track));
   auto sink_id = sink->GetSinkID();
+  auto id = sink->GetID();
   sinks_.push_back(std::make_pair(track, std::move(sink)));
-  on_add_track_(sink_id);
+  on_add_track_(sink_id, id);
 }
 
 void UnityRenderer::RemoveTrack(webrtc::VideoTrackInterface* track) {
@@ -99,8 +103,9 @@ void UnityRenderer::RemoveTrack(webrtc::VideoTrackInterface* track) {
     return;
   }
   auto sink_id = it->second->GetSinkID();
+  auto id = it->second->GetID();
   sinks_.erase(std::remove_if(sinks_.begin(), sinks_.end(), f), sinks_.end());
-  on_remove_track_(sink_id);
+  on_remove_track_(sink_id, id);
 }
 
 }  // namespace sora

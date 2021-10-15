@@ -25,6 +25,7 @@ class UnityRenderer : public VideoTrackReceiver {
     Sink(webrtc::VideoTrackInterface* track);
     ~Sink();
     ptrid_t GetSinkID() const;
+    std::string GetID() const;
 
    private:
     rtc::scoped_refptr<webrtc::VideoFrameBuffer> GetFrameBuffer();
@@ -41,12 +42,12 @@ class UnityRenderer : public VideoTrackReceiver {
       std::pair<webrtc::VideoTrackInterface*, std::unique_ptr<Sink>>>
       VideoSinkVector;
   VideoSinkVector sinks_;
-  std::function<void(ptrid_t)> on_add_track_;
-  std::function<void(ptrid_t)> on_remove_track_;
+  std::function<void(ptrid_t, std::string)> on_add_track_;
+  std::function<void(ptrid_t, std::string)> on_remove_track_;
 
  public:
-  UnityRenderer(std::function<void(ptrid_t)> on_add_track,
-                std::function<void(ptrid_t)> on_remove_track);
+  UnityRenderer(std::function<void(ptrid_t, std::string)> on_add_track,
+                std::function<void(ptrid_t, std::string)> on_remove_track);
 
   void AddTrack(webrtc::VideoTrackInterface* track) override;
   void RemoveTrack(webrtc::VideoTrackInterface* track) override;

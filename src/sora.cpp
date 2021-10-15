@@ -59,10 +59,10 @@ void Sora::Release() {
   delete this;
 }
 
-void Sora::SetOnAddTrack(std::function<void(ptrid_t)> on_add_track) {
+void Sora::SetOnAddTrack(std::function<void(ptrid_t, std::string)> on_add_track) {
   on_add_track_ = on_add_track;
 }
-void Sora::SetOnRemoveTrack(std::function<void(ptrid_t)> on_remove_track) {
+void Sora::SetOnRemoveTrack(std::function<void(ptrid_t, std::string)> on_remove_track) {
   on_remove_track_ = on_remove_track;
 }
 void Sora::SetOnNotify(std::function<void(std::string)> on_notify) {
@@ -149,21 +149,21 @@ void Sora::DoConnect(const sora_conf::internal::ConnectConfig& cc,
   }
 
   renderer_.reset(new UnityRenderer(
-      [this](ptrid_t track_id) {
+      [this](ptrid_t track_id, std::string connection_id) {
         std::lock_guard<std::mutex> guard(event_mutex_);
-        event_queue_.push_back([this, track_id]() {
+        event_queue_.push_back([this, track_id, connection_id = std::move(connection_id)]() {
           // ここは Unity スレッドから呼ばれる
           if (on_add_track_) {
-            on_add_track_(track_id);
+            on_add_track_(track_id, connection_id);
           }
         });
       },
-      [this](ptrid_t track_id) {
+      [this](ptrid_t track_id, std::string connection_id) {
         std::lock_guard<std::mutex> guard(event_mutex_);
-        event_queue_.push_back([this, track_id]() {
+        event_queue_.push_back([this, track_id, connection_id = std::move(connection_id)]() {
           // ここは Unity スレッドから呼ばれる
           if (on_remove_track_) {
-            on_remove_track_(track_id);
+            on_remove_track_(track_id, connection_id);
           }
         });
       }));
