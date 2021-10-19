@@ -57,7 +57,7 @@ public class Sora : IDisposable
         // 以下は null でない場合のみ設定される
         public bool? Ordered;
         public int? MaxPacketLifeTime;
-        public int? MaxRetransmits;
+        public ushort? MaxRetransmits;
         public string Protocol;
         public bool? Compress;
     }
