@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package sora_conf.internal;
 
-message DataChannels {
+message DataChannel {
     // required
     string label = 1;
     string direction = 2;

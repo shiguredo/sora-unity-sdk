@@ -49,7 +49,7 @@ public class Sora : IDisposable
         R2,
     }
 
-    public class DataChannels
+    public class DataChannel
     {
         // 以下は設定必須
         public string Label = "";
@@ -57,7 +57,7 @@ public class Sora : IDisposable
         // 以下は null でない場合のみ設定される
         public bool? Ordered;
         public int? MaxPacketLifeTime;
-        public ushort? MaxRetransmits;
+        public int? MaxRetransmits;
         public string Protocol;
         public bool? Compress;
     }
