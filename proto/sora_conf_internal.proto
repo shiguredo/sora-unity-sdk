@@ -57,5 +57,5 @@ message ConnectConfig {
     bool enable_ignore_disconnect_websocket = 30;
     bool ignore_disconnect_websocket = 31;
     int32 disconnect_wait_timeout = 32;
-    repeated DataChannels data_channels = 33;
+    repeated DataChannel data_channels = 33;
 }

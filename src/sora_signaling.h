@@ -63,7 +63,7 @@ struct SoraSignalingConfig {
   int data_channel_signaling_timeout = 180;
   boost::optional<bool> ignore_disconnect_websocket;
   int disconnect_wait_timeout = 5;
-  std::vector<sora_conf::internal::DataChannels> data_channels;
+  std::vector<sora_conf::internal::DataChannel> data_channels;
 
   bool insecure = false;
 

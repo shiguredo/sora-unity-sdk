@@ -109,7 +109,7 @@ public class Sora : IDisposable
         public int DisconnectWaitTimeout = 5;
 
         // DataChannel メッセージング
-        public List<DataChannels> DataChannels = new List<DataChannels>();
+        public List<DataChannel> DataChannels = new List<DataChannel>();
     }
 
     IntPtr p;
@@ -237,7 +237,7 @@ public class Sora : IDisposable
             var direction =
                 m.Direction == Direction.Sendonly ? "sendonly" :
                 m.Direction == Direction.Recvonly ? "recvonly" : "sendrecv";
-            var c = new SoraConf.Internal.DataChannels()
+            var c = new SoraConf.Internal.DataChannel()
             {
                 label = m.Label,
                 direction = direction,
