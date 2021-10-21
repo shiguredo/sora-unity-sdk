@@ -456,9 +456,9 @@ void SoraSignaling::DoSendConnect(bool redirect) {
         *config_.ignore_disconnect_websocket;
   }
 
-  if (!config_.data_channel_messaging.empty()) {
+  if (!config_.data_channels.empty()) {
     boost::json::array ar;
-    for (const auto& m : config_.data_channel_messaging) {
+    for (const auto& m : config_.data_channels) {
       boost::json::object obj;
       obj["label"] = m.label;
       obj["direction"] = m.direction;
@@ -479,7 +479,7 @@ void SoraSignaling::DoSendConnect(bool redirect) {
       }
       ar.push_back(obj);
     }
-    json_message["data_channel_messaging"] = ar;
+    json_message["data_channels"] = ar;
   }
 
   ws_->WriteText(

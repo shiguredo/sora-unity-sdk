@@ -254,7 +254,7 @@ void Sora::DoConnect(const sora_conf::internal::ConnectConfig& cc,
       config.ignore_disconnect_websocket = cc.ignore_disconnect_websocket;
     }
     config.disconnect_wait_timeout = cc.disconnect_wait_timeout;
-    config.data_channel_messaging = cc.data_channel_messaging;
+    config.data_channels = cc.data_channels;
     if (!cc.metadata.empty()) {
       boost::json::error_code ec;
       auto md = boost::json::parse(cc.metadata, ec);
