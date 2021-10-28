@@ -23,3 +23,7 @@
 ### Unity 2020 (LTS) 以降で macOS 向けにビルドしたい
 
 - Build Settings の Architecture を Intel-64bit にしてください。
+
+### Pixel6 で H.264 を配信したい
+
+- 現在 Pixel6 で H.264 を配信することはできません。 他のコーデックを使用してください。
