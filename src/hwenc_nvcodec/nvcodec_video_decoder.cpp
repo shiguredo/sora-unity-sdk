@@ -46,9 +46,7 @@ bool NvCodecVideoDecoder::IsSupported(cudaVideoCodec codec_id) {
   return decoder != nullptr;
 }
 
-int32_t NvCodecVideoDecoder::InitDecode(
-    const webrtc::VideoCodec* codec_settings,
-    int32_t number_of_cores) {
+bool NvCodecVideoDecoder::Configure(const Settings& settings) {
   return InitNvCodec();
 }
 
@@ -123,11 +121,11 @@ const char* NvCodecVideoDecoder::ImplementationName() const {
   return "NVIDIA VIDEO CODEC SDK";
 }
 
-int32_t NvCodecVideoDecoder::InitNvCodec() {
+bool NvCodecVideoDecoder::InitNvCodec() {
   decoder_ =
       NvCodecVideoDecoderCuda::Create(codec_id_, &NvCodecVideoDecoder::Log);
   output_info_ = false;
-  return WEBRTC_VIDEO_CODEC_OK;
+  return true;
 }
 
 void NvCodecVideoDecoder::ReleaseNvCodec() {
