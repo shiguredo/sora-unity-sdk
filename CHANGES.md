@@ -11,6 +11,22 @@
 
 ## develop
 
+## 2021.4.0
+
+- [CHANGE] `data_channel_messaging` を `data_channles` へ変更する
+    - @torikizi
+- [UPDATE] protocol buffers を `3.19.1` に上げる
+    - @voluntas
+- [UPDATE] libwebrtc を `94.4606.3.4` に上げる
+    - @melpon @torikizi @voluntas
+- [UPDATE] Boost のバージョンを `1.78.0` に上げる
+    - @voluntas
+- [UPDATE] signaling mid 対応
+    - @melpon
+- [ADD] `Sora.Config.SignalingUrlCandidate` に複数のシグナリング URL 指定を可能にする
+    - @melpon
+- [ADD] `"type": "redirect"` でクラスター機能でのリダイレクトに対応
+
 ## 2021.3.1
 
 - [FIX] Let's Encrypt な証明書の SSL 接続が失敗する問題を修正する

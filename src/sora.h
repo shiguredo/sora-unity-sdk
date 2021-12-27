@@ -37,8 +37,6 @@ class Sora {
   int ref_ = 1;
   std::unique_ptr<boost::asio::io_context> ioc_;
   UnityContext* context_;
-  std::string signaling_url_;
-  std::string channel_id_;
   std::unique_ptr<RTCManager> rtc_manager_;
   std::shared_ptr<SoraSignaling> signaling_;
   std::unique_ptr<rtc::Thread> thread_;

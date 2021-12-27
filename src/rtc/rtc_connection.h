@@ -44,6 +44,7 @@ class RTCConnection {
           const rtc::scoped_refptr<const webrtc::RTCStatsReport>&)> callback);
 
   void SetEncodingParameters(
+      std::string mid,
       std::vector<webrtc::RtpEncodingParameters> encodings);
   void ResetEncodingParameters();
 

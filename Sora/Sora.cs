@@ -49,7 +49,7 @@ public class Sora : IDisposable
         R2,
     }
 
-    public class DataChannelMessaging
+    public class DataChannel
     {
         // 以下は設定必須
         public string Label = "";
@@ -65,6 +65,7 @@ public class Sora : IDisposable
     public class Config
     {
         public string SignalingUrl = "";
+        public string[] SignalingUrlCandidate = new string[0];
         public string ChannelId = "";
         public string ClientId = "";
         public string Metadata = "";
@@ -108,7 +109,7 @@ public class Sora : IDisposable
         public int DisconnectWaitTimeout = 5;
 
         // DataChannel メッセージング
-        public List<DataChannelMessaging> DataChannelMessaging = new List<DataChannelMessaging>();
+        public List<DataChannel> DataChannels = new List<DataChannel>();
     }
 
     IntPtr p;
@@ -190,7 +191,17 @@ public class Sora : IDisposable
 
         var cc = new SoraConf.Internal.ConnectConfig();
         cc.unity_version = UnityEngine.Application.unityVersion;
-        cc.signaling_url = config.SignalingUrl;
+        if (config.SignalingUrl.Trim().Length != 0)
+        {
+            cc.signaling_url.Add(config.SignalingUrl.Trim());
+        }
+        foreach (var url in config.SignalingUrlCandidate)
+        {
+            if (url.Trim().Length != 0)
+            {
+                cc.signaling_url.Add(url.Trim());
+            }
+        }
         cc.channel_id = config.ChannelId;
         cc.client_id = config.ClientId;
         cc.metadata = config.Metadata;
@@ -221,12 +232,12 @@ public class Sora : IDisposable
         cc.enable_ignore_disconnect_websocket = config.EnableIgnoreDisconnectWebsocket;
         cc.ignore_disconnect_websocket = config.IgnoreDisconnectWebsocket;
         cc.disconnect_wait_timeout = config.DisconnectWaitTimeout;
-        foreach (var m in config.DataChannelMessaging)
+        foreach (var m in config.DataChannels)
         {
             var direction =
                 m.Direction == Direction.Sendonly ? "sendonly" :
                 m.Direction == Direction.Recvonly ? "recvonly" : "sendrecv";
-            var c = new SoraConf.Internal.DataChannelMessaging()
+            var c = new SoraConf.Internal.DataChannel()
             {
                 label = m.Label,
                 direction = direction,
@@ -256,7 +267,7 @@ public class Sora : IDisposable
                 c.enable_compress = true;
                 c.compress = m.Compress.Value;
             }
-            cc.data_channel_messaging.Add(c);
+            cc.data_channels.Add(c);
         }
 
         sora_connect(p, Jsonif.Json.ToJson(cc));

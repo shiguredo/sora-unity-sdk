@@ -33,7 +33,7 @@ namespace sora {
 
 struct SoraSignalingConfig {
   std::string unity_version;
-  std::string signaling_url;
+  std::vector<std::string> signaling_url;
   std::string channel_id;
   std::string client_id = "";
 
@@ -63,7 +63,7 @@ struct SoraSignalingConfig {
   int data_channel_signaling_timeout = 180;
   boost::optional<bool> ignore_disconnect_websocket;
   int disconnect_wait_timeout = 5;
-  std::vector<sora_conf::internal::DataChannelMessaging> data_channel_messaging;
+  std::vector<sora_conf::internal::DataChannel> data_channels;
 
   bool insecure = false;
 
@@ -77,14 +77,14 @@ class SoraSignaling : public std::enable_shared_from_this<SoraSignaling>,
                       public RTCMessageSender,
                       public SoraDataChannelObserver {
   boost::asio::io_context& ioc_;
+  std::vector<std::shared_ptr<Websocket>> connecting_wss_;
+  std::string connected_signaling_url_;
   std::shared_ptr<Websocket> ws_;
   std::shared_ptr<SoraDataChannelOnAsio> dc_;
   bool using_datachannel_ = false;
   bool ws_connected_ = false;
   std::set<std::string> compressed_labels_;
   std::atomic_bool destroy_ = {false};
-
-  URLParts parts_;
 
   RTCManager* manager_;
   std::shared_ptr<RTCConnection> connection_;
@@ -101,6 +101,7 @@ class SoraSignaling : public std::enable_shared_from_this<SoraSignaling>,
   enum State {
     Init,
     Connecting,
+    Redirecting,
     Connected,
     Closing,
     Closed,
@@ -124,9 +125,9 @@ class SoraSignaling : public std::enable_shared_from_this<SoraSignaling>,
   void Destroy();
   ~SoraSignaling();
 
-private:
+ private:
   // destroy_ フラグを確認してから boost::asio::post する
-  void Post(std::function<void ()> f);
+  void Post(std::function<void()> f);
 
  public:
   std::shared_ptr<RTCConnection> GetRTCConnection() const;
@@ -136,14 +137,21 @@ private:
 
  private:
   void DoConnect();
-  void OnConnect(boost::system::error_code ec);
+  void OnConnect(boost::system::error_code ec,
+                 std::string url,
+                 std::shared_ptr<Websocket> ws);
+
+  void Redirect(std::string url);
+  void OnRedirect(boost::system::error_code ec,
+                  std::string url,
+                  std::shared_ptr<Websocket> ws);
 
   void DoDisconnect();
   void DoInternalDisconnect(boost::optional<int> force_error_code,
                             std::string reason,
                             std::string message);
 
-  void DoSendConnect();
+  void DoSendConnect(bool redirect);
   void DoSendPong();
   void DoSendPong(
       const rtc::scoped_refptr<const webrtc::RTCStatsReport>& report);
