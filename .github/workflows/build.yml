@@ -48,7 +48,7 @@ jobs:
           # Android に関しては多分 Ubuntu でもいけると思うけど、
           # 普段ビルドしてるのは macOS からなので macOS でビルドする
           - android
-    runs-on: macOS-latest
+    runs-on: macos-11
     steps:
     - uses: actions/checkout@v2
     - name: Cache
