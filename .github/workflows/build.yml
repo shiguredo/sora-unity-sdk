@@ -105,7 +105,7 @@ jobs:
         name: ios
         path: ios/
   package:
-    runs-on: macOS-latest
+    runs-on: macos-11
     needs: [build-windows, build-macos]
     steps:
     - uses: actions/checkout@v2
