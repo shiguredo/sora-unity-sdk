@@ -4,8 +4,7 @@ on:
   push:
     paths-ignore:
     - 'doc/**'
-    - '**/*.md'
-    - 'README.md'
+    - '**.md'
   schedule:
   - cron: "0 0 * * *"
 
@@ -105,7 +104,7 @@ jobs:
         name: ios
         path: ios/
   package:
-    runs-on: macOS-latest
+    runs-on: macos-11
     needs: [build-windows, build-macos]
     steps:
     - uses: actions/checkout@v2
