@@ -96,7 +96,7 @@ jobs:
       run: |
         mkdir ios/
         cp _install/ios/webrtc/NOTICE ios/
-        cp _install/ios/webrtc/release/lib/libwebrtc.a ios/
+        cp _install/ios/webrtc/lib/libwebrtc.a ios/
         cp _build/sora-unity-sdk/ios/libSoraUnitySdk.a ios/
     - name: Upload iOS Artifact
       if: matrix.name == 'ios'
