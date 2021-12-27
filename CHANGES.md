@@ -11,6 +11,8 @@
 
 ## develop
 
+- [CHANGE] Github Actions の macos-latest を macos-11 へ変更する
+
 ## 2021.4.0
 
 - [CHANGE] `data_channel_messaging` を `data_channles` へ変更する
