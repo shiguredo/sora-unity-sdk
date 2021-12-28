@@ -13,7 +13,7 @@
 
 - [CHANGE] Github Actions の `macos-latest` を `macos-11` へ変更する
     - @voluntas
-- [UPDATE] libwebrtc を `97.4692.0.4` に上げる
+- [UPDATE] libwebrtc を `97.4692.4.0` に上げる
     - @voluntas
 
 ## 2021.4.0
