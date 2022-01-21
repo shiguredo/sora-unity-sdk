@@ -42,6 +42,10 @@ Sora Unity SDK を使ってみたい人は [USE.md](doc/USE.md) をお読みく�
 - Unity 2019.4 (LTS)
 - Unity 2020.3 (LTS)
 
+## システム条件
+
+- Sora 2021.2 以降
+
 ## 対応プラットフォーム
 
 - Windows 10 1809 x86_64 以降
@@ -131,10 +135,12 @@ Sora Unity SDK ではソフトウェアでの H.264 エンコード/デコード
 ### 機能
 
 - ミュート機能
+- デバイスをつかまないようにする機能
 
 ### プラットフォーム
 
 - Ubuntu 20.04 への対応
+- ARM 版 Windows への対応
 
 ### NVIDIA VIDEO CODEC SDK
 
@@ -157,8 +163,8 @@ Sora Unity SDK ではソフトウェアでの H.264 エンコード/デコード
 Apache License 2.0
 
 ```
-Copyright 2019-2021, Wandbox LLC (Original Author)
-Copyright 2019-2021, Shiguredo Inc.
+Copyright 2019-2022, Wandbox LLC (Original Author)
+Copyright 2019-2022, Shiguredo Inc.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -172,3 +178,4 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 ```
+
