@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 
@@ -83,6 +83,8 @@ public class Sora : IDisposable
         public CapturerType CapturerType = Sora.CapturerType.DeviceCamera;
         public UnityEngine.Camera UnityCamera = null;
         public int UnityCameraRenderTargetDepthBuffer = 16;
+        public bool Video = true;
+        public bool Audio = true;
         public string VideoCapturerDevice = "";
         public int VideoWidth = 640;
         public int VideoHeight = 480;
@@ -110,6 +112,9 @@ public class Sora : IDisposable
 
         // DataChannel メッセージング
         public List<DataChannel> DataChannels = new List<DataChannel>();
+
+        // true の場合は署名検証をしない
+        public bool Insecure = false;
     }
 
     IntPtr p;

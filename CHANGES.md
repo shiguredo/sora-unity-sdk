@@ -15,6 +15,8 @@
     - @voluntas
 - [UPDATE] libwebrtc を `97.4692.4.0` に上げる
     - @voluntas
+- [ADD] `Insecure`, `Video`, `Audio` フラグを追加
+    - @melpon
 
 ## 2021.4.0
 
