@@ -10,6 +10,11 @@ on:
 
 jobs:
   build-windows:
+    strategy:
+      fail-fast: false
+      matrix:
+        name:
+          - windows_x86_64
     runs-on: windows-latest
     steps:
     - uses: actions/checkout@v2
@@ -18,25 +23,25 @@ jobs:
       uses: actions/cache@v2
       with:
         path: _install
-        key: windows-v3-${{ hashFiles('VERSIONS') }}
+        key: ${{ matrix.name }}-v3-${{ hashFiles('VERSIONS') }}
         restore-keys: |
-          windows-v3-
+          ${{ matrix.name }}-v3-
     - name: install_tools.ps1
       run: "& .\\install_tools.ps1"
     - name: cmake.ps1
       run: "& .\\cmake.ps1"
-    - name: Copy Windows files
+    - name: Copy ${{ matrix.name }} files
       run: |
-        mkdir windows
-        Copy-Item build\Release\SoraUnitySdk.dll windows
-        Copy-Item _install\webrtc\NOTICE windows
+        mkdir ${{ matrix.name }}
+        Copy-Item build\Release\SoraUnitySdk.dll ${{ matrix.name }}
+        Copy-Item _install\webrtc\NOTICE ${{ matrix.name }}
         # ソースコード（生成した分も含む）も一緒に入れておく
-        Copy-Item -Recurse Sora windows\Sora
-    - name: Upload Windows Artifact
+        Copy-Item -Recurse Sora ${{ matrix.name }}\Sora
+    - name: Upload ${{ matrix.name }} Artifact
       uses: actions/upload-artifact@v2
       with:
-        name: windows
-        path: windows
+        name: ${{ matrix.name }}
+        path: ${{ matrix.name }}
   build-macos:
     strategy:
       fail-fast: false
@@ -117,8 +122,8 @@ jobs:
         mkdir -p SoraUnitySdk/Plugins/SoraUnitySdk/macos
         mkdir -p SoraUnitySdk/Plugins/SoraUnitySdk/ios
         mkdir -p SoraUnitySdk/Plugins/SoraUnitySdk/android/arm64-v8a
-        cp windows/SoraUnitySdk.dll SoraUnitySdk/Plugins/SoraUnitySdk/windows/x86_64/
-        cp -r windows/Sora/ SoraUnitySdk/SoraUnitySdk/
+        cp windows_x86_64/SoraUnitySdk.dll SoraUnitySdk/Plugins/SoraUnitySdk/windows/x86_64/
+        cp -r windows_x86_64/Sora/ SoraUnitySdk/SoraUnitySdk/
         cp -r macos/SoraUnitySdk.bundle SoraUnitySdk/Plugins/SoraUnitySdk/macos/SoraUnitySdk.bundle
         cp android/libSoraUnitySdk.so SoraUnitySdk/Plugins/SoraUnitySdk/android/arm64-v8a/
         cp android/webrtc.jar SoraUnitySdk/Plugins/SoraUnitySdk/android/
@@ -133,7 +138,7 @@ jobs:
         echo "-----------------------------" >> SoraUnitySdk/NOTICE
         echo "# WebRTC for Windows" >> SoraUnitySdk/NOTICE
         echo "-----------------------------" >> SoraUnitySdk/NOTICE
-        cat windows/NOTICE >> SoraUnitySdk/NOTICE
+        cat windows_x86_64/NOTICE >> SoraUnitySdk/NOTICE
 
         echo "-----------------------------" >> SoraUnitySdk/NOTICE
         echo "# WebRTC for macOS" >> SoraUnitySdk/NOTICE

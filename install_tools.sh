@@ -66,10 +66,20 @@ if [ $BOOST_CHANGED -eq 1 -o ! -e $INSTALL_DIR/boost/include/boost/version.hpp ]
 
     pushd boost_${_VERSION_UNDERSCORE}
       ./bootstrap.sh
-      ./b2 headers
       rm -rf $INSTALL_DIR/boost
-      mkdir -p $INSTALL_DIR/boost/include
-      cp -r boost $INSTALL_DIR/boost/include/boost
+      ./b2 install \
+        cxxstd=17 \
+        -j8 \
+        --prefix=$INSTALL_DIR/boost \
+        --with-filesystem \
+        --with-container \
+        --with-json \
+        --layout=system \
+        address-model=64 \
+        link=static \
+        threading=multi \
+        variant=release \
+        runtime-link=static
     popd
   popd
 fi

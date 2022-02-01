@@ -18,19 +18,24 @@ set(_INSTALL_DIR ${CMAKE_CURRENT_SOURCE_DIR}/_install)
 project(SoraUnitySdk C CXX)
 
 set(Boost_USE_STATIC_LIBS ON)
+if (WIN32)
+  set(Boost_USE_STATIC_RUNTIME ON)
+else()
+  set(Boost_USE_STATIC_RUNTIME OFF)
+endif()
 
 set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY BOTH)
 set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE BOTH)
 set(CMAKE_FIND_ROOT_PATH_MODE_PACKAGE BOTH)
 
 find_package(WebRTC REQUIRED)
-find_package(Boost REQUIRED)
+find_package(Boost REQUIRED COMPONENTS json)
 
 set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)
 set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
 set(CMAKE_FIND_ROOT_PATH_MODE_PACKAGE ONLY)
 
-if (SORA_UNITY_SDK_PACKAGE STREQUAL "windows")
+if (SORA_UNITY_SDK_PACKAGE STREQUAL "windows_x86_64")
   add_library(SoraUnitySdk SHARED)
 
   # configure_file で使う
@@ -55,11 +60,10 @@ elseif (SORA_UNITY_SDK_PACKAGE STREQUAL "android")
   set(SORA_UNITY_SDK_PLATFORM Android)
 endif()
 
-set_target_properties(SoraUnitySdk PROPERTIES CXX_STANDARD 14 C_STANDARD 99)
+set_target_properties(SoraUnitySdk PROPERTIES CXX_STANDARD 17 C_STANDARD 99)
 
 target_sources(SoraUnitySdk
   PRIVATE
-    src/boost_json.cpp
     src/id_pointer.cpp
     src/sora.cpp
     src/sora_signaling.cpp
@@ -133,9 +137,10 @@ target_link_libraries(SoraUnitySdk
   PRIVATE
     WebRTC::WebRTC
     Boost::boost
+    Boost::json
 )
 
-if (SORA_UNITY_SDK_PACKAGE STREQUAL "windows")
+if (SORA_UNITY_SDK_PACKAGE STREQUAL "windows_x86_64")
   # 文字コードを utf-8 として扱うのと、シンボルテーブル数を増やす
   target_compile_options(SoraUnitySdk
     PRIVATE
