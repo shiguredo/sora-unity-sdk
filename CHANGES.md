@@ -13,8 +13,8 @@
 
 - [CHANGE] Github Actions の `macos-latest` を `macos-11` へ変更する
     - @voluntas
-- [UPDATE] libwebrtc を `97.4692.4.0` に上げる
-    - @voluntas
+- [UPDATE] libwebrtc を `99.4844.0.0` に上げる
+    - @voluntas @melpon
 - [ADD] `Insecure`, `Video`, `Audio` フラグを追加
     - @melpon
 
