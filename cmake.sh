@@ -74,8 +74,9 @@ CMAKE_COMMON_ARGS=" \
     -DWEBRTC_ROOT_DIR="$INSTALL_DIR/$PACKAGE/webrtc" \
     -DJSON_ROOT_DIR"=$INSTALL_DIR/json" \
     -DCMAKE_MODULE_PATH="$MODULE_PATH" \
-    -DCMAKE_PREFIX_PATH="$INSTALL_DIR/boost" \
+    -DCMAKE_PREFIX_PATH="$INSTALL_DIR/$PACKAGE/boost" \
     -DANDROID_TOOLCHAIN_FILE="$INSTALL_DIR/android-ndk/build/cmake/android.toolchain.cmake" \
+    -DANDROID_NATIVE_API_LEVEL=$ANDROID_NATIVE_API_LEVEL \
 "
 
 if [ "$PACKAGE" = "ios" ]; then
@@ -109,8 +110,9 @@ else
       -DWEBRTC_ROOT_DIR="$INSTALL_DIR/$PACKAGE/webrtc" \
       -DJSON_ROOT_DIR"=$INSTALL_DIR/json" \
       -DCMAKE_MODULE_PATH="$MODULE_PATH" \
-      -DCMAKE_PREFIX_PATH="$INSTALL_DIR/boost" \
+      -DCMAKE_PREFIX_PATH="$INSTALL_DIR/$PACKAGE/boost" \
       -DANDROID_TOOLCHAIN_FILE="$INSTALL_DIR/android-ndk/build/cmake/android.toolchain.cmake" \
+      -DANDROID_NATIVE_API_LEVEL=$ANDROID_NATIVE_API_LEVEL \
       $CMAKE_ARGS
     cmake --build . -j$JOBS
   popd
