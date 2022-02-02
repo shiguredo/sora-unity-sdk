@@ -92,7 +92,7 @@ std::unique_ptr<webrtc::VideoDecoder> HWVideoDecoderFactory::CreateVideoDecoder(
         absl::make_unique<NvCodecVideoDecoder>(cudaVideoCodec_H264));
 #endif
 
-  RTC_NOTREACHED();
+  RTC_DCHECK_NOTREACHED();
   return nullptr;
 }
 

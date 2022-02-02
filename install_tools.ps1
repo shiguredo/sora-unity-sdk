@@ -43,9 +43,12 @@ if ($BOOST_CHANGED -Or !(Test-Path "$INSTALL_DIR\boost\include\boost\version.hpp
   Push-Location $BUILD_DIR\boost_${_BOOST_UNDERSCORE_VERSION}
     & .\bootstrap.bat
     & .\b2.exe install `
+        cxxstd=17 `
         -j8 `
         --prefix=$INSTALL_DIR\boost `
         --with-filesystem `
+        --with-container `
+        --with-json `
         --layout=system `
         address-model=64 `
         link=static `
@@ -66,7 +69,7 @@ if (!(Test-Path $WEBRTC_VERSION_FILE) -Or ("$WEBRTC_BUILD_VERSION" -ne (Get-Cont
 
 if ($WEBRTC_CHANGED -Or !(Test-Path "$INSTALL_DIR\webrtc\release\webrtc.lib")) {
   # shiguredo-webrtc-windows のバイナリをダウンロードする
-  $_URL = "https://github.com/shiguredo-webrtc-build/webrtc-build/releases/download/m$WEBRTC_BUILD_VERSION/webrtc.windows.zip"
+  $_URL = "https://github.com/shiguredo-webrtc-build/webrtc-build/releases/download/m$WEBRTC_BUILD_VERSION/webrtc.windows_x86_64.zip"
   $_FILE = "$BUILD_DIR\webrtc-m$WEBRTC_BUILD_VERSION.zip"
   Push-Location $BUILD_DIR
     if (!(Test-Path $_FILE)) {

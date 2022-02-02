@@ -320,7 +320,7 @@ void Sora::DoConnect(const sora_conf::internal::ConnectConfig& cc,
                   "Failed to start thread");
     return;
   }
-  thread_->PostTask(RTC_FROM_HERE, [this]() {
+  thread_->PostTask([this]() {
     auto guard = boost::asio::make_work_guard(*ioc_);
     RTC_LOG(LS_INFO) << "io_context started";
     ioc_->run();

@@ -44,37 +44,6 @@ for name in macos android ios; do
 done
 echo $WEBRTC_BUILD_VERSION > $WEBRTC_VERSION_FILE
 
-# Boost
-BOOST_VERSION_FILE="$INSTALL_DIR/boost.version"
-BOOST_CHANGED=0
-if [ ! -e $BOOST_VERSION_FILE -o "$BOOST_VERSION" != "`cat $BOOST_VERSION_FILE`" ]; then
-  BOOST_CHANGED=1
-fi
-
-if [ $BOOST_CHANGED -eq 1 -o ! -e $INSTALL_DIR/boost/include/boost/version.hpp ]; then
-  _VERSION_UNDERSCORE=${BOOST_VERSION//./_}
-  _URL=https://boostorg.jfrog.io/artifactory/main/release/${BOOST_VERSION}/source/boost_${_VERSION_UNDERSCORE}.tar.gz
-  _FILE=$BUILD_DIR/boost_${_VERSION_UNDERSCORE}.tar.gz
-  if [ ! -e $_FILE ]; then
-    echo "file(DOWNLOAD $_URL $_FILE)" > $BUILD_DIR/tmp.cmake
-    cmake -P $BUILD_DIR/tmp.cmake
-    rm $BUILD_DIR/tmp.cmake
-  fi
-  pushd $BUILD_DIR
-    rm -rf boost_${_VERSION_UNDERSCORE}
-    cmake -E tar xf $_FILE
-
-    pushd boost_${_VERSION_UNDERSCORE}
-      ./bootstrap.sh
-      ./b2 headers
-      rm -rf $INSTALL_DIR/boost
-      mkdir -p $INSTALL_DIR/boost/include
-      cp -r boost $INSTALL_DIR/boost/include/boost
-    popd
-  popd
-fi
-echo $BOOST_VERSION > $BOOST_VERSION_FILE
-
 # Android NDK のインストール
 ANDROID_NDK_VERSION_FILE="$INSTALL_DIR/android_ndk.version"
 ANDROID_NDK_CHANGED=0
@@ -143,6 +112,86 @@ pushd $INSTALL_DIR/buildtools
   git reset --hard $WEBRTC_SRC_BUILDTOOLS_COMMIT
   cp third_party/libc++/__config_site $INSTALL_DIR/libcxx/include/
 popd
+
+# Boost
+BOOST_VERSION_FILE="$INSTALL_DIR/boost.version"
+BOOST_CHANGED=0
+if [ ! -e $BOOST_VERSION_FILE -o "$BOOST_VERSION" != "`cat $BOOST_VERSION_FILE`" ]; then
+  BOOST_CHANGED=1
+fi
+
+for name in macos android ios; do
+  if [ $BOOST_CHANGED -eq 1 -o ! -e $INSTALL_DIR/$name/boost/include/boost/version.hpp ]; then
+    _VERSION_UNDERSCORE=${BOOST_VERSION//./_}
+    _URL=https://boostorg.jfrog.io/artifactory/main/release/${BOOST_VERSION}/source/boost_${_VERSION_UNDERSCORE}.tar.gz
+    _FILE=$BUILD_DIR/boost_${_VERSION_UNDERSCORE}.tar.gz
+    if [ ! -e $_FILE ]; then
+      echo "file(DOWNLOAD $_URL $_FILE)" > $BUILD_DIR/tmp.cmake
+      cmake -P $BUILD_DIR/tmp.cmake
+      rm $BUILD_DIR/tmp.cmake
+    fi
+    mkdir -p $BUILD_DIR/$name
+    pushd $BUILD_DIR/$name
+      rm -rf boost_${_VERSION_UNDERSCORE}
+      cmake -E tar xf $_FILE
+
+      pushd boost_${_VERSION_UNDERSCORE}
+        ./bootstrap.sh
+        rm -rf $INSTALL_DIR/$name/boost
+
+        case "$name" in
+          "android" )
+            echo "using clang : android : $INSTALL_DIR/android-ndk/toolchains/llvm/prebuilt/darwin-x86_64/bin/aarch64-linux-android${ANDROID_NATIVE_API_LEVEL}-clang++ : <archiver>\"$INSTALL_DIR/android-ndk/toolchains/llvm/prebuilt/darwin-x86_64/bin/aarch64-linux-android-ar\" <ranlib>\"$INSTALL_DIR/android-ndk/toolchains/llvm/prebuilt/darwin-x86_64/bin/aarch64-linux-android-ranlib\" ;" > user-config.jam
+            TARGET_OS=android
+            BOOST_CXXFLAGS=" \
+              -D_LIBCPP_ABI_UNSTABLE \
+              -isystem $INSTALL_DIR/libcxx/include \
+              -nostdinc++ \
+              --sysroot=$INSTALL_DIR/android-ndk/toolchains/llvm/prebuilt/darwin-x86_64/sysroot \
+            "
+            BOOST_FLAGS=" \
+              architecture=arm \
+              --user-config=user-config.jam \
+            "
+            ;;
+          "macos" )
+            unset LD
+            unset RANLIB
+            BOOST_CXXFLAGS=""
+            BOOST_FLAGS=""
+            TARGET_OS=darwin
+            ;;
+          "ios" )
+            unset LD
+            unset RANLIB
+            BOOST_CXXFLAGS=""
+            BOOST_FLAGS=""
+            TARGET_OS=iphone
+            ;;
+        esac
+
+        ./b2 install \
+          cxxstd=17 \
+          -j8 \
+          --prefix=$INSTALL_DIR/$name/boost \
+          --with-filesystem \
+          --with-container \
+          --with-json \
+          cxxflags="$BOOST_CXXFLAGS" \
+          visibility=global \
+          toolset=clang \
+          target-os=$TARGET_OS \
+          address-model=64 \
+          link=static \
+          threading=multi \
+          variant=release \
+          --ignore-site-config \
+          $BOOST_FLAGS
+      popd
+    popd
+  fi
+done
+echo $BOOST_VERSION > $BOOST_VERSION_FILE
 
 # protobuf
 PROTOBUF_VERSION_FILE="$INSTALL_DIR/protobuf.version"
