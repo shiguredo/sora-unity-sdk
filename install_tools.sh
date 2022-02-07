@@ -141,7 +141,13 @@ for name in macos android ios; do
 
         case "$name" in
           "android" )
-            echo "using clang : android : $INSTALL_DIR/android-ndk/toolchains/llvm/prebuilt/darwin-x86_64/bin/aarch64-linux-android${ANDROID_NATIVE_API_LEVEL}-clang++ : <archiver>\"$INSTALL_DIR/android-ndk/toolchains/llvm/prebuilt/darwin-x86_64/bin/aarch64-linux-android-ar\" <ranlib>\"$INSTALL_DIR/android-ndk/toolchains/llvm/prebuilt/darwin-x86_64/bin/aarch64-linux-android-ranlib\" ;" > user-config.jam
+            echo " \
+              using clang \
+              : android \
+              : $INSTALL_DIR/android-ndk/toolchains/llvm/prebuilt/darwin-x86_64/bin/aarch64-linux-android${ANDROID_NATIVE_API_LEVEL}-clang++ \
+              : <archiver>\"$INSTALL_DIR/android-ndk/toolchains/llvm/prebuilt/darwin-x86_64/bin/aarch64-linux-android-ar\" \
+                <ranlib>\"$INSTALL_DIR/android-ndk/toolchains/llvm/prebuilt/darwin-x86_64/bin/aarch64-linux-android-ranlib\" ; \
+              " > user-config.jam
             TARGET_OS=android
             BOOST_CXXFLAGS=" \
               -D_LIBCPP_ABI_UNSTABLE \
@@ -155,38 +161,59 @@ for name in macos android ios; do
             "
             ;;
           "macos" )
-            unset LD
-            unset RANLIB
             BOOST_CXXFLAGS=""
             BOOST_FLAGS=""
             TARGET_OS=darwin
             ;;
           "ios" )
-            unset LD
-            unset RANLIB
             BOOST_CXXFLAGS=""
             BOOST_FLAGS=""
             TARGET_OS=iphone
             ;;
         esac
 
-        ./b2 install \
-          cxxstd=17 \
-          -j8 \
-          --prefix=$INSTALL_DIR/$name/boost \
-          --with-filesystem \
-          --with-container \
-          --with-json \
-          cxxflags="$BOOST_CXXFLAGS" \
-          visibility=global \
-          toolset=clang \
-          target-os=$TARGET_OS \
-          address-model=64 \
-          link=static \
-          threading=multi \
-          variant=release \
-          --ignore-site-config \
-          $BOOST_FLAGS
+        B2_INSTALL_FLAGS=" \
+            cxxstd=17 \
+            -j8 \
+            --with-filesystem \
+            --with-container \
+            --with-json \
+            cxxflags=\"$BOOST_CXXFLAGS\" \
+            visibility=global \
+            toolset=clang \
+            target-os=$TARGET_OS \
+            address-model=64 \
+            link=static \
+            threading=multi \
+            variant=release \
+            --ignore-site-config \
+            $BOOST_FLAGS \
+        "
+        if [ "$name" = "ios" ]; then
+          # シミュレータとデバイス用に生成して lipo でくっつける
+          rm -rf $INSTALL_DIR/$name-simulator/boost
+          rm -rf $INSTALL_DIR/$name-device/boost
+          ./b2 install \
+            $B2_INSTALL_FLAGS \
+            --prefix=$INSTALL_DIR/$name-simulator/boost
+          ./b2 install \
+            $B2_INSTALL_FLAGS \
+            --prefix=$INSTALL_DIR/$name-device/boost \
+            architecture=arm
+          mkdir -p $INSTALL_DIR/$name/boost/lib
+          for filename in `cd $INSTALL_DIR/$name-device/boost/lib && ls -1 *.a`; do
+            lipo -create -output $INSTALL_DIR/$name/boost/lib/$filename \
+              $INSTALL_DIR/$name-simulator/boost/lib/$filename \
+              $INSTALL_DIR/$name-device/boost/lib/$filename
+          done
+          mv $INSTALL_DIR/$name-device/boost/include $INSTALL_DIR/$name/boost/include
+          rm -rf $INSTALL_DIR/$name-simulator
+          rm -rf $INSTALL_DIR/$name-device
+        else
+          ./b2 install \
+            $B2_INSTALL_FLAGS \
+            --prefix=$INSTALL_DIR/$name/boost
+        fi
       popd
     popd
   fi
