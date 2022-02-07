@@ -60,9 +60,9 @@ jobs:
       uses: actions/cache@v2
       with:
         path: _install
-        key: macos-v5-${{ hashFiles('VERSIONS') }}
+        key: macos-v6-${{ hashFiles('VERSIONS') }}
         restore-keys: |
-          macos-v5-
+          macos-v6-
     - name: install_tools.sh
       run: ./install_tools.sh
     - name: cmake.sh
@@ -130,6 +130,7 @@ jobs:
         cp android/webrtc.jar SoraUnitySdk/Plugins/SoraUnitySdk/android/
         cp ios/libSoraUnitySdk.a SoraUnitySdk/Plugins/SoraUnitySdk/ios/
         cp ios/libwebrtc.a SoraUnitySdk/Plugins/SoraUnitySdk/ios/
+        cp ios/libboost_json.a SoraUnitySdk/Plugins/SoraUnitySdk/ios/
 
         cp LICENSE SoraUnitySdk/
 
