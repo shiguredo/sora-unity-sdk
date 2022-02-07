@@ -166,7 +166,12 @@ for name in macos android ios; do
             TARGET_OS=darwin
             ;;
           "ios" )
-            BOOST_CXXFLAGS=""
+            BOOST_CXXFLAGS=" \
+              -fvisibility=default \
+              -mios-version-min=10.0 \
+              -fvisibility=hidden \
+              -fvisibility-inlines-hidden \
+            "
             BOOST_FLAGS=""
             TARGET_OS=iphone
             ;;
@@ -178,7 +183,6 @@ for name in macos android ios; do
             --with-filesystem \
             --with-container \
             --with-json \
-            cxxflags=\"$BOOST_CXXFLAGS\" \
             visibility=global \
             toolset=clang \
             target-os=$TARGET_OS \
@@ -193,11 +197,35 @@ for name in macos android ios; do
           # シミュレータとデバイス用に生成して lipo でくっつける
           rm -rf $INSTALL_DIR/$name-simulator/boost
           rm -rf $INSTALL_DIR/$name-device/boost
+          CLANGPP=`xcodebuild -find clang++`
+          echo " \
+            using clang \
+            : iphone \
+            : $CLANGPP -arch x86_64 \
+            : <striper> <root>`xcrun --sdk iphonesimulator --show-sdk-path` \
+            : <architecture>x64 <target-os>iphone <address-model>64 \
+            ; \
+            " > user-config.jam
           ./b2 install \
             $B2_INSTALL_FLAGS \
+            cflags="-arch x86_64 -isysroot `xcrun --sdk iphonesimulator --show-sdk-path` $BOOST_CXXFLAGS" \
+            cxxflags="-arch x86_64 -isysroot `xcrun --sdk iphonesimulator --show-sdk-path` $BOOST_CXXFLAGS" \
+            --build-dir=./$name-simulator \
             --prefix=$INSTALL_DIR/$name-simulator/boost
+
+          echo " \
+            using clang \
+            : iphone \
+            : $CLANGPP -arch arm64 -fembed-bitcode \
+            : <striper> <root>`xcrun --sdk iphoneos --show-sdk-path` \
+            : <architecture>arm <target-os>iphone <address-model>64 \
+            ; \
+            " > user-config.jam
           ./b2 install \
             $B2_INSTALL_FLAGS \
+            cflags="-arch arm64 -isysroot `xcrun --sdk iphoneos --show-sdk-path` $BOOST_CXXFLAGS" \
+            cxxflags="-arch arm64 -isysroot `xcrun --sdk iphoneos --show-sdk-path` $BOOST_CXXFLAGS" \
+            --build-dir=./$name-device \
             --prefix=$INSTALL_DIR/$name-device/boost \
             architecture=arm
           mkdir -p $INSTALL_DIR/$name/boost/lib
@@ -212,6 +240,7 @@ for name in macos android ios; do
         else
           ./b2 install \
             $B2_INSTALL_FLAGS \
+            cxxflags="$BOOST_CXXFLAGS" \
             --prefix=$INSTALL_DIR/$name/boost
         fi
       popd
