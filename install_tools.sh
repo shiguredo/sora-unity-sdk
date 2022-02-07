@@ -171,6 +171,7 @@ for name in macos android ios; do
               -mios-version-min=10.0 \
               -fvisibility=hidden \
               -fvisibility-inlines-hidden \
+              -fembed-bitcode \
             "
             BOOST_FLAGS=""
             TARGET_OS=iphone
@@ -201,7 +202,7 @@ for name in macos android ios; do
           echo " \
             using clang \
             : iphone \
-            : $CLANGPP -arch x86_64 \
+            : $CLANGPP -arch x86_64 -fembed-bitcode \
             : <striper> <root>`xcrun --sdk iphonesimulator --show-sdk-path` \
             : <architecture>x64 <target-os>iphone <address-model>64 \
             ; \
