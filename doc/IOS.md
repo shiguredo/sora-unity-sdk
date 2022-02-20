@@ -18,7 +18,7 @@
 [![Image from Gyazo](https://i.gyazo.com/622ba8940acb005eb354124b2a1999bb.png)](https://gyazo.com/622ba8940acb005eb354124b2a1999bb)
 
 - libboost_json.a のインスペクタ -> Select Platform for plugin -> Any Platform のチェックを外し、 Include Platforms で iOS だけが チェックされるように設定して下さい。
-- libboost_json.a のインスペクタ -> Platform settings の OpenGLES の項目にチェックが入っていない場合、チェックを入れてください。(Unity 2020 以降をご利用の場合)
+- Unity 2020 以降をご利用の場合は Platform settings の OpenGLES の項目にチェックが入っていない場合、チェックを入れてください。
 
 [![Image from Gyazo](https://i.gyazo.com/b556ba7577afb690cba2bf442555939e.png)](https://gyazo.com/b556ba7577afb690cba2bf442555939e)
 
