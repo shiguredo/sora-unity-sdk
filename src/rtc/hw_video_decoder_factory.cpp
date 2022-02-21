@@ -31,9 +31,7 @@ bool IsFormatSupported(
     const std::vector<webrtc::SdpVideoFormat>& supported_formats,
     const webrtc::SdpVideoFormat& format) {
   for (const webrtc::SdpVideoFormat& supported_format : supported_formats) {
-    if (cricket::IsSameCodec(format.name, format.parameters,
-                             supported_format.name,
-                             supported_format.parameters)) {
+    if (format.IsSameCodec(supported_format)) {
       return true;
     }
   }
@@ -94,7 +92,7 @@ std::unique_ptr<webrtc::VideoDecoder> HWVideoDecoderFactory::CreateVideoDecoder(
         absl::make_unique<NvCodecVideoDecoder>(cudaVideoCodec_H264));
 #endif
 
-  RTC_NOTREACHED();
+  RTC_DCHECK_NOTREACHED();
   return nullptr;
 }
 

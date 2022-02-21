@@ -263,8 +263,8 @@ int32_t NvCodecH264Encoder::Encode(
     h264_bitstream_parser_.ParseBitstream(encoded_image_);
     encoded_image_.qp_ = h264_bitstream_parser_.GetLastSliceQp().value_or(-1);
 
-    webrtc::EncodedImageCallback::Result result = callback_->OnEncodedImage(
-        encoded_image_, &codec_specific);
+    webrtc::EncodedImageCallback::Result result =
+        callback_->OnEncodedImage(encoded_image_, &codec_specific);
     if (result.error != webrtc::EncodedImageCallback::Result::OK) {
       RTC_LOG(LS_ERROR) << __FUNCTION__
                         << " OnEncodedImage failed error:" << result.error;
@@ -308,7 +308,6 @@ webrtc::VideoEncoder::EncoderInfo NvCodecH264Encoder::GetEncoderInfo() const {
   info.scaling_settings = webrtc::VideoEncoder::ScalingSettings(
       kLowH264QpThreshold, kHighH264QpThreshold);
   info.is_hardware_accelerated = true;
-  info.has_internal_source = false;
   return info;
 }
 

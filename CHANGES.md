@@ -9,7 +9,14 @@
 - FIX
     - バグ修正
 
-## develop
+## 2022.1.0
+
+- [CHANGE] Github Actions の `macos-latest` を `macos-11` へ変更する
+    - @voluntas
+- [UPDATE] libwebrtc を `99.4844.1.0` に上げる
+    - @voluntas @melpon @torikizi
+- [ADD] `Insecure`, `Video`, `Audio` フラグを追加
+    - @melpon
 
 ## 2021.4.0
 

@@ -187,6 +187,7 @@ void Sora::DoConnect(const sora_conf::internal::ConnectConfig& cc,
   config.audio_recording_device = cc.audio_recording_device;
   config.audio_playout_device = cc.audio_playout_device;
   config.simulcast = cc.simulcast;
+  config.insecure = cc.insecure;
 
   if (cc.role == "sendonly" || cc.role == "sendrecv") {
     // 送信側は capturer を設定する。送信のみの場合は playout の設定はしない
@@ -242,6 +243,8 @@ void Sora::DoConnect(const sora_conf::internal::ConnectConfig& cc,
     config.signaling_url = cc.signaling_url;
     config.channel_id = cc.channel_id;
     config.client_id = cc.client_id;
+    config.video = cc.video;
+    config.audio = cc.audio;
     config.video_codec_type = cc.video_codec_type;
     config.video_bit_rate = cc.video_bit_rate;
     config.audio_codec_type = cc.audio_codec_type;
@@ -264,6 +267,7 @@ void Sora::DoConnect(const sora_conf::internal::ConnectConfig& cc,
         config.metadata = md;
       }
     }
+    config.insecure = cc.insecure;
 
     ioc_.reset(new boost::asio::io_context(1));
     auto on_notify = [this](std::string json) {
@@ -316,7 +320,7 @@ void Sora::DoConnect(const sora_conf::internal::ConnectConfig& cc,
                   "Failed to start thread");
     return;
   }
-  thread_->PostTask(RTC_FROM_HERE, [this]() {
+  thread_->PostTask([this]() {
     auto guard = boost::asio::make_work_guard(*ioc_);
     RTC_LOG(LS_INFO) << "io_context started";
     ioc_->run();

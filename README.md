@@ -1,6 +1,6 @@
 # Sora Unity SDK
 
-[![libwebrtc](https://img.shields.io/badge/libwebrtc-m94.4606-blue.svg)](https://chromium.googlesource.com/external/webrtc/+/branch-heads/4606)
+[![libwebrtc](https://img.shields.io/badge/libwebrtc-99.4844-blue.svg)](https://chromium.googlesource.com/external/webrtc/+/branch-heads/4844)
 [![GitHub tag](https://img.shields.io/github/tag/shiguredo/sora-unity-sdk.svg)](https://github.com/shiguredo/sora-unity-sdk)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Actions Status](https://github.com/shiguredo/sora-unity-sdk/workflows/build/badge.svg)](https://github.com/shiguredo/sora-unity-sdk/actions)
@@ -41,6 +41,10 @@ Sora Unity SDK を使ってみたい人は [USE.md](doc/USE.md) をお読みく�
 
 - Unity 2019.4 (LTS)
 - Unity 2020.3 (LTS)
+
+## システム条件
+
+- Sora 2021.2 以降
 
 ## 対応プラットフォーム
 
@@ -102,13 +106,6 @@ Sora Unity SDK ではソフトウェアでの H.264 エンコード/デコード
 
 詳細は H.264 を [USE_H264.md](doc/USE_H264.md) をお読みください
 
-## 今後
-
-- Apple M1 対応
-- ミュート機能
-- 音声のみ送受信機能
-- サイマルキャスト rid 指定対応
-
 ## 有償での優先実装
 
 - Windows 版 NVIDIA VIDEO CODEC SDK による H.264 エンコーダ対応
@@ -131,10 +128,15 @@ Sora Unity SDK ではソフトウェアでの H.264 エンコード/デコード
 ### 機能
 
 - ミュート機能
+- デバイスをつかまないようにする機能
+- Apple M1 対応
+- 音声のみ送受信機能
+- サイマルキャスト rid 指定対応
 
 ### プラットフォーム
 
 - Ubuntu 20.04 への対応
+- ARM 版 Windows への対応
 
 ### NVIDIA VIDEO CODEC SDK
 
@@ -157,8 +159,8 @@ Sora Unity SDK ではソフトウェアでの H.264 エンコード/デコード
 Apache License 2.0
 
 ```
-Copyright 2019-2021, Wandbox LLC (Original Author)
-Copyright 2019-2021, Shiguredo Inc.
+Copyright 2019-2022, Wandbox LLC (Original Author)
+Copyright 2019-2022, Shiguredo Inc.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -172,3 +174,4 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 ```
+

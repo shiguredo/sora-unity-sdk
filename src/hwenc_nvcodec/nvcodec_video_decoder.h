@@ -18,8 +18,7 @@ class NvCodecVideoDecoder : public webrtc::VideoDecoder {
 
   static bool IsSupported(cudaVideoCodec codec_id);
 
-  int32_t InitDecode(const webrtc::VideoCodec* codec_settings,
-                     int32_t number_of_cores) override;
+  bool Configure(const Settings& settings) override;
 
   int32_t Decode(const webrtc::EncodedImage& input_image,
                  bool missing_frames,
@@ -36,7 +35,7 @@ class NvCodecVideoDecoder : public webrtc::VideoDecoder {
   static void NvCodecVideoDecoder::Log(NvCodecVideoDecoderCuda::LogType type,
                                        const std::string& log);
 
-  int32_t InitNvCodec();
+  bool InitNvCodec();
   void ReleaseNvCodec();
 
   webrtc::DecodedImageCallback* decode_complete_callback_ = nullptr;

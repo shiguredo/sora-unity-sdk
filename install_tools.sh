@@ -44,37 +44,6 @@ for name in macos android ios; do
 done
 echo $WEBRTC_BUILD_VERSION > $WEBRTC_VERSION_FILE
 
-# Boost
-BOOST_VERSION_FILE="$INSTALL_DIR/boost.version"
-BOOST_CHANGED=0
-if [ ! -e $BOOST_VERSION_FILE -o "$BOOST_VERSION" != "`cat $BOOST_VERSION_FILE`" ]; then
-  BOOST_CHANGED=1
-fi
-
-if [ $BOOST_CHANGED -eq 1 -o ! -e $INSTALL_DIR/boost/include/boost/version.hpp ]; then
-  _VERSION_UNDERSCORE=${BOOST_VERSION//./_}
-  _URL=https://boostorg.jfrog.io/artifactory/main/release/${BOOST_VERSION}/source/boost_${_VERSION_UNDERSCORE}.tar.gz
-  _FILE=$BUILD_DIR/boost_${_VERSION_UNDERSCORE}.tar.gz
-  if [ ! -e $_FILE ]; then
-    echo "file(DOWNLOAD $_URL $_FILE)" > $BUILD_DIR/tmp.cmake
-    cmake -P $BUILD_DIR/tmp.cmake
-    rm $BUILD_DIR/tmp.cmake
-  fi
-  pushd $BUILD_DIR
-    rm -rf boost_${_VERSION_UNDERSCORE}
-    cmake -E tar xf $_FILE
-
-    pushd boost_${_VERSION_UNDERSCORE}
-      ./bootstrap.sh
-      ./b2 headers
-      rm -rf $INSTALL_DIR/boost
-      mkdir -p $INSTALL_DIR/boost/include
-      cp -r boost $INSTALL_DIR/boost/include/boost
-    popd
-  popd
-fi
-echo $BOOST_VERSION > $BOOST_VERSION_FILE
-
 # Android NDK のインストール
 ANDROID_NDK_VERSION_FILE="$INSTALL_DIR/android_ndk.version"
 ANDROID_NDK_CHANGED=0
@@ -117,7 +86,7 @@ if [ ! -e $INSTALL_DIR/android/webrtc.ldflags ]; then
 fi
 
 # 特定バージョンの libcxx, libcxxabi を取得
-source $INSTALL_DIR/macos/webrtc/release/VERSIONS
+source $INSTALL_DIR/macos/webrtc/VERSIONS
 if [ ! -e $INSTALL_DIR/libcxx/.git ]; then
   git clone $WEBRTC_SRC_BUILDTOOLS_THIRD_PARTY_LIBCXX_TRUNK_URL $INSTALL_DIR/libcxx
 fi
@@ -143,6 +112,143 @@ pushd $INSTALL_DIR/buildtools
   git reset --hard $WEBRTC_SRC_BUILDTOOLS_COMMIT
   cp third_party/libc++/__config_site $INSTALL_DIR/libcxx/include/
 popd
+
+# Boost
+BOOST_VERSION_FILE="$INSTALL_DIR/boost.version"
+BOOST_CHANGED=0
+if [ ! -e $BOOST_VERSION_FILE -o "$BOOST_VERSION" != "`cat $BOOST_VERSION_FILE`" ]; then
+  BOOST_CHANGED=1
+fi
+
+for name in macos android ios; do
+  if [ $BOOST_CHANGED -eq 1 -o ! -e $INSTALL_DIR/$name/boost/include/boost/version.hpp ]; then
+    _VERSION_UNDERSCORE=${BOOST_VERSION//./_}
+    _URL=https://boostorg.jfrog.io/artifactory/main/release/${BOOST_VERSION}/source/boost_${_VERSION_UNDERSCORE}.tar.gz
+    _FILE=$BUILD_DIR/boost_${_VERSION_UNDERSCORE}.tar.gz
+    if [ ! -e $_FILE ]; then
+      echo "file(DOWNLOAD $_URL $_FILE)" > $BUILD_DIR/tmp.cmake
+      cmake -P $BUILD_DIR/tmp.cmake
+      rm $BUILD_DIR/tmp.cmake
+    fi
+    mkdir -p $BUILD_DIR/$name
+    pushd $BUILD_DIR/$name
+      rm -rf boost_${_VERSION_UNDERSCORE}
+      cmake -E tar xf $_FILE
+
+      pushd boost_${_VERSION_UNDERSCORE}
+        ./bootstrap.sh
+        rm -rf $INSTALL_DIR/$name/boost
+
+        case "$name" in
+          "android" )
+            echo " \
+              using clang \
+              : android \
+              : $INSTALL_DIR/android-ndk/toolchains/llvm/prebuilt/darwin-x86_64/bin/aarch64-linux-android${ANDROID_NATIVE_API_LEVEL}-clang++ \
+              : <archiver>\"$INSTALL_DIR/android-ndk/toolchains/llvm/prebuilt/darwin-x86_64/bin/aarch64-linux-android-ar\" \
+                <ranlib>\"$INSTALL_DIR/android-ndk/toolchains/llvm/prebuilt/darwin-x86_64/bin/aarch64-linux-android-ranlib\" ; \
+              " > user-config.jam
+            TARGET_OS=android
+            BOOST_CXXFLAGS=" \
+              -D_LIBCPP_ABI_UNSTABLE \
+              -isystem $INSTALL_DIR/libcxx/include \
+              -nostdinc++ \
+              --sysroot=$INSTALL_DIR/android-ndk/toolchains/llvm/prebuilt/darwin-x86_64/sysroot \
+            "
+            BOOST_FLAGS=" \
+              architecture=arm \
+              --user-config=user-config.jam \
+            "
+            ;;
+          "macos" )
+            BOOST_CXXFLAGS=""
+            BOOST_FLAGS=""
+            TARGET_OS=darwin
+            ;;
+          "ios" )
+            BOOST_CXXFLAGS=" \
+              -fvisibility=default \
+              -mios-version-min=10.0 \
+              -fvisibility=hidden \
+              -fvisibility-inlines-hidden \
+              -fembed-bitcode \
+            "
+            BOOST_FLAGS=""
+            TARGET_OS=iphone
+            ;;
+        esac
+
+        B2_INSTALL_FLAGS=" \
+            cxxstd=17 \
+            -j8 \
+            --with-filesystem \
+            --with-container \
+            --with-json \
+            visibility=global \
+            toolset=clang \
+            target-os=$TARGET_OS \
+            address-model=64 \
+            link=static \
+            threading=multi \
+            variant=release \
+            --ignore-site-config \
+            $BOOST_FLAGS \
+        "
+        if [ "$name" = "ios" ]; then
+          # シミュレータとデバイス用に生成して lipo でくっつける
+          rm -rf $INSTALL_DIR/$name-simulator/boost
+          rm -rf $INSTALL_DIR/$name-device/boost
+          CLANGPP=`xcodebuild -find clang++`
+          echo " \
+            using clang \
+            : iphone \
+            : $CLANGPP -arch x86_64 -fembed-bitcode \
+            : <striper> <root>`xcrun --sdk iphonesimulator --show-sdk-path` \
+            : <architecture>x64 <target-os>iphone <address-model>64 \
+            ; \
+            " > user-config.jam
+          ./b2 install \
+            $B2_INSTALL_FLAGS \
+            cflags="-arch x86_64 -isysroot `xcrun --sdk iphonesimulator --show-sdk-path` $BOOST_CXXFLAGS" \
+            cxxflags="-arch x86_64 -isysroot `xcrun --sdk iphonesimulator --show-sdk-path` $BOOST_CXXFLAGS" \
+            --build-dir=./$name-simulator \
+            --prefix=$INSTALL_DIR/$name-simulator/boost
+
+          echo " \
+            using clang \
+            : iphone \
+            : $CLANGPP -arch arm64 -fembed-bitcode \
+            : <striper> <root>`xcrun --sdk iphoneos --show-sdk-path` \
+            : <architecture>arm <target-os>iphone <address-model>64 \
+            ; \
+            " > user-config.jam
+          ./b2 install \
+            $B2_INSTALL_FLAGS \
+            cflags="-arch arm64 -isysroot `xcrun --sdk iphoneos --show-sdk-path` $BOOST_CXXFLAGS" \
+            cxxflags="-arch arm64 -isysroot `xcrun --sdk iphoneos --show-sdk-path` $BOOST_CXXFLAGS" \
+            --build-dir=./$name-device \
+            --prefix=$INSTALL_DIR/$name-device/boost \
+            architecture=arm
+          mkdir -p $INSTALL_DIR/$name/boost/lib
+          for filename in `cd $INSTALL_DIR/$name-device/boost/lib && ls -1 *.a`; do
+            lipo -create -output $INSTALL_DIR/$name/boost/lib/$filename \
+              $INSTALL_DIR/$name-simulator/boost/lib/$filename \
+              $INSTALL_DIR/$name-device/boost/lib/$filename
+          done
+          mv $INSTALL_DIR/$name-device/boost/include $INSTALL_DIR/$name/boost/include
+          rm -rf $INSTALL_DIR/$name-simulator
+          rm -rf $INSTALL_DIR/$name-device
+        else
+          ./b2 install \
+            $B2_INSTALL_FLAGS \
+            cxxflags="$BOOST_CXXFLAGS" \
+            --prefix=$INSTALL_DIR/$name/boost
+        fi
+      popd
+    popd
+  fi
+done
+echo $BOOST_VERSION > $BOOST_VERSION_FILE
 
 # protobuf
 PROTOBUF_VERSION_FILE="$INSTALL_DIR/protobuf.version"
