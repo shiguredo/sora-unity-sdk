@@ -46,7 +46,7 @@ jobs:
       run: |
         mkdir windows_hololens2
         Copy-Item build\hololens2\Release\SoraUnitySdk.dll windows_hololens2
-        Copy-Item _install\hololens2\webrtc\NOTICE ${{ matrix.name }}
+        Copy-Item _install\hololens2\webrtc\NOTICE windows_hololens2
     - name: Upload windows_hololens2 Artifact
       uses: actions/upload-artifact@v2
       with:
