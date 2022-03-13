@@ -130,6 +130,7 @@ jobs:
       run: |
         set -ex
         mkdir -p SoraUnitySdk/Plugins/SoraUnitySdk/windows/x86_64
+        mkdir -p SoraUnitySdk/Plugins/SoraUnitySdk/windows/hololens2
         mkdir -p SoraUnitySdk/Plugins/SoraUnitySdk/macos
         mkdir -p SoraUnitySdk/Plugins/SoraUnitySdk/ios
         mkdir -p SoraUnitySdk/Plugins/SoraUnitySdk/android/arm64-v8a
