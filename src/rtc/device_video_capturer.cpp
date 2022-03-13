@@ -10,6 +10,7 @@
 
 #include "device_video_capturer.h"
 
+#include <math.h>
 #include <stdint.h>
 #include <memory>
 
@@ -47,12 +48,29 @@ bool DeviceVideoCapturer::Init(size_t width,
   }
   vcm_->RegisterCaptureDataCallback(this);
 
+#if defined(SORA_UNITY_SDK_HOLOLENS2)
+  // HoloLens 2 の Capability は、ちょっとでも違う値だと無限ループに入ってしまうので、
+  // 既存の Capability から一番近い値を拾ってくる
+  int n = device_info->NumberOfCapabilities(vcm_->CurrentDeviceName());
+  int diff = 0x7fffffff;
+  for (int i = 0; i < n; i++) {
+    webrtc::VideoCaptureCapability capability;
+    device_info->GetCapability(vcm_->CurrentDeviceName(), i, capability);
+    int d =
+        abs((int)(width * height * target_fps -
+                  capability.width * capability.height * capability.maxFPS));
+    if (d < diff) {
+      capability_ = capability;
+      diff = d;
+    }
+  }
+#else
   device_info->GetCapability(vcm_->CurrentDeviceName(), 0, capability_);
-
   capability_.width = static_cast<int32_t>(width);
   capability_.height = static_cast<int32_t>(height);
   capability_.maxFPS = static_cast<int32_t>(target_fps);
   capability_.videoType = webrtc::VideoType::kI420;
+#endif
 
   if (vcm_->StartCapture(capability_) != 0) {
     Destroy();

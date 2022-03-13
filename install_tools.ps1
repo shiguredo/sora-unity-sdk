@@ -2,6 +2,7 @@ $ErrorActionPreference = 'Stop'
 
 $BUILD_DIR = Join-Path (Resolve-Path ".").Path "_build"
 $INSTALL_DIR = Join-Path (Resolve-Path ".").Path "_install"
+$ARCHS = "x86_64","hololens2"
 
 $SORA_VERSION_FILE = Join-Path (Resolve-Path ".").Path "VERSIONS"
 Get-Content $SORA_VERSION_FILE | Foreach-Object{
@@ -14,6 +15,10 @@ Get-Content $SORA_VERSION_FILE | Foreach-Object{
 
 mkdir $BUILD_DIR -Force
 mkdir $INSTALL_DIR -Force
+foreach ($name in $ARCHS) {
+  mkdir $BUILD_DIR\$name -Force
+  mkdir $INSTALL_DIR\$name -Force
+}
 
 # Boost
 
@@ -23,39 +28,61 @@ if (!(Test-Path $BOOST_VERSION_FILE) -Or ("$BOOST_VERSION" -ne (Get-Content $BOO
   $BOOST_CHANGED = $TRUE
 }
 
-if ($BOOST_CHANGED -Or !(Test-Path "$INSTALL_DIR\boost\include\boost\version.hpp")) {
-  $_BOOST_UNDERSCORE_VERSION = $BOOST_VERSION.Replace(".", "_")
-  $_URL = "https://boostorg.jfrog.io/artifactory/main/release/${BOOST_VERSION}/source/boost_${_BOOST_UNDERSCORE_VERSION}.zip"
-  $_FILE = "boost_${_BOOST_UNDERSCORE_VERSION}.zip"
-  # ダウンロードと展開
-  Push-Location $BUILD_DIR
-    if (!(Test-Path $_FILE)) {
-      # curl に擬態しないとアーカイブではなく HTML コンテンツが降ってきてしまう
-      Invoke-WebRequest -Headers @{"User-Agent"="curl/7.55.1"} -Uri $_URL -OutFile $_FILE
+foreach ($name in $ARCHS) {
+  if ($BOOST_CHANGED -Or !(Test-Path "$INSTALL_DIR\$name\boost\include\boost\version.hpp")) {
+    $_BOOST_UNDERSCORE_VERSION = $BOOST_VERSION.Replace(".", "_")
+    $_URL = "https://boostorg.jfrog.io/artifactory/main/release/${BOOST_VERSION}/source/boost_${_BOOST_UNDERSCORE_VERSION}.zip"
+    $_FILE = "boost_${_BOOST_UNDERSCORE_VERSION}.zip"
+    # ダウンロード
+    Push-Location $BUILD_DIR
+      if (!(Test-Path $_FILE)) {
+        # curl に擬態しないとアーカイブではなく HTML コンテンツが降ってきてしまう
+        Invoke-WebRequest -Headers @{"User-Agent"="curl/7.55.1"} -Uri $_URL -OutFile $_FILE
+      }
+    Pop-Location
+
+    # 展開
+    Push-Location $BUILD_DIR\$name
+      if (Test-Path "boost_${_BOOST_UNDERSCORE_VERSION}") {
+        Remove-Item boost_${_BOOST_UNDERSCORE_VERSION} -Force -Recurse
+      }
+      # Expand-Archive -Path $_FILE -DestinationPath .
+      7z x $BUILD_DIR\$_FILE
+    Pop-Location
+
+    $arch = switch ($name) {
+      "x86_64" { "x86" }
+      "hololens2" { "arm" }
     }
-    if (Test-Path "boost_${_BOOST_UNDERSCORE_VERSION}") {
-      Remove-Item boost_${_BOOST_UNDERSCORE_VERSION} -Force -Recurse
+    $runtime = switch ($name) {
+      "x86_64" { "static" }
+      "hololens2" { "shared" }
     }
-    # Expand-Archive -Path $_FILE -DestinationPath .
-    7z x $_FILE
-  Pop-Location
-  # ビルドとインストール
-  Push-Location $BUILD_DIR\boost_${_BOOST_UNDERSCORE_VERSION}
-    & .\bootstrap.bat
-    & .\b2.exe install `
-        cxxstd=17 `
-        -j8 `
-        --prefix=$INSTALL_DIR\boost `
-        --with-filesystem `
-        --with-container `
-        --with-json `
-        --layout=system `
-        address-model=64 `
-        link=static `
-        threading=multi `
-        variant=release `
-        runtime-link=static
-  Pop-Location
+    $variant = "release"
+
+    # メモ。デバッグ時は以下の定義が必須
+    # define=_ITERATOR_DEBUG_LEVEL=0
+
+    # ビルドとインストール
+    Push-Location $BUILD_DIR\$name\boost_${_BOOST_UNDERSCORE_VERSION}
+      & .\bootstrap.bat
+      & .\b2.exe install `
+          cxxstd=17 `
+          -j8 `
+          --prefix=$INSTALL_DIR\$name\boost `
+          --with-filesystem `
+          --with-container `
+          --with-json `
+          --layout=system `
+          --build-dir=build `
+          architecture=$arch `
+          address-model=64 `
+          link=static `
+          threading=multi `
+          variant=$variant `
+          runtime-link=$runtime
+    Pop-Location
+  }
 }
 Set-Content "$BOOST_VERSION_FILE" -Value "$BOOST_VERSION"
 
@@ -67,29 +94,31 @@ if (!(Test-Path $WEBRTC_VERSION_FILE) -Or ("$WEBRTC_BUILD_VERSION" -ne (Get-Cont
   $WEBRTC_CHANGED = $TRUE
 }
 
-if ($WEBRTC_CHANGED -Or !(Test-Path "$INSTALL_DIR\webrtc\release\webrtc.lib")) {
-  # shiguredo-webrtc-windows のバイナリをダウンロードする
-  $_URL = "https://github.com/shiguredo-webrtc-build/webrtc-build/releases/download/m$WEBRTC_BUILD_VERSION/webrtc.windows_x86_64.zip"
-  $_FILE = "$BUILD_DIR\webrtc-m$WEBRTC_BUILD_VERSION.zip"
-  Push-Location $BUILD_DIR
-    if (!(Test-Path $_FILE)) {
-      Invoke-WebRequest -Uri $_URL -OutFile $_FILE
+foreach ($name in $ARCHS) {
+  if ($WEBRTC_CHANGED -Or !(Test-Path "$INSTALL_DIR\$name\webrtc\lib\webrtc.lib")) {
+    # shiguredo-webrtc-build の hololens2 用バイナリをダウンロードする
+    $_URL = "https://github.com/shiguredo-webrtc-build/webrtc-build/releases/download/m$WEBRTC_BUILD_VERSION-hololens2/webrtc.windows_$name.zip"
+    $_FILE = "$BUILD_DIR\webrtc-m$WEBRTC_BUILD_VERSION-$name.zip"
+    Push-Location $BUILD_DIR
+      if (!(Test-Path $_FILE)) {
+        Invoke-WebRequest -Uri $_URL -OutFile $_FILE
+      }
+    Pop-Location
+    # 展開
+    if (Test-Path "$BUILD_DIR\$name\webrtc") {
+      Remove-Item $BUILD_DIR\$name\webrtc -Recurse -Force
     }
-  Pop-Location
-  # 展開
-  if (Test-Path "$BUILD_DIR\webrtc") {
-    Remove-Item $BUILD_DIR\webrtc -Recurse -Force
+    # Expand-Archive -Path $_FILE -DestinationPath "$BUILD_DIR\$name\webrtc"
+    Push-Location $BUILD_DIR\$name
+      7z x $_FILE
+    Pop-Location
+  
+    # インストール
+    if (Test-Path "$INSTALL_DIR\$name\webrtc") {
+      Remove-Item $INSTALL_DIR\$name\webrtc -Recurse -Force
+    }
+    Move-Item $BUILD_DIR\$name\webrtc $INSTALL_DIR\$name\webrtc
   }
-  # Expand-Archive -Path $_FILE -DestinationPath "$BUILD_DIR\webrtc"
-  Push-Location $BUILD_DIR
-    7z x $_FILE
-  Pop-Location
-
-  # インストール
-  if (Test-Path "$INSTALL_DIR\webrtc") {
-    Remove-Item $INSTALL_DIR\webrtc -Recurse -Force
-  }
-  Move-Item $BUILD_DIR\webrtc $INSTALL_DIR\webrtc
 }
 Set-Content "$WEBRTC_VERSION_FILE" -Value "$WEBRTC_BUILD_VERSION"
 

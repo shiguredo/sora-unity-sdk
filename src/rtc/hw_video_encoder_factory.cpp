@@ -16,6 +16,10 @@
 #include "hwenc_nvcodec/nvcodec_h264_encoder.h"
 #endif
 
+#if defined(SORA_UNITY_SDK_HOLOLENS2)
+#include <modules/video_coding/codecs/h264/winuwp/encoder/h264_encoder_mf_impl.h>
+#endif
+
 namespace sora {
 
 std::vector<webrtc::SdpVideoFormat> HWVideoEncoderFactory::GetSupportedFormats()
@@ -44,6 +48,21 @@ std::vector<webrtc::SdpVideoFormat> HWVideoEncoderFactory::GetSupportedFormats()
   }
 #endif
 
+#if defined(SORA_UNITY_SDK_HOLOLENS2)
+  std::vector<webrtc::SdpVideoFormat> h264_codecs = {
+      CreateH264Format(webrtc::H264Profile::kProfileBaseline,
+                       webrtc::H264Level::kLevel3_1, "1"),
+      CreateH264Format(webrtc::H264Profile::kProfileBaseline,
+                       webrtc::H264Level::kLevel3_1, "0"),
+      CreateH264Format(webrtc::H264Profile::kProfileConstrainedBaseline,
+                       webrtc::H264Level::kLevel3_1, "1"),
+      CreateH264Format(webrtc::H264Profile::kProfileConstrainedBaseline,
+                       webrtc::H264Level::kLevel3_1, "0")};
+
+  for (const webrtc::SdpVideoFormat& format : h264_codecs)
+    supported_codecs.push_back(format);
+#endif
+
   return supported_codecs;
 }
 
@@ -63,6 +82,11 @@ std::unique_ptr<webrtc::VideoEncoder> HWVideoEncoderFactory::CreateVideoEncoder(
   if (absl::EqualsIgnoreCase(format.name, cricket::kH264CodecName)) {
     return std::unique_ptr<webrtc::VideoEncoder>(
         absl::make_unique<NvCodecH264Encoder>(cricket::VideoCodec(format)));
+  }
+#endif
+#if defined(SORA_UNITY_SDK_HOLOLENS2)
+  if (absl::EqualsIgnoreCase(format.name, cricket::kH264CodecName)) {
+    return absl::make_unique<webrtc::H264EncoderMFImpl>();
   }
 #endif
 

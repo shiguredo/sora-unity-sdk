@@ -174,6 +174,9 @@ unity_bool_t sora_is_h264_supported() {
 #if defined(SORA_UNITY_SDK_WINDOWS)
   return NvCodecH264Encoder::IsSupported() &&
          NvCodecVideoDecoder::IsSupported(cudaVideoCodec_H264);
+#elif defined(SORA_UNITY_SDK_HOLOLENS2)
+  // HoloLens 2 は Media Foundation を使った HWA があるので常に true
+  return true;
 #elif defined(SORA_UNITY_SDK_MACOS) || defined(SORA_UNITY_SDK_IOS)
   // macOS, iOS は VideoToolbox が使えるので常に true
   return true;

@@ -40,12 +40,21 @@ int NativeBuffer::height() const {
 rtc::scoped_refptr<webrtc::I420BufferInterface> NativeBuffer::ToI420() {
   rtc::scoped_refptr<webrtc::I420Buffer> i420_buffer =
       webrtc::I420Buffer::Create(raw_width_, raw_height_);
+#if defined(SORA_UNITY_SDK_HOLOLENS2)
+  const int conversionResult = libyuv::ConvertToI420(
+      data_.get(), length_, 0, nullptr, 0, i420_buffer.get()->MutableDataY(),
+      i420_buffer.get()->StrideY(), i420_buffer.get()->MutableDataU(),
+      i420_buffer.get()->StrideU(), i420_buffer.get()->MutableDataV(),
+      i420_buffer.get()->StrideV(), 0, 0, raw_width_, raw_height_, raw_width_,
+      raw_height_, libyuv::kRotate0, ConvertVideoType(video_type_));
+#else
   const int conversionResult = libyuv::ConvertToI420(
       data_.get(), length_, i420_buffer.get()->MutableDataY(),
       i420_buffer.get()->StrideY(), i420_buffer.get()->MutableDataU(),
       i420_buffer.get()->StrideU(), i420_buffer.get()->MutableDataV(),
       i420_buffer.get()->StrideV(), 0, 0, raw_width_, raw_height_, raw_width_,
       raw_height_, libyuv::kRotate0, ConvertVideoType(video_type_));
+#endif
   rtc::scoped_refptr<webrtc::I420Buffer> scaled_buffer =
       webrtc::I420Buffer::Create(scaled_width_, scaled_height_);
   scaled_buffer->ScaleFrom(*i420_buffer->ToI420());

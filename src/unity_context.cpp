@@ -124,6 +124,16 @@ void UnityContext::Init(IUnityInterfaces* ifs) {
   RTC_LOG(LS_INFO) << "Log initialized";
 #endif
 
+#if defined(SORA_UNITY_SDK_HOLOLENS2)
+  rtc::LogMessage::LogToDebug((rtc::LoggingSeverity)rtc::LS_NONE);
+  rtc::LogMessage::LogTimestamps();
+  rtc::LogMessage::LogThreads();
+
+  log_sink_.reset(new OutputDebugSink());
+  rtc::LogMessage::AddLogToStream(log_sink_.get(), rtc::LS_INFO);
+  RTC_LOG(LS_INFO) << "Log initialized";
+#endif
+
 #if defined(SORA_UNITY_SDK_ANDROID) || defined(SORA_UNITY_SDK_IOS)
   rtc::LogMessage::LogToDebug((rtc::LoggingSeverity)rtc::LS_INFO);
   rtc::LogMessage::LogTimestamps();

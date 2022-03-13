@@ -42,6 +42,21 @@ class UnityCameraCapturer : public sora::ScalableVideoTrackSource,
   std::unique_ptr<D3D11Impl> capturer_;
 #endif
 
+#ifdef SORA_UNITY_SDK_HOLOLENS2
+  class NullImpl {
+    int width_;
+    int height_;
+
+   public:
+    bool Init(UnityContext* context,
+              void* camera_texture,
+              int width,
+              int height);
+    rtc::scoped_refptr<webrtc::I420Buffer> Capture();
+  };
+  std::unique_ptr<NullImpl> capturer_;
+#endif
+
 #if defined(SORA_UNITY_SDK_MACOS) || defined(SORA_UNITY_SDK_IOS)
   class MetalImpl {
     UnityContext* context_;

@@ -23,9 +23,9 @@ jobs:
       uses: actions/cache@v2
       with:
         path: _install
-        key: ${{ matrix.name }}-v3-${{ hashFiles('VERSIONS') }}
+        key: ${{ matrix.name }}-v4-${{ hashFiles('VERSIONS') }}
         restore-keys: |
-          ${{ matrix.name }}-v3-
+          ${{ matrix.name }}-v4-
     - name: install_tools.ps1
       run: "& .\\install_tools.ps1"
     - name: cmake.ps1
@@ -33,8 +33,8 @@ jobs:
     - name: Copy ${{ matrix.name }} files
       run: |
         mkdir ${{ matrix.name }}
-        Copy-Item build\Release\SoraUnitySdk.dll ${{ matrix.name }}
-        Copy-Item _install\webrtc\NOTICE ${{ matrix.name }}
+        Copy-Item build\x86_64\Release\SoraUnitySdk.dll ${{ matrix.name }}
+        Copy-Item _install\x86_64\webrtc\NOTICE ${{ matrix.name }}
         # ソースコード（生成した分も含む）も一緒に入れておく
         Copy-Item -Recurse Sora ${{ matrix.name }}\Sora
     - name: Upload ${{ matrix.name }} Artifact
@@ -42,6 +42,16 @@ jobs:
       with:
         name: ${{ matrix.name }}
         path: ${{ matrix.name }}
+    - name: Copy HoloLens2 files
+      run: |
+        mkdir windows_hololens2
+        Copy-Item build\hololens2\Release\SoraUnitySdk.dll windows_hololens2
+        Copy-Item _install\hololens2\webrtc\NOTICE ${{ matrix.name }}
+    - name: Upload windows_hololens2 Artifact
+      uses: actions/upload-artifact@v2
+      with:
+        name: windows_hololens2
+        path: windows_hololens2
   build-macos:
     strategy:
       fail-fast: false
@@ -125,6 +135,7 @@ jobs:
         mkdir -p SoraUnitySdk/Plugins/SoraUnitySdk/android/arm64-v8a
         cp windows_x86_64/SoraUnitySdk.dll SoraUnitySdk/Plugins/SoraUnitySdk/windows/x86_64/
         cp -r windows_x86_64/Sora/ SoraUnitySdk/SoraUnitySdk/
+        cp windows_hololens2/SoraUnitySdk.dll SoraUnitySdk/Plugins/SoraUnitySdk/windows/hololens2/
         cp -r macos/SoraUnitySdk.bundle SoraUnitySdk/Plugins/SoraUnitySdk/macos/SoraUnitySdk.bundle
         cp android/libSoraUnitySdk.so SoraUnitySdk/Plugins/SoraUnitySdk/android/arm64-v8a/
         cp android/webrtc.jar SoraUnitySdk/Plugins/SoraUnitySdk/android/
@@ -141,6 +152,12 @@ jobs:
         echo "# WebRTC for Windows" >> SoraUnitySdk/NOTICE
         echo "-----------------------------" >> SoraUnitySdk/NOTICE
         cat windows_x86_64/NOTICE >> SoraUnitySdk/NOTICE
+
+        echo ""
+        echo "-----------------------------" >> SoraUnitySdk/NOTICE
+        echo "# WebRTC for HoloLens 2" >> SoraUnitySdk/NOTICE
+        echo "-----------------------------" >> SoraUnitySdk/NOTICE
+        cat windows_hololens2/NOTICE >> SoraUnitySdk/NOTICE
 
         echo "-----------------------------" >> SoraUnitySdk/NOTICE
         echo "# WebRTC for macOS" >> SoraUnitySdk/NOTICE

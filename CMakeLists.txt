@@ -14,10 +14,15 @@ if (SORA_UNITY_SDK_PACKAGE STREQUAL "android")
   set(ANDROID_STL none)
 endif()
 
+if (SORA_UNITY_SDK_PACKAGE STREQUAL "windows_hololens2")
+  set(CMAKE_SYSTEM_NAME WindowsStore)
+  set(CMAKE_SYSTEM_VERSION 10.0)
+endif()
+
 project(SoraUnitySdk C CXX)
 
 set(Boost_USE_STATIC_LIBS ON)
-if (WIN32)
+if (SORA_UNITY_SDK_PACKAGE STREQUAL "windows_x86_64")
   set(Boost_USE_STATIC_RUNTIME ON)
 else()
   set(Boost_USE_STATIC_RUNTIME OFF)
@@ -39,6 +44,11 @@ if (SORA_UNITY_SDK_PACKAGE STREQUAL "windows_x86_64")
 
   # configure_file で使う
   set(SORA_UNITY_SDK_PLATFORM Windows)
+elseif (SORA_UNITY_SDK_PACKAGE STREQUAL "windows_hololens2")
+  add_library(SoraUnitySdk SHARED)
+
+  # configure_file で使う
+  set(SORA_UNITY_SDK_PLATFORM HoloLens2)
 elseif (SORA_UNITY_SDK_PACKAGE STREQUAL "macos")
   add_library(SoraUnitySdk MODULE)
   set_target_properties(SoraUnitySdk PROPERTIES BUNDLE TRUE)
@@ -254,6 +264,67 @@ if (SORA_UNITY_SDK_PACKAGE STREQUAL "windows_x86_64")
   #     cuda.lib
   #     ${CMAKE_CURRENT_SOURCE_DIR}/NvCodec/Lib/x64/nvcuvid.lib
   # )
+elseif (SORA_UNITY_SDK_PACKAGE STREQUAL "windows_hololens2")
+  # 文字コードを utf-8 として扱うのと、シンボルテーブル数を増やす
+  target_compile_options(SoraUnitySdk
+    PRIVATE
+      "$<$<COMPILE_LANGUAGE:CXX>:/utf-8;/bigobj>"
+      "$<$<COMPILE_LANGUAGE:CUDA>:-Xcompiler;/utf-8 /bigobj>"
+  )
+  set_target_properties(SoraUnitySdk
+    PROPERTIES
+      MSVC_RUNTIME_LIBRARY "MultiThreadedDLL"
+  )
+
+  target_sources(SoraUnitySdk
+    PRIVATE
+      src/unity_camera_capturer_null.cpp
+      src/rtc/hw_video_encoder_factory.cpp
+      src/rtc/hw_video_decoder_factory.cpp
+  )
+
+  target_link_libraries(SoraUnitySdk
+    PRIVATE
+      dbghelp.lib
+      dnsapi.lib
+      msimg32.lib
+      oleaut32.lib
+      psapi.lib
+      shell32.lib
+      shlwapi.lib
+      usp10.lib
+      version.lib
+      wininet.lib
+      winmm.lib
+      ws2_32.lib
+      amstrmid.lib
+      Strmiids.lib
+      crypt32.lib
+      dmoguids.lib
+      iphlpapi.lib
+      msdmo.lib
+      Secur32.lib
+      wmcodecdspuuid.lib
+      dxgi.lib
+      D3D11.lib
+      mfreadwrite.lib
+      mfplat.lib
+      mfuuid.lib
+  )
+
+  target_compile_definitions(SoraUnitySdk
+    PRIVATE
+      SORA_UNITY_SDK_HOLOLENS2
+      WEBRTC_VIDEO_CAPTURE_WINRT
+      UNICODE
+      _UNICODE
+      _CONSOLE
+      _WIN32_WINNT=0x0A00
+      WEBRTC_WIN
+      NOMINMAX
+      WIN32_LEAN_AND_MEAN
+  )
+
 elseif (SORA_UNITY_SDK_PACKAGE STREQUAL "macos")
   enable_language(OBJCXX)
 

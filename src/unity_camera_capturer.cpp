@@ -47,6 +47,13 @@ bool UnityCameraCapturer::Init(UnityContext* context,
   }
 #endif
 
+#ifdef SORA_UNITY_SDK_HOLOLENS2
+  capturer_.reset(new NullImpl());
+  if (!capturer_->Init(context, unity_camera_texture, width, height)) {
+    return false;
+  }
+#endif
+
 #if defined(SORA_UNITY_SDK_MACOS) || defined(SORA_UNITY_SDK_IOS)
   capturer_.reset(new MetalImpl());
   if (!capturer_->Init(context, unity_camera_texture, width, height)) {
