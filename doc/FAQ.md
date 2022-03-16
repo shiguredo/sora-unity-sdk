@@ -32,6 +32,6 @@
 
 - 現在 Pixel6 で H.264 を配信することはできません。 他のコーデックを使用してください。
 
-### TURN 機能を無効にしたい
+### Sora の TURN 機能を無効にして利用したい
 
-- Sora Unity SDK は `turn = false` に対応していません。
+- Sora Unity SDK は `turn = false` に設定して利用することはできません。
