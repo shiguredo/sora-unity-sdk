@@ -34,4 +34,4 @@
 
 ### Sora の TURN 機能を無効にして利用したい
 
-- Sora Unity SDK は `turn = false` に設定して利用することはできません。
+- Sora Unity SDK は Sora を `turn = false` に設定して利用することはできません。
