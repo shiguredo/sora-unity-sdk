@@ -23,18 +23,14 @@ jobs:
       uses: actions/cache@v2
       with:
         path: _install
-        key: ${{ matrix.name }}-v3-${{ hashFiles('VERSIONS') }}
+        key: windows-v3-${{ hashFiles('VERSIONS') }}
         restore-keys: |
-          ${{ matrix.name }}-v3-
-    - name: install_tools.ps1
-      run: "& .\\install_tools.ps1"
-    - name: cmake.ps1
-      run: "& .\\cmake.ps1"
+          windows-v3-
+    - run: python3 run.py ${{ matrix.name }}
     - name: Copy ${{ matrix.name }} files
       run: |
         mkdir ${{ matrix.name }}
-        Copy-Item build\Release\SoraUnitySdk.dll ${{ matrix.name }}
-        Copy-Item _install\webrtc\NOTICE ${{ matrix.name }}
+        Copy-Item _build\windows_x86_64\release\sora_unity_sdk\Release\SoraUnitySdk.dll ${{ matrix.name }}
         # ソースコード（生成した分も含む）も一緒に入れておく
         Copy-Item -Recurse Sora ${{ matrix.name }}\Sora
     - name: Upload ${{ matrix.name }} Artifact
@@ -47,11 +43,8 @@ jobs:
       fail-fast: false
       matrix:
         name:
-          - macos
+          - macos_arm64
           - ios
-          # Android に関しては多分 Ubuntu でもいけると思うけど、
-          # 普段ビルドしてるのは macOS からなので macOS でビルドする
-          - android
     runs-on: macos-11
     steps:
     - uses: actions/checkout@v2
@@ -63,55 +56,70 @@ jobs:
         key: macos-v6-${{ hashFiles('VERSIONS') }}
         restore-keys: |
           macos-v6-
-    - name: install_tools.sh
-      run: ./install_tools.sh
-    - name: cmake.sh
-      run: ./cmake.sh ${{ matrix.name }}
+    - run: python3 run.py ${{ matrix.name }}
     # macOS 用
-    - name: Copy macOS files
-      if: matrix.name == 'macos'
+    - name: Copy macOS arm64 files
+      if: matrix.name == 'macos_arm64'
       run: |
-        mkdir macos/
-        cp -r _build/sora-unity-sdk/macos/SoraUnitySdk.bundle/ macos/SoraUnitySdk.bundle/
-        cp _install/macos/webrtc/NOTICE macos/
-    - name: Upload macOS Artifact
-      if: matrix.name == 'macos'
+        mkdir macos_arm64/
+        cp -r _build/macos_arm64/release/sora_unity_sdk/SoraUnitySdk.bundle/ macos_arm64/SoraUnitySdk.bundle/
+    - name: Upload macOS arm64 Artifact
+      if: matrix.name == 'macos_arm64'
       uses: actions/upload-artifact@v2
       with:
-        name: macos
-        path: macos/
-    # Android 用
-    - name: Copy Android files
-      if: matrix.name == 'android'
-      run: |
-        mkdir android/
-        cp _install/android/webrtc/NOTICE android/
-        cp _install/android/webrtc/jar/webrtc.jar android/
-        cp _build/sora-unity-sdk/android/libSoraUnitySdk.so android/
-    - name: Upload Android Artifact
-      if: matrix.name == 'android'
-      uses: actions/upload-artifact@v2
-      with:
-        name: android
-        path: android/
+        name: macos_arm64
+        path: macos_arm64/
     # iOS 用
     - name: Copy iOS files
       if: matrix.name == 'ios'
       run: |
         mkdir ios/
-        cp _install/ios/webrtc/NOTICE ios/
-        cp _install/ios/webrtc/lib/libwebrtc.a ios/
-        cp _install/ios/boost/lib/libboost_json.a ios/
-        cp _build/sora-unity-sdk/ios/libSoraUnitySdk.a ios/
+        cp _install/ios/release/webrtc/lib/libwebrtc.a ios/
+        cp _install/ios/release/boost/lib/libboost_json.a ios/
+        cp _build/ios/release/sora_unity_sdk/libSoraUnitySdk.a ios/
     - name: Upload iOS Artifact
       if: matrix.name == 'ios'
       uses: actions/upload-artifact@v2
       with:
         name: ios
         path: ios/
+  build-ubuntu:
+    strategy:
+      fail-fast: false
+      matrix:
+        name:
+          - android
+    runs-on: ubuntu-20.04
+    steps:
+    - uses: actions/checkout@v2
+    - name: Cache
+      id: cache
+      uses: actions/cache@v2
+      with:
+        path: _install
+        key: ubuntu2004-v1-${{ hashFiles('VERSIONS') }}
+        restore-keys: |
+          ubuntu2004-v1-
+    - run: python3 run.py ${{ matrix.name }}
+    # Android 用
+    - name: Copy Android files
+      if: matrix.name == 'android'
+      run: |
+        mkdir android/
+        cp _install/android/release/webrtc/jar/webrtc.jar android/
+        cp _build/android/release/sora_unity_sdk/libSoraUnitySdk.so android/
+    - name: Upload Android Artifact
+      if: matrix.name == 'android'
+      uses: actions/upload-artifact@v2
+      with:
+        name: android
+        path: android/
   package:
-    runs-on: macos-11
-    needs: [build-windows, build-macos]
+    runs-on: ubuntu-20.04
+    needs:
+      - build-windows
+      - build-macos
+      - build-ubuntu
     steps:
     - uses: actions/checkout@v2
     - name: Download artifacts
@@ -120,12 +128,12 @@ jobs:
       run: |
         set -ex
         mkdir -p SoraUnitySdk/Plugins/SoraUnitySdk/windows/x86_64
-        mkdir -p SoraUnitySdk/Plugins/SoraUnitySdk/macos
+        mkdir -p SoraUnitySdk/Plugins/SoraUnitySdk/macos/arm64
         mkdir -p SoraUnitySdk/Plugins/SoraUnitySdk/ios
         mkdir -p SoraUnitySdk/Plugins/SoraUnitySdk/android/arm64-v8a
         cp windows_x86_64/SoraUnitySdk.dll SoraUnitySdk/Plugins/SoraUnitySdk/windows/x86_64/
         cp -r windows_x86_64/Sora/ SoraUnitySdk/SoraUnitySdk/
-        cp -r macos/SoraUnitySdk.bundle SoraUnitySdk/Plugins/SoraUnitySdk/macos/SoraUnitySdk.bundle
+        cp -r macos_arm64/SoraUnitySdk.bundle SoraUnitySdk/Plugins/SoraUnitySdk/macos/arm64/SoraUnitySdk.bundle
         cp android/libSoraUnitySdk.so SoraUnitySdk/Plugins/SoraUnitySdk/android/arm64-v8a/
         cp android/webrtc.jar SoraUnitySdk/Plugins/SoraUnitySdk/android/
         cp ios/libSoraUnitySdk.a SoraUnitySdk/Plugins/SoraUnitySdk/ios/
@@ -133,29 +141,7 @@ jobs:
         cp ios/libboost_json.a SoraUnitySdk/Plugins/SoraUnitySdk/ios/
 
         cp LICENSE SoraUnitySdk/
-
-        # NOTICE ファイルを結合する
-        cp NOTICE.md SoraUnitySdk/NOTICE
-        echo ""
-        echo "-----------------------------" >> SoraUnitySdk/NOTICE
-        echo "# WebRTC for Windows" >> SoraUnitySdk/NOTICE
-        echo "-----------------------------" >> SoraUnitySdk/NOTICE
-        cat windows_x86_64/NOTICE >> SoraUnitySdk/NOTICE
-
-        echo "-----------------------------" >> SoraUnitySdk/NOTICE
-        echo "# WebRTC for macOS" >> SoraUnitySdk/NOTICE
-        echo "-----------------------------" >> SoraUnitySdk/NOTICE
-        cat macos/NOTICE >> SoraUnitySdk/NOTICE
-
-        echo "-----------------------------" >> SoraUnitySdk/NOTICE
-        echo "# WebRTC for Android" >> SoraUnitySdk/NOTICE
-        echo "-----------------------------" >> SoraUnitySdk/NOTICE
-        cat android/NOTICE >> SoraUnitySdk/NOTICE
-
-        echo "-----------------------------" >> SoraUnitySdk/NOTICE
-        echo "# WebRTC for iOS" >> SoraUnitySdk/NOTICE
-        echo "-----------------------------" >> SoraUnitySdk/NOTICE
-        cat ios/NOTICE >> SoraUnitySdk/NOTICE
+        cp NOTICE.md SoraUnitySdk/
 
     - name: Upload SoraUnitySdk
       uses: actions/upload-artifact@v2

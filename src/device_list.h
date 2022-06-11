@@ -1,10 +1,10 @@
-#ifndef SORA_DEVICE_LIST_H_
-#define SORA_DEVICE_LIST_H_
+#ifndef SORA_UNITY_SDK_DEVICE_LIST_H_
+#define SORA_UNITY_SDK_DEVICE_LIST_H_
 
 #include <functional>
 #include <string>
 
-namespace sora {
+namespace sora_unity_sdk {
 
 class DeviceList {
  public:
@@ -15,6 +15,6 @@ class DeviceList {
   static bool EnumAudioPlayout(std::function<void(std::string, std::string)> f);
 };
 
-}  // namespace sora
+}  // namespace sora_unity_sdk
 
-#endif  // SORA_DEVICE_LIST_H_
+#endif

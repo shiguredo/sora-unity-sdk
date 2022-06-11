@@ -1,20 +1,18 @@
 {
     "configurations": [
         {
-            "name": "Win32",
+            "name": "Windows Release",
             "includePath": [
                 "${workspaceFolder}/src",
-                "${workspaceFolder}/_install/boost/include",
-                "${workspaceFolder}/NvCodec/include",
-                "${workspaceFolder}/NvCodec/NvCodec",
-                "${workspaceFolder}/build/proto/cpp",
-                "${workspaceFolder}/_install/webrtc/include",
-                "${workspaceFolder}/_install/webrtc/include/third_party/zlib",
-                "${workspaceFolder}/_install/webrtc/include/third_party/abseil-cpp",
-                "${workspaceFolder}/_install/webrtc/include/third_party/boringssl/src/include",
-                "${workspaceFolder}/_install/webrtc/include/third_party/libyuv/include",
-                "${workspaceFolder}/_install/cuda/nvcc/include",
-                "${workspaceFolder}/build"
+                "${workspaceFolder}/_install/windows_x86_64/release/sora/include",
+                "${workspaceFolder}/_install/windows_x86_64/release/boost/include",
+                "${workspaceFolder}/_install/windows_x86_64/release/webrtc/include",
+                "${workspaceFolder}/_install/windows_x86_64/release/webrtc/include/third_party/zlib",
+                "${workspaceFolder}/_install/windows_x86_64/release/webrtc/include/third_party/abseil-cpp",
+                "${workspaceFolder}/_install/windows_x86_64/release/webrtc/include/third_party/boringssl/src/include",
+                "${workspaceFolder}/_install/windows_x86_64/release/webrtc/include/third_party/libyuv/include",
+                "${workspaceFolder}/_build/windows_x86_64/release/sora_unity_sdk",
+                "${workspaceFolder}/_build/windows_x86_64/release/sora_unity_sdk/proto/cpp"
             ],
             "defines": [
                 "_DEBUG",
@@ -27,8 +25,6 @@
                 "WIN32_LEAN_AND_MEAN",
                 "SORA_UNITY_SDK_WINDOWS"
             ],
-            "windowsSdkVersion": "10.0.18362.0",
-            "compilerPath": "C:/Program Files (x86)/Microsoft Visual Studio/2019/Community/VC/Tools/MSVC/14.29.30037/bin/Hostx64/x64/cl.exe",
             "cStandard": "c11",
             "cppStandard": "c++17",
             "intelliSenseMode": "msvc-x64"

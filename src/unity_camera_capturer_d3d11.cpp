@@ -1,6 +1,6 @@
 #include "unity_camera_capturer.h"
 
-namespace sora {
+namespace sora_unity_sdk {
 
 bool UnityCameraCapturer::D3D11Impl::Init(UnityContext* context,
                                           void* camera_texture,
@@ -91,4 +91,4 @@ UnityCameraCapturer::D3D11Impl::Capture() {
   return i420_buffer;
 }
 
-}  // namespace sora
+}  // namespace sora_unity_sdk

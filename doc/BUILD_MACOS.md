@@ -9,26 +9,17 @@
 - Xcode
 - [CMake](https://cmake.org/)
 
-### 依存ライブラリのビルド
-
-コマンドラインで `install_tools.sh` を実行してください。
-libwebrtc と関連ツールのダウンロードも含むので時間がかかります。
-
-```
-$ sh install_tools.sh
-```
-
 ### Unity プラグインのビルド
 
-コマンドラインで `cmake.sh` を実行してください。
+コマンドラインで `python3 run.py macos_arm64` を実行してください。
 
 ```
-$ sh cmake.sh
+$ python3 run.py macos_arm64
 ```
 
-ビルドに成功すると `build/SoraUnitySdk.bundle` が生成されます。
+ビルドに成功すると `_build/macos_arm64/release/sora_unity_sdk/SoraUnitySdk.bundle` が生成されます。
 
 ## インストール
 
-`build/SoraUnitySdk.bundle` と `Sora/Sora.cs` を任意のプロジェクトの Assets にコピーしてください。
+`_build/macos_arm64/release/sora_unity_sdk/SoraUnitySdk.bundle` と `Sora/` を任意のプロジェクトの Assets にコピーしてください。
 

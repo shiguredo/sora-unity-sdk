@@ -1,6 +1,6 @@
 #include "unity_context.h"
 
-namespace sora {
+namespace sora_unity_sdk {
 
 void UnityContext::OnGraphicsDeviceEventStatic(
     UnityGfxDeviceEventType eventType) {
@@ -161,4 +161,4 @@ ID3D11DeviceContext* UnityContext::GetDeviceContext() {
 }
 #endif
 
-}  // namespace sora
+}  // namespace sora_unity_sdk

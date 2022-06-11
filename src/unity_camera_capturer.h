@@ -1,24 +1,25 @@
-#ifndef SORA_UNITY_CAMERA_CAPTURER_H_INCLUDED
-#define SORA_UNITY_CAMERA_CAPTURER_H_INCLUDED
+#ifndef SORA_UNITY_SDK_UNITY_CAMERA_CAPTURER_H_INCLUDED
+#define SORA_UNITY_SDK_UNITY_CAMERA_CAPTURER_H_INCLUDED
 
 // WebRTC
-#include "api/media_stream_interface.h"
-#include "api/scoped_refptr.h"
-#include "api/video/i420_buffer.h"
-#include "libyuv.h"
-#include "rtc_base/logging.h"
-#include "rtc_base/ref_counted_object.h"
-#include "system_wrappers/include/clock.h"
+#include <api/media_stream_interface.h>
+#include <api/scoped_refptr.h>
+#include <api/video/i420_buffer.h>
+#include <libyuv.h>
+#include <rtc_base/logging.h>
+#include <rtc_base/ref_counted_object.h>
+#include <system_wrappers/include/clock.h>
 
 // sora
-#include "rtc/scalable_track_source.h"
+#include <sora/scalable_track_source.h>
+
 #include "unity_context.h"
 
 #ifdef SORA_UNITY_SDK_ANDROID
 #include <vulkan/vulkan.h>
 #endif
 
-namespace sora {
+namespace sora_unity_sdk {
 
 class UnityCameraCapturer : public sora::ScalableVideoTrackSource,
                             public rtc::VideoSinkInterface<webrtc::VideoFrame> {
@@ -99,6 +100,6 @@ class UnityCameraCapturer : public sora::ScalableVideoTrackSource,
             int height);
 };
 
-}  // namespace sora
+}  // namespace sora_unity_sdk
 
-#endif  // SORA_UNITY_CAMERA_CAPTURER_H_INCLUDED
+#endif

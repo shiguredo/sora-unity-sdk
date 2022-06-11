@@ -1,5 +1,5 @@
-#ifndef SORA_UNITY_CONTEXT_H_INCLUDED
-#define SORA_UNITY_CONTEXT_H_INCLUDED
+#ifndef SORA_UNITY_SDK_UNITY_CONTEXT_H_INCLUDED
+#define SORA_UNITY_SDK_UNITY_CONTEXT_H_INCLUDED
 
 #include <mutex>
 
@@ -13,7 +13,7 @@
 #include "unity/IUnityGraphicsD3D11.h"
 #endif
 
-namespace sora {
+namespace sora_unity_sdk {
 
 class UnityContext {
   std::mutex mutex_;
@@ -49,6 +49,6 @@ class UnityContext {
 #endif
 };
 
-}  // namespace sora
+}  // namespace sora_unity_sdk
 
-#endif  // SORA_UNITY_CONTEXT_H_INCLUDED
+#endif

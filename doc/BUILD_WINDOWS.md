@@ -9,17 +9,14 @@
 - [CMake](https://cmake.org/)
 - [Visual Studio 2019 \| Visual Studio](https://visualstudio.microsoft.com/ja/vs/?rr=https%3A%2F%2Fwww.google.com%2F)
     - 動作確認は Visual Studio 2019 Community で行っています
-
-### 依存ライブラリのビルド
-
-`.\install_tools.bat` をダブルクリックで実行するか、コマンドプロンプトから実行してください。
+- Python3
 
 ### Unity プラグインのビルド
 
-`.\cmake.bat` をダブルクリックで実行するか、コマンドプロンプトから実行してください。
+PowerShell を起動し、プロジェクトのルートディレクトリで `python3 run.py windows_x86_64` を実行してください。
 
-うまくいくと `build\Release\SoraUnitySdk.dll` が生成されます。
+うまくいくと `_build\windows_x86_64\release\sora_unity_sdk\Release\SoraUnitySdk.dll` が生成されます。
 
 ## インストール
 
-`build\Release\SoraUnitySdk.dll` と `Sora\Sora.cs` を自身のプロジェクトにコピーしてください。
+`_build\windows_x86_64\release\sora_unity_sdk\Release\SoraUnitySdk.dll` と `Sora\` を自身のプロジェクトにコピーしてください。

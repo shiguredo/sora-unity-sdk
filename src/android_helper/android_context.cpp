@@ -1,8 +1,8 @@
 #include "android_context.h"
 
-#include "sdk/android/native_api/jni/class_loader.h"
-#include "sdk/android/native_api/jni/jvm.h"
-#include "sdk/android/native_api/jni/scoped_java_ref.h"
+#include <sdk/android/native_api/jni/class_loader.h>
+#include <sdk/android/native_api/jni/jvm.h>
+#include <sdk/android/native_api/jni/scoped_java_ref.h>
 
 namespace sora {
 

@@ -1,6 +1,6 @@
 #include "unity_camera_capturer.h"
 
-namespace sora {
+namespace sora_unity_sdk {
 
 rtc::scoped_refptr<UnityCameraCapturer> UnityCameraCapturer::Create(
     UnityContext* context,
@@ -64,4 +64,4 @@ bool UnityCameraCapturer::Init(UnityContext* context,
   return true;
 }
 
-}  // namespace sora
+}  // namespace sora_unity_sdk

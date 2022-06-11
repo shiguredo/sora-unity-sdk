@@ -2,7 +2,7 @@
 
 #include <rtc_base/logging.h>
 
-namespace sora {
+namespace sora_unity_sdk {
 
 // UnityRenderer::Sink
 
@@ -11,6 +11,7 @@ UnityRenderer::Sink::Sink(webrtc::VideoTrackInterface* track) : track_(track) {
   track_->AddOrUpdateSink(this, rtc::VideoSinkWants());
 }
 UnityRenderer::Sink::~Sink() {
+  track_->RemoveSink(this);
   IdPointer::Instance().Unregister(ptrid_);
 }
 ptrid_t UnityRenderer::Sink::GetSinkID() const {
@@ -79,28 +80,24 @@ void UnityRenderer::Sink::TextureUpdateCallback(int eventID, void* data) {
   }
 }
 
-UnityRenderer::UnityRenderer(std::function<void(ptrid_t)> on_add_track,
-                             std::function<void(ptrid_t)> on_remove_track)
-    : on_add_track_(on_add_track), on_remove_track_(on_remove_track) {}
-
-void UnityRenderer::AddTrack(webrtc::VideoTrackInterface* track) {
+ptrid_t UnityRenderer::AddTrack(webrtc::VideoTrackInterface* track) {
   std::unique_ptr<Sink> sink(new Sink(track));
   auto sink_id = sink->GetSinkID();
   sinks_.push_back(std::make_pair(track, std::move(sink)));
-  on_add_track_(sink_id);
+  return sink_id;
 }
 
-void UnityRenderer::RemoveTrack(webrtc::VideoTrackInterface* track) {
+ptrid_t UnityRenderer::RemoveTrack(webrtc::VideoTrackInterface* track) {
   auto f = [track](const VideoSinkVector::value_type& sink) {
     return sink.first == track;
   };
   auto it = std::find_if(sinks_.begin(), sinks_.end(), f);
   if (it == sinks_.end()) {
-    return;
+    return 0;
   }
   auto sink_id = it->second->GetSinkID();
   sinks_.erase(std::remove_if(sinks_.begin(), sinks_.end(), f), sinks_.end());
-  on_remove_track_(sink_id);
+  return sink_id;
 }
 
-}  // namespace sora
+}  // namespace sora_unity_sdk
