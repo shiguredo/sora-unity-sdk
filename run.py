@@ -934,6 +934,7 @@ def main():
         elif platform == 'android':
             toolchain_file = os.path.join(install_dir, 'android-ndk', 'build', 'cmake', 'android.toolchain.cmake')
             cmake_args.append(f"-DCMAKE_TOOLCHAIN_FILE={toolchain_file}")
+            cmake_args.append(f"-DANDROID_PLATFORM=android-{android_native_api_level}")
             cmake_args.append(f"-DANDROID_NATIVE_API_LEVEL={android_native_api_level}")
             cmake_args.append('-DANDROID_ABI=arm64-v8a')
             cmake_args.append('-DANDROID_STL=none')
@@ -962,7 +963,7 @@ def main():
                  '-arch', 'arm64',
                  '-sdk', 'iphoneos'])
             cmd(['lipo', '-create',
-                 '-output', os.path.join(unity_build_dir, 'ibSoraUnitySdk.a'),
+                 '-output', os.path.join(unity_build_dir, 'libSoraUnitySdk.a'),
                  os.path.join(unity_build_dir, 'Release-iphonesimulator', 'libSoraUnitySdk.a'),
                  os.path.join(unity_build_dir, 'Release-iphoneos', 'libSoraUnitySdk.a')])
         else:
