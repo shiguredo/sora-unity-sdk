@@ -25,6 +25,7 @@
 #include <sora/sora_video_encoder_factory.h>
 
 #ifdef SORA_UNITY_SDK_ANDROID
+#include <sora/android/android_capturer.h>
 #include "android_helper/android_context.h"
 #endif
 
@@ -46,7 +47,7 @@ Sora::~Sora() {
   renderer_.reset();
 #if defined(SORA_UNITY_SDK_ANDROID)
   if (capturer_ != nullptr && capturer_type_ == 0) {
-    static_cast<AndroidCapturer*>(capturer_.get())->Stop();
+    static_cast<sora::AndroidCapturer*>(capturer_.get())->Stop();
   }
 #endif
   capturer_ = nullptr;
@@ -478,7 +479,7 @@ void Sora::SendMessage(const std::string& label, const std::string& data) {
 
 void* Sora::GetAndroidApplicationContext(void* env) {
 #ifdef SORA_UNITY_SDK_ANDROID
-  return ::sora_unity_sdk::GetAndroidApplicationContext((JNIEnv*)env);
+  return ::sora_unity_sdk::GetAndroidApplicationContext((JNIEnv*)env).obj();
 #else
   return nullptr;
 #endif

@@ -14,7 +14,7 @@
 #endif
 
 #if defined(SORA_UNITY_SDK_MACOS) || defined(SORA_UNITY_SDK_IOS)
-#include "../mac_helper/mac_capturer.h"
+#include <sora/mac/mac_capturer.h>
 #elif defined(SORA_UNITY_SDK_ANDROID)
 #include <sora/android/android_capturer.h>
 #include "android_helper/android_context.h"
@@ -31,7 +31,8 @@ bool DeviceList::EnumVideoCapturer(
 #elif defined(SORA_UNITY_SDK_ANDROID)
 
   JNIEnv* env = webrtc::AttachCurrentThreadIfNeeded();
-  return sora::AndroidCapturer::EnumVideoDevice(env, f);
+  jobject context = GetAndroidApplicationContext(env).obj();
+  return sora::AndroidCapturer::EnumVideoDevice(env, context, f);
 
 #else
 

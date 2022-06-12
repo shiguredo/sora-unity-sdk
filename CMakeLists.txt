@@ -158,7 +158,7 @@ if (SORA_UNITY_SDK_PACKAGE STREQUAL "windows_x86_64")
       NOMINMAX
       WIN32_LEAN_AND_MEAN
   )
-elseif (SORA_UNITY_SDK_PACKAGE STREQUAL "macos")
+elseif (SORA_UNITY_SDK_PACKAGE STREQUAL "macos_x86_64" OR SORA_UNITY_SDK_PACKAGE STREQUAL "macos_arm64")
   enable_language(OBJCXX)
 
   target_sources(SoraUnitySdk PRIVATE src/unity_camera_capturer_metal.mm)
@@ -235,7 +235,7 @@ elseif (SORA_UNITY_SDK_PACKAGE STREQUAL "android")
   )
   file(READ ${SORA_DIR}/share/webrtc.ldflags _WEBRTC_ANDROID_LDFLAGS)
   string(REGEX REPLACE "\n" ";" _WEBRTC_ANDROID_LDFLAGS "${_WEBRTC_ANDROID_LDFLAGS}")
-  target_link_options(hello
+  target_link_options(SoraUnitySdk
     PRIVATE
       -fuse-ld=gold
       ${_WEBRTC_ANDROID_LDFLAGS}

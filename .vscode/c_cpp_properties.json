@@ -28,6 +28,30 @@
             "cStandard": "c11",
             "cppStandard": "c++17",
             "intelliSenseMode": "msvc-x64"
+        },
+        {
+            "name": "macOS arm64 Release",
+            "includePath": [
+                "${workspaceFolder}/src",
+                "${workspaceFolder}/_install/macos_arm64/release/sora/include",
+                "${workspaceFolder}/_install/macos_arm64/release/boost/include",
+                "${workspaceFolder}/_install/macos_arm64/release/webrtc/include",
+                "${workspaceFolder}/_install/macos_arm64/release/webrtc/include/third_party/zlib",
+                "${workspaceFolder}/_install/macos_arm64/release/webrtc/include/third_party/abseil-cpp",
+                "${workspaceFolder}/_install/macos_arm64/release/webrtc/include/third_party/boringssl/src/include",
+                "${workspaceFolder}/_install/macos_arm64/release/webrtc/include/third_party/libyuv/include",
+                "${workspaceFolder}/_install/macos_arm64/release/webrtc/include/sdk/objc",
+                "${workspaceFolder}/_build/macos_arm64/release/sora_unity_sdk",
+                "${workspaceFolder}/_build/macos_arm64/release/sora_unity_sdk/proto/cpp"
+            ],
+            "defines": [
+                "WEBRTC_POSIX",
+                "WEBRTC_MAC",
+                "SORA_UNITY_SDK_MACOS"
+            ],
+            "cStandard": "c11",
+            "cppStandard": "c++17",
+            "intelliSenseMode": "msvc-x64"
         }
     ],
     "version": 4

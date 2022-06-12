@@ -1,6 +1,7 @@
 import subprocess
 import logging
 import os
+import stat
 import urllib.parse
 import zipfile
 import tarfile
@@ -564,10 +565,14 @@ def install_protobuf(version, source_dir, install_dir, platform: str):
     # - osx-x86_64
     # - win32
     # - win64
-  url = f'https://github.com/protocolbuffers/protobuf/releases/download/v{version}/protoc-{version}-{platform}.zip'
-  path = download(url, source_dir)
-  rm_rf(os.path.join(install_dir, 'protobuf'))
-  extract(path, install_dir, 'protobuf')
+    url = f'https://github.com/protocolbuffers/protobuf/releases/download/v{version}/protoc-{version}-{platform}.zip'
+    path = download(url, source_dir)
+    rm_rf(os.path.join(install_dir, 'protobuf'))
+    extract(path, install_dir, 'protobuf')
+    # なぜか実行属性が消えてるので入れてやる
+    for file in os.scandir(os.path.join(install_dir, 'protobuf', 'bin')):
+        if file.is_file:
+            os.chmod(file.path, file.stat().st_mode | stat.S_IXUSR)
 
 
 @versioned
@@ -587,6 +592,10 @@ def install_protoc_gen_jsonif(version, source_dir, install_dir, platform: str):
     shutil.copytree(
         os.path.join(jsonif_install_dir, *platform.split('-')),
         os.path.join(jsonif_install_dir, 'bin'))
+    # なぜか実行属性が消えてるので入れてやる
+    for file in os.scandir(os.path.join(jsonif_install_dir, 'bin')):
+        if file.is_file:
+            os.chmod(file.path, file.stat().st_mode | stat.S_IXUSR)
 
 
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
@@ -691,16 +700,16 @@ def install_deps(platform: str, build_platform: str, source_dir, build_dir, inst
                 install_boost_args['cxxflags'] += ['-target', 'x86_64-apple-darwin']
                 install_boost_args['architecture'] = 'x86'
             if platform == 'macos_arm64':
-                install_boost_args['cflags'] += ['-target', 'aarch64-apple-darwin']
-                install_boost_args['cxxflags'] += ['-target', 'aarch64-apple-darwin']
+                install_boost_args['cflags'] += ['-target', 'arm64-apple-darwin']
+                install_boost_args['cxxflags'] += ['-target', 'arm64-apple-darwin']
                 install_boost_args['architecture'] = 'arm'
-        elif platform.target.os == 'ios':
+        elif platform == 'ios':
             install_boost_args['target_os'] = 'iphone'
             install_boost_args['toolset'] = 'clang'
             install_boost_args['cxxflags'] = [
                 '-std=gnu++17'
             ]
-        elif platform.target.os == 'android':
+        elif platform == 'android':
             install_boost_args['target_os'] = 'android'
             install_boost_args['cflags'] = [
                 '-fPIC',
@@ -908,8 +917,8 @@ def main():
             pass
         elif platform in ('macos_x86_64', 'macos_arm64'):
             sysroot = cmdcap(['xcrun', '--sdk', 'macosx', '--show-sdk-path'])
-            arch = 'x86_64' if platform == 'macos_x86_64' else 'aarch64'
-            target = 'x86_64-apple-darwin' if platform == 'macos_x86_64' else 'aarch64-apple-darwin'
+            arch = 'x86_64' if platform == 'macos_x86_64' else 'arm64'
+            target = 'x86_64-apple-darwin' if platform == 'macos_x86_64' else 'arm64-apple-darwin'
             cmake_args.append(f'-DCMAKE_SYSTEM_PROCESSOR={arch}')
             cmake_args.append(f'-DCMAKE_OSX_ARCHITECTURES={arch}')
             cmake_args.append(f'-DCMAKE_C_COMPILER_TARGET={target}')
@@ -938,7 +947,26 @@ def main():
             raise Exception(f'Platform {platform} not supported.')
 
         cmd(['cmake', BASE_DIR, *cmake_args])
-        cmd(['cmake', '--build', '.', f'-j{multiprocessing.cpu_count()}', '--config', configuration])
+
+        if platform == 'ios':
+            cmd(['cmake', '--build', '.', f'-j{multiprocessing.cpu_count()}',
+                 '--config', configuration,
+                 '--target', 'SoraUnitySdk',
+                 '--',
+                 '-arch', 'x86_64',
+                 '-sdk', 'iphonesimulator'])
+            cmd(['cmake', '--build', '.', f'-j{multiprocessing.cpu_count()}',
+                 '--config', configuration,
+                 '--target', 'SoraUnitySdk',
+                 '--',
+                 '-arch', 'arm64',
+                 '-sdk', 'iphoneos'])
+            cmd(['lipo', '-create',
+                 '-output', os.path.join(unity_build_dir, 'ibSoraUnitySdk.a'),
+                 os.path.join(unity_build_dir, 'Release-iphonesimulator', 'libSoraUnitySdk.a'),
+                 os.path.join(unity_build_dir, 'Release-iphoneos', 'libSoraUnitySdk.a')])
+        else:
+            cmd(['cmake', '--build', '.', f'-j{multiprocessing.cpu_count()}', '--config', configuration])
 
 
 if __name__ == '__main__':

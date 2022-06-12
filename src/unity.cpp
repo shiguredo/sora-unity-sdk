@@ -186,6 +186,8 @@ unity_bool_t sora_is_h264_supported() {
 #elif defined(SORA_UNITY_SDK_ANDROID)
   // Android は多分大体動くので true
   return true;
+#else
+#error "Unknown SDK Type"
 #endif
 }
 
