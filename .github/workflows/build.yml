@@ -23,9 +23,9 @@ jobs:
       uses: actions/cache@v2
       with:
         path: _install
-        key: windows-v3-${{ hashFiles('VERSIONS') }}
+        key: ${{ matrix.name }}-v3-${{ hashFiles('VERSIONS') }}
         restore-keys: |
-          windows-v3-
+          ${{ matrix.name }}-v3-
     - run: python3 run.py ${{ matrix.name }}
     - name: Copy ${{ matrix.name }} files
       run: |
@@ -53,9 +53,9 @@ jobs:
       uses: actions/cache@v2
       with:
         path: _install
-        key: macos-v6-${{ hashFiles('VERSIONS') }}
+        key: ${{ matrix.name }}-v6-${{ hashFiles('VERSIONS') }}
         restore-keys: |
-          macos-v6-
+          ${{ matrix.name }}-v6-
     - run: python3 run.py ${{ matrix.name }}
     # macOS 用
     - name: Copy macOS arm64 files
@@ -97,9 +97,9 @@ jobs:
       uses: actions/cache@v2
       with:
         path: _install
-        key: ubuntu2004-v1-${{ hashFiles('VERSIONS') }}
+        key: ${{ matrix.name }}-v1-${{ hashFiles('VERSIONS') }}
         restore-keys: |
-          ubuntu2004-v1-
+          ${{ matrix.name }}-v1-
     - run: python3 run.py ${{ matrix.name }}
     # Android 用
     - name: Copy Android files
