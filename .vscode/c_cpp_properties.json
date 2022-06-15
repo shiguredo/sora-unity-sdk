@@ -52,6 +52,32 @@
             "cStandard": "c11",
             "cppStandard": "c++17",
             "intelliSenseMode": "msvc-x64"
+        },
+        {
+            "name": "Adnroid Release",
+            "includePath": [
+                "${workspaceFolder}/src",
+                "${workspaceFolder}/_install/android/release/sora/include",
+                "${workspaceFolder}/_install/android/release/boost/include",
+                "${workspaceFolder}/_install/android/release/webrtc/include",
+                "${workspaceFolder}/_install/android/release/webrtc/include/third_party/zlib",
+                "${workspaceFolder}/_install/android/release/webrtc/include/third_party/abseil-cpp",
+                "${workspaceFolder}/_install/android/release/webrtc/include/third_party/boringssl/src/include",
+                "${workspaceFolder}/_install/android/release/webrtc/include/third_party/libyuv/include",
+                "${workspaceFolder}/_install/android/release/webrtc/include/sdk/android",
+                "${workspaceFolder}/_install/android/release/android-ndk/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/include",
+                "${workspaceFolder}/_build/android/release/sora_unity_sdk",
+                "${workspaceFolder}/_build/android/release/sora_unity_sdk/proto/cpp"
+            ],
+            "defines": [
+                "WEBRTC_POSIX",
+                "WEBRTC_LINUX",
+                "WEBRTC_ANDROID",
+                "SORA_UNITY_SDK_ANDROID"
+            ],
+            "cStandard": "c11",
+            "cppStandard": "c++17",
+            "intelliSenseMode": "clang-x64"
         }
     ],
     "version": 4

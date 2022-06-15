@@ -37,6 +37,11 @@ namespace sora_unity_sdk {
 
 Sora::Sora(UnityContext* context) : context_(context) {
   ptrid_ = IdPointer::Instance().Register(this);
+#if defined(SORA_UNITY_SDK_ANDROID)
+  auto env = sora::GetJNIEnv();
+  android_context_ =
+      ::sora_unity_sdk::GetAndroidApplicationContext((JNIEnv*)env);
+#endif
 }
 
 Sora::~Sora() {
@@ -186,20 +191,22 @@ void Sora::DoConnect(const sora_conf::internal::ConnectConfig& cc,
       absl::make_unique<webrtc::RtcEventLogFactory>(
           dependencies.task_queue_factory.get());
 
+  void* env = sora::GetJNIEnv();
+  void* android_context = GetAndroidApplicationContext(env);
+
   // media_dependencies
   cricket::MediaEngineDependencies media_dependencies;
   media_dependencies.task_queue_factory = dependencies.task_queue_factory.get();
   media_dependencies.adm = CreateADM(
       media_dependencies.task_queue_factory, false, cc.unity_audio_input,
       cc.unity_audio_output, on_handle_audio_, cc.audio_recording_device,
-      cc.audio_playout_device, worker_thread_.get());
+      cc.audio_playout_device, worker_thread_.get(), env, android_context);
 
   media_dependencies.audio_encoder_factory =
       webrtc::CreateBuiltinAudioEncoderFactory();
   media_dependencies.audio_decoder_factory =
       webrtc::CreateBuiltinAudioDecoderFactory();
 
-  void* env = sora::GetJNIEnv();
   auto cuda_context = sora::CudaContext::Create();
   {
     auto config = sora::GetDefaultVideoEncoderFactoryConfig(cuda_context, env);
@@ -239,10 +246,10 @@ void Sora::DoConnect(const sora_conf::internal::ConnectConfig& cc,
   renderer_.reset(new UnityRenderer());
 
   if (cc.role == "sendonly" || cc.role == "sendrecv") {
-    auto capturer =
-        CreateVideoCapturer(cc.capturer_type, (void*)cc.unity_camera_texture,
-                            cc.video_capturer_device, cc.video_width,
-                            cc.video_height, signaling_thread_.get());
+    auto capturer = CreateVideoCapturer(
+        cc.capturer_type, (void*)cc.unity_camera_texture,
+        cc.video_capturer_device, cc.video_width, cc.video_height,
+        signaling_thread_.get(), env, android_context);
     if (!capturer) {
       on_disconnect((int)sora_conf::ErrorCode::INTERNAL_ERROR,
                     "Capturer Init Failed");
@@ -397,7 +404,9 @@ rtc::scoped_refptr<UnityAudioDevice> Sora::CreateADM(
     std::function<void(const int16_t*, int, int)> on_handle_audio,
     std::string audio_recording_device,
     std::string audio_playout_device,
-    rtc::Thread* worker_thread) {
+    rtc::Thread* worker_thread,
+    void* jni_env,
+    void* android_context) {
   rtc::scoped_refptr<webrtc::AudioDeviceModule> adm;
 
   if (dummy_audio) {
@@ -410,8 +419,8 @@ rtc::scoped_refptr<UnityAudioDevice> Sora::CreateADM(
     sora::AudioDeviceModuleConfig config;
     config.audio_layer = webrtc::AudioDeviceModule::kPlatformDefaultAudio;
     config.task_queue_factory = task_queue_factory;
-    config.jni_env = sora::GetJNIEnv();
-    config.application_context = GetAndroidApplicationContext(config.jni_env);
+    config.jni_env = jni_env;
+    config.application_context = android_context;
     adm = sora::CreateAudioDeviceModule(config);
   }
 
@@ -429,7 +438,9 @@ rtc::scoped_refptr<webrtc::VideoTrackSourceInterface> Sora::CreateVideoCapturer(
     std::string video_capturer_device,
     int video_width,
     int video_height,
-    rtc::Thread* signaling_thread) {
+    rtc::Thread* signaling_thread,
+    void* jni_env,
+    void* android_context) {
   if (capturer_type == 0) {
     // 実カメラ（デバイス）を使う
     sora::CameraDeviceCapturerConfig config;
@@ -438,8 +449,8 @@ rtc::scoped_refptr<webrtc::VideoTrackSourceInterface> Sora::CreateVideoCapturer(
     // TODO(melpon): framerate をちゃんと設定する
     config.fps = 30;
     config.device_name = video_capturer_device;
-    config.jni_env = sora::GetJNIEnv();
-    config.application_context = GetAndroidApplicationContext(config.jni_env);
+    config.jni_env = jni_env;
+    config.application_context = android_context;
     config.signaling_thread = signaling_thread;
 
     return sora::CreateCameraDeviceCapturer(config);
@@ -479,7 +490,7 @@ void Sora::SendMessage(const std::string& label, const std::string& data) {
 
 void* Sora::GetAndroidApplicationContext(void* env) {
 #ifdef SORA_UNITY_SDK_ANDROID
-  return ::sora_unity_sdk::GetAndroidApplicationContext((JNIEnv*)env).obj();
+  return android_context_.obj();
 #else
   return nullptr;
 #endif

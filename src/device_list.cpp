@@ -31,8 +31,8 @@ bool DeviceList::EnumVideoCapturer(
 #elif defined(SORA_UNITY_SDK_ANDROID)
 
   JNIEnv* env = webrtc::AttachCurrentThreadIfNeeded();
-  jobject context = GetAndroidApplicationContext(env).obj();
-  return sora::AndroidCapturer::EnumVideoDevice(env, context, f);
+  auto context = GetAndroidApplicationContext(env);
+  return sora::AndroidCapturer::EnumVideoDevice(env, context.obj(), f);
 
 #else
 

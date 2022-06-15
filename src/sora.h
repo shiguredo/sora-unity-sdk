@@ -26,6 +26,10 @@
 #include "unity_context.h"
 #include "unity_renderer.h"
 
+#ifdef SORA_UNITY_SDK_ANDROID
+#include <sdk/android/native_api/jni/scoped_java_ref.h>
+#endif
+
 namespace sora_unity_sdk {
 
 class Sora : public std::enable_shared_from_this<Sora>,
@@ -58,7 +62,7 @@ class Sora : public std::enable_shared_from_this<Sora>,
   void SendMessage(const std::string& label, const std::string& data);
 
  private:
-  static void* GetAndroidApplicationContext(void* env);
+  void* GetAndroidApplicationContext(void* env);
   static sora_conf::ErrorCode ToErrorCode(sora::SoraSignalingErrorCode ec);
 
   // SoraSignalingObserver の実装
@@ -85,7 +89,9 @@ class Sora : public std::enable_shared_from_this<Sora>,
       std::function<void(const int16_t*, int, int)> on_handle_audio,
       std::string audio_recording_device,
       std::string audio_playout_device,
-      rtc::Thread* worker_thread);
+      rtc::Thread* worker_thread,
+      void* jni_env,
+      void* android_context);
 
   static rtc::scoped_refptr<webrtc::VideoTrackSourceInterface>
   CreateVideoCapturer(int capturer_type,
@@ -93,7 +99,9 @@ class Sora : public std::enable_shared_from_this<Sora>,
                       std::string video_capturer_device,
                       int video_width,
                       int video_height,
-                      rtc::Thread* signaling_thread);
+                      rtc::Thread* signaling_thread,
+                      void* jni_env,
+                      void* android_context);
 
   void PushEvent(std::function<void()> f);
 
@@ -128,6 +136,9 @@ class Sora : public std::enable_shared_from_this<Sora>,
 
   rtc::scoped_refptr<UnityAudioDevice> unity_adm_;
   webrtc::TaskQueueFactory* task_queue_factory_;
+#if defined(SORA_UNITY_SDK_ANDROID)
+  webrtc::ScopedJavaGlobalRef<jobject> android_context_;
+#endif
 };
 
 }  // namespace sora_unity_sdk
