@@ -92,6 +92,9 @@ class Sora : public std::enable_shared_from_this<Sora>,
       rtc::Thread* worker_thread,
       void* jni_env,
       void* android_context);
+  static bool InitADM(rtc::scoped_refptr<webrtc::AudioDeviceModule> adm,
+                      std::string audio_recording_device,
+                      std::string audio_playout_device);
 
   static rtc::scoped_refptr<webrtc::VideoTrackSourceInterface>
   CreateVideoCapturer(int capturer_type,

@@ -243,6 +243,12 @@ void Sora::DoConnect(const sora_conf::internal::ConnectConfig& cc,
   factory_options.crypto_options.srtp.enable_gcm_crypto_suites = true;
   factory_->SetOptions(factory_options);
 
+  if (!InitADM(adm, cc.audio_recording_device, cc.audio_playout_device)) {
+    on_disconnect((int)sora_conf::ErrorCode::INTERNAL_ERROR,
+                  "Failed to InitADM");
+    return;
+  }
+
   renderer_.reset(new UnityRenderer());
 
   if (cc.role == "sendonly" || cc.role == "sendrecv") {
@@ -421,7 +427,8 @@ rtc::scoped_refptr<UnityAudioDevice> Sora::CreateADM(
     config.task_queue_factory = task_queue_factory;
     config.jni_env = jni_env;
     config.application_context = android_context;
-    adm = sora::CreateAudioDeviceModule(config);
+    adm = worker_thread->Invoke<rtc::scoped_refptr<webrtc::AudioDeviceModule>>(
+        RTC_FROM_HERE, [&] { return sora::CreateAudioDeviceModule(config); });
   }
 
   return worker_thread->Invoke<rtc::scoped_refptr<UnityAudioDevice>>(
@@ -430,6 +437,87 @@ rtc::scoped_refptr<UnityAudioDevice> Sora::CreateADM(
                                         !unity_audio_output, on_handle_audio,
                                         task_queue_factory);
       });
+}
+
+bool Sora::InitADM(rtc::scoped_refptr<webrtc::AudioDeviceModule> adm,
+                   std::string audio_recording_device,
+                   std::string audio_playout_device) {
+  // 録音デバイスと再生デバイスを指定する
+  if (!audio_recording_device.empty()) {
+    bool succeeded = false;
+    int devices = adm->RecordingDevices();
+    for (int i = 0; i < devices; i++) {
+      char name[webrtc::kAdmMaxDeviceNameSize];
+      char guid[webrtc::kAdmMaxGuidSize];
+      if (adm->SetRecordingDevice(i) != 0) {
+        RTC_LOG(LS_WARNING) << "Failed to SetRecordingDevice: index=" << i;
+        continue;
+      }
+      bool available = false;
+      if (adm->RecordingIsAvailable(&available) != 0) {
+        RTC_LOG(LS_WARNING) << "Failed to RecordingIsAvailable: index=" << i;
+        continue;
+      }
+
+      if (!available) {
+        continue;
+      }
+      if (adm->RecordingDeviceName(i, name, guid) != 0) {
+        RTC_LOG(LS_WARNING) << "Failed to RecordingDeviceName: index=" << i;
+        continue;
+      }
+      if (audio_recording_device == name || audio_recording_device == guid) {
+        RTC_LOG(LS_INFO) << "Succeeded SetRecordingDevice: index=" << i
+                         << " device_name=" << name << " unique_name=" << guid;
+        succeeded = true;
+        break;
+      }
+    }
+    if (!succeeded) {
+      RTC_LOG(LS_ERROR) << "No recording device found: name="
+                        << audio_recording_device;
+      return false;
+    }
+  }
+
+  if (!audio_playout_device.empty()) {
+    bool succeeded = false;
+    int devices = adm->PlayoutDevices();
+    for (int i = 0; i < devices; i++) {
+      char name[webrtc::kAdmMaxDeviceNameSize];
+      char guid[webrtc::kAdmMaxGuidSize];
+      if (adm->SetPlayoutDevice(i) != 0) {
+        RTC_LOG(LS_WARNING) << "Failed to SetPlayoutDevice: index=" << i;
+        continue;
+      }
+      bool available = false;
+      if (adm->PlayoutIsAvailable(&available) != 0) {
+        RTC_LOG(LS_WARNING) << "Failed to PlayoutIsAvailable: index=" << i;
+        continue;
+      }
+
+      if (!available) {
+        continue;
+      }
+      if (adm->PlayoutDeviceName(i, name, guid) != 0) {
+        RTC_LOG(LS_WARNING) << "Failed to PlayoutDeviceName: index=" << i;
+        continue;
+      }
+      if (audio_playout_device == name || audio_playout_device == guid) {
+        RTC_LOG(LS_INFO) << "Succeeded SetPlayoutDevice: index=" << i
+                         << " device_name=" << name << " unique_name=" << guid;
+        succeeded = true;
+        break;
+      }
+    }
+    if (!succeeded) {
+      RTC_LOG(LS_ERROR) << "No playout device found: name="
+                        << audio_playout_device;
+      return false;
+    }
+  }
+
+  return true;
 }
 
 rtc::scoped_refptr<webrtc::VideoTrackSourceInterface> Sora::CreateVideoCapturer(
