@@ -197,10 +197,11 @@ void Sora::DoConnect(const sora_conf::internal::ConnectConfig& cc,
   // media_dependencies
   cricket::MediaEngineDependencies media_dependencies;
   media_dependencies.task_queue_factory = dependencies.task_queue_factory.get();
-  media_dependencies.adm = CreateADM(
+  auto adm = CreateADM(
       media_dependencies.task_queue_factory, false, cc.unity_audio_input,
       cc.unity_audio_output, on_handle_audio_, cc.audio_recording_device,
       cc.audio_playout_device, worker_thread_.get(), env, android_context);
+  media_dependencies.adm = adm;
 
   media_dependencies.audio_encoder_factory =
       webrtc::CreateBuiltinAudioEncoderFactory();
