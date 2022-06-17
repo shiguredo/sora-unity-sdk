@@ -5,7 +5,7 @@
 #include "sora_conf_internal.json.h"
 #include "unity_context.h"
 
-#ifdef SORA_UNITY_SDK_WINDOWS
+#if defined(SORA_UNITY_SDK_WINDOWS) || defined(SORA_UNITY_SDK_UBUNTU)
 #include <sora/hwenc_nvcodec/nvcodec_h264_encoder.h>
 #include <sora/hwenc_nvcodec/nvcodec_video_decoder.h>
 #endif
@@ -175,7 +175,7 @@ unity_bool_t sora_device_enum_audio_playout(device_enum_cb_t f,
 }
 
 unity_bool_t sora_is_h264_supported() {
-#if defined(SORA_UNITY_SDK_WINDOWS)
+#if defined(SORA_UNITY_SDK_WINDOWS) || defined(SORA_UNITY_SDK_UBUNTU)
   auto context = sora::CudaContext::Create();
   return sora::NvCodecH264Encoder::IsSupported(context) &&
          sora::NvCodecVideoDecoder::IsSupported(context,

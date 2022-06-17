@@ -944,6 +944,11 @@ def main():
             # r23b には ANDROID_CPP_FEATURES=exceptions でも例外が設定されない問題がある
             # https://github.com/android/ndk/issues/1618
             cmake_args.append('-DCMAKE_ANDROID_EXCEPTIONS=ON')
+        elif platform == 'ubuntu-20.04_x86_64':
+            cmake_args.append(f"-DCMAKE_C_COMPILER={os.path.join(webrtc_info.clang_dir, 'bin', 'clang')}")
+            cmake_args.append(f"-DCMAKE_CXX_COMPILER={os.path.join(webrtc_info.clang_dir, 'bin', 'clang++')}")
+            cmake_args.append(
+                f"-DLIBCXX_INCLUDE_DIR={cmake_path(os.path.join(webrtc_info.libcxx_dir, 'include'))}")
         else:
             raise Exception(f'Platform {platform} not supported.')
 

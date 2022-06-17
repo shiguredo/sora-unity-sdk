@@ -51,6 +51,10 @@ elseif (SORA_UNITY_SDK_PACKAGE STREQUAL "android")
   add_library(SoraUnitySdk SHARED)
 
   set(SORA_UNITY_SDK_PLATFORM Android)
+elseif (SORA_UNITY_SDK_PACKAGE STREQUAL "ubuntu-20.04_x86_64")
+  add_library(SoraUnitySdk SHARED)
+
+  set(SORA_UNITY_SDK_PLATFORM Ubuntu)
 endif()
 
 set_target_properties(SoraUnitySdk PROPERTIES CXX_STANDARD 17 C_STANDARD 99)
@@ -239,4 +243,12 @@ elseif (SORA_UNITY_SDK_PACKAGE STREQUAL "android")
     PRIVATE
       ${_WEBRTC_ANDROID_LDFLAGS}
   )
+
+elseif (SORA_UNITY_SDK_PACKAGE STREQUAL "ubuntu-20.04_x86_64")
+
+  find_package(Libdrm REQUIRED)
+  target_compile_definitions(SoraUnitySdk PRIVATE SORA_UNITY_SDK_UBUNTU)
+  target_compile_options(SoraUnitySdk PRIVATE "-nostdinc++")
+  target_include_directories(SoraUnitySdk PRIVATE ${LIBCXX_INCLUDE_DIR})
+
 endif()
