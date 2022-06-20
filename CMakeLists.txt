@@ -214,12 +214,14 @@ elseif (SORA_UNITY_SDK_PACKAGE STREQUAL "android")
   find_library(ANDROID_LIB_OPENSLES OpenSLES)
   find_library(ANDROID_LIB_VULKAN vulkan)
   find_library(ANDROID_LIB_EGL EGL)
+  find_library(ANDROID_LIB_GLESV2 GLESv2)
 
   target_sources(SoraUnitySdk
     PRIVATE
       src/android_helper/jni_onload.cc
       src/android_helper/android_context.cpp
       src/unity_camera_capturer_vulkan.cpp
+      src/unity_camera_capturer_opengl.cpp
   )
 
   target_compile_definitions(SoraUnitySdk
@@ -236,6 +238,7 @@ elseif (SORA_UNITY_SDK_PACKAGE STREQUAL "android")
       ${ANDROID_LIB_OPENSLES}
       ${ANDROID_LIB_VULKAN}
       ${ANDROID_LIB_EGL}
+      ${ANDROID_LIB_GLESV2}
   )
   file(READ ${SORA_DIR}/share/webrtc.ldflags _WEBRTC_ANDROID_LDFLAGS)
   string(REGEX REPLACE "\n" ";" _WEBRTC_ANDROID_LDFLAGS "${_WEBRTC_ANDROID_LDFLAGS}")
@@ -245,6 +248,11 @@ elseif (SORA_UNITY_SDK_PACKAGE STREQUAL "android")
   )
 
 elseif (SORA_UNITY_SDK_PACKAGE STREQUAL "ubuntu-20.04_x86_64")
+
+  target_sources(SoraUnitySdk
+    PRIVATE
+      src/unity_camera_capturer_opengl.cpp
+  )
 
   find_package(Libdrm REQUIRED)
   target_compile_definitions(SoraUnitySdk PRIVATE SORA_UNITY_SDK_UBUNTU)
