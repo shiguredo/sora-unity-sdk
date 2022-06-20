@@ -191,22 +191,44 @@ void Sora::DoConnect(const sora_conf::internal::ConnectConfig& cc,
       absl::make_unique<webrtc::RtcEventLogFactory>(
           dependencies.task_queue_factory.get());
 
-  void* env = sora::GetJNIEnv();
-  void* android_context = GetAndroidApplicationContext(env);
+  // worker 上の env
+  auto worker_env = worker_thread_->Invoke<void*>(
+      RTC_FROM_HERE, [] { return sora::GetJNIEnv(); });
+  // worker 上の context
+#if defined(SORA_UNITY_SDK_ANDROID)
+  void* worker_context =
+      worker_thread_->Invoke<jobject>(RTC_FROM_HERE, [worker_env] {
+        return ::sora_unity_sdk::GetAndroidApplicationContext(
+                   (JNIEnv*)worker_env)
+            .Release();
+      });
+#else
+  void* worker_context = nullptr;
+#endif
 
   // media_dependencies
   cricket::MediaEngineDependencies media_dependencies;
   media_dependencies.task_queue_factory = dependencies.task_queue_factory.get();
-  auto adm = CreateADM(
-      media_dependencies.task_queue_factory, false, cc.unity_audio_input,
-      cc.unity_audio_output, on_handle_audio_, cc.audio_recording_device,
-      cc.audio_playout_device, worker_thread_.get(), env, android_context);
+  auto adm =
+      CreateADM(media_dependencies.task_queue_factory, false,
+                cc.unity_audio_input, cc.unity_audio_output, on_handle_audio_,
+                cc.audio_recording_device, cc.audio_playout_device,
+                worker_thread_.get(), worker_env, worker_context);
   media_dependencies.adm = adm;
+
+#if defined(SORA_UNITY_SDK_ANDROID)
+  worker_thread_->Invoke<void>(RTC_FROM_HERE, [worker_env, worker_context] {
+    ((JNIEnv*)worker_env)->DeleteLocalRef((jobject)worker_context);
+  });
+#endif
 
   media_dependencies.audio_encoder_factory =
       webrtc::CreateBuiltinAudioEncoderFactory();
   media_dependencies.audio_decoder_factory =
       webrtc::CreateBuiltinAudioDecoderFactory();
+
+  void* env = sora::GetJNIEnv();
+  void* android_context = GetAndroidApplicationContext(env);
 
   auto cuda_context = sora::CudaContext::Create();
   {

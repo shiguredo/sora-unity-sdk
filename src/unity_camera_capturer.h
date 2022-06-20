@@ -95,6 +95,7 @@ class UnityCameraCapturer : public sora::ScalableVideoTrackSource,
     int width_;
     int height_;
     unsigned int fbo_ = 0;
+    bool initialized_ = false;
 
    public:
     ~OpenglImpl() override;

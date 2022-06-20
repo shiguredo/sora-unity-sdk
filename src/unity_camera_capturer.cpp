@@ -49,16 +49,19 @@ bool UnityCameraCapturer::Init(UnityContext* context,
   switch (renderer_type) {
     case kUnityGfxRendererD3D11:
 #ifdef SORA_UNITY_SDK_WINDOWS
+      RTC_LOG(LS_INFO) << "Init UnityCameraCapturer with D3D11Impl";
       capturer_.reset(new D3D11Impl());
 #endif
       break;
     case kUnityGfxRendererMetal:
 #if defined(SORA_UNITY_SDK_MACOS) || defined(SORA_UNITY_SDK_IOS)
+      RTC_LOG(LS_INFO) << "Init UnityCameraCapturer with MetalImpl";
       capturer_.reset(new MetalImpl());
 #endif
       break;
     case kUnityGfxRendererVulkan:
 #ifdef SORA_UNITY_SDK_ANDROID
+      RTC_LOG(LS_INFO) << "Init UnityCameraCapturer with VulkanImpl";
       capturer_.reset(new VulkanImpl());
 #endif
       break;
@@ -66,6 +69,7 @@ bool UnityCameraCapturer::Init(UnityContext* context,
     case kUnityGfxRendererOpenGLES20:
     case kUnityGfxRendererOpenGLES30:
 #if defined(SORA_UNITY_SDK_ANDROID) || defined(SORA_UNITY_SDK_UBUNTU)
+      RTC_LOG(LS_INFO) << "Init UnityCameraCapturer with OpenglImpl";
       capturer_.reset(new OpenglImpl());
 #endif
       break;
@@ -74,6 +78,7 @@ bool UnityCameraCapturer::Init(UnityContext* context,
   }
 
   if (capturer_ == nullptr) {
+    RTC_LOG(LS_INFO) << "Failed to Init for UnityCameraCapturer";
     return false;
   }
 

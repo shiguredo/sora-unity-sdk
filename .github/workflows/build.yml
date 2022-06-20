@@ -104,7 +104,7 @@ jobs:
     - name: Prepare Ubuntu x86_64
       if: matrix.name == 'ubuntu-20.04_x86_64'
       run: |
-        sudo apt install libdrm-dev
+        sudo apt install libdrm-dev libgl-dev
     - run: python3 run.py ${{ matrix.name }}
     # Android 用
     - name: Copy Android files

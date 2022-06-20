@@ -33,16 +33,6 @@ bool UnityCameraCapturer::OpenglImpl::Init(UnityContext* context,
   camera_texture_ = camera_texture;
   width_ = width;
   height_ = height;
-  glGenFramebuffers(1, &fbo_);
-  GL_ERRCHECK("glGenFramebuffers");
-
-  glBindFramebuffer(GL_FRAMEBUFFER, fbo_);
-  GL_ERRCHECK("glBindFramebuffer");
-
-  glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D,
-                         (GLuint)(intptr_t)camera_texture_, 0);
-  GL_ERRCHECK("glFramebufferTexture2D");
-
   return true;
 }
 
@@ -51,6 +41,22 @@ bool UnityCameraCapturer::OpenglImpl::Init(UnityContext* context,
 
 rtc::scoped_refptr<webrtc::I420Buffer>
 UnityCameraCapturer::OpenglImpl::Capture() {
+  // Init 関数とは別のスレッドから呼ばれることがあるので、
+  // ここに初期化処理を入れる
+  if (!initialized_) {
+    initialized_ = true;
+
+    glGenFramebuffers(1, &fbo_);
+    GL_ERRCHECK("glGenFramebuffers");
+
+    glBindFramebuffer(GL_FRAMEBUFFER, fbo_);
+    GL_ERRCHECK("glBindFramebuffer");
+
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D,
+                           (GLuint)(intptr_t)camera_texture_, 0);
+    GL_ERRCHECK("glFramebufferTexture2D");
+  }
+
   glBindFramebuffer(GL_FRAMEBUFFER, fbo_);
   GL_ERRCHECK("glBindFramebuffer");
 
