@@ -61,6 +61,7 @@ Sora::~Sora() {
 
   audio_track_ = nullptr;
   video_track_ = nullptr;
+  connection_context_ = nullptr;
   factory_ = nullptr;
 
   if (ioc_ != nullptr) {
