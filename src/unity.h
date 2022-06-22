@@ -1,5 +1,5 @@
-#ifndef SORA_UNITY_H_
-#define SORA_UNITY_H_
+#ifndef SORA_UNITY_SDK_UNITY_H_
+#define SORA_UNITY_SDK_UNITY_H_
 
 #include <stdint.h>
 
@@ -87,4 +87,4 @@ UNITY_INTERFACE_EXPORT unity_bool_t sora_is_h264_supported();
 }
 #endif
 
-#endif  // SORA_UNITY_H_
+#endif

@@ -1,5 +1,5 @@
-#ifndef SORA_UNITY_AUDIO_DEVICE_H_INCLUDED
-#define SORA_UNITY_AUDIO_DEVICE_H_INCLUDED
+#ifndef SORA_UNITY_SDK_UNITY_AUDIO_DEVICE_H_INCLUDED
+#define SORA_UNITY_SDK_UNITY_AUDIO_DEVICE_H_INCLUDED
 
 #include <stddef.h>
 #include <atomic>
@@ -12,7 +12,7 @@
 #include "rtc_base/ref_counted_object.h"
 #include "rtc_base/thread.h"
 
-namespace sora {
+namespace sora_unity_sdk {
 
 class UnityAudioDevice : public webrtc::AudioDeviceModule {
  public:
@@ -41,7 +41,7 @@ class UnityAudioDevice : public webrtc::AudioDeviceModule {
       std::function<void(const int16_t* p, int samples, int channels)>
           on_handle_audio,
       webrtc::TaskQueueFactory* task_queue_factory) {
-    return new rtc::RefCountedObject<UnityAudioDevice>(
+    return rtc::make_ref_counted<UnityAudioDevice>(
         adm, adm_recording, adm_playout, on_handle_audio, task_queue_factory);
   }
 
@@ -393,14 +393,26 @@ class UnityAudioDevice : public webrtc::AudioDeviceModule {
   }
 
   // Only supported on Android.
-  virtual bool BuiltInAECIsAvailable() const override { return false; }
-  virtual bool BuiltInAGCIsAvailable() const override { return false; }
-  virtual bool BuiltInNSIsAvailable() const override { return false; }
+  virtual bool BuiltInAECIsAvailable() const override {
+    return false;
+  }
+  virtual bool BuiltInAGCIsAvailable() const override {
+    return false;
+  }
+  virtual bool BuiltInNSIsAvailable() const override {
+    return false;
+  }
 
   // Enables the built-in audio effects. Only supported on Android.
-  virtual int32_t EnableBuiltInAEC(bool enable) override { return 0; }
-  virtual int32_t EnableBuiltInAGC(bool enable) override { return 0; }
-  virtual int32_t EnableBuiltInNS(bool enable) override { return 0; }
+  virtual int32_t EnableBuiltInAEC(bool enable) override {
+    return 0;
+  }
+  virtual int32_t EnableBuiltInAGC(bool enable) override {
+    return 0;
+  }
+  virtual int32_t EnableBuiltInNS(bool enable) override {
+    return 0;
+  }
 
 // Only supported on iOS.
 #if defined(WEBRTC_IOS)
@@ -429,8 +441,8 @@ class UnityAudioDevice : public webrtc::AudioDeviceModule {
   std::atomic_bool is_playing_ = {false};
   std::atomic_bool stereo_playout_ = {false};
   std::vector<int16_t> converted_audio_data_;
-};  // namespace sora
+};
 
-}  // namespace sora
+}  // namespace sora_unity_sdk
 
-#endif  // SORA_UNITY_AUDIO_DEVICE_H_INCLUDED
+#endif

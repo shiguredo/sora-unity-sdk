@@ -1,10 +1,10 @@
 #include "android_context.h"
 
-#include "sdk/android/native_api/jni/class_loader.h"
-#include "sdk/android/native_api/jni/jvm.h"
-#include "sdk/android/native_api/jni/scoped_java_ref.h"
+#include <sdk/android/native_api/jni/class_loader.h>
+#include <sdk/android/native_api/jni/jvm.h>
+#include <sdk/android/native_api/jni/scoped_java_ref.h>
 
-namespace sora {
+namespace sora_unity_sdk {
 
 webrtc::ScopedJavaLocalRef<jobject> GetAndroidApplicationContext(JNIEnv* env) {
   // Context context = UnityPlayer.currentActivity.getApplicationContext()
@@ -26,4 +26,4 @@ webrtc::ScopedJavaLocalRef<jobject> GetAndroidApplicationContext(JNIEnv* env) {
   return context;
 }
 
-}  // namespace sora
+}  // namespace sora_unity_sdk

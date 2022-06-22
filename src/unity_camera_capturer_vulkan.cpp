@@ -3,7 +3,7 @@
 // unity
 #include "unity/IUnityGraphicsVulkan.h"
 
-namespace sora {
+namespace sora_unity_sdk {
 
 UnityCameraCapturer::VulkanImpl::~VulkanImpl() {
   UnityVulkanInstance instance =
@@ -22,9 +22,9 @@ UnityCameraCapturer::VulkanImpl::~VulkanImpl() {
 }
 
 bool UnityCameraCapturer::VulkanImpl::Init(UnityContext* context,
-                                          void* camera_texture,
-                                          int width,
-                                          int height) {
+                                           void* camera_texture,
+                                           int width,
+                                           int height) {
   context_ = context;
   camera_texture_ = camera_texture;
   width_ = width;
@@ -363,4 +363,4 @@ UnityCameraCapturer::VulkanImpl::Capture() {
   return i420_buffer;
 }
 
-}  // namespace sora
+}  // namespace sora_unity_sdk

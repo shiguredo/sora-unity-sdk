@@ -68,17 +68,15 @@ public class Sora : IDisposable
         public string[] SignalingUrlCandidate = new string[0];
         public string ChannelId = "";
         public string ClientId = "";
+        public string BundleId = "";
         public string Metadata = "";
         public Role Role = Sora.Role.Sendonly;
-        public bool Multistream = false;
-        public bool Spotlight = false;
+        public bool? Multistream;
+        public bool? Spotlight;
         public int SpotlightNumber = 0;
-        // 指定しない場合は rid を Sora へ送らないため null を設定しておく    
-        public SpotlightFocusRidType? SpotlightFocusRid = null;
-        // 指定しない場合は rid を Sora へ送らないため null を設定しておく    
-        public SpotlightFocusRidType? SpotlightUnfocusRid = null;
-        public bool Simulcast = false;
-        // 指定しない場合は rid を Sora へ送らないため null を設定しておく    
+        public SpotlightFocusRidType? SpotlightFocusRid;
+        public SpotlightFocusRidType? SpotlightUnfocusRid;
+        public bool? Simulcast;
         public SimulcastRidType? SimulcastRid = null;
         public CapturerType CapturerType = Sora.CapturerType.DeviceCamera;
         public UnityEngine.Camera UnityCamera = null;
@@ -115,6 +113,13 @@ public class Sora : IDisposable
 
         // true の場合は署名検証をしない
         public bool Insecure = false;
+
+        // Proxy の設定
+        public string ProxyUrl = "";
+        public string ProxyUsername = "";
+        public string ProxyPassword = "";
+        // Proxy サーバーに接続するときの User-Agent。未設定ならデフォルト値が使われる
+        public string ProxyAgent = "";
     }
 
     IntPtr p;
@@ -209,14 +214,18 @@ public class Sora : IDisposable
         }
         cc.channel_id = config.ChannelId;
         cc.client_id = config.ClientId;
+        cc.bundle_id = config.BundleId;
         cc.metadata = config.Metadata;
         cc.role = role;
-        cc.multistream = config.Multistream;
-        cc.spotlight = config.Spotlight;
+        cc.enable_multistream = config.Multistream != null;
+        cc.multistream = config.Multistream == null ? false : config.Multistream.Value;
+        cc.enable_spotlight = config.Spotlight != null;
+        cc.spotlight = config.Spotlight == null ? false : config.Spotlight.Value;
         cc.spotlight_number = config.SpotlightNumber;
         cc.spotlight_focus_rid = config.SpotlightFocusRid == null ? "" : config.SpotlightFocusRid.Value.ToString().ToLower();
         cc.spotlight_unfocus_rid = config.SpotlightUnfocusRid == null ? "" : config.SpotlightUnfocusRid.Value.ToString().ToLower();
-        cc.simulcast = config.Simulcast;
+        cc.enable_simulcast = config.Simulcast != null;
+        cc.simulcast = config.Simulcast == null ? false : config.Simulcast.Value;
         cc.simulcast_rid = config.SimulcastRid == null ? "" : config.SimulcastRid.Value.ToString().ToLower();
         cc.insecure = config.Insecure;
         cc.capturer_type = (int)config.CapturerType;
@@ -277,6 +286,10 @@ public class Sora : IDisposable
             }
             cc.data_channels.Add(c);
         }
+        cc.proxy_url = config.ProxyUrl;
+        cc.proxy_username = config.ProxyUsername;
+        cc.proxy_password = config.ProxyPassword;
+        cc.proxy_agent = config.ProxyAgent;
 
         sora_connect(p, Jsonif.Json.ToJson(cc));
     }

@@ -1,18 +1,20 @@
-#ifndef SORA_UNITY_RENDERER_H_INCLUDED
-#define SORA_UNITY_RENDERER_H_INCLUDED
+#ifndef SORA_UNITY_SDK_UNITY_RENDERER_H_INCLUDED
+#define SORA_UNITY_SDK_UNITY_RENDERER_H_INCLUDED
 
 // webrtc
-#include "api/video/i420_buffer.h"
-#include "libyuv.h"
+#include <api/media_stream_interface.h>
+#include <api/video/i420_buffer.h>
+#include <api/video/video_frame.h>
+#include <api/video/video_sink_interface.h>
+#include <libyuv.h>
 
 // sora
 #include "id_pointer.h"
-#include "rtc/video_track_receiver.h"
 #include "unity/IUnityRenderingExtensions.h"
 
-namespace sora {
+namespace sora_unity_sdk {
 
-class UnityRenderer : public VideoTrackReceiver {
+class UnityRenderer {
  public:
   class Sink : public rtc::VideoSinkInterface<webrtc::VideoFrame> {
     webrtc::VideoTrackInterface* track_;
@@ -41,16 +43,12 @@ class UnityRenderer : public VideoTrackReceiver {
       std::pair<webrtc::VideoTrackInterface*, std::unique_ptr<Sink>>>
       VideoSinkVector;
   VideoSinkVector sinks_;
-  std::function<void(ptrid_t)> on_add_track_;
-  std::function<void(ptrid_t)> on_remove_track_;
 
  public:
-  UnityRenderer(std::function<void(ptrid_t)> on_add_track,
-                std::function<void(ptrid_t)> on_remove_track);
-
-  void AddTrack(webrtc::VideoTrackInterface* track) override;
-  void RemoveTrack(webrtc::VideoTrackInterface* track) override;
+  ptrid_t AddTrack(webrtc::VideoTrackInterface* track);
+  ptrid_t RemoveTrack(webrtc::VideoTrackInterface* track);
 };
 
-}  // namespace sora
-#endif  // SORA_UNITY_RENDERER_H_INCLUDED
+}  // namespace sora_unity_sdk
+
+#endif
