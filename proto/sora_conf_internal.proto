@@ -64,4 +64,5 @@ message ConnectConfig {
     int32 disconnect_wait_timeout = 37;
     repeated DataChannel data_channels = 38;
     bool insecure = 39;
+    string bundle_id = 40;
 }

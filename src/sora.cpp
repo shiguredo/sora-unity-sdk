@@ -325,6 +325,7 @@ void Sora::DoConnect(const sora_conf::internal::ConnectConfig& cc,
     config.signaling_urls = cc.signaling_url;
     config.channel_id = cc.channel_id;
     config.client_id = cc.client_id;
+    config.bundle_id = cc.bundle_id;
     config.video = cc.video;
     config.audio = cc.audio;
     config.video_codec_type = cc.video_codec_type;

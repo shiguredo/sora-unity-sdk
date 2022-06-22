@@ -68,6 +68,7 @@ public class Sora : IDisposable
         public string[] SignalingUrlCandidate = new string[0];
         public string ChannelId = "";
         public string ClientId = "";
+        public string BundleId = "";
         public string Metadata = "";
         public Role Role = Sora.Role.Sendonly;
         public bool? Multistream;
@@ -206,6 +207,7 @@ public class Sora : IDisposable
         }
         cc.channel_id = config.ChannelId;
         cc.client_id = config.ClientId;
+        cc.bundle_id = config.BundleId;
         cc.metadata = config.Metadata;
         cc.role = role;
         cc.enable_multistream = config.Multistream != null;
