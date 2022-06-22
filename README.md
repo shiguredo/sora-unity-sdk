@@ -39,12 +39,12 @@ Sora Unity SDK を使ってみたい人は [USE.md](doc/USE.md) をお読みく�
 - [「Momo (on Jetson Nano) -> Sora-Labo -> Sora-Unity と Sora-Js 同時受信。ここまでがお手軽すぎてやばい。」 / Twitter](https://twitter.com/izmhrats/status/1203299775354851328?s=20)
 ## 対応 Unity バージョン
 
-- Unity 2019.4 (LTS)
 - Unity 2020.3 (LTS)
+- Unity 2021.3 (LTS)
 
 ## システム条件
 
-- Sora 2021.2 以降
+- Sora 2022.1.0 以降
 
 ## 対応プラットフォーム
 
@@ -52,14 +52,18 @@ Sora Unity SDK を使ってみたい人は [USE.md](doc/USE.md) をお読みく�
 - macOS 12.4 M1 以降
 - Android 7 以降
 - iOS 10 以降
+- Ubuntu 20.04 以降
 
 ## 対応機能
 
 - AV1 への対応
 - Windows への対応
 - macOS への対応
+    - Apple M1 対応
 - Android への対応
+- Android OpenGL ES への対応
 - iOS 対応
+- Ubuntu 20.04 への対応
 - SRTP/SRTCP の AES-GCM 対応
 - Unity のカメラ映像を取得し Sora で送信
 - カメラから映像を取得し Sora に送信
@@ -129,13 +133,11 @@ Sora Unity SDK ではソフトウェアでの H.264 エンコード/デコード
 
 - ミュート機能
 - デバイスをつかまないようにする機能
-- Apple M1 対応
 - 音声のみ送受信機能
 - サイマルキャスト rid 指定対応
 
 ### プラットフォーム
 
-- Ubuntu 20.04 への対応
 - ARM 版 Windows への対応
 
 ### NVIDIA VIDEO CODEC SDK
