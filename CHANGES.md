@@ -15,6 +15,8 @@
     - @melpon
 - [UPDATE] Sora C++ SDK 化
     - @melpon
+- [ADD] Android の OpenGL ES を使った Unity カメラキャプチャに対応
+    - @melpon
 - [ADD] Ubuntu に対応
     - @melpon
 - [ADD] BundleId 追加
