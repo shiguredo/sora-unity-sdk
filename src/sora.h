@@ -16,6 +16,7 @@
 #include <api/task_queue/task_queue_factory.h>
 #include <media/engine/webrtc_media_engine.h>
 #include <modules/audio_device/include/audio_device.h>
+#include <pc/connection_context.h>
 
 #include "id_pointer.h"
 #include "sora_conf.json.h"
@@ -128,6 +129,7 @@ class Sora : public std::enable_shared_from_this<Sora>,
   std::unique_ptr<rtc::Thread> worker_thread_;
   std::unique_ptr<rtc::Thread> signaling_thread_;
   rtc::scoped_refptr<webrtc::PeerConnectionFactoryInterface> factory_;
+  rtc::scoped_refptr<webrtc::ConnectionContext> connection_context_;
 
   std::mutex event_mutex_;
   std::deque<std::function<void()>> event_queue_;

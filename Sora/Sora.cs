@@ -113,6 +113,13 @@ public class Sora : IDisposable
 
         // true の場合は署名検証をしない
         public bool Insecure = false;
+
+        // Proxy の設定
+        public string ProxyUrl = "";
+        public string ProxyUsername = "";
+        public string ProxyPassword = "";
+        // Proxy サーバーに接続するときの User-Agent。未設定ならデフォルト値が使われる
+        public string ProxyAgent = "";
     }
 
     IntPtr p;
@@ -279,6 +286,10 @@ public class Sora : IDisposable
             }
             cc.data_channels.Add(c);
         }
+        cc.proxy_url = config.ProxyUrl;
+        cc.proxy_username = config.ProxyUsername;
+        cc.proxy_password = config.ProxyPassword;
+        cc.proxy_agent = config.ProxyAgent;
 
         sora_connect(p, Jsonif.Json.ToJson(cc));
     }

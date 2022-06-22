@@ -21,6 +21,7 @@
 #include <sora/camera_device_capturer.h>
 #include <sora/java_context.h>
 #include <sora/rtc_stats.h>
+#include <sora/sora_peer_connection_factory.h>
 #include <sora/sora_video_decoder_factory.h>
 #include <sora/sora_video_encoder_factory.h>
 
@@ -250,8 +251,8 @@ void Sora::DoConnect(const sora_conf::internal::ConnectConfig& cc,
   dependencies.media_engine =
       cricket::CreateMediaEngine(std::move(media_dependencies));
 
-  factory_ =
-      webrtc::CreateModularPeerConnectionFactory(std::move(dependencies));
+  factory_ = sora::CreateModularPeerConnectionFactoryWithContext(
+      std::move(dependencies), connection_context_);
 
   if (factory_ == nullptr) {
     RTC_LOG(LS_ERROR) << "Failed to create PeerConnectionFactory";
@@ -371,6 +372,12 @@ void Sora::DoConnect(const sora_conf::internal::ConnectConfig& cc,
       }
     }
     config.insecure = cc.insecure;
+    config.proxy_url = cc.proxy_url;
+    config.proxy_username = cc.proxy_username;
+    config.proxy_password = cc.proxy_password;
+    config.proxy_agent = cc.proxy_agent;
+    config.network_manager = connection_context_->default_network_manager();
+    config.socket_factory = connection_context_->default_socket_factory();
 
     signaling_ = sora::SoraSignaling::Create(std::move(config));
     signaling_->Connect();

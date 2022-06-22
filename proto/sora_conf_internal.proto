@@ -65,4 +65,8 @@ message ConnectConfig {
     repeated DataChannel data_channels = 38;
     bool insecure = 39;
     string bundle_id = 40;
+    string proxy_url = 41;
+    string proxy_username = 42;
+    string proxy_password = 43;
+    string proxy_agent = 44;
 }
