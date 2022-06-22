@@ -159,8 +159,8 @@ jobs:
         cp ios/libboost_json.a SoraUnitySdk/Plugins/SoraUnitySdk/ios/
         cp ubuntu-20.04_x86_64/libSoraUnitySdk.so SoraUnitySdk/Plugins/SoraUnitySdk/linux/x86_64/
 
-        cp LICENSE SoraUnitySdk/
-        cp NOTICE.md SoraUnitySdk/
+        cp LICENSE SoraUnitySdk/SoraUnitySdk/
+        cp NOTICE.md SoraUnitySdk/SoraUnitySdk/
 
     - name: Upload SoraUnitySdk
       uses: actions/upload-artifact@v2
