@@ -309,12 +309,18 @@ void Sora::DoConnect(const sora_conf::internal::ConnectConfig& cc,
     config.pc_factory = factory_;
     config.io_context = ioc_.get();
     config.role = cc.role;
-    config.multistream = cc.multistream;
-    config.spotlight = cc.spotlight;
+    if (cc.enable_multistream) {
+      config.multistream = cc.multistream;
+    }
+    if (cc.enable_spotlight) {
+      config.spotlight = cc.spotlight;
+    }
     config.spotlight_number = cc.spotlight_number;
     config.spotlight_focus_rid = cc.spotlight_focus_rid;
     config.spotlight_unfocus_rid = cc.spotlight_unfocus_rid;
-    config.simulcast = cc.simulcast;
+    if (cc.enable_simulcast) {
+      config.simulcast = cc.simulcast;
+    }
     config.simulcast_rid = cc.simulcast_rid;
     config.signaling_urls = cc.signaling_url;
     config.channel_id = cc.channel_id;
