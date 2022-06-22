@@ -11,6 +11,17 @@
 
 ## develop
 
+- [CHANGE] Multistream, Spotlight, Simulcast を Nullable にする
+    - @melpon
+- [UPDATE] Sora C++ SDK 化
+    - @melpon
+- [ADD] Ubuntu に対応
+    - @melpon
+- [ADD] BundleId 追加
+    - @melpon
+- [ADD] HTTP Proxy に対応
+    - @melpon
+
 ## 2022.1.0
 
 - [CHANGE] Github Actions の `macos-latest` を `macos-11` へ変更する
