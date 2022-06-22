@@ -49,7 +49,7 @@ Sora Unity SDK を使ってみたい人は [USE.md](doc/USE.md) をお読みく�
 ## 対応プラットフォーム
 
 - Windows 10 1809 x86_64 以降
-- macOS 10.15 x86_64 以降
+- macOS 12.4 M1 以降
 - Android 7 以降
 - iOS 10 以降
 

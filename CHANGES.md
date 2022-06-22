@@ -13,7 +13,11 @@
 
 - [CHANGE] Multistream, Spotlight, Simulcast を Nullable にする
     - @melpon
+- [CHANGE] macOS x86_64 の対応をドロップ
+    - @melpon
 - [UPDATE] Sora C++ SDK 化
+    - @melpon
+- [ADD] macOS M1 に対応
     - @melpon
 - [ADD] Android の OpenGL ES を使った Unity カメラキャプチャに対応
     - @melpon
