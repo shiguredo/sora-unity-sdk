@@ -37,8 +37,8 @@ Hierarchyから「ButtonStart」と「ButtonEnd」を選択して少し上に動
 参考：`Width`と`Height`を変更するとGameビューでは以下のように変化します。  
 [![Image from Gyazo](https://i.gyazo.com/791329a7ea7d5524cb781027ef918446.png)](https://gyazo.com/791329a7ea7d5524cb781027ef918446)  
 
-###### multi_pubsubシーンを変更したい場合
-multi_pubsubシーンは動的に必要なイメージ数が変わるため、あらかじめ設定するRawImageはありません。   
+###### multi_sendrecvシーンを変更したい場合
+multi_sendrecvシーンは動的に必要なイメージ数が変わるため、あらかじめ設定するRawImageはありません。   
 その場合はHierarchyのCanvas/BaseTrackの変更とCanvas/Scroll Viewのサイズ変更をしてください。  
 [![Image from Gyazo](https://i.gyazo.com/e025bc6392b4424e1b25d0b6f95b2589.png)](https://gyazo.com/e025bc6392b4424e1b25d0b6f95b2589)
 
