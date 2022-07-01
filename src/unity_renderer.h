@@ -17,7 +17,7 @@ namespace sora_unity_sdk {
 class UnityRenderer {
  public:
   class Sink : public rtc::VideoSinkInterface<webrtc::VideoFrame> {
-    webrtc::VideoTrackInterface* track_;
+    rtc::scoped_refptr<webrtc::VideoTrackInterface> track_;
     ptrid_t ptrid_;
     std::mutex mutex_;
     rtc::scoped_refptr<webrtc::VideoFrameBuffer> frame_buffer_;
