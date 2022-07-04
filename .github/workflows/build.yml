@@ -45,7 +45,7 @@ jobs:
         name:
           - macos_arm64
           - ios
-    runs-on: macos-11
+    runs-on: macos-12
     steps:
     - uses: actions/checkout@v2
     - name: Cache
@@ -53,9 +53,9 @@ jobs:
       uses: actions/cache@v2
       with:
         path: _install
-        key: ${{ matrix.name }}-v6-${{ hashFiles('VERSIONS') }}
+        key: ${{ matrix.name }}-v7-${{ hashFiles('VERSIONS') }}
         restore-keys: |
-          ${{ matrix.name }}-v6-
+          ${{ matrix.name }}-v7-
     - run: python3 run.py ${{ matrix.name }}
     # macOS 用
     - name: Copy macOS arm64 files
