@@ -39,7 +39,6 @@ Sora Unity SDK を使ってみたい人は [USE.md](doc/USE.md) をお読みく�
 - [「Momo (on Jetson Nano) -> Sora-Labo -> Sora-Unity と Sora-Js 同時受信。ここまでがお手軽すぎてやばい。」 / Twitter](https://twitter.com/izmhrats/status/1203299775354851328?s=20)
 ## 対応 Unity バージョン
 
-- Unity 2020.3 (LTS)
 - Unity 2021.3 (LTS)
 
 ## システム条件
