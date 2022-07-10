@@ -292,7 +292,8 @@ void Sora::DoConnect(const sora_conf::internal::ConnectConfig& cc,
 
     std::string audio_track_id = rtc::CreateRandomString(16);
     audio_track_ = factory_->CreateAudioTrack(
-        audio_track_id, factory_->CreateAudioSource(cricket::AudioOptions()));
+        audio_track_id,
+        factory_->CreateAudioSource(cricket::AudioOptions()).get());
     std::string video_track_id = rtc::CreateRandomString(16);
     video_track_ = factory_->CreateVideoTrack(video_track_id, capturer.get());
     auto track_id = renderer_->AddTrack(video_track_.get());
@@ -596,15 +597,16 @@ void Sora::GetStats(std::function<void(std::string)> on_get_stats) {
     return;
   }
 
-  pc->GetStats(sora::RTCStatsCallback::Create(
-      [self = shared_from_this(), on_get_stats = std::move(on_get_stats)](
-          const rtc::scoped_refptr<const webrtc::RTCStatsReport>& report) {
-        std::string json = report->ToJson();
-        self->PushEvent(
-            [on_get_stats = std::move(on_get_stats), json = std::move(json)]() {
-              on_get_stats(std::move(json));
-            });
-      }));
+  pc->GetStats(
+      sora::RTCStatsCallback::Create(
+          [self = shared_from_this(), on_get_stats = std::move(on_get_stats)](
+              const rtc::scoped_refptr<const webrtc::RTCStatsReport>& report) {
+            std::string json = report->ToJson();
+            self->PushEvent(
+                [on_get_stats = std::move(on_get_stats),
+                 json = std::move(json)]() { on_get_stats(std::move(json)); });
+          })
+          .get());
 }
 
 void Sora::SendMessage(const std::string& label, const std::string& data) {

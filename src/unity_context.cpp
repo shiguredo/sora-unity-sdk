@@ -104,7 +104,8 @@ bool UnityContext::IsInitialized() {
 void UnityContext::Init(IUnityInterfaces* ifs) {
   std::lock_guard<std::mutex> guard(mutex_);
 
-#if defined(SORA_UNITY_SDK_WINDOWS) || defined(SORA_UNITY_SDK_MACOS) || defined(SORA_UNITY_SDK_UBUNTU)
+#if defined(SORA_UNITY_SDK_WINDOWS) || defined(SORA_UNITY_SDK_MACOS) || \
+    defined(SORA_UNITY_SDK_UBUNTU)
   const size_t kDefaultMaxLogFileSize = 10 * 1024 * 1024;
   rtc::LogMessage::LogToDebug((rtc::LoggingSeverity)rtc::LS_NONE);
   rtc::LogMessage::LogTimestamps();
