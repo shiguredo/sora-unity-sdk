@@ -28,6 +28,13 @@
 
 [![Image from Gyazo](https://i.gyazo.com/db3ddc8c4624d83cd2a0ed4cc65c4fbd.png)](https://gyazo.com/db3ddc8c4624d83cd2a0ed4cc65c4fbd)
 
+#### libsora.a
+
+- 特に変更は必要ありません。想定している設定内容は以下の画像の通りです。
+
+[![Image from Gyazo](https://i.gyazo.com/d4de6b900211ed2fb528e3d245abc216.png)](https://gyazo.com/d4de6b900211ed2fb528e3d245abc216)
+
+
 ### Player Settings の設定
 
 #### Target Minimum iOS Version
