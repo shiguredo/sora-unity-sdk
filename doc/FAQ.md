@@ -8,10 +8,6 @@
 
 - 現在カメラを無効にすることは出来ませんが、 `video = false;` を指定することで音声だけを送信することが可能です。カメラデバイスを無効にしたい場合は fork して実装してください。
 
-### Android で Graphics APIs に Vulkan, OpenGL 以外を設定したい
-
-- 現在 Graphics APIs を Vulkan, OpenGL 以外に設定することは出来ません。fork して実装してください。
-
 ### AV1 を設定して配信したい
 
 - 現在 AV1 が動作するのは Windows / MacOS ( intel 64-bit ) / iOS / iPadOS のみです。 Android は動作しません。
