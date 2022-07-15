@@ -13,11 +13,17 @@ libSoraUnitySdk.so インスペクタの Platform settings -> Android の設定�
 
 [![Image from Gyazo](https://i.gyazo.com/f7dbf0ebbd1b1567517b4fcd34ff1c97.png)](https://gyazo.com/f7dbf0ebbd1b1567517b4fcd34ff1c97)
 
-### Graphics APIs を Vulkan に設定します。
+### Graphics APIs を設定します。
 
+####  Vulkan を使用したい場合
 Player Settings -> Other Settings の Graphics APIs で Vulkan を先頭にして下さい。
 
-[![Image from Gyazo](https://i.gyazo.com/6088aa664df137c0bbeff69de2af57ae.png)](https://gyazo.com/6088aa664df137c0bbeff69de2af57ae)
+[![Image from Gyazo](https://i.gyazo.com/bdd46d716499e312f3361b756e90b53c.png)](https://gyazo.com/bdd46d716499e312f3361b756e90b53c)
+
+####  OpenGLES を使用したい場合
+Player Settings -> Other Settings の Graphics APIs で OpenGLES3 を先頭にして下さい。
+
+[![Image from Gyazo](https://i.gyazo.com/a3fe926948f72079cb663075c7968288.png)](https://gyazo.com/a3fe926948f72079cb663075c7968288)
 
 ### Minimum API Level で Android 7.0 'Nougat' ( API level 24 ) 以上を設定します。
 
@@ -34,5 +40,3 @@ Player Settings -> Other Settings -> Target Architectures で ARM64 にチェッ
 
 - Pixel 3 で解像度が 16 の倍数でない時に映像が乱れる問題があります。
   - [1084702 - Mobile Chrome on Pixel 3 has video corruption for non-16-aligned resolutions in WebRTC calls : Hardware VP8 encoder bug - chromium](https://bugs.chromium.org/p/chromium/issues/detail?id=1084702)
-
-- OpenGLES モードでは一部機能が動作しないため、Vulkan モードで利用するのを推奨します。
