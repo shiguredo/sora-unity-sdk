@@ -1,6 +1,6 @@
 #include "id_pointer.h"
 
-namespace sora {
+namespace sora_unity_sdk {
 
 IdPointer& IdPointer::Instance() {
   static IdPointer ip;
@@ -24,4 +24,4 @@ void* IdPointer::Lookup(ptrid_t id) {
   return it->second;
 }
 
-}  // namespace sora
+}  // namespace sora_unity_sdk

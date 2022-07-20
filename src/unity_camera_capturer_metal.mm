@@ -5,7 +5,7 @@
 // .mm ファイルからじゃないと IUnityGraphicsMetal.h を読み込めないので、ここで import する
 #import "unity/IUnityGraphicsMetal.h"
 
-namespace sora {
+namespace sora_unity_sdk {
 
 static std::string MTLStorageModeToString(MTLStorageMode mode) {
   switch (mode) {

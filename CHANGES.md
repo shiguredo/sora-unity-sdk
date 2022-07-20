@@ -9,10 +9,37 @@
 - FIX
     - バグ修正
 
+## develop
+
+## 2022.2.0
+
+- [CHANGE] Multistream, Spotlight, Simulcast を Nullable にする
+    - @melpon
+- [CHANGE] macOS x86_64 の対応をドロップ
+    - @melpon
+- [UPDATE] Sora C++ SDK 化
+    - @melpon
+- [UPDATE] Sora C++ SDK を `2022.7.5` に上げる
+    - @melpon
+- [UPDATE] libwebrtc を `103.5060.5.0` に上げる
+    - @melpon
+- [ADD] macOS M1 に対応
+    - @melpon
+- [ADD] Android の OpenGL ES を使った Unity カメラキャプチャに対応
+    - @melpon
+- [ADD] Ubuntu に対応
+    - @melpon
+- [ADD] BundleId 追加
+    - @melpon
+- [ADD] HTTP Proxy に対応
+    - @melpon
+
 ## 2022.1.0
 
 - [CHANGE] Github Actions の `macos-latest` を `macos-11` へ変更する
     - @voluntas
+- [CHANGE] Github Actions の `windows-latest` を `windows-2019` へ変更する
+    - @melpon
 - [UPDATE] libwebrtc を `99.4844.1.0` に上げる
     - @voluntas @melpon @torikizi
 - [ADD] `Insecure`, `Video`, `Audio` フラグを追加

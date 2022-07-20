@@ -1,6 +1,6 @@
 #include "unity_context.h"
 
-namespace sora {
+namespace sora_unity_sdk {
 
 void UnityContext::OnGraphicsDeviceEventStatic(
     UnityGfxDeviceEventType eventType) {
@@ -104,7 +104,8 @@ bool UnityContext::IsInitialized() {
 void UnityContext::Init(IUnityInterfaces* ifs) {
   std::lock_guard<std::mutex> guard(mutex_);
 
-#if defined(SORA_UNITY_SDK_WINDOWS) || defined(SORA_UNITY_SDK_MACOS)
+#if defined(SORA_UNITY_SDK_WINDOWS) || defined(SORA_UNITY_SDK_MACOS) || \
+    defined(SORA_UNITY_SDK_UBUNTU)
   const size_t kDefaultMaxLogFileSize = 10 * 1024 * 1024;
   rtc::LogMessage::LogToDebug((rtc::LoggingSeverity)rtc::LS_NONE);
   rtc::LogMessage::LogTimestamps();
@@ -161,4 +162,4 @@ ID3D11DeviceContext* UnityContext::GetDeviceContext() {
 }
 #endif
 
-}  // namespace sora
+}  // namespace sora_unity_sdk

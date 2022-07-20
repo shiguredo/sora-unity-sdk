@@ -1,6 +1,6 @@
 #include "unity_camera_capturer.h"
 
-namespace sora {
+namespace sora_unity_sdk {
 
 rtc::scoped_refptr<UnityCameraCapturer> UnityCameraCapturer::Create(
     UnityContext* context,
@@ -17,7 +17,8 @@ rtc::scoped_refptr<UnityCameraCapturer> UnityCameraCapturer::Create(
 
 void UnityCameraCapturer::OnRender() {
 #if defined(SORA_UNITY_SDK_WINDOWS) || defined(SORA_UNITY_SDK_MACOS) || \
-    defined(SORA_UNITY_SDK_IOS) || defined(SORA_UNITY_SDK_ANDROID)
+    defined(SORA_UNITY_SDK_IOS) || defined(SORA_UNITY_SDK_ANDROID) ||   \
+    defined(SORA_UNITY_SDK_UBUNTU)
   auto i420_buffer = capturer_->Capture();
   if (!i420_buffer) {
     return;
@@ -40,28 +41,51 @@ bool UnityCameraCapturer::Init(UnityContext* context,
                                void* unity_camera_texture,
                                int width,
                                int height) {
+  capturer_.reset();
+
+  auto renderer_type =
+      context->GetInterfaces()->Get<IUnityGraphics>()->GetRenderer();
+
+  switch (renderer_type) {
+    case kUnityGfxRendererD3D11:
 #ifdef SORA_UNITY_SDK_WINDOWS
-  capturer_.reset(new D3D11Impl());
-  if (!capturer_->Init(context, unity_camera_texture, width, height)) {
-    return false;
-  }
+      RTC_LOG(LS_INFO) << "Init UnityCameraCapturer with D3D11Impl";
+      capturer_.reset(new D3D11Impl());
 #endif
-
+      break;
+    case kUnityGfxRendererMetal:
 #if defined(SORA_UNITY_SDK_MACOS) || defined(SORA_UNITY_SDK_IOS)
-  capturer_.reset(new MetalImpl());
-  if (!capturer_->Init(context, unity_camera_texture, width, height)) {
-    return false;
-  }
+      RTC_LOG(LS_INFO) << "Init UnityCameraCapturer with MetalImpl";
+      capturer_.reset(new MetalImpl());
 #endif
-
+      break;
+    case kUnityGfxRendererVulkan:
 #ifdef SORA_UNITY_SDK_ANDROID
-  capturer_.reset(new VulkanImpl());
+      RTC_LOG(LS_INFO) << "Init UnityCameraCapturer with VulkanImpl";
+      capturer_.reset(new VulkanImpl());
+#endif
+      break;
+    case kUnityGfxRendererOpenGLCore:
+    case kUnityGfxRendererOpenGLES20:
+    case kUnityGfxRendererOpenGLES30:
+#if defined(SORA_UNITY_SDK_ANDROID) || defined(SORA_UNITY_SDK_UBUNTU)
+      RTC_LOG(LS_INFO) << "Init UnityCameraCapturer with OpenglImpl";
+      capturer_.reset(new OpenglImpl());
+#endif
+      break;
+    default:
+      break;
+  }
+
+  if (capturer_ == nullptr) {
+    RTC_LOG(LS_INFO) << "Failed to Init for UnityCameraCapturer";
+    return false;
+  }
+
   if (!capturer_->Init(context, unity_camera_texture, width, height)) {
     return false;
   }
-#endif
-
   return true;
 }
 
-}  // namespace sora
+}  // namespace sora_unity_sdk
