@@ -17,6 +17,10 @@
     - @melpon
 - [UPDATE] Sora C++ SDK 化
     - @melpon
+- [UPDATE] Sora C++ SDK を `103.5060.5.0` に上げる
+    - @melpon
+- [UPDATE] libwebrtc を `2022.7.5` に上げる
+    - @melpon
 - [ADD] macOS M1 に対応
     - @melpon
 - [ADD] Android の OpenGL ES を使った Unity カメラキャプチャに対応
