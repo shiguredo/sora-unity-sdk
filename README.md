@@ -37,13 +37,14 @@ Sora Unity SDK を使ってみたい人は [USE.md](doc/USE.md) をお読みく�
 - [「こんな感じに Unity のカメラ映像を WebRTC で配信できるようになりました https://t\.co/R98ZmZTFOK」 / Twitter](https://twitter.com/melponn/status/1193406538494275592)
 - [「ちゃんとリアルタイムで配信してます（モーション作るのが面倒だったのでシーンエディタから動かしてる）。Unity 側が配信で、ブラウザ（右上）で受信してる。 https://t\.co/TIL7NYroZm」 / Twitter](https://twitter.com/melponn/status/1193411591183552512)
 - [「Momo (on Jetson Nano) -> Sora-Labo -> Sora-Unity と Sora-Js 同時受信。ここまでがお手軽すぎてやばい。」 / Twitter](https://twitter.com/izmhrats/status/1203299775354851328?s=20)
+
 ## 対応 Unity バージョン
 
 - Unity 2021.3 (LTS)
 
 ## システム条件
 
-- Sora 2022.1.0 以降
+- Sora 2022.1.1 以降
 
 ## 対応プラットフォーム
 
@@ -99,6 +100,10 @@ Sora Unity SDK を使ってみたい人は [USE.md](doc/USE.md) をお読みく�
     - Windows 版
         - H.264 のハードウェアエンコードへの対応
         - H.264 のハードウェアデコードへの対応
+
+## 既知のバグ
+
+[既知のバグ](doc/KNOWN_BUGS.md) をご確認ください。
 
 ## H.264 の利用について
 
