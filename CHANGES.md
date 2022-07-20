@@ -11,15 +11,17 @@
 
 ## develop
 
+## 2022.2.0
+
 - [CHANGE] Multistream, Spotlight, Simulcast を Nullable にする
     - @melpon
 - [CHANGE] macOS x86_64 の対応をドロップ
     - @melpon
 - [UPDATE] Sora C++ SDK 化
     - @melpon
-- [UPDATE] Sora C++ SDK を `103.5060.5.0` に上げる
+- [UPDATE] Sora C++ SDK を `2022.7.5` に上げる
     - @melpon
-- [UPDATE] libwebrtc を `2022.7.5` に上げる
+- [UPDATE] libwebrtc を `103.5060.5.0` に上げる
     - @melpon
 - [ADD] macOS M1 に対応
     - @melpon
