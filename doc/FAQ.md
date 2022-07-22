@@ -10,11 +10,11 @@
 
 ### AV1 を設定して配信したい
 
-- 現在 AV1 が動作するのは Windows / MacOS ( intel 64-bit ) / iOS / iPadOS のみです。 Android は動作しません。
+- 現在 AV1 が動作するのは Windows / macOS ( intel 64-bit ) / iOS / iPadOS のみです。 Android は動作しません。
 
-### iOS 端末から H.264 の FHD で配信したい
+### iOS または macOS から H.264 の FHD で配信したい
 
-- iOS 端末から FHD で配信したい場合は Sora の H.264 のプロファイルレベル ID を 3.2 以上に設定してください。 設定方法はこちらの [Sora のドキュメント](https://sora-doc.shiguredo.jp/sora_conf#default-h264-profile-level-id)をお読みください。プロファイルレベル ID を変更しない場合は H.264 の HD 以下で配信するか、他のコーデックを使用して FHD 配信をしてください。
+- iOS または macOS から FHD で配信したい場合は Sora の H.264 のプロファイルレベル ID を 5.2 以上に設定してください。 設定方法は [Sora のドキュメント](https://sora-doc.shiguredo.jp/SORA_CONF#8a25f5)をお読みください。プロファイルレベル ID を変更しない場合は H.264 の HD 以下で配信するか、他のコーデックを使用して FHD 配信をしてください。
 
 ### Sora の TURN 機能を無効にして利用したい
 
