@@ -11,6 +11,11 @@
 
 ## develop
 
+## 2022.2.1
+
+- [UPDATE] Sora C++ SDK を `2022.7.8` に上げる
+    - @melpon
+
 ## 2022.2.0
 
 - [CHANGE] Multistream, Spotlight, Simulcast を Nullable にする
