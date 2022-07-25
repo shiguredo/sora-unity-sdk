@@ -23,3 +23,7 @@
 ### Sora の TURN 機能を無効にして利用したい
 
 - Sora Unity SDK は Sora を `turn = false` に設定して利用することはできません。
+
+### Windows で 受信した VP9 の映像が表示されない
+
+- NVIDIA 搭載の Windows で 128x128 未満の VP9 の映像を受信できません。詳細は [Sora C++ SDK の FAQ](https://github.com/shiguredo/sora-cpp-sdk/blob/develop/doc/faq.md#nvidia-%E6%90%AD%E8%BC%89%E3%81%AE-windows-%E3%81%A7-128x128-%E6%9C%AA%E6%BA%80%E3%81%AE-vp9-%E3%81%AE%E6%98%A0%E5%83%8F%E3%82%92%E5%8F%97%E4%BF%A1%E3%81%A7%E3%81%8D%E3%81%BE%E3%81%9B%E3%82%93) をご確認ください。
