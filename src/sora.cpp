@@ -88,10 +88,12 @@ Sora::~Sora() {
   RTC_LOG(LS_INFO) << "Sora object destroy finished";
 }
 
-void Sora::SetOnAddTrack(std::function<void(ptrid_t)> on_add_track) {
+void Sora::SetOnAddTrack(
+    std::function<void(ptrid_t, std::string)> on_add_track) {
   on_add_track_ = on_add_track;
 }
-void Sora::SetOnRemoveTrack(std::function<void(ptrid_t)> on_remove_track) {
+void Sora::SetOnRemoveTrack(
+    std::function<void(ptrid_t, std::string)> on_remove_track) {
   on_remove_track_ = on_remove_track;
 }
 void Sora::SetOnNotify(std::function<void(std::string)> on_notify) {
@@ -296,12 +298,6 @@ void Sora::DoConnect(const sora_conf::internal::ConnectConfig& cc,
         factory_->CreateAudioSource(cricket::AudioOptions()).get());
     std::string video_track_id = rtc::CreateRandomString(16);
     video_track_ = factory_->CreateVideoTrack(video_track_id, capturer.get());
-    auto track_id = renderer_->AddTrack(video_track_.get());
-    PushEvent([this, track_id]() {
-      if (on_add_track_) {
-        on_add_track_(track_id);
-      }
-    });
   }
 
   {
@@ -661,6 +657,15 @@ void Sora::OnSetOffer() {
         video_result = signaling_->GetPeerConnection()->AddTrack(video_track_,
                                                                  {stream_id});
   }
+
+  if (video_track_ != nullptr) {
+    auto track_id = renderer_->AddTrack(video_track_.get());
+    PushEvent([this, track_id]() {
+      if (on_add_track_) {
+        on_add_track_(track_id, "");
+      }
+    });
+  }
 }
 void Sora::OnDisconnect(sora::SoraSignalingErrorCode ec, std::string message) {
   RTC_LOG(LS_INFO) << "OnDisconnect: " << message;
@@ -697,11 +702,12 @@ void Sora::OnTrack(
     rtc::scoped_refptr<webrtc::RtpTransceiverInterface> transceiver) {
   auto track = transceiver->receiver()->track();
   if (track->kind() == webrtc::MediaStreamTrackInterface::kVideoKind) {
+    auto connection_id = transceiver->receiver()->stream_ids()[0];
     auto track_id = renderer_->AddTrack(
         static_cast<webrtc::VideoTrackInterface*>(track.get()));
-    PushEvent([this, track_id]() {
+    PushEvent([this, track_id, connection_id]() {
       if (on_add_track_) {
-        on_add_track_(track_id);
+        on_add_track_(track_id, connection_id);
       }
     });
   }
@@ -710,13 +716,14 @@ void Sora::OnRemoveTrack(
     rtc::scoped_refptr<webrtc::RtpReceiverInterface> receiver) {
   auto track = receiver->track();
   if (track->kind() == webrtc::MediaStreamTrackInterface::kVideoKind) {
+    auto connection_id = receiver->stream_ids()[0];
     auto track_id = renderer_->RemoveTrack(
         static_cast<webrtc::VideoTrackInterface*>(track.get()));
 
     if (track_id != 0) {
-      PushEvent([this, track_id]() {
+      PushEvent([this, track_id, connection_id]() {
         if (on_remove_track_) {
-          on_remove_track_(track_id);
+          on_remove_track_(track_id, connection_id);
         }
       });
     }

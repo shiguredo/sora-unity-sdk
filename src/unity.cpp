@@ -49,18 +49,20 @@ void* sora_create() {
 
 void sora_set_on_add_track(void* p, track_cb_t on_add_track, void* userdata) {
   auto wsora = (SoraWrapper*)p;
-  wsora->sora->SetOnAddTrack([on_add_track, userdata](ptrid_t track_id) {
-    on_add_track(track_id, userdata);
-  });
+  wsora->sora->SetOnAddTrack(
+      [on_add_track, userdata](ptrid_t track_id, std::string connection_id) {
+        on_add_track(track_id, connection_id.c_str(), userdata);
+      });
 }
 
 void sora_set_on_remove_track(void* p,
                               track_cb_t on_remove_track,
                               void* userdata) {
   auto wsora = (SoraWrapper*)p;
-  wsora->sora->SetOnRemoveTrack([on_remove_track, userdata](ptrid_t track_id) {
-    on_remove_track(track_id, userdata);
-  });
+  wsora->sora->SetOnRemoveTrack(
+      [on_remove_track, userdata](ptrid_t track_id, std::string connection_id) {
+        on_remove_track(track_id, connection_id.c_str(), userdata);
+      });
 }
 
 void sora_set_on_notify(void* p, notify_cb_t on_notify, void* userdata) {

@@ -313,16 +313,16 @@ public class Sora : IDisposable
         commandBuffer.Clear();
     }
 
-    private delegate void TrackCallbackDelegate(uint track_id, IntPtr userdata);
+    private delegate void TrackCallbackDelegate(uint track_id, string connection_id, IntPtr userdata);
 
     [AOT.MonoPInvokeCallback(typeof(TrackCallbackDelegate))]
-    static private void TrackCallback(uint trackId, IntPtr userdata)
+    static private void TrackCallback(uint trackId, string connectionId, IntPtr userdata)
     {
-        var callback = GCHandle.FromIntPtr(userdata).Target as Action<uint>;
-        callback(trackId);
+        var callback = GCHandle.FromIntPtr(userdata).Target as Action<uint, string>;
+        callback(trackId, connectionId);
     }
 
-    public Action<uint> OnAddTrack
+    public Action<uint, string> OnAddTrack
     {
         set
         {
@@ -335,7 +335,7 @@ public class Sora : IDisposable
             sora_set_on_add_track(p, TrackCallback, GCHandle.ToIntPtr(onAddTrackHandle));
         }
     }
-    public Action<uint> OnRemoveTrack
+    public Action<uint, string> OnRemoveTrack
     {
         set
         {

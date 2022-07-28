@@ -12,7 +12,9 @@ extern "C" {
 typedef unsigned int ptrid_t;
 typedef int32_t unity_bool_t;
 
-typedef void (*track_cb_t)(ptrid_t track_id, void* userdata);
+typedef void (*track_cb_t)(ptrid_t track_id,
+                           const char* connection_id,
+                           void* userdata);
 typedef void (*notify_cb_t)(const char* json, void* userdata);
 typedef void (*push_cb_t)(const char* json, void* userdata);
 typedef void (*stats_cb_t)(const char* json, void* userdata);
