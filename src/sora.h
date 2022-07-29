@@ -140,6 +140,8 @@ class Sora : public std::enable_shared_from_this<Sora>,
 
   ptrid_t ptrid_;
 
+  std::map<ptrid_t, std::string> connection_ids_;
+
   rtc::scoped_refptr<webrtc::VideoTrackSourceInterface> capturer_;
   int capturer_type_ = 0;
 

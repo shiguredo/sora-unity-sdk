@@ -708,6 +708,7 @@ void Sora::OnTrack(
     auto connection_id = transceiver->receiver()->stream_ids()[0];
     auto track_id = renderer_->AddTrack(
         static_cast<webrtc::VideoTrackInterface*>(track.get()));
+    connection_ids_.insert(std::make_pair(track_id, connection_id));
     PushEvent([this, track_id, connection_id]() {
       if (on_add_track_) {
         on_add_track_(track_id, connection_id);
@@ -719,9 +720,10 @@ void Sora::OnRemoveTrack(
     rtc::scoped_refptr<webrtc::RtpReceiverInterface> receiver) {
   auto track = receiver->track();
   if (track->kind() == webrtc::MediaStreamTrackInterface::kVideoKind) {
-    auto connection_id = receiver->stream_ids()[0];
     auto track_id = renderer_->RemoveTrack(
         static_cast<webrtc::VideoTrackInterface*>(track.get()));
+    auto connection_id = connection_ids_[track_id];
+    connection_ids_.erase(track_id);
 
     if (track_id != 0) {
       PushEvent([this, track_id, connection_id]() {
