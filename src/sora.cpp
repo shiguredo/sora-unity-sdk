@@ -110,6 +110,9 @@ void Sora::SetOnDisconnect(
     std::function<void(int, std::string)> on_disconnect) {
   on_disconnect_ = std::move(on_disconnect);
 }
+void Sora::SetOnDataChannel(std::function<void(std::string)> on_data_channel) {
+  on_data_channel_ = std::move(on_data_channel);
+}
 
 void Sora::DispatchEvents() {
   auto self = shared_from_this();
@@ -728,6 +731,14 @@ void Sora::OnRemoveTrack(
       });
     }
   }
+}
+
+void Sora::OnDataChannel(std::string label) {
+  PushEvent([this, label]() {
+    if (on_data_channel_) {
+      on_data_channel_(label);
+    }
+  });
 }
 
 void Sora::PushEvent(std::function<void()> f) {

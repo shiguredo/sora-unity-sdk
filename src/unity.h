@@ -25,6 +25,7 @@ typedef void (*message_cb_t)(const char* label,
 typedef void (*disconnect_cb_t)(int error_code,
                                 const char* reason,
                                 void* userdata);
+typedef void (*data_channel_cb_t)(const char* reason, void* userdata);
 
 UNITY_INTERFACE_EXPORT void* sora_create();
 UNITY_INTERFACE_EXPORT void sora_set_on_add_track(void* p,
@@ -44,6 +45,10 @@ UNITY_INTERFACE_EXPORT void sora_set_on_message(void* p,
                                                 void* userdata);
 UNITY_INTERFACE_EXPORT void
 sora_set_on_disconnect(void* p, disconnect_cb_t on_disconnect, void* userdata);
+UNITY_INTERFACE_EXPORT void sora_set_on_data_channel(
+    void* p,
+    data_channel_cb_t on_data_channel,
+    void* userdata);
 UNITY_INTERFACE_EXPORT void sora_dispatch_events(void* p);
 UNITY_INTERFACE_EXPORT void sora_connect(void* p, const char* config);
 UNITY_INTERFACE_EXPORT void sora_disconnect(void* p);

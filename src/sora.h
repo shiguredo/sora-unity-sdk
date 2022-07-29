@@ -40,11 +40,13 @@ class Sora : public std::enable_shared_from_this<Sora>,
   ~Sora();
 
   void SetOnAddTrack(std::function<void(ptrid_t, std::string)> on_add_track);
-  void SetOnRemoveTrack(std::function<void(ptrid_t, std::string)> on_remove_track);
+  void SetOnRemoveTrack(
+      std::function<void(ptrid_t, std::string)> on_remove_track);
   void SetOnNotify(std::function<void(std::string)> on_notify);
   void SetOnPush(std::function<void(std::string)> on_push);
   void SetOnMessage(std::function<void(std::string, std::string)> on_message);
   void SetOnDisconnect(std::function<void(int, std::string)> on_disconnect);
+  void SetOnDataChannel(std::function<void(std::string)> on_data_channel);
   void DispatchEvents();
 
   void Connect(const sora_conf::internal::ConnectConfig& cc);
@@ -77,6 +79,7 @@ class Sora : public std::enable_shared_from_this<Sora>,
       rtc::scoped_refptr<webrtc::RtpTransceiverInterface> transceiver) override;
   void OnRemoveTrack(
       rtc::scoped_refptr<webrtc::RtpReceiverInterface> receiver) override;
+  void OnDataChannel(std::string label) override;
 
  private:
   void DoConnect(const sora_conf::internal::ConnectConfig& config,
@@ -122,6 +125,7 @@ class Sora : public std::enable_shared_from_this<Sora>,
   std::function<void(std::string)> on_push_;
   std::function<void(std::string, std::string)> on_message_;
   std::function<void(int, std::string)> on_disconnect_;
+  std::function<void(std::string)> on_data_channel_;
   std::function<void(const int16_t*, int, int)> on_handle_audio_;
 
   std::unique_ptr<rtc::Thread> io_thread_;

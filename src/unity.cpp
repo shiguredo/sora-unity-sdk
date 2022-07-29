@@ -97,6 +97,15 @@ void sora_set_on_disconnect(void* p,
       });
 }
 
+void sora_set_on_data_channel(void* p,
+                              data_channel_cb_t on_data_channel,
+                              void* userdata) {
+  auto wsora = (SoraWrapper*)p;
+  wsora->sora->SetOnDataChannel([on_data_channel, userdata](std::string label) {
+    on_data_channel(label.c_str(), userdata);
+  });
+}
+
 void sora_dispatch_events(void* p) {
   auto wsora = (SoraWrapper*)p;
   wsora->sora->DispatchEvents();

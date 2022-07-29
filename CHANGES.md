@@ -11,6 +11,11 @@
 
 ## develop
 
+- [ADD] OnDataChannel を追加
+    - @melpon
+- [UPDATE] Sora C++ SDK を `2022.9.0` に上げる
+    - @melpon
+
 ## 2022.2.1
 
 - [CHANGE] OnAddTrack, OnRemoveTrack に connectionId を追加
