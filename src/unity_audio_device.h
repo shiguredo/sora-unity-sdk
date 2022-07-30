@@ -229,6 +229,7 @@ class UnityAudioDevice : public webrtc::AudioDeviceModule {
     if (adm_playout_) {
       return adm_->StartPlayout();
     } else {
+      is_playing_ = true;
       handle_audio_thread_.reset(new std::thread([this]() {
         RTC_LOG(LS_INFO) << "Sora Audio Playout Thread started";
         HandleAudioData();
