@@ -254,6 +254,7 @@ class UnityAudioDevice : public webrtc::AudioDeviceModule {
       return adm_->StopPlayout();
     } else {
       DoStopPlayout();
+      is_playing_ = false;
       return 0;
     }
   }
