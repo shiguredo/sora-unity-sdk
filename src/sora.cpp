@@ -216,12 +216,12 @@ void Sora::DoConnect(const sora_conf::internal::ConnectConfig& cc,
   // media_dependencies
   cricket::MediaEngineDependencies media_dependencies;
   media_dependencies.task_queue_factory = dependencies.task_queue_factory.get();
-  auto adm =
+  unity_adm_ =
       CreateADM(media_dependencies.task_queue_factory, false,
                 cc.unity_audio_input, cc.unity_audio_output, on_handle_audio_,
                 cc.audio_recording_device, cc.audio_playout_device,
                 worker_thread_.get(), worker_env, worker_context);
-  media_dependencies.adm = adm;
+  media_dependencies.adm = unity_adm_;
 
 #if defined(SORA_UNITY_SDK_ANDROID)
   worker_thread_->Invoke<void>(RTC_FROM_HERE, [worker_env, worker_context] {
@@ -273,7 +273,7 @@ void Sora::DoConnect(const sora_conf::internal::ConnectConfig& cc,
   factory_options.crypto_options.srtp.enable_gcm_crypto_suites = true;
   factory_->SetOptions(factory_options);
 
-  if (!InitADM(adm, cc.audio_recording_device, cc.audio_playout_device)) {
+  if (!InitADM(unity_adm_, cc.audio_recording_device, cc.audio_playout_device)) {
     on_disconnect((int)sora_conf::ErrorCode::INTERNAL_ERROR,
                   "Failed to InitADM");
     return;
