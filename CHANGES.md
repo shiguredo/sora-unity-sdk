@@ -15,6 +15,10 @@
     - @melpon
 - [UPDATE] Sora C++ SDK を `2022.9.0` に上げる
     - @melpon
+- [FIX] UnityAudioOutput = true で ADM を Stop しても再生中のままになっていたのを修正
+    - @melpon
+- [FIX] ProcessAudio が機能してなかったのを修正
+    - @melpon
 
 ## 2022.2.1
 
