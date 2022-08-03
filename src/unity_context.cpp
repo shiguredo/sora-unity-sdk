@@ -1,5 +1,9 @@
 #include "unity_context.h"
 
+#ifdef SORA_UNITY_SDK_HOLOLENS2
+#include <winrt/Windows.Storage.h>
+#endif
+
 namespace sora {
 
 void UnityContext::OnGraphicsDeviceEventStatic(
@@ -104,13 +108,23 @@ bool UnityContext::IsInitialized() {
 void UnityContext::Init(IUnityInterfaces* ifs) {
   std::lock_guard<std::mutex> guard(mutex_);
 
-#if defined(SORA_UNITY_SDK_WINDOWS) || defined(SORA_UNITY_SDK_MACOS)
+#if defined(SORA_UNITY_SDK_WINDOWS) || defined(SORA_UNITY_SDK_HOLOLENS2) || \
+    defined(SORA_UNITY_SDK_MACOS)
   const size_t kDefaultMaxLogFileSize = 10 * 1024 * 1024;
   rtc::LogMessage::LogToDebug((rtc::LoggingSeverity)rtc::LS_NONE);
   rtc::LogMessage::LogTimestamps();
   rtc::LogMessage::LogThreads();
 
-  log_sink_.reset(new rtc::FileRotatingLogSink("./", "webrtc_logs",
+#if defined(SORA_UNITY_SDK_HOLOLENS2)
+  std::string path =
+      rtc::ToUtf8(winrt::Windows::Storage::ApplicationData::Current()
+                      .TemporaryFolder()
+                      .Path()
+                      .c_str());
+#else
+  std::string path = "./";
+#endif
+  log_sink_.reset(new rtc::FileRotatingLogSink(path, "webrtc_logs",
                                                kDefaultMaxLogFileSize, 10));
   if (!log_sink_->Init()) {
     RTC_LOG(LS_ERROR) << __FUNCTION__ << ": Failed to open log file";
@@ -121,16 +135,6 @@ void UnityContext::Init(IUnityInterfaces* ifs) {
 
   rtc::LogMessage::AddLogToStream(log_sink_.get(), rtc::LS_INFO);
 
-  RTC_LOG(LS_INFO) << "Log initialized";
-#endif
-
-#if defined(SORA_UNITY_SDK_HOLOLENS2)
-  rtc::LogMessage::LogToDebug((rtc::LoggingSeverity)rtc::LS_NONE);
-  rtc::LogMessage::LogTimestamps();
-  rtc::LogMessage::LogThreads();
-
-  log_sink_.reset(new OutputDebugSink());
-  rtc::LogMessage::AddLogToStream(log_sink_.get(), rtc::LS_INFO);
   RTC_LOG(LS_INFO) << "Log initialized";
 #endif
 

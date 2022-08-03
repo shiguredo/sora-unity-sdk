@@ -4,6 +4,7 @@
     },
     "files.associations": {
       "*.cs": "csharp",
+      "CMakeLists.txt": "cmake",
       "memory": "cpp",
       "utility": "cpp",
       "xmemory": "cpp",
@@ -102,6 +103,13 @@
       "xutility": "cpp",
       "*.ipp": "cpp",
       "hash_map": "cpp",
-      "hash_set": "cpp"
+      "hash_set": "cpp",
+      "bit": "cpp",
+      "coroutine": "cpp",
+      "format": "cpp",
+      "ranges": "cpp",
+      "source_location": "cpp",
+      "span": "cpp",
+      "stop_token": "cpp"
     }
 }

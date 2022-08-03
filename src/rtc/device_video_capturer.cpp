@@ -26,6 +26,46 @@ DeviceVideoCapturer::~DeviceVideoCapturer() {
   Destroy();
 }
 
+#if defined(SORA_UNITY_SDK_HOLOLENS2)
+static std::string VideoTypeToString(webrtc::VideoType type) {
+  switch (type) {
+    default:
+    case webrtc::VideoType::kUnknown:
+      return "Unknown";
+    case webrtc::VideoType::kI420:
+      return "I420";
+    case webrtc::VideoType::kIYUV:
+      return "IYUV";
+    case webrtc::VideoType::kRGB24:
+      return "RGB24";
+    case webrtc::VideoType::kABGR:
+      return "ABGR";
+    case webrtc::VideoType::kARGB:
+      return "ARGB";
+    case webrtc::VideoType::kARGB4444:
+      return "ARGB4444";
+    case webrtc::VideoType::kRGB565:
+      return "RGB565";
+    case webrtc::VideoType::kARGB1555:
+      return "ARGB1555";
+    case webrtc::VideoType::kYUY2:
+      return "YUY2";
+    case webrtc::VideoType::kYV12:
+      return "YV12";
+    case webrtc::VideoType::kUYVY:
+      return "UYVY";
+    case webrtc::VideoType::kMJPEG:
+      return "MJPEG";
+    case webrtc::VideoType::kNV21:
+      return "NV21";
+    case webrtc::VideoType::kNV12:
+      return "NV12";
+    case webrtc::VideoType::kBGRA:
+      return "BGRA";
+  }
+}
+#endif
+
 bool DeviceVideoCapturer::Init(size_t width,
                                size_t height,
                                size_t target_fps,
@@ -53,17 +93,45 @@ bool DeviceVideoCapturer::Init(size_t width,
   // 既存の Capability から一番近い値を拾ってくる
   int n = device_info->NumberOfCapabilities(vcm_->CurrentDeviceName());
   int diff = 0x7fffffff;
+  // width, height が一番近い解像度を選ぶ
   for (int i = 0; i < n; i++) {
     webrtc::VideoCaptureCapability capability;
     device_info->GetCapability(vcm_->CurrentDeviceName(), i, capability);
-    int d =
-        abs((int)(width * height * target_fps -
-                  capability.width * capability.height * capability.maxFPS));
+    RTC_LOG(LS_INFO) << "Capability[" << i
+                     << "]: type=" << VideoTypeToString(capability.videoType)
+                     << " width=" << capability.width
+                     << " height=" << capability.height
+                     << " fps=" << capability.maxFPS;
+    int d = abs((int)(width * height - capability.width * capability.height));
     if (d < diff) {
       capability_ = capability;
       diff = d;
     }
   }
+  // 同じ解像度の中で一番近い FPS を選ぶ
+  diff = 0x7fffffff;
+  for (int i = 0; i < n; i++) {
+    webrtc::VideoCaptureCapability capability;
+    device_info->GetCapability(vcm_->CurrentDeviceName(), i, capability);
+    if (capability_.width != capability.width ||
+        capability_.height != capability.height) {
+      continue;
+    }
+    int d = abs((int)(target_fps - capability.maxFPS));
+    if (d < diff) {
+      capability_ = capability;
+      diff = d;
+    }
+  }
+  RTC_LOG(LS_INFO) << "Determined capability type="
+                   << VideoTypeToString(capability_.videoType)
+                   << " width=" << capability_.width
+                   << " height=" << capability_.height
+                   << " fps=" << capability_.maxFPS;
+
+  capability_.mrc_video_effect_definition =
+      webrtc::MrcVideoEffectDefinition::Create();
+
 #else
   device_info->GetCapability(vcm_->CurrentDeviceName(), 0, capability_);
   capability_.width = static_cast<int32_t>(width);

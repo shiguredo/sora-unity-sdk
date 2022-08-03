@@ -97,7 +97,7 @@ if (!(Test-Path $WEBRTC_VERSION_FILE) -Or ("$WEBRTC_BUILD_VERSION" -ne (Get-Cont
 foreach ($name in $ARCHS) {
   if ($WEBRTC_CHANGED -Or !(Test-Path "$INSTALL_DIR\$name\webrtc\lib\webrtc.lib")) {
     # shiguredo-webrtc-build の hololens2 用バイナリをダウンロードする
-    $_URL = "https://github.com/shiguredo-webrtc-build/webrtc-build/releases/download/m$WEBRTC_BUILD_VERSION-hololens2/webrtc.windows_$name.zip"
+    $_URL = "https://github.com/shiguredo-webrtc-build/webrtc-build/releases/download/m$WEBRTC_BUILD_VERSION/webrtc.windows_$name.zip"
     $_FILE = "$BUILD_DIR\webrtc-m$WEBRTC_BUILD_VERSION-$name.zip"
     Push-Location $BUILD_DIR
       if (!(Test-Path $_FILE)) {
