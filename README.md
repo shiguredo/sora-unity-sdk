@@ -124,6 +124,8 @@ Sora Unity SDK ではソフトウェアでの H.264 エンコード/デコード
     - [スロースネットワークス株式会社](http://www.sloth-networks.co.jp) 様
 - Android 版対応
     - [株式会社KDDIテクノロジー](https://kddi-tech.com/) 様
+- Android OpenGL ES 対応
+    - 企業名非公開
 
 ## 有償での優先実装が可能な機能一覧
 
