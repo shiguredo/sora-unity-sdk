@@ -1,4 +1,5 @@
 #include "sora.h"
+#include "sora_version.h"
 
 // WebRTC
 #include <api/audio_codecs/builtin_audio_decoder_factory.h>
@@ -87,6 +88,9 @@ Sora::~Sora() {
   }
   RTC_LOG(LS_INFO) << "Sora object destroy finished";
 }
+
+#define SORA_CLIENT \
+  "Sora Unity SDK " SORA_UNITY_SDK_VERSION " (" SORA_UNITY_SDK_COMMIT_SHORT ")"
 
 void Sora::SetOnAddTrack(
     std::function<void(ptrid_t, std::string)> on_add_track) {
@@ -311,6 +315,7 @@ void Sora::DoConnect(const sora_conf::internal::ConnectConfig& cc,
     config.pc_factory = factory_;
     config.io_context = ioc_.get();
     config.role = cc.role;
+    config.sora_client = SORA_CLIENT;
     if (cc.enable_multistream) {
       config.multistream = cc.multistream;
     }
