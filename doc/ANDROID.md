@@ -43,3 +43,6 @@ Player Settings -> Other Settings -> Target Architectures で ARM64 にチェッ
 
 - Pixel 3 で解像度が 16 の倍数でない時に映像が乱れる問題があります。
     - [1084702 - Mobile Chrome on Pixel 3 has video corruption for non-16-aligned resolutions in WebRTC calls : Hardware VP8 encoder bug - chromium](https://bugs.chromium.org/p/chromium/issues/detail?id=1084702)
+
+- Development Build では接続できていたがリリースビルドで接続できない。
+    - インターネット接続のパーミッションが付与されていない可能性があります。[Project Settings - Player - Android タブ - Other Settings - Configration - Internet Access] の設定を `Require` に設定されているかいるかご確認ください。
