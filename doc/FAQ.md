@@ -16,6 +16,13 @@
 
 - 現在 AV1 が動作するのは Windows / macOS ( intel 64-bit ) / iOS / iPadOS のみです。 Android は動作しません。
 
+### HTTP Proxy を利用して接続したい
+
+- Sora.Config にて HTTP Proxy の設定を行えます
+    - ProxyUrl : Proxy の URL とポート番号を指定します (例 : http://proxy.example.com:8080)
+    - ProxyUsername : Proxy の認証に利用するユーザーを指定します
+    - ProxyPassword : Proxy の認証に利用するパスワードを指定します
+
 ### iOS または macOS から H.264 の FHD で配信したい
 
 - iOS または macOS から FHD で配信したい場合は Sora の H.264 のプロファイルレベル ID を 5.2 以上に設定してください。 設定方法は [Sora のドキュメント](https://sora-doc.shiguredo.jp/SORA_CONF#8a25f5)をお読みください。プロファイルレベル ID を変更しない場合は H.264 の HD 以下で配信するか、他のコーデックを使用して FHD 配信をしてください。
