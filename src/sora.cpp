@@ -1,4 +1,5 @@
 #include "sora.h"
+#include "sora_version.h"
 
 // WebRTC
 #include <api/audio_codecs/builtin_audio_decoder_factory.h>
@@ -88,10 +89,15 @@ Sora::~Sora() {
   RTC_LOG(LS_INFO) << "Sora object destroy finished";
 }
 
-void Sora::SetOnAddTrack(std::function<void(ptrid_t)> on_add_track) {
+#define SORA_CLIENT \
+  "Sora Unity SDK " SORA_UNITY_SDK_VERSION " (" SORA_UNITY_SDK_COMMIT_SHORT ")"
+
+void Sora::SetOnAddTrack(
+    std::function<void(ptrid_t, std::string)> on_add_track) {
   on_add_track_ = on_add_track;
 }
-void Sora::SetOnRemoveTrack(std::function<void(ptrid_t)> on_remove_track) {
+void Sora::SetOnRemoveTrack(
+    std::function<void(ptrid_t, std::string)> on_remove_track) {
   on_remove_track_ = on_remove_track;
 }
 void Sora::SetOnNotify(std::function<void(std::string)> on_notify) {
@@ -107,6 +113,9 @@ void Sora::SetOnMessage(
 void Sora::SetOnDisconnect(
     std::function<void(int, std::string)> on_disconnect) {
   on_disconnect_ = std::move(on_disconnect);
+}
+void Sora::SetOnDataChannel(std::function<void(std::string)> on_data_channel) {
+  on_data_channel_ = std::move(on_data_channel);
 }
 
 void Sora::DispatchEvents() {
@@ -211,12 +220,12 @@ void Sora::DoConnect(const sora_conf::internal::ConnectConfig& cc,
   // media_dependencies
   cricket::MediaEngineDependencies media_dependencies;
   media_dependencies.task_queue_factory = dependencies.task_queue_factory.get();
-  auto adm =
+  unity_adm_ =
       CreateADM(media_dependencies.task_queue_factory, false,
                 cc.unity_audio_input, cc.unity_audio_output, on_handle_audio_,
                 cc.audio_recording_device, cc.audio_playout_device,
                 worker_thread_.get(), worker_env, worker_context);
-  media_dependencies.adm = adm;
+  media_dependencies.adm = unity_adm_;
 
 #if defined(SORA_UNITY_SDK_ANDROID)
   worker_thread_->Invoke<void>(RTC_FROM_HERE, [worker_env, worker_context] {
@@ -268,7 +277,7 @@ void Sora::DoConnect(const sora_conf::internal::ConnectConfig& cc,
   factory_options.crypto_options.srtp.enable_gcm_crypto_suites = true;
   factory_->SetOptions(factory_options);
 
-  if (!InitADM(adm, cc.audio_recording_device, cc.audio_playout_device)) {
+  if (!InitADM(unity_adm_, cc.audio_recording_device, cc.audio_playout_device)) {
     on_disconnect((int)sora_conf::ErrorCode::INTERNAL_ERROR,
                   "Failed to InitADM");
     return;
@@ -296,12 +305,6 @@ void Sora::DoConnect(const sora_conf::internal::ConnectConfig& cc,
         factory_->CreateAudioSource(cricket::AudioOptions()).get());
     std::string video_track_id = rtc::CreateRandomString(16);
     video_track_ = factory_->CreateVideoTrack(video_track_id, capturer.get());
-    auto track_id = renderer_->AddTrack(video_track_.get());
-    PushEvent([this, track_id]() {
-      if (on_add_track_) {
-        on_add_track_(track_id);
-      }
-    });
   }
 
   {
@@ -312,6 +315,7 @@ void Sora::DoConnect(const sora_conf::internal::ConnectConfig& cc,
     config.pc_factory = factory_;
     config.io_context = ioc_.get();
     config.role = cc.role;
+    config.sora_client = SORA_CLIENT;
     if (cc.enable_multistream) {
       config.multistream = cc.multistream;
     }
@@ -661,6 +665,15 @@ void Sora::OnSetOffer() {
         video_result = signaling_->GetPeerConnection()->AddTrack(video_track_,
                                                                  {stream_id});
   }
+
+  if (video_track_ != nullptr) {
+    auto track_id = renderer_->AddTrack(video_track_.get());
+    PushEvent([this, track_id]() {
+      if (on_add_track_) {
+        on_add_track_(track_id, "");
+      }
+    });
+  }
 }
 void Sora::OnDisconnect(sora::SoraSignalingErrorCode ec, std::string message) {
   RTC_LOG(LS_INFO) << "OnDisconnect: " << message;
@@ -697,11 +710,13 @@ void Sora::OnTrack(
     rtc::scoped_refptr<webrtc::RtpTransceiverInterface> transceiver) {
   auto track = transceiver->receiver()->track();
   if (track->kind() == webrtc::MediaStreamTrackInterface::kVideoKind) {
+    auto connection_id = transceiver->receiver()->stream_ids()[0];
     auto track_id = renderer_->AddTrack(
         static_cast<webrtc::VideoTrackInterface*>(track.get()));
-    PushEvent([this, track_id]() {
+    connection_ids_.insert(std::make_pair(track_id, connection_id));
+    PushEvent([this, track_id, connection_id]() {
       if (on_add_track_) {
-        on_add_track_(track_id);
+        on_add_track_(track_id, connection_id);
       }
     });
   }
@@ -712,15 +727,25 @@ void Sora::OnRemoveTrack(
   if (track->kind() == webrtc::MediaStreamTrackInterface::kVideoKind) {
     auto track_id = renderer_->RemoveTrack(
         static_cast<webrtc::VideoTrackInterface*>(track.get()));
+    auto connection_id = connection_ids_[track_id];
+    connection_ids_.erase(track_id);
 
     if (track_id != 0) {
-      PushEvent([this, track_id]() {
+      PushEvent([this, track_id, connection_id]() {
         if (on_remove_track_) {
-          on_remove_track_(track_id);
+          on_remove_track_(track_id, connection_id);
         }
       });
     }
   }
+}
+
+void Sora::OnDataChannel(std::string label) {
+  PushEvent([this, label]() {
+    if (on_data_channel_) {
+      on_data_channel_(label);
+    }
+  });
 }
 
 void Sora::PushEvent(std::function<void()> f) {

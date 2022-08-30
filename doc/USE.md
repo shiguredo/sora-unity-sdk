@@ -6,7 +6,7 @@ Sora Unity SDK を使ってみるためにまずはサンプル集を試して�
 
 [Sora Unity SDK サンプル集](https://github.com/shiguredo/sora-unity-sdk-samples)
 
-## インストール
+## Sora Unity SDK のインストール
 
 サンプルを試して動くことが確認できたら、Sora Unity SDK を導入したいご自身のプロジェクトにインストールしてみます。
 
@@ -27,15 +27,20 @@ GitHub アカウントを用意して[Sora Labo のドキュメント](https://g
 
 ### macOS / Windows で Sora Unity SDK を使ってみる
 
-インストール完了後使うことができます。
+Sora Unity SDK のインストール完了後使うことができます。
 
 ### iOS で Sora Unity SDK を使ってみる
 
-インストール完了後 [IOS.md](IOS.md) をお読みください。
+Sora Unity SDK のインストール完了後 [IOS.md](IOS.md) をお読みください。
 
 ### Android で Sora Unity SDK を使ってみる
 
-インストール完了後 [ANDROID.md](ANDROID.md) をお読みください。
+Sora Unity SDK のインストール完了後 [ANDROID.md](ANDROID.md) をお読みください。
+
+### Linux で Sora Unity SDK を使ってみる
+
+`libva-drm2` パッケージの apt によるインストール、
+Sora Unity SDK のインストール完了後使うことができます。
 
 ## FAQ
 

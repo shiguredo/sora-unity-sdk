@@ -12,7 +12,9 @@ extern "C" {
 typedef unsigned int ptrid_t;
 typedef int32_t unity_bool_t;
 
-typedef void (*track_cb_t)(ptrid_t track_id, void* userdata);
+typedef void (*track_cb_t)(ptrid_t track_id,
+                           const char* connection_id,
+                           void* userdata);
 typedef void (*notify_cb_t)(const char* json, void* userdata);
 typedef void (*push_cb_t)(const char* json, void* userdata);
 typedef void (*stats_cb_t)(const char* json, void* userdata);
@@ -23,6 +25,7 @@ typedef void (*message_cb_t)(const char* label,
 typedef void (*disconnect_cb_t)(int error_code,
                                 const char* reason,
                                 void* userdata);
+typedef void (*data_channel_cb_t)(const char* reason, void* userdata);
 
 UNITY_INTERFACE_EXPORT void* sora_create();
 UNITY_INTERFACE_EXPORT void sora_set_on_add_track(void* p,
@@ -42,6 +45,10 @@ UNITY_INTERFACE_EXPORT void sora_set_on_message(void* p,
                                                 void* userdata);
 UNITY_INTERFACE_EXPORT void
 sora_set_on_disconnect(void* p, disconnect_cb_t on_disconnect, void* userdata);
+UNITY_INTERFACE_EXPORT void sora_set_on_data_channel(
+    void* p,
+    data_channel_cb_t on_data_channel,
+    void* userdata);
 UNITY_INTERFACE_EXPORT void sora_dispatch_events(void* p);
 UNITY_INTERFACE_EXPORT void sora_connect(void* p, const char* config);
 UNITY_INTERFACE_EXPORT void sora_disconnect(void* p);

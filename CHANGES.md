@@ -11,8 +11,23 @@
 
 ## develop
 
+## 2022.3.0
+
+- [UPDATE] Sora C++ SDK を `2022.9.0` に上げる
+    - @melpon
+- [ADD] OnDataChannel を追加
+    - @melpon
+- [FIX] Sora Unity SDK のクライアント情報を設定するように追加
+    - @torikizi
+- [FIX] UnityAudioOutput = true で ADM を Stop しても再生中のままになっていたのを修正
+    - @melpon
+- [FIX] ProcessAudio が機能してなかったのを修正
+    - @melpon
+
 ## 2022.2.1
 
+- [CHANGE] OnAddTrack, OnRemoveTrack に connectionId を追加
+    - @melpon
 - [UPDATE] Sora C++ SDK を `2022.7.8` に上げる
     - @melpon
 

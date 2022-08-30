@@ -191,12 +191,6 @@ class UnityAudioDevice : public webrtc::AudioDeviceModule {
       device_buffer_->SetPlayoutSampleRate(48000);
       device_buffer_->SetPlayoutChannels(stereo_playout_ ? 2 : 1);
 
-      handle_audio_thread_.reset(new std::thread([this]() {
-        RTC_LOG(LS_INFO) << "Sora Audio Playout Thread started";
-        HandleAudioData();
-        RTC_LOG(LS_INFO) << "Sora Audio Playout Thread finished";
-      }));
-
       return 0;
     }
   }
@@ -235,6 +229,13 @@ class UnityAudioDevice : public webrtc::AudioDeviceModule {
     if (adm_playout_) {
       return adm_->StartPlayout();
     } else {
+      is_playing_ = true;
+      handle_audio_thread_.reset(new std::thread([this]() {
+        RTC_LOG(LS_INFO) << "Sora Audio Playout Thread started";
+        HandleAudioData();
+        RTC_LOG(LS_INFO) << "Sora Audio Playout Thread finished";
+      }));
+
       return 0;
     }
   }
@@ -254,6 +255,7 @@ class UnityAudioDevice : public webrtc::AudioDeviceModule {
       return adm_->StopPlayout();
     } else {
       DoStopPlayout();
+      is_playing_ = false;
       return 0;
     }
   }
