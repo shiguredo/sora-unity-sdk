@@ -39,7 +39,7 @@ Sora Unity SDK のインストール完了後 [ANDROID.md](ANDROID.md) をお読
 
 ### Linux で Sora Unity SDK を使ってみる
 
-`libva2` パッケージおよび `libva-drm2` パッケージの apt によるインストール、
+`libva-drm2` パッケージの apt によるインストール、
 Sora Unity SDK のインストール完了後使うことができます。
 
 ## FAQ
