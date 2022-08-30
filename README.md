@@ -52,7 +52,7 @@ Sora Unity SDK を使ってみたい人は [USE.md](doc/USE.md) をお読みく�
 - macOS 12.4 M1 以降
 - Android 7 以降
 - iOS 12 以降
-- Ubuntu 20.04 以降
+- Ubuntu 20.04
 
 ## 対応機能
 

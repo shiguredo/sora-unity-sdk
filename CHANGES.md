@@ -11,6 +11,8 @@
 
 ## develop
 
+## 2022.3.0
+
 - [UPDATE] Sora C++ SDK を `2022.9.0` に上げる
     - @melpon
 - [ADD] OnDataChannel を追加
