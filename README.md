@@ -145,14 +145,12 @@ Sora Unity SDK ではソフトウェアでの H.264 エンコード/デコード
 ### プラットフォーム
 
 - 一つ前の Unity LTS への対応
-- ARM 版 Windows への対応
 
 ### NVIDIA VIDEO CODEC SDK
 
 - VP8 のハードウェアデコードへの対応
 - VP9 のハードウェアデコードへの対応
 - AV1 のハードウェアデコードへの対応
-- Ubuntu 20.04 への対応
 
 ## ライセンス
 
