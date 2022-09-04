@@ -20,7 +20,7 @@ Please read https://github.com/shiguredo/oss/blob/master/README.en.md before use
 
 ## ドキュメント
 
-[Sora Unity SDK ドキュメント(https://sora-unity-sdk.shiguredo.jp/)
+[Sora Unity SDK ドキュメント](https://sora-unity-sdk.shiguredo.jp/)
 
 ## サンプル
 
