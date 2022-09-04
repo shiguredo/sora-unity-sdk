@@ -17,16 +17,10 @@ Please read https://github.com/shiguredo/oss/blob/master/README.en.md before use
 
 利用前に https://github.com/shiguredo/oss をお読みください。
 
-## 利用方法
 
-Sora Unity SDK を使ってみたい人は [USE.md](doc/USE.md) をお読みください。
+## ドキュメント
 
-## ビルド方法
-
-**ビルド方法の詳細は GitHub Actions をご確認ください、ビルドに関しての問い合わせは受け付けておりません**
-
-- Windows でのビルド方法は [BUILD_WINDOWS.md](doc/BUILD_WINDOWS.md) をお読みください
-- macOS でのビルド方法は [BUILD_MACOS.md](doc/BUILD_MACOS.md) をお読みください
+`Sora Unity SDK ドキュメント <https://sora-unity-sdk.shiguredo.jp/>`_
 
 ## サンプル
 
@@ -100,19 +94,6 @@ Sora Unity SDK を使ってみたい人は [USE.md](doc/USE.md) をお読みく�
     - Windows 版
         - H.264 のハードウェアエンコードへの対応
         - H.264 のハードウェアデコードへの対応
-
-## 既知のバグ
-
-[既知のバグ](doc/KNOWN_BUGS.md) をご確認ください。
-
-## H.264 の利用について
-
-Sora Unity SDK ではソフトウェアでの H.264 エンコード/デコードの利用はできません。
-これは H.264 のソフトウェアエンコーダ/デコーダを含んで配布した場合はライセンス費用が発生することから、無効にしているためです。
-
-そのため Windows では NVIDIA VIDEO CODEC SDK 、macOS では VideoToolbox を利用し、H.264 のエンコード/デコードを実現しています。また Android でも H.264 ハードウェアエンコーダを利用します。
-
-詳細は H.264 を [USE_H264.md](doc/USE_H264.md) をお読みください
 
 ## 有償での優先実装
 
