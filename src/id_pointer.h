@@ -1,12 +1,12 @@
-#ifndef SORA_ID_POINTER_H_INCLUDED
-#define SORA_ID_POINTER_H_INCLUDED
+#ifndef SORA_UNITY_SDK_ID_POINTER_H_INCLUDED
+#define SORA_UNITY_SDK_ID_POINTER_H_INCLUDED
 
 #include <map>
 #include <mutex>
 
 #include "unity.h"
 
-namespace sora {
+namespace sora_unity_sdk {
 
 // TextureUpdateCallback のユーザデータが 32bit 整数しか扱えないので、
 // ID からポインタに変換する仕組みを用意する
@@ -22,6 +22,6 @@ class IdPointer {
   void* Lookup(ptrid_t id);
 };
 
-}  // namespace sora
+}  // namespace sora_unity_sdk
 
-#endif  // SORA_ID_POINTER_H_INCLUDED
+#endif

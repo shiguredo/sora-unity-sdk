@@ -14,24 +14,25 @@
 #endif
 
 #if defined(SORA_UNITY_SDK_MACOS) || defined(SORA_UNITY_SDK_IOS)
-#include "../mac_helper/mac_capturer.h"
+#include <sora/mac/mac_capturer.h>
 #elif defined(SORA_UNITY_SDK_ANDROID)
-#include "../android_helper/android_capturer.h"
-#include "../android_helper/android_context.h"
+#include <sora/android/android_capturer.h>
+#include "android_helper/android_context.h"
 #endif
 
-namespace sora {
+namespace sora_unity_sdk {
 
 bool DeviceList::EnumVideoCapturer(
     std::function<void(std::string, std::string)> f) {
 #if defined(SORA_UNITY_SDK_MACOS) || defined(SORA_UNITY_SDK_IOS)
 
-  return MacCapturer::EnumVideoDevice(f);
+  return sora::MacCapturer::EnumVideoDevice(f);
 
 #elif defined(SORA_UNITY_SDK_ANDROID)
 
   JNIEnv* env = webrtc::AttachCurrentThreadIfNeeded();
-  return AndroidCapturer::EnumVideoDevice(env, f);
+  auto context = GetAndroidApplicationContext(env);
+  return sora::AndroidCapturer::EnumVideoDevice(env, context.obj(), f);
 
 #else
 
@@ -167,4 +168,4 @@ bool DeviceList::EnumAudioPlayout(
 #endif
 }
 
-}  // namespace sora
+}  // namespace sora_unity_sdk

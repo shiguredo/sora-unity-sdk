@@ -1,31 +1,41 @@
-#ifndef SORA_UNITY_CAMERA_CAPTURER_H_INCLUDED
-#define SORA_UNITY_CAMERA_CAPTURER_H_INCLUDED
+#ifndef SORA_UNITY_SDK_UNITY_CAMERA_CAPTURER_H_INCLUDED
+#define SORA_UNITY_SDK_UNITY_CAMERA_CAPTURER_H_INCLUDED
 
 // WebRTC
-#include "api/media_stream_interface.h"
-#include "api/scoped_refptr.h"
-#include "api/video/i420_buffer.h"
-#include "libyuv.h"
-#include "rtc_base/logging.h"
-#include "rtc_base/ref_counted_object.h"
-#include "system_wrappers/include/clock.h"
+#include <api/media_stream_interface.h>
+#include <api/scoped_refptr.h>
+#include <api/video/i420_buffer.h>
+#include <libyuv.h>
+#include <rtc_base/logging.h>
+#include <rtc_base/ref_counted_object.h>
+#include <system_wrappers/include/clock.h>
 
 // sora
-#include "rtc/scalable_track_source.h"
+#include <sora/scalable_track_source.h>
+
 #include "unity_context.h"
 
 #ifdef SORA_UNITY_SDK_ANDROID
 #include <vulkan/vulkan.h>
 #endif
 
-namespace sora {
+namespace sora_unity_sdk {
 
 class UnityCameraCapturer : public sora::ScalableVideoTrackSource,
                             public rtc::VideoSinkInterface<webrtc::VideoFrame> {
   webrtc::Clock* clock_ = webrtc::Clock::GetRealTimeClock();
 
+  struct Impl {
+    virtual ~Impl() {}
+    virtual bool Init(UnityContext* context,
+                      void* camera_texture,
+                      int width,
+                      int height) = 0;
+    virtual rtc::scoped_refptr<webrtc::I420Buffer> Capture() = 0;
+  };
+
 #ifdef SORA_UNITY_SDK_WINDOWS
-  class D3D11Impl {
+  class D3D11Impl : public Impl {
     UnityContext* context_;
     void* camera_texture_;
     void* frame_texture_;
@@ -36,10 +46,9 @@ class UnityCameraCapturer : public sora::ScalableVideoTrackSource,
     bool Init(UnityContext* context,
               void* camera_texture,
               int width,
-              int height);
-    rtc::scoped_refptr<webrtc::I420Buffer> Capture();
+              int height) override;
+    rtc::scoped_refptr<webrtc::I420Buffer> Capture() override;
   };
-  std::unique_ptr<D3D11Impl> capturer_;
 #endif
 
 #ifdef SORA_UNITY_SDK_HOLOLENS2
@@ -58,7 +67,7 @@ class UnityCameraCapturer : public sora::ScalableVideoTrackSource,
 #endif
 
 #if defined(SORA_UNITY_SDK_MACOS) || defined(SORA_UNITY_SDK_IOS)
-  class MetalImpl {
+  class MetalImpl : public Impl {
     UnityContext* context_;
     void* camera_texture_;
     void* frame_texture_;
@@ -69,14 +78,13 @@ class UnityCameraCapturer : public sora::ScalableVideoTrackSource,
     bool Init(UnityContext* context,
               void* camera_texture,
               int width,
-              int height);
-    rtc::scoped_refptr<webrtc::I420Buffer> Capture();
+              int height) override;
+    rtc::scoped_refptr<webrtc::I420Buffer> Capture() override;
   };
-  std::unique_ptr<MetalImpl> capturer_;
 #endif
 
 #ifdef SORA_UNITY_SDK_ANDROID
-  class VulkanImpl {
+  class VulkanImpl : public Impl {
     UnityContext* context_;
     void* camera_texture_;
     VkImage image_ = VK_NULL_HANDLE;
@@ -86,15 +94,35 @@ class UnityCameraCapturer : public sora::ScalableVideoTrackSource,
     int height_;
 
    public:
-    ~VulkanImpl();
+    ~VulkanImpl() override;
     bool Init(UnityContext* context,
               void* camera_texture,
               int width,
-              int height);
-    rtc::scoped_refptr<webrtc::I420Buffer> Capture();
+              int height) override;
+    rtc::scoped_refptr<webrtc::I420Buffer> Capture() override;
   };
-  std::unique_ptr<VulkanImpl> capturer_;
 #endif
+
+#if defined(SORA_UNITY_SDK_ANDROID) || defined(SORA_UNITY_SDK_UBUNTU)
+  class OpenglImpl : public Impl {
+    UnityContext* context_;
+    void* camera_texture_;
+    int width_;
+    int height_;
+    unsigned int fbo_ = 0;
+    bool initialized_ = false;
+
+   public:
+    ~OpenglImpl() override;
+    bool Init(UnityContext* context,
+              void* camera_texture,
+              int width,
+              int height) override;
+    rtc::scoped_refptr<webrtc::I420Buffer> Capture() override;
+  };
+#endif
+
+  std::unique_ptr<Impl> capturer_;
 
  public:
   static rtc::scoped_refptr<UnityCameraCapturer> Create(
@@ -114,6 +142,6 @@ class UnityCameraCapturer : public sora::ScalableVideoTrackSource,
             int height);
 };
 
-}  // namespace sora
+}  // namespace sora_unity_sdk
 
-#endif  // SORA_UNITY_CAMERA_CAPTURER_H_INCLUDED
+#endif

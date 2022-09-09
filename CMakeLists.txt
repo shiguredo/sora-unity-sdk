@@ -5,6 +5,7 @@ cmake_policy(SET CMP0054 NEW)
 # MSVC runtime library flags are selected by an abstraction.
 cmake_policy(SET CMP0091 NEW)
 
+<<<<<<< HEAD
 set(_INSTALL_DIR ${CMAKE_CURRENT_SOURCE_DIR}/_install)
 
 if (SORA_UNITY_SDK_PACKAGE STREQUAL "android")
@@ -19,21 +20,26 @@ if (SORA_UNITY_SDK_PACKAGE STREQUAL "windows_hololens2")
   set(CMAKE_SYSTEM_VERSION 10.0)
 endif()
 
+=======
+>>>>>>> origin/develop
 project(SoraUnitySdk C CXX)
+
+list(APPEND CMAKE_PREFIX_PATH ${SORA_DIR})
+list(APPEND CMAKE_MODULE_PATH ${SORA_DIR}/share/cmake)
 
 set(Boost_USE_STATIC_LIBS ON)
 if (SORA_UNITY_SDK_PACKAGE STREQUAL "windows_x86_64")
   set(Boost_USE_STATIC_RUNTIME ON)
-else()
-  set(Boost_USE_STATIC_RUNTIME OFF)
 endif()
 
 set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY NEVER)
 set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE NEVER)
 set(CMAKE_FIND_ROOT_PATH_MODE_PACKAGE NEVER)
 
-find_package(WebRTC REQUIRED)
 find_package(Boost REQUIRED COMPONENTS json)
+find_package(WebRTC REQUIRED)
+find_package(Sora REQUIRED)
+find_package(Threads REQUIRED)
 
 set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)
 set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
@@ -44,12 +50,16 @@ if (SORA_UNITY_SDK_PACKAGE STREQUAL "windows_x86_64")
 
   # configure_file で使う
   set(SORA_UNITY_SDK_PLATFORM Windows)
+<<<<<<< HEAD
 elseif (SORA_UNITY_SDK_PACKAGE STREQUAL "windows_hololens2")
   add_library(SoraUnitySdk SHARED)
 
   # configure_file で使う
   set(SORA_UNITY_SDK_PLATFORM HoloLens2)
 elseif (SORA_UNITY_SDK_PACKAGE STREQUAL "macos")
+=======
+elseif (SORA_UNITY_SDK_PACKAGE STREQUAL "macos_x86_64" OR SORA_UNITY_SDK_PACKAGE STREQUAL "macos_arm64")
+>>>>>>> origin/develop
   add_library(SoraUnitySdk MODULE)
   set_target_properties(SoraUnitySdk PROPERTIES BUNDLE TRUE)
   set_target_properties(SoraUnitySdk PROPERTIES CXX_VISIBILITY_PRESET hidden)
@@ -67,31 +77,23 @@ elseif (SORA_UNITY_SDK_PACKAGE STREQUAL "android")
   add_library(SoraUnitySdk SHARED)
 
   set(SORA_UNITY_SDK_PLATFORM Android)
+elseif (SORA_UNITY_SDK_PACKAGE STREQUAL "ubuntu-20.04_x86_64")
+  add_library(SoraUnitySdk SHARED)
+
+  set(SORA_UNITY_SDK_PLATFORM Ubuntu)
 endif()
 
 set_target_properties(SoraUnitySdk PROPERTIES CXX_STANDARD 17 C_STANDARD 99)
 
 target_sources(SoraUnitySdk
   PRIVATE
+    src/device_list.cpp
     src/id_pointer.cpp
     src/sora.cpp
-    src/sora_signaling.cpp
-    src/ssl_verifier.cpp
-    src/unity.cpp
     src/unity_camera_capturer.cpp
     src/unity_context.cpp
     src/unity_renderer.cpp
-    src/watchdog.cpp
-    src/websocket.cpp
-    src/rtc/device_list.cpp
-    src/rtc/device_video_capturer.cpp
-    src/rtc/native_buffer.cpp
-    src/rtc/peer_connection_observer.cpp
-    src/rtc/rtc_connection.cpp
-    src/rtc/rtc_manager.cpp
-    src/rtc/rtc_ssl_verifier.cpp
-    src/rtc/scalable_track_source.cpp
-    src/rtc/simulcast_video_encoder_factory.cpp
+    src/unity.cpp
 )
 
 file(MAKE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/proto")
@@ -108,12 +110,12 @@ add_custom_command(
     "${CMAKE_CURRENT_SOURCE_DIR}/Sora/Generated/SoraConfInternal.cs"
     "${CMAKE_CURRENT_SOURCE_DIR}/Sora/Generated/Jsonif.cs"
   COMMAND
-    "${_INSTALL_DIR}/protoc/bin/protoc${EXE_EXT}"
+    "${PROTOBUF_DIR}/bin/protoc${EXE_EXT}"
   ARGS
     --jsonif-cpp_out "${CMAKE_CURRENT_BINARY_DIR}/proto/cpp"
     --jsonif-unity_out "${CMAKE_CURRENT_SOURCE_DIR}/Sora/Generated"
-    --plugin=protoc-gen-jsonif-cpp="${_INSTALL_DIR}/protoc-gen-jsonif/bin/protoc-gen-jsonif-cpp${EXE_EXT}"
-    --plugin=protoc-gen-jsonif-unity="${_INSTALL_DIR}/protoc-gen-jsonif/bin/protoc-gen-jsonif-unity${EXE_EXT}"
+    --plugin=protoc-gen-jsonif-cpp="${PROTOC_GEN_JSONIF_DIR}/bin/protoc-gen-jsonif-cpp${EXE_EXT}"
+    --plugin=protoc-gen-jsonif-unity="${PROTOC_GEN_JSONIF_DIR}/bin/protoc-gen-jsonif-unity${EXE_EXT}"
     -I "${CMAKE_CURRENT_SOURCE_DIR}/proto/"
     "${CMAKE_CURRENT_SOURCE_DIR}/proto/sora_conf.proto"
     "${CMAKE_CURRENT_SOURCE_DIR}/proto/sora_conf_internal.proto"
@@ -130,236 +132,114 @@ add_dependencies(SoraUnitySdk sora_conf.json.h)
 target_include_directories(SoraUnitySdk PRIVATE "${CMAKE_CURRENT_BINARY_DIR}/proto/cpp")
 
 string(SUBSTRING ${SORA_UNITY_SDK_COMMIT} 0 8 SORA_UNITY_SDK_COMMIT_SHORT)
-string(SUBSTRING ${WEBRTC_SRC_COMMIT} 0 8 WEBRTC_SRC_COMMIT_SHORT)
+string(SUBSTRING ${WEBRTC_COMMIT} 0 8 WEBRTC_COMMIT_SHORT)
 
 configure_file(src/sora_version.h.template ${CMAKE_CURRENT_BINARY_DIR}/sora_version.h)
 
-target_include_directories(SoraUnitySdk
-  PRIVATE
-    ${CMAKE_CURRENT_BINARY_DIR}
-    ${CMAKE_CURRENT_SOURCE_DIR}/src
-    ${CMAKE_CURRENT_SOURCE_DIR}/NvCodec/include
-    ${CMAKE_CURRENT_SOURCE_DIR}/NvCodec/NvCodec
-)
+target_include_directories(SoraUnitySdk PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
 
-target_link_libraries(SoraUnitySdk
-  PRIVATE
-    WebRTC::WebRTC
-    Boost::boost
-    Boost::json
-)
+target_link_libraries(SoraUnitySdk PRIVATE Sora::sora)
 
 if (SORA_UNITY_SDK_PACKAGE STREQUAL "windows_x86_64")
   # 文字コードを utf-8 として扱うのと、シンボルテーブル数を増やす
   target_compile_options(SoraUnitySdk
     PRIVATE
       "$<$<COMPILE_LANGUAGE:CXX>:/utf-8;/bigobj>"
-      "$<$<COMPILE_LANGUAGE:CUDA>:-Xcompiler;/utf-8 /bigobj>"
   )
   set_target_properties(SoraUnitySdk
     PROPERTIES
       # CRTライブラリを静的リンクさせる
-      # CMake 3.15 以上なら MSVC_RUNTIME_LIBRARY が使える
-      MSVC_RUNTIME_LIBRARY "MultiThreaded"
+      MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
   )
 
-  target_sources(SoraUnitySdk
-    PRIVATE
-      src/unity_camera_capturer_d3d11.cpp
-      src/rtc/hw_video_encoder_factory.cpp
-      src/rtc/hw_video_decoder_factory.cpp
-      src/hwenc_nvcodec/nvcodec_h264_encoder.cpp
-      src/hwenc_nvcodec/nvcodec_video_decoder.cpp
-      NvCodec/NvCodec/NvEncoder/NvEncoder.cpp
-      NvCodec/NvCodec/NvEncoder/NvEncoderD3D11.cpp
-  )
+  target_sources(SoraUnitySdk PRIVATE src/unity_camera_capturer_d3d11.cpp)
 
-  target_link_libraries(SoraUnitySdk
-    PRIVATE
-      dbghelp.lib
-      delayimp.lib
-      dnsapi.lib
-      msimg32.lib
-      oleaut32.lib
-      psapi.lib
-      shell32.lib
-      shlwapi.lib
-      usp10.lib
-      version.lib
-      wininet.lib
-      winmm.lib
-      ws2_32.lib
-      amstrmid.lib
-      Strmiids.lib
-      crypt32.lib
-      dmoguids.lib
-      iphlpapi.lib
-      msdmo.lib
-      Secur32.lib
-      wmcodecdspuuid.lib
-      dxgi.lib
-      D3D11.lib
-  )
+  #target_link_libraries(SoraUnitySdk
+  #  PRIVATE
+  #    dbghelp.lib
+  #    delayimp.lib
+  #    dnsapi.lib
+  #    msimg32.lib
+  #    oleaut32.lib
+  #    psapi.lib
+  #    shell32.lib
+  #    shlwapi.lib
+  #    usp10.lib
+  #    version.lib
+  #    wininet.lib
+  #    winmm.lib
+  #    ws2_32.lib
+  #    amstrmid.lib
+  #    Strmiids.lib
+  #    crypt32.lib
+  #    dmoguids.lib
+  #    iphlpapi.lib
+  #    msdmo.lib
+  #    Secur32.lib
+  #    wmcodecdspuuid.lib
+  #    dxgi.lib
+  #    D3D11.lib
+  #)
 
   target_compile_definitions(SoraUnitySdk
     PRIVATE
       SORA_UNITY_SDK_WINDOWS
-      UNICODE
-      _UNICODE
-      _CONSOLE
       _WIN32_WINNT=0x0A00
-      WEBRTC_WIN
       NOMINMAX
       WIN32_LEAN_AND_MEAN
   )
-
-  # enable_language(CUDA) は CUDA 用 Visual Studio Integration を利用して CUDA を検出しているが、
-  # CUDA ドライバがインストールできない場所では VS Integration をインストールできないため、
-  # enable_language(CUDA) は利用できない。
-  # なので（deprecated だけど）FindCUDA を利用してコンパイルする。
-
-  set(CUDA_TOOLKIT_ROOT_DIR ${CMAKE_CURRENT_SOURCE_DIR}/_install/cuda/nvcc)
-  find_package(CUDA REQUIRED)
-
-  set_source_files_properties(
-      NvCodec/NvCodec/NvDecoder/NvDecoder.cpp
-      src/hwenc_nvcodec/nvcodec_video_decoder_cuda.cpp
-    PROPERTIES
-      CUDA_SOURCE_PROPERTY_FORMAT OBJ
-  )
-  cuda_compile(CUDA_FILES
-      NvCodec/NvCodec/NvDecoder/NvDecoder.cpp
-      src/hwenc_nvcodec/nvcodec_video_decoder_cuda.cpp
-    OPTIONS
-      -Xcompiler /utf-8
-      -Xcompiler /I${CMAKE_CURRENT_SOURCE_DIR}/NvCodec/include
-      -Xcompiler /I${CMAKE_CURRENT_SOURCE_DIR}/NvCodec/NvCodec
-      -Xcompiler /I${CMAKE_CURRENT_SOURCE_DIR}/src
-  )
-  target_sources(SoraUnitySdk PRIVATE ${CUDA_FILES})
-  target_include_directories(SoraUnitySdk PRIVATE ${CUDA_INCLUDE_DIRS})
-  target_link_libraries(SoraUnitySdk
-    PRIVATE
-      #${CUDA_TOOLKIT_ROOT_DIR}/lib/x64/cuda.lib
-      ${CUDA_LIBRARIES}
-      #${CMAKE_CURRENT_SOURCE_DIR}/NvCodec/Lib/x64/nvcuvid.lib
-  )
-
-  # CUDA 
-  # enable_language(CUDA)
-  # target_sources(SoraUnitySdk
-  #   PRIVATE
-  #     NvCodec/NvCodec/NvDecoder/NvDecoder.cpp
-  #     src/hwenc_nvcodec/nvcodec_video_decoder_cuda.cpp
-  # )
-  # set_source_files_properties(
-  #     NvCodec/NvCodec/NvDecoder/NvDecoder.cpp
-  #     src/hwenc_nvcodec/nvcodec_video_decoder_cuda.cpp
-  #   PROPERTIES
-  #     LANGUAGE CUDA
-  #     CUDA_SEPARABLE_COMPILATION ON
-  # )
-  # target_link_libraries(SoraUnitySdk
-  #   PRIVATE
-  #     cuda.lib
-  #     ${CMAKE_CURRENT_SOURCE_DIR}/NvCodec/Lib/x64/nvcuvid.lib
-  # )
 elseif (SORA_UNITY_SDK_PACKAGE STREQUAL "windows_hololens2")
   # 文字コードを utf-8 として扱うのと、シンボルテーブル数を増やす
   target_compile_options(SoraUnitySdk
     PRIVATE
       "$<$<COMPILE_LANGUAGE:CXX>:/utf-8;/bigobj>"
-      "$<$<COMPILE_LANGUAGE:CUDA>:-Xcompiler;/utf-8 /bigobj>"
   )
   set_target_properties(SoraUnitySdk
     PROPERTIES
-      MSVC_RUNTIME_LIBRARY "MultiThreadedDLL"
+      MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
   )
 
   target_sources(SoraUnitySdk
     PRIVATE
       src/unity_camera_capturer_null.cpp
-      src/rtc/hw_video_encoder_factory.cpp
-      src/rtc/hw_video_decoder_factory.cpp
-  )
-
-  target_link_libraries(SoraUnitySdk
-    PRIVATE
-      dbghelp.lib
-      dnsapi.lib
-      msimg32.lib
-      oleaut32.lib
-      psapi.lib
-      shell32.lib
-      shlwapi.lib
-      usp10.lib
-      version.lib
-      wininet.lib
-      winmm.lib
-      ws2_32.lib
-      amstrmid.lib
-      Strmiids.lib
-      crypt32.lib
-      dmoguids.lib
-      iphlpapi.lib
-      msdmo.lib
-      Secur32.lib
-      wmcodecdspuuid.lib
-      dxgi.lib
-      D3D11.lib
-      mfreadwrite.lib
-      mfplat.lib
-      mfuuid.lib
   )
 
   target_compile_definitions(SoraUnitySdk
     PRIVATE
       SORA_UNITY_SDK_HOLOLENS2
       WEBRTC_VIDEO_CAPTURE_WINRT
-      UNICODE
-      _UNICODE
-      _CONSOLE
       _WIN32_WINNT=0x0A00
-      WEBRTC_WIN
       NOMINMAX
       WIN32_LEAN_AND_MEAN
   )
-
-elseif (SORA_UNITY_SDK_PACKAGE STREQUAL "macos")
+elseif (SORA_UNITY_SDK_PACKAGE STREQUAL "macos_x86_64" OR SORA_UNITY_SDK_PACKAGE STREQUAL "macos_arm64")
   enable_language(OBJCXX)
 
-  target_sources(SoraUnitySdk
-    PRIVATE
-      src/unity_camera_capturer_metal.mm
-      src/mac_helper/mac_capturer.mm
-      src/mac_helper/objc_codec_factory_helper.mm
-  )
+  target_sources(SoraUnitySdk PRIVATE src/unity_camera_capturer_metal.mm)
 
-  target_link_libraries(SoraUnitySdk
-    PRIVATE
-      "-framework Foundation"
-      "-framework AVFoundation"
-      "-framework CoreServices"
-      "-framework CoreFoundation"
-      "-framework AudioUnit"
-      "-framework AudioToolbox"
-      "-framework CoreAudio"
-      "-framework CoreGraphics"
-      "-framework CoreMedia"
-      "-framework CoreVideo"
-      "-framework QuartzCore"
-      "-framework VideoToolbox"
-      "-framework AppKit"
-      "-framework Metal"
-      "-framework MetalKit"
-      "-framework OpenGL"
-  )
+  #target_link_libraries(SoraUnitySdk
+  #  PRIVATE
+  #    "-framework Foundation"
+  #    "-framework AVFoundation"
+  #    "-framework CoreServices"
+  #    "-framework CoreFoundation"
+  #    "-framework AudioUnit"
+  #    "-framework AudioToolbox"
+  #    "-framework CoreAudio"
+  #    "-framework CoreGraphics"
+  #    "-framework CoreMedia"
+  #    "-framework CoreVideo"
+  #    "-framework QuartzCore"
+  #    "-framework VideoToolbox"
+  #    "-framework AppKit"
+  #    "-framework Metal"
+  #    "-framework MetalKit"
+  #    "-framework OpenGL"
+  #)
 
   target_compile_definitions(SoraUnitySdk
     PRIVATE
       SORA_UNITY_SDK_MACOS
-      WEBRTC_POSIX
-      WEBRTC_MAC
   )
 
 elseif (SORA_UNITY_SDK_PACKAGE STREQUAL "ios")
@@ -368,17 +248,12 @@ elseif (SORA_UNITY_SDK_PACKAGE STREQUAL "ios")
   target_sources(SoraUnitySdk
     PRIVATE
       src/unity_camera_capturer_metal.mm
-      src/mac_helper/mac_capturer.mm
-      src/mac_helper/objc_codec_factory_helper.mm
       src/mac_helper/ios_audio_init.mm
   )
 
   target_compile_definitions(SoraUnitySdk
     PRIVATE
       SORA_UNITY_SDK_IOS
-      WEBRTC_POSIX
-      WEBRTC_MAC
-      WEBRTC_IOS
   )
   install(TARGETS SoraUnitySdk DESTINATION lib)
 
@@ -389,37 +264,22 @@ elseif (SORA_UNITY_SDK_PACKAGE STREQUAL "android")
   find_library(ANDROID_LIB_OPENSLES OpenSLES)
   find_library(ANDROID_LIB_VULKAN vulkan)
   find_library(ANDROID_LIB_EGL EGL)
+  find_library(ANDROID_LIB_GLESV2 GLESv2)
 
   target_sources(SoraUnitySdk
     PRIVATE
-      src/jni_onload.cc
-      src/rtc/hw_video_encoder_factory.cpp
-      src/rtc/hw_video_decoder_factory.cpp
-      src/android_helper/android_codec_factory_helper.cpp
-      src/android_helper/android_capturer.cpp
+      src/android_helper/jni_onload.cc
       src/android_helper/android_context.cpp
       src/unity_camera_capturer_vulkan.cpp
+      src/unity_camera_capturer_opengl.cpp
   )
 
   target_compile_definitions(SoraUnitySdk
     PRIVATE
       SORA_UNITY_SDK_ANDROID
-      WEBRTC_POSIX
-      WEBRTC_LINUX
-      WEBRTC_ANDROID
-      _LIBCPP_ABI_UNSTABLE
-      _LIBCPP_DISABLE_AVAILABILITY
-      SORA_UNITY_SDK_ANDROID
-      _LIBCPP_DISABLE_VISIBILITY_ANNOTATIONS
-      _LIBCXXABI_DISABLE_VISIBILITY_ANNOTATIONS
-      _LIBCPP_ENABLE_NODISCARD
   )
   target_compile_options(SoraUnitySdk PRIVATE "-nostdinc++")
-  target_include_directories(SoraUnitySdk
-    PRIVATE
-      ${_INSTALL_DIR}/libcxx/include
-      ${_INSTALL_DIR}/libcxxabi/include
-  )
+  target_include_directories(SoraUnitySdk PRIVATE ${LIBCXX_INCLUDE_DIR})
 
   target_link_libraries(SoraUnitySdk
     PRIVATE
@@ -428,19 +288,26 @@ elseif (SORA_UNITY_SDK_PACKAGE STREQUAL "android")
       ${ANDROID_LIB_OPENSLES}
       ${ANDROID_LIB_VULKAN}
       ${ANDROID_LIB_EGL}
+      ${ANDROID_LIB_GLESV2}
   )
-  file(READ ${_INSTALL_DIR}/android/webrtc.ldflags _WEBRTC_ANDROID_LDFLAGS)
+  file(READ ${SORA_DIR}/share/webrtc.ldflags _WEBRTC_ANDROID_LDFLAGS)
   string(REGEX REPLACE "\n" ";" _WEBRTC_ANDROID_LDFLAGS "${_WEBRTC_ANDROID_LDFLAGS}")
   target_link_options(SoraUnitySdk
     PRIVATE
-      -fuse-ld=gold
-      #-Wl,--wrap=malloc
-      #-Wl,--wrap=calloc
-      #-Wl,--wrap=memalign
-      #-Wl,--wrap=realloc
-      #-Wl,--wrap=free
-      #-Wl,--wrap=realpath
-      #-Wl,--wrap=getcwd
       ${_WEBRTC_ANDROID_LDFLAGS}
   )
-endif ()
+
+elseif (SORA_UNITY_SDK_PACKAGE STREQUAL "ubuntu-20.04_x86_64")
+
+  target_sources(SoraUnitySdk
+    PRIVATE
+      src/unity_camera_capturer_opengl.cpp
+  )
+
+  find_package(Libva REQUIRED)
+  find_package(Libdrm REQUIRED)
+  target_compile_definitions(SoraUnitySdk PRIVATE SORA_UNITY_SDK_UBUNTU)
+  target_compile_options(SoraUnitySdk PRIVATE "-nostdinc++")
+  target_include_directories(SoraUnitySdk PRIVATE ${LIBCXX_INCLUDE_DIR})
+
+endif()

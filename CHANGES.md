@@ -11,10 +11,66 @@
 
 ## develop
 
+- [UPDATE] Sora C++ SDK を `2022.11.0` に上げる
+    - @melpon
+- [UPDATE] libwebrtc を `m105.5195.0.0` に上げる
+    - @melpon
+- [UPDATE] Boost を `1.80.0` に上げる
+    - @melpon
+- [UPDATE] Android NDK を `r25b` に上げる
+    - @melpon
+
+## 2022.3.0
+
+- [UPDATE] Sora C++ SDK を `2022.9.0` に上げる
+    - @melpon
+- [ADD] OnDataChannel を追加
+    - @melpon
+- [FIX] Sora Unity SDK のクライアント情報を設定するように追加
+    - @torikizi
+- [FIX] UnityAudioOutput = true で ADM を Stop しても再生中のままになっていたのを修正
+    - @melpon
+- [FIX] ProcessAudio が機能してなかったのを修正
+    - @melpon
+
+## 2022.2.1
+
+- [CHANGE] OnAddTrack, OnRemoveTrack に connectionId を追加
+    - @melpon
+- [UPDATE] Sora C++ SDK を `2022.7.8` に上げる
+    - @melpon
+
+## 2022.2.0
+
+- [CHANGE] Multistream, Spotlight, Simulcast を Nullable にする
+    - @melpon
+- [CHANGE] macOS x86_64 の対応をドロップ
+    - @melpon
+- [UPDATE] Sora C++ SDK 化
+    - @melpon
+- [UPDATE] Sora C++ SDK を `2022.7.5` に上げる
+    - @melpon
+- [UPDATE] libwebrtc を `103.5060.5.0` に上げる
+    - @melpon
+- [ADD] macOS M1 に対応
+    - @melpon
+- [ADD] Android の OpenGL ES を使った Unity カメラキャプチャに対応
+    - @melpon
+- [ADD] Ubuntu に対応
+    - @melpon
+- [ADD] BundleId 追加
+    - @melpon
+- [ADD] HTTP Proxy に対応
+    - @melpon
+
+## 2022.1.0
+
 - [CHANGE] Github Actions の `macos-latest` を `macos-11` へ変更する
     - @voluntas
-- [UPDATE] libwebrtc を `99.4844.0.0` に上げる
-    - @voluntas @melpon
+- [CHANGE] Github Actions の `windows-latest` を `windows-2019` へ変更する
+    - @melpon
+- [UPDATE] libwebrtc を `99.4844.1.0` に上げる
+    - @voluntas @melpon @torikizi
 - [ADD] `Insecure`, `Video`, `Audio` フラグを追加
     - @melpon
 

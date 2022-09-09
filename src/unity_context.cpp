@@ -4,7 +4,7 @@
 #include <winrt/Windows.Storage.h>
 #endif
 
-namespace sora {
+namespace sora_unity_sdk {
 
 void UnityContext::OnGraphicsDeviceEventStatic(
     UnityGfxDeviceEventType eventType) {
@@ -109,7 +109,7 @@ void UnityContext::Init(IUnityInterfaces* ifs) {
   std::lock_guard<std::mutex> guard(mutex_);
 
 #if defined(SORA_UNITY_SDK_WINDOWS) || defined(SORA_UNITY_SDK_HOLOLENS2) || \
-    defined(SORA_UNITY_SDK_MACOS)
+    defined(SORA_UNITY_SDK_MACOS) || defined(SORA_UNITY_SDK_UBUNTU)
   const size_t kDefaultMaxLogFileSize = 10 * 1024 * 1024;
   rtc::LogMessage::LogToDebug((rtc::LoggingSeverity)rtc::LS_NONE);
   rtc::LogMessage::LogTimestamps();
@@ -131,7 +131,7 @@ void UnityContext::Init(IUnityInterfaces* ifs) {
     log_sink_.reset();
     return;
   }
-  //log_sink_->DisableBuffering();
+  log_sink_->DisableBuffering();
 
   rtc::LogMessage::AddLogToStream(log_sink_.get(), rtc::LS_INFO);
 
@@ -175,4 +175,4 @@ ID3D11DeviceContext* UnityContext::GetDeviceContext() {
 }
 #endif
 
-}  // namespace sora
+}  // namespace sora_unity_sdk

@@ -1,6 +1,6 @@
 # Sora Unity SDK
 
-[![libwebrtc](https://img.shields.io/badge/libwebrtc-m97.4692-blue.svg)](https://chromium.googlesource.com/external/webrtc/+/branch-heads/4692)
+[![libwebrtc](https://img.shields.io/badge/libwebrtc-103.5060-blue.svg)](https://chromium.googlesource.com/external/webrtc/+/branch-heads/5060)
 [![GitHub tag](https://img.shields.io/github/tag/shiguredo/sora-unity-sdk.svg)](https://github.com/shiguredo/sora-unity-sdk)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Actions Status](https://github.com/shiguredo/sora-unity-sdk/workflows/build/badge.svg)](https://github.com/shiguredo/sora-unity-sdk/actions)
@@ -17,16 +17,10 @@ Please read https://github.com/shiguredo/oss/blob/master/README.en.md before use
 
 利用前に https://github.com/shiguredo/oss をお読みください。
 
-## 利用方法
 
-Sora Unity SDK を使ってみたい人は [USE.md](doc/USE.md) をお読みください。
+## ドキュメント
 
-## ビルド方法
-
-**ビルド方法の詳細は GitHub Actions をご確認ください、ビルドに関しての問い合わせは受け付けておりません**
-
-- Windows でのビルド方法は [BUILD_WINDOWS.md](doc/BUILD_WINDOWS.md) をお読みください
-- macOS でのビルド方法は [BUILD_MACOS.md](doc/BUILD_MACOS.md) をお読みください
+[Sora Unity SDK ドキュメント](https://sora-unity-sdk.shiguredo.jp/)
 
 ## サンプル
 
@@ -37,29 +31,33 @@ Sora Unity SDK を使ってみたい人は [USE.md](doc/USE.md) をお読みく�
 - [「こんな感じに Unity のカメラ映像を WebRTC で配信できるようになりました https://t\.co/R98ZmZTFOK」 / Twitter](https://twitter.com/melponn/status/1193406538494275592)
 - [「ちゃんとリアルタイムで配信してます（モーション作るのが面倒だったのでシーンエディタから動かしてる）。Unity 側が配信で、ブラウザ（右上）で受信してる。 https://t\.co/TIL7NYroZm」 / Twitter](https://twitter.com/melponn/status/1193411591183552512)
 - [「Momo (on Jetson Nano) -> Sora-Labo -> Sora-Unity と Sora-Js 同時受信。ここまでがお手軽すぎてやばい。」 / Twitter](https://twitter.com/izmhrats/status/1203299775354851328?s=20)
+
 ## 対応 Unity バージョン
 
-- Unity 2019.4 (LTS)
-- Unity 2020.3 (LTS)
+- Unity 2021.3 (LTS)
 
 ## システム条件
 
-- Sora 2021.2 以降
+- Sora 2022.1.1 以降
 
 ## 対応プラットフォーム
 
 - Windows 10 1809 x86_64 以降
-- macOS 10.15 x86_64 以降
+- macOS 12.4 M1 以降
 - Android 7 以降
-- iOS 10 以降
+- iOS 12 以降
+- Ubuntu 20.04
 
 ## 対応機能
 
 - AV1 への対応
 - Windows への対応
 - macOS への対応
+    - Apple M1 対応
 - Android への対応
+- Android OpenGL ES への対応
 - iOS 対応
+- Ubuntu 20.04 への対応
 - SRTP/SRTCP の AES-GCM 対応
 - Unity のカメラ映像を取得し Sora で送信
 - カメラから映像を取得し Sora に送信
@@ -97,15 +95,6 @@ Sora Unity SDK を使ってみたい人は [USE.md](doc/USE.md) をお読みく�
         - H.264 のハードウェアエンコードへの対応
         - H.264 のハードウェアデコードへの対応
 
-## H.264 の利用について
-
-Sora Unity SDK ではソフトウェアでの H.264 エンコード/デコードの利用はできません。
-これは H.264 のソフトウェアエンコーダ/デコーダを含んで配布した場合はライセンス費用が発生することから、無効にしているためです。
-
-そのため Windows では NVIDIA VIDEO CODEC SDK 、macOS では VideoToolbox を利用し、H.264 のエンコード/デコードを実現しています。また Android でも H.264 ハードウェアエンコーダを利用します。
-
-詳細は H.264 を [USE_H264.md](doc/USE_H264.md) をお読みください
-
 ## 有償での優先実装
 
 - Windows 版 NVIDIA VIDEO CODEC SDK による H.264 エンコーダ対応
@@ -116,6 +105,8 @@ Sora Unity SDK ではソフトウェアでの H.264 エンコード/デコード
     - [スロースネットワークス株式会社](http://www.sloth-networks.co.jp) 様
 - Android 版対応
     - [株式会社KDDIテクノロジー](https://kddi-tech.com/) 様
+- Android OpenGL ES 対応
+    - 企業名非公開
 
 ## 有償での優先実装が可能な機能一覧
 
@@ -129,30 +120,18 @@ Sora Unity SDK ではソフトウェアでの H.264 エンコード/デコード
 
 - ミュート機能
 - デバイスをつかまないようにする機能
-- Apple M1 対応
 - 音声のみ送受信機能
 - サイマルキャスト rid 指定対応
 
 ### プラットフォーム
 
-- Ubuntu 20.04 への対応
-- ARM 版 Windows への対応
+- 一つ前の Unity LTS への対応
 
 ### NVIDIA VIDEO CODEC SDK
 
 - VP8 のハードウェアデコードへの対応
 - VP9 のハードウェアデコードへの対応
 - AV1 のハードウェアデコードへの対応
-- Ubuntu 20.04 への対応
-
-### INTEL Media SDK 対応
-
-- H.264 のハードウェアエンコードへの対応
-- VP8 のハードウェアエンコードへの対応
-- VP9 のハードウェアエンコードへの対応
-- H.264 のハードウェアデコードへの対応
-- VP8 のハードウェアデコードへの対応
-- VP9 のハードウェアデコードへの対応
 
 ## ライセンス
 
