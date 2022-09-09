@@ -17,6 +17,8 @@
     - @melpon
 - [UPDATE] Boost を `1.80.0` に上げる
     - @melpon
+- [UPDATE] Android NDK を `r25b` に上げる
+    - @melpon
 
 ## 2022.3.0
 
