@@ -397,131 +397,15 @@ def install_llvm(version, install_dir,
 
 
 @versioned
-def install_boost(
-        version: str, source_dir, build_dir, install_dir,
-        debug: bool, cxx: str, cflags: List[str], cxxflags: List[str], linkflags: List[str],
-        toolset, visibility, target_os, architecture,
-        android_ndk, native_api_level):
-    version_underscore = version.replace('.', '_')
+def install_boost(version, source_dir, install_dir, sora_version, platform: str):
+    win = platform.startswith("windows_")
+    filename = f'boost-{version}_sora-cpp-sdk-{sora_version}_{platform}.{"zip" if win else "tar.gz"}'
+    rm_rf(os.path.join(source_dir, filename))
     archive = download(
-        f'https://boostorg.jfrog.io/artifactory/main/release/{version}/source/boost_{version_underscore}.tar.gz',
-        source_dir)
-    extract(archive, output_dir=build_dir, output_dirname='boost')
-    with cd(os.path.join(build_dir, 'boost')):
-        bootstrap = '.\\bootstrap.bat' if target_os == 'windows' else './bootstrap.sh'
-        b2 = 'b2' if target_os == 'windows' else './b2'
-        runtime_link = 'static' if target_os == 'windows' else 'shared'
-
-        cmd([bootstrap])
-
-        if target_os == 'iphone':
-            # iOS の場合、シミュレータとデバイス用のライブラリを作って
-            # lipo で結合する
-            IOS_BUILD_TARGETS = [('x86_64', 'iphonesimulator'), ('arm64', 'iphoneos')]
-            for arch, sdk in IOS_BUILD_TARGETS:
-                clangpp = cmdcap(['xcodebuild', '-find', 'clang++'])
-                sysroot = cmdcap(['xcrun', '--sdk', sdk, '--show-sdk-path'])
-                boost_arch = 'x86' if arch == 'x86_64' else 'arm'
-                with open('project-config.jam', 'w') as f:
-                    f.write(f"using clang \
-                        : iphone \
-                        : {clangpp} -arch {arch} -isysroot {sysroot} \
-                          -fembed-bitcode \
-                          -mios-version-min=10.0 \
-                          -fvisibility=hidden \
-                        : <striper> <root>{sysroot} \
-                        ; \
-                        ")
-                cmd([
-                    b2,
-                    'install',
-                    '-d+0',
-                    f'--build-dir={os.path.join(build_dir, "boost", f"build-{arch}-{sdk}")}',
-                    f'--prefix={os.path.join(build_dir, "boost", f"install-{arch}-{sdk}")}',
-                    '--with-json',
-                    '--layout=system',
-                    '--ignore-site-config',
-                    f'variant={"debug" if debug else "release"}',
-                    f'cflags={" ".join(cflags)}',
-                    f'cxxflags={" ".join(cxxflags)}',
-                    f'linkflags={" ".join(linkflags)}',
-                    f'toolset={toolset}',
-                    f'visibility={visibility}',
-                    f'target-os={target_os}',
-                    'address-model=64',
-                    'link=static',
-                    f'runtime-link={runtime_link}',
-                    'threading=multi',
-                    f'architecture={boost_arch}'])
-            arch, sdk = IOS_BUILD_TARGETS[0]
-            installed_path = os.path.join(build_dir, 'boost', f'install-{arch}-{sdk}')
-            rm_rf(os.path.join(install_dir, 'boost'))
-            cmd(['cp', '-r', installed_path, os.path.join(install_dir, 'boost')])
-
-            for lib in enum_all_files(os.path.join(installed_path, 'lib'), os.path.join(installed_path, 'lib')):
-                if not lib.endswith('.a'):
-                    continue
-                files = [os.path.join(build_dir, 'boost', f'install-{arch}-{sdk}', 'lib', lib)
-                         for arch, sdk in IOS_BUILD_TARGETS]
-                cmd(['lipo', '-create', '-output', os.path.join(install_dir, 'boost', 'lib', lib)] + files)
-        elif target_os == 'android':
-            # Android の場合、android-ndk を使ってビルドする
-            with open('project-config.jam', 'w') as f:
-                bin = os.path.join(android_ndk, 'toolchains', 'llvm', 'prebuilt', 'linux-x86_64', 'bin')
-                sysroot = os.path.join(android_ndk, 'toolchains', 'llvm', 'prebuilt', 'linux-x86_64', 'sysroot')
-                f.write(f"using clang \
-                    : android \
-                    : {os.path.join(bin, f'aarch64-linux-android{native_api_level}-clang++')} \
-                      --sysroot={sysroot} \
-                    : <archiver>{os.path.join(bin, 'llvm-ar')} \
-                      <ranlib>{os.path.join(bin, 'llvm-ranlib')} \
-                    ; \
-                    ")
-            cmd([
-                b2,
-                'install',
-                '-d+0',
-                f'--prefix={os.path.join(install_dir, "boost")}',
-                '--with-json',
-                '--layout=system',
-                '--ignore-site-config',
-                f'variant={"debug" if debug else "release"}',
-                f'compileflags=--sysroot={sysroot}',
-                f'cflags={" ".join(cflags)}',
-                f'cxxflags={" ".join(cxxflags)}',
-                f'linkflags={" ".join(linkflags)}',
-                f'toolset={toolset}',
-                f'visibility={visibility}',
-                f'target-os={target_os}',
-                'address-model=64',
-                'link=static',
-                f'runtime-link={runtime_link}',
-                'threading=multi',
-                'architecture=arm'])
-        else:
-            if len(cxx) != 0:
-                with open('project-config.jam', 'w') as f:
-                    f.write(f'using {toolset} : : {cxx} : ;')
-            cmd([
-                b2,
-                'install',
-                '-d+0',
-                f'--prefix={os.path.join(install_dir, "boost")}',
-                '--with-json',
-                '--layout=system',
-                '--ignore-site-config',
-                f'variant={"debug" if debug else "release"}',
-                f'cflags={" ".join(cflags)}',
-                f'cxxflags={" ".join(cxxflags)}',
-                f'linkflags={" ".join(linkflags)}',
-                f'toolset={toolset}',
-                f'visibility={visibility}',
-                f'target-os={target_os}',
-                'address-model=64',
-                'link=static',
-                f'runtime-link={runtime_link}',
-                'threading=multi',
-                f'architecture={architecture}'])
+        f'https://github.com/shiguredo/sora-cpp-sdk/releases/download/{sora_version}/{filename}',
+        output_dir=source_dir)
+    rm_rf(os.path.join(install_dir, 'boost'))
+    extract(archive, output_dir=install_dir, output_dirname='boost')
 
 
 def cmake_path(path: str) -> str:
@@ -661,81 +545,10 @@ def install_deps(platform: str, build_platform: str, source_dir, build_dir, inst
             'version': version['BOOST_VERSION'],
             'version_file': os.path.join(install_dir, 'boost.version'),
             'source_dir': source_dir,
-            'build_dir': build_dir,
             'install_dir': install_dir,
-            'cxx': '',
-            'cflags': [],
-            'cxxflags': [],
-            'linkflags': [],
-            'toolset': '',
-            'visibility': 'global',
-            'target_os': '',
-            'debug': debug,
-            'android_ndk': '',
-            'native_api_level': '',
-            'architecture': 'x86',
+            'sora_version': version['SORA_CPP_SDK_VERSION'],
+            'platform': platform,
         }
-        if platform == 'windows_x86_64':
-            install_boost_args['cxxflags'] = [
-                '-D_HAS_ITERATOR_DEBUGGING=0'
-            ]
-            install_boost_args['toolset'] = 'msvc'
-            install_boost_args['target_os'] = 'windows'
-        elif platform in ('macos_x86_64', 'macos_arm64'):
-            sysroot = cmdcap(['xcrun', '--sdk', 'macosx', '--show-sdk-path'])
-            install_boost_args['target_os'] = 'darwin'
-            install_boost_args['toolset'] = 'clang'
-            install_boost_args['cxx'] = 'clang++'
-            install_boost_args['cflags'] = [
-                f"--sysroot={sysroot}",
-            ]
-            install_boost_args['cxxflags'] = [
-                '-fPIC',
-                f"--sysroot={sysroot}",
-                '-std=gnu++17'
-            ]
-            install_boost_args['visibility'] = 'hidden'
-            if platform == 'macos_x86_64':
-                install_boost_args['cflags'] += ['-target', 'x86_64-apple-darwin']
-                install_boost_args['cxxflags'] += ['-target', 'x86_64-apple-darwin']
-                install_boost_args['architecture'] = 'x86'
-            if platform == 'macos_arm64':
-                install_boost_args['cflags'] += ['-target', 'arm64-apple-darwin']
-                install_boost_args['cxxflags'] += ['-target', 'arm64-apple-darwin']
-                install_boost_args['architecture'] = 'arm'
-        elif platform == 'ios':
-            install_boost_args['target_os'] = 'iphone'
-            install_boost_args['toolset'] = 'clang'
-            install_boost_args['cxxflags'] = [
-                '-std=gnu++17'
-            ]
-        elif platform == 'android':
-            install_boost_args['target_os'] = 'android'
-            install_boost_args['cflags'] = [
-                '-fPIC',
-            ]
-            install_boost_args['cxxflags'] = [
-                '-fPIC',
-                '-D_LIBCPP_ABI_UNSTABLE',
-                '-D_LIBCPP_DISABLE_AVAILABILITY',
-                '-nostdinc++',
-                '-std=gnu++17',
-                f"-isystem{os.path.join(webrtc_info.libcxx_dir, 'include')}",
-            ]
-            install_boost_args['toolset'] = 'clang'
-            install_boost_args['android_ndk'] = os.path.join(install_dir, 'android-ndk')
-            install_boost_args['native_api_level'] = version['ANDROID_NATIVE_API_LEVEL']
-        elif platform == 'ubuntu-20.04_x86_64':
-            install_boost_args['target_os'] = 'linux'
-            install_boost_args['cxx'] = os.path.join(webrtc_info.clang_dir, 'bin', 'clang++')
-            install_boost_args['cxxflags'] = [
-                '-D_LIBCPP_ABI_UNSTABLE',
-                '-D_LIBCPP_DISABLE_AVAILABILITY',
-                '-nostdinc++',
-                f"-isystem{os.path.join(webrtc_info.libcxx_dir, 'include')}",
-                '-fPIC',
-            ]
-            install_boost_args['toolset'] = 'clang'
         install_boost(**install_boost_args)
 
         # CMake
