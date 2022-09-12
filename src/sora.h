@@ -69,7 +69,7 @@ class Sora : public std::enable_shared_from_this<Sora>,
   static sora_conf::ErrorCode ToErrorCode(sora::SoraSignalingErrorCode ec);
 
   // SoraSignalingObserver の実装
-  void OnSetOffer() override;
+  void OnSetOffer(std::string offer) override;
   void OnDisconnect(sora::SoraSignalingErrorCode ec,
                     std::string message) override;
   void OnNotify(std::string text) override;

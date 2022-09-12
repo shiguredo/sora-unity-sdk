@@ -653,7 +653,7 @@ sora_conf::ErrorCode Sora::ToErrorCode(sora::SoraSignalingErrorCode ec) {
   }
 }
 
-void Sora::OnSetOffer() {
+void Sora::OnSetOffer(std::string offer) {
   std::string stream_id = rtc::CreateRandomString(16);
   if (audio_track_ != nullptr) {
     webrtc::RTCErrorOr<rtc::scoped_refptr<webrtc::RtpSenderInterface>>

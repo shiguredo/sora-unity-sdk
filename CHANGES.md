@@ -11,6 +11,19 @@
 
 ## develop
 
+## 2022.4.0
+
+- [CHANGE] iOS ビルド向けに Bitcode を off にする設定を追加
+    - @torikizi
+- [UPDATE] Sora C++ SDK を `2022.11.0` に上げる
+    - @melpon
+- [UPDATE] libwebrtc を `m105.5195.0.0` に上げる
+    - @melpon
+- [UPDATE] Boost を `1.80.0` に上げる
+    - @melpon
+- [UPDATE] Android NDK を `r25b` に上げる
+    - @melpon
+
 ## 2022.3.0
 
 - [UPDATE] Sora C++ SDK を `2022.9.0` に上げる
