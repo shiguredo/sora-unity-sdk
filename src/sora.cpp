@@ -277,7 +277,8 @@ void Sora::DoConnect(const sora_conf::internal::ConnectConfig& cc,
   factory_options.crypto_options.srtp.enable_gcm_crypto_suites = true;
   factory_->SetOptions(factory_options);
 
-  if (!InitADM(unity_adm_, cc.audio_recording_device, cc.audio_playout_device)) {
+  if (!InitADM(unity_adm_, cc.audio_recording_device,
+               cc.audio_playout_device)) {
     on_disconnect((int)sora_conf::ErrorCode::INTERNAL_ERROR,
                   "Failed to InitADM");
     return;
@@ -289,7 +290,11 @@ void Sora::DoConnect(const sora_conf::internal::ConnectConfig& cc,
     auto capturer = CreateVideoCapturer(
         cc.capturer_type, (void*)cc.unity_camera_texture,
         cc.video_capturer_device, cc.video_width, cc.video_height,
-        signaling_thread_.get(), env, android_context);
+        signaling_thread_.get(), env, android_context
+#ifdef SORA_UNITY_SDK_HOLOLENS2
+        , cc
+#endif
+        );
     if (!capturer) {
       on_disconnect((int)sora_conf::ErrorCode::INTERNAL_ERROR,
                     "Capturer Init Failed");
@@ -571,7 +576,12 @@ rtc::scoped_refptr<webrtc::VideoTrackSourceInterface> Sora::CreateVideoCapturer(
     int video_height,
     rtc::Thread* signaling_thread,
     void* jni_env,
-    void* android_context) {
+    void* android_context
+#ifdef SORA_UNITY_SDK_HOLOLENS2
+    ,
+    const sora_conf::internal::ConnectConfig& cc
+#endif
+) {
   if (capturer_type == 0) {
     // 実カメラ（デバイス）を使う
     sora::CameraDeviceCapturerConfig config;
@@ -583,6 +593,27 @@ rtc::scoped_refptr<webrtc::VideoTrackSourceInterface> Sora::CreateVideoCapturer(
     config.jni_env = jni_env;
     config.application_context = android_context;
     config.signaling_thread = signaling_thread;
+
+#ifdef SORA_UNITY_SDK_HOLOLENS2
+    config.mrc = webrtc::MrcVideoEffectDefinition::Create();
+    if (cc.enable_mrc_hologram_composition_enabled) {
+      config.mrc->HologramCompositionEnabled(
+          cc.mrc_hologram_composition_enabled);
+    }
+    if (cc.enable_mrc_recording_indicator_enabled) {
+      config.mrc->RecordingIndicatorEnabled(cc.mrc_recording_indicator_enabled);
+    }
+    if (cc.enable_mrc_video_stabilization_enabled) {
+      config.mrc->VideoStabilizationEnabled(cc.mrc_video_stabilization_enabled);
+    }
+    if (cc.enable_mrc_video_stabilization_buffer_length) {
+      config.mrc->VideoStabilizationBufferLength(
+          cc.mrc_video_stabilization_buffer_length);
+    }
+    if (cc.enable_mrc_global_opacity_coefficient) {
+      config.mrc->GlobalOpacityCoefficient(cc.mrc_global_opacity_coefficient);
+    }
+#endif
 
     return sora::CreateCameraDeviceCapturer(config);
   } else {

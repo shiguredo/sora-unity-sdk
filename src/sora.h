@@ -108,7 +108,12 @@ class Sora : public std::enable_shared_from_this<Sora>,
                       int video_height,
                       rtc::Thread* signaling_thread,
                       void* jni_env,
-                      void* android_context);
+                      void* android_context
+#ifdef SORA_UNITY_SDK_HOLOLENS2
+                      ,
+                      const sora_conf::internal::ConnectConfig& cc
+#endif
+  );
 
   void PushEvent(std::function<void()> f);
 

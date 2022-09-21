@@ -120,6 +120,13 @@ public class Sora : IDisposable
         public string ProxyPassword = "";
         // Proxy サーバーに接続するときの User-Agent。未設定ならデフォルト値が使われる
         public string ProxyAgent = "";
+
+        // MRC の設定
+        public bool? MrcHologramCompositionEnabled;
+        public bool? MrcRecordingIndicatorEnabled;
+        public bool? MrcVideoStabilizationEnabled;
+        public uint? MrcVideoStabilizationBufferLength;
+        public float? GlobalOpacityCoefficient;
     }
 
     IntPtr p;
@@ -296,6 +303,27 @@ public class Sora : IDisposable
         cc.proxy_username = config.ProxyUsername;
         cc.proxy_password = config.ProxyPassword;
         cc.proxy_agent = config.ProxyAgent;
+
+        if (config.MrcHologramCompositionEnabled != null) {
+            cc.enable_mrc_hologram_composition_enabled = true;
+            cc.mrc_hologram_composition_enabled = config.MrcHologramCompositionEnabled.Value;
+        }
+        if (config.MrcRecordingIndicatorEnabled != null) {
+            cc.enable_mrc_recording_indicator_enabled = true;
+            cc.mrc_recording_indicator_enabled = config.MrcRecordingIndicatorEnabled.Value;
+        }
+        if (config.MrcVideoStabilizationEnabled != null) {
+            cc.enable_mrc_video_stabilization_enabled = true;
+            cc.mrc_video_stabilization_enabled = config.MrcVideoStabilizationEnabled.Value;
+        }
+        if (config.MrcVideoStabilizationBufferLength != null) {
+            cc.enable_mrc_video_stabilization_buffer_length = true;
+            cc.mrc_video_stabilization_buffer_length = config.MrcVideoStabilizationBufferLength.Value;
+        }
+        if (config.GlobalOpacityCoefficient != null) {
+            cc.enable_mrc_global_opacity_coefficient = true;
+            cc.mrc_global_opacity_coefficient = config.GlobalOpacityCoefficient.Value;
+        }
 
         sora_connect(p, Jsonif.Json.ToJson(cc));
     }

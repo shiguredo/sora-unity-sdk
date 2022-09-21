@@ -52,7 +52,7 @@ class UnityCameraCapturer : public sora::ScalableVideoTrackSource,
 #endif
 
 #ifdef SORA_UNITY_SDK_HOLOLENS2
-  class NullImpl {
+  class NullImpl : public Impl {
     int width_;
     int height_;
 
@@ -60,10 +60,9 @@ class UnityCameraCapturer : public sora::ScalableVideoTrackSource,
     bool Init(UnityContext* context,
               void* camera_texture,
               int width,
-              int height);
-    rtc::scoped_refptr<webrtc::I420Buffer> Capture();
+              int height) override;
+    rtc::scoped_refptr<webrtc::I420Buffer> Capture() override;
   };
-  std::unique_ptr<NullImpl> capturer_;
 #endif
 
 #if defined(SORA_UNITY_SDK_MACOS) || defined(SORA_UNITY_SDK_IOS)

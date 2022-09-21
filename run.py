@@ -516,7 +516,7 @@ def install_deps(platform: str, build_platform: str, source_dir, build_dir, inst
         # Windows は MSVC を使うので不要
         # macOS と iOS は Apple Clang を使うので不要
         # Android は libc++ のために必要
-        if platform not in ('windows_x86_64', 'macos_x86_64', 'macos_arm64', 'ios'):
+        if platform not in ('windows_x86_64', 'windows_hololens2', 'macos_x86_64', 'macos_arm64', 'ios'):
             # LLVM
             tools_url = webrtc_version['WEBRTC_SRC_TOOLS_URL']
             tools_commit = webrtc_version['WEBRTC_SRC_TOOLS_COMMIT']
@@ -660,10 +660,10 @@ def get_build_platform():
         raise Exception(f'OS {os} not supported')
 
 
-AVAILABLE_TARGETS = ['windows_x86_64', 'macos_arm64', 'ubuntu-20.04_x86_64', 'ios', 'android']
+AVAILABLE_TARGETS = ['windows_x86_64', 'windows_hololens2', 'macos_arm64', 'ubuntu-20.04_x86_64', 'ios', 'android']
 
 BUILD_PLATFORM = {
-    'windows_x86_64': ['windows_x86_64'],
+    'windows_x86_64': ['windows_x86_64', 'windows_hololens2'],
     'macos_x86_64': ['macos_x86_64', 'macos_arm64', 'ios'],
     'macos_arm64': ['macos_x86_64', 'macos_arm64', 'ios'],
     'ubuntu-20.04_x86_64': ['ubuntu-20.04_x86_64', 'android'],
@@ -726,8 +726,11 @@ def main():
         cmake_args.append(f"-DSORA_DIR={cmake_path(os.path.join(install_dir, 'sora'))}")
         cmake_args.append(f"-DPROTOBUF_DIR={cmake_path(os.path.join(install_dir, 'protobuf'))}")
         cmake_args.append(f"-DPROTOC_GEN_JSONIF_DIR={cmake_path(os.path.join(install_dir, 'protoc-gen-jsonif'))}")
-        if platform == 'windows_x86_64':
-            pass
+        if platform in ('windows_x86_64', 'windows_hololens2'):
+            if platform == 'windows_hololens2':
+                cmake_args.append('-DCMAKE_SYSTEM_NAME=WindowsStore')
+                cmake_args.append('-DCMAKE_SYSTEM_VERSION=10.0')
+                cmake_args += ['-A', 'ARM64']
         elif platform in ('macos_x86_64', 'macos_arm64'):
             sysroot = cmdcap(['xcrun', '--sdk', 'macosx', '--show-sdk-path'])
             arch = 'x86_64' if platform == 'macos_x86_64' else 'arm64'

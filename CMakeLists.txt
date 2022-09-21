@@ -5,23 +5,6 @@ cmake_policy(SET CMP0054 NEW)
 # MSVC runtime library flags are selected by an abstraction.
 cmake_policy(SET CMP0091 NEW)
 
-<<<<<<< HEAD
-set(_INSTALL_DIR ${CMAKE_CURRENT_SOURCE_DIR}/_install)
-
-if (SORA_UNITY_SDK_PACKAGE STREQUAL "android")
-  # toolchain の設定
-  set(CMAKE_TOOLCHAIN_FILE ${ANDROID_TOOLCHAIN_FILE})
-  set(ANDROID_ABI arm64-v8a)
-  set(ANDROID_STL none)
-endif()
-
-if (SORA_UNITY_SDK_PACKAGE STREQUAL "windows_hololens2")
-  set(CMAKE_SYSTEM_NAME WindowsStore)
-  set(CMAKE_SYSTEM_VERSION 10.0)
-endif()
-
-=======
->>>>>>> origin/develop
 project(SoraUnitySdk C CXX)
 
 list(APPEND CMAKE_PREFIX_PATH ${SORA_DIR})
@@ -50,16 +33,12 @@ if (SORA_UNITY_SDK_PACKAGE STREQUAL "windows_x86_64")
 
   # configure_file で使う
   set(SORA_UNITY_SDK_PLATFORM Windows)
-<<<<<<< HEAD
 elseif (SORA_UNITY_SDK_PACKAGE STREQUAL "windows_hololens2")
   add_library(SoraUnitySdk SHARED)
 
   # configure_file で使う
   set(SORA_UNITY_SDK_PLATFORM HoloLens2)
-elseif (SORA_UNITY_SDK_PACKAGE STREQUAL "macos")
-=======
 elseif (SORA_UNITY_SDK_PACKAGE STREQUAL "macos_x86_64" OR SORA_UNITY_SDK_PACKAGE STREQUAL "macos_arm64")
->>>>>>> origin/develop
   add_library(SoraUnitySdk MODULE)
   set_target_properties(SoraUnitySdk PROPERTIES BUNDLE TRUE)
   set_target_properties(SoraUnitySdk PROPERTIES CXX_VISIBILITY_PRESET hidden)
@@ -196,7 +175,7 @@ elseif (SORA_UNITY_SDK_PACKAGE STREQUAL "windows_hololens2")
   )
   set_target_properties(SoraUnitySdk
     PROPERTIES
-      MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
+      MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>DLL"
   )
 
   target_sources(SoraUnitySdk
@@ -207,6 +186,7 @@ elseif (SORA_UNITY_SDK_PACKAGE STREQUAL "windows_hololens2")
   target_compile_definitions(SoraUnitySdk
     PRIVATE
       SORA_UNITY_SDK_HOLOLENS2
+      SORA_CPP_SDK_HOLOLENS2
       WEBRTC_VIDEO_CAPTURE_WINRT
       _WIN32_WINNT=0x0A00
       NOMINMAX

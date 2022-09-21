@@ -1,6 +1,6 @@
 #include "unity_camera_capturer.h"
 
-namespace sora {
+namespace sora_unity_sdk {
 
 bool UnityCameraCapturer::NullImpl::Init(UnityContext* context,
                                          void* camera_texture,
@@ -16,4 +16,4 @@ UnityCameraCapturer::NullImpl::Capture() {
   return webrtc::I420Buffer::Create(width_, height_);
 }
 
-}  // namespace sora
+}  // namespace sora_unity_sdk
