@@ -31,7 +31,7 @@ jobs:
     - name: Copy ${{ matrix.name }} files
       run: |
         mkdir ${{ matrix.name }}
-        Copy-Item _build\windows_x86_64\release\sora_unity_sdk\Release\SoraUnitySdk.dll ${{ matrix.name }}
+        Copy-Item _build\${{ matrix.name }}\release\sora_unity_sdk\Release\SoraUnitySdk.dll ${{ matrix.name }}
         # ソースコード（生成した分も含む）も一緒に入れておく
         Copy-Item -Recurse Sora ${{ matrix.name }}\Sora
     - name: Upload ${{ matrix.name }} Artifact
