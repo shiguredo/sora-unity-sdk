@@ -25,6 +25,7 @@ public class SoraUnitySdkPostProcessor
 #endif
 
         proj.AddBuildProperty(guid, "OTHER_LDFLAGS", "-ObjC");
+        proj.SetBuildProperty(guid, "ENABLE_BITCODE", "NO");
         proj.AddFrameworkToProject(guid, "VideoToolbox.framework", false);
         proj.AddFrameworkToProject(guid, "GLKit.framework", false);
         proj.AddFrameworkToProject(guid, "Network.framework", false);
