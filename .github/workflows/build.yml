@@ -15,6 +15,7 @@ jobs:
       matrix:
         name:
           - windows_x86_64
+          - windows_hololens2
     runs-on: windows-2019
     steps:
     - uses: actions/checkout@v2
@@ -38,16 +39,6 @@ jobs:
       with:
         name: ${{ matrix.name }}
         path: ${{ matrix.name }}
-    - name: Copy HoloLens2 files
-      run: |
-        mkdir windows_hololens2
-        Copy-Item build\hololens2\Release\SoraUnitySdk.dll windows_hololens2
-        Copy-Item _install\hololens2\webrtc\NOTICE windows_hololens2
-    - name: Upload windows_hololens2 Artifact
-      uses: actions/upload-artifact@v2
-      with:
-        name: windows_hololens2
-        path: windows_hololens2
   build-macos:
     strategy:
       fail-fast: false
