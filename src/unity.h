@@ -26,6 +26,7 @@ typedef void (*disconnect_cb_t)(int error_code,
                                 const char* reason,
                                 void* userdata);
 typedef void (*data_channel_cb_t)(const char* reason, void* userdata);
+typedef void (*capturer_frame_cb_t)(const char* data, void* userdata);
 
 UNITY_INTERFACE_EXPORT void* sora_create();
 UNITY_INTERFACE_EXPORT void sora_set_on_add_track(void* p,
@@ -49,6 +50,9 @@ UNITY_INTERFACE_EXPORT void sora_set_on_data_channel(
     void* p,
     data_channel_cb_t on_data_channel,
     void* userdata);
+UNITY_INTERFACE_EXPORT void sora_set_on_capturer_frame(void* p,
+                                                       capturer_frame_cb_t f,
+                                                       void* userdata);
 UNITY_INTERFACE_EXPORT void sora_dispatch_events(void* p);
 UNITY_INTERFACE_EXPORT void sora_connect(void* p, const char* config);
 UNITY_INTERFACE_EXPORT void sora_disconnect(void* p);
