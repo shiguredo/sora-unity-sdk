@@ -294,7 +294,7 @@ void Sora::DoConnect(const sora_conf::internal::ConnectConfig& cc,
   if (cc.role == "sendonly" || cc.role == "sendrecv") {
     auto capturer = CreateVideoCapturer(
         cc.capturer_type, (void*)cc.unity_camera_texture,
-        cc.video_capturer_device, cc.video_width, cc.video_height,
+        cc.video_capturer_device, cc.video_width, cc.video_height, cc.video_fps,
         signaling_thread_.get(), env, android_context);
     if (!capturer) {
       on_disconnect((int)sora_conf::ErrorCode::INTERNAL_ERROR,
@@ -579,6 +579,7 @@ rtc::scoped_refptr<webrtc::VideoTrackSourceInterface> Sora::CreateVideoCapturer(
     std::string video_capturer_device,
     int video_width,
     int video_height,
+    int video_fps,
     rtc::Thread* signaling_thread,
     void* jni_env,
     void* android_context) {
@@ -587,8 +588,7 @@ rtc::scoped_refptr<webrtc::VideoTrackSourceInterface> Sora::CreateVideoCapturer(
     sora::CameraDeviceCapturerConfig config;
     config.width = video_width;
     config.height = video_height;
-    // TODO(melpon): framerate をちゃんと設定する
-    config.fps = 30;
+    config.fps = video_fps;
     config.device_name = video_capturer_device;
     config.jni_env = jni_env;
     config.application_context = android_context;

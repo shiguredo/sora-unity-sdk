@@ -86,6 +86,7 @@ public class Sora : IDisposable
         public string VideoCapturerDevice = "";
         public int VideoWidth = 640;
         public int VideoHeight = 480;
+        public int VideoFps = 30;
         public VideoCodecType VideoCodecType = VideoCodecType.VP9;
         public int VideoBitRate = 0;
         public bool UnityAudioInput = false;
@@ -247,6 +248,7 @@ public class Sora : IDisposable
         cc.video_capturer_device = config.VideoCapturerDevice;
         cc.video_width = config.VideoWidth;
         cc.video_height = config.VideoHeight;
+        cc.video_fps = config.VideoFps;
         cc.video_codec_type = config.VideoCodecType.ToString();
         cc.video_bit_rate = config.VideoBitRate;
         cc.unity_audio_input = config.UnityAudioInput;

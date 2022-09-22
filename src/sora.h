@@ -107,6 +107,7 @@ class Sora : public std::enable_shared_from_this<Sora>,
                       std::string video_capturer_device,
                       int video_width,
                       int video_height,
+                      int video_fps,
                       rtc::Thread* signaling_thread,
                       void* jni_env,
                       void* android_context);
