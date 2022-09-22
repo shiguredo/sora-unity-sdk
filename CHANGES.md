@@ -11,6 +11,11 @@
 
 ## develop
 
+- [ADD] カメラからのフレーム情報を受け取るコールバックを追加
+    - @melpon
+- [ADD] カメラデバイスの FPS の設定可能にする
+    - @melpon
+
 ## 2022.4.0
 
 - [CHANGE] iOS ビルド向けに Bitcode を off にする設定を追加
