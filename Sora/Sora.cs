@@ -131,6 +131,7 @@ public class Sora : IDisposable
     GCHandle onDisconnectHandle;
     GCHandle onDataChannelHandle;
     GCHandle onHandleAudioHandle;
+    GCHandle onCapturerFrameHandle;
     UnityEngine.Rendering.CommandBuffer commandBuffer;
     UnityEngine.Camera unityCamera;
 
@@ -180,6 +181,11 @@ public class Sora : IDisposable
         if (onHandleAudioHandle.IsAllocated)
         {
             onHandleAudioHandle.Free();
+        }
+
+        if (onCapturerFrameHandle.IsAllocated)
+        {
+            onCapturerFrameHandle.Free();
         }
     }
 
@@ -507,6 +513,30 @@ public class Sora : IDisposable
         }
     }
 
+    private delegate void CapturerFrameCallbackDelegate(string data, IntPtr userdata);
+
+    [AOT.MonoPInvokeCallback(typeof(CapturerFrameCallbackDelegate))]
+    static private void CapturerFrameCallback(string data, IntPtr userdata)
+    {
+        var callback = GCHandle.FromIntPtr(userdata).Target as Action<SoraConf.VideoFrame>;
+        var frame = Jsonif.Json.FromJson<SoraConf.VideoFrame>(data);
+        callback(frame);
+    }
+
+    public Action<SoraConf.VideoFrame> OnCapturerFrame
+    {
+        set
+        {
+            if (onCapturerFrameHandle.IsAllocated)
+            {
+                onCapturerFrameHandle.Free();
+            }
+
+            onCapturerFrameHandle = GCHandle.Alloc(value);
+            sora_set_on_capturer_frame(p, CapturerFrameCallback, GCHandle.ToIntPtr(onCapturerFrameHandle));
+        }
+    }
+
     private delegate void StatsCallbackDelegate(string json, IntPtr userdata);
 
     [AOT.MonoPInvokeCallback(typeof(StatsCallbackDelegate))]
@@ -660,6 +690,8 @@ public class Sora : IDisposable
     private static extern void sora_process_audio(IntPtr p, [In] float[] data, int offset, int samples);
     [DllImport(DllName)]
     private static extern void sora_set_on_handle_audio(IntPtr p, HandleAudioCallbackDelegate on_handle_audio, IntPtr userdata);
+    [DllImport(DllName)]
+    private static extern void sora_set_on_capturer_frame(IntPtr p, CapturerFrameCallbackDelegate on_capturer_frame, IntPtr userdata);
     [DllImport(DllName)]
     private static extern void sora_get_stats(IntPtr p, StatsCallbackDelegate on_get_stats, IntPtr userdata);
     [DllImport(DllName)]

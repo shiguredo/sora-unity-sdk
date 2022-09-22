@@ -57,6 +57,7 @@ Sora::~Sora() {
     static_cast<sora::AndroidCapturer*>(capturer_.get())->Stop();
   }
 #endif
+  capturer_sink_ = nullptr;
   capturer_ = nullptr;
   unity_adm_ = nullptr;
 
@@ -116,6 +117,10 @@ void Sora::SetOnDisconnect(
 }
 void Sora::SetOnDataChannel(std::function<void(std::string)> on_data_channel) {
   on_data_channel_ = std::move(on_data_channel);
+}
+void Sora::SetOnCapturerFrame(
+    std::function<void(std::string)> on_capturer_frame) {
+  on_capturer_frame_ = std::move(on_capturer_frame);
 }
 
 void Sora::DispatchEvents() {
@@ -277,7 +282,8 @@ void Sora::DoConnect(const sora_conf::internal::ConnectConfig& cc,
   factory_options.crypto_options.srtp.enable_gcm_crypto_suites = true;
   factory_->SetOptions(factory_options);
 
-  if (!InitADM(unity_adm_, cc.audio_recording_device, cc.audio_playout_device)) {
+  if (!InitADM(unity_adm_, cc.audio_recording_device,
+               cc.audio_playout_device)) {
     on_disconnect((int)sora_conf::ErrorCode::INTERNAL_ERROR,
                   "Failed to InitADM");
     return;
@@ -294,6 +300,10 @@ void Sora::DoConnect(const sora_conf::internal::ConnectConfig& cc,
       on_disconnect((int)sora_conf::ErrorCode::INTERNAL_ERROR,
                     "Capturer Init Failed");
       return;
+    }
+    if (on_capturer_frame_) {
+      capturer_sink_.reset(
+          new Sora::CapturerSink(capturer, on_capturer_frame_));
     }
 
     capturer_ = capturer;
@@ -752,4 +762,49 @@ void Sora::PushEvent(std::function<void()> f) {
   std::lock_guard<std::mutex> guard(event_mutex_);
   event_queue_.push_back(std::move(f));
 }
+
+// Sora::CapturerSink
+
+Sora::CapturerSink::CapturerSink(
+    rtc::scoped_refptr<webrtc::VideoTrackSourceInterface> capturer,
+    std::function<void(std::string)> on_frame)
+    : capturer_(capturer), on_frame_(std::move(on_frame)) {
+  capturer_->AddOrUpdateSink(this, rtc::VideoSinkWants());
+}
+Sora::CapturerSink::~CapturerSink() {
+  capturer_->RemoveSink(this);
+}
+void Sora::CapturerSink::OnFrame(const webrtc::VideoFrame& frame) {
+  sora_conf::VideoFrame f;
+  f.baseptr = reinterpret_cast<int64_t>(&frame);
+  f.id = frame.id();
+  f.timestamp_us = frame.timestamp_us();
+  f.timestamp = frame.timestamp();
+  f.ntp_time_ms = frame.ntp_time_ms();
+  f.rotation = (int)frame.rotation();
+  auto& v = f.video_frame_buffer;
+  auto vfb = frame.video_frame_buffer();
+  v.baseptr = reinterpret_cast<int64_t>(vfb.get());
+  v.type = (sora_conf::VideoFrameBuffer::Type)vfb->type();
+  v.width = vfb->width();
+  v.height = vfb->height();
+  if (vfb->type() == webrtc::VideoFrameBuffer::Type::kI420) {
+    auto p = vfb->GetI420();
+    v.i420_stride_y = p->StrideY();
+    v.i420_stride_u = p->StrideU();
+    v.i420_stride_v = p->StrideV();
+    v.i420_data_y = reinterpret_cast<int64_t>(p->DataY());
+    v.i420_data_u = reinterpret_cast<int64_t>(p->DataU());
+    v.i420_data_v = reinterpret_cast<int64_t>(p->DataV());
+  }
+  if (vfb->type() == webrtc::VideoFrameBuffer::Type::kNV12) {
+    auto p = vfb->GetNV12();
+    v.nv12_stride_y = p->StrideY();
+    v.nv12_stride_uv = p->StrideUV();
+    v.nv12_data_y = reinterpret_cast<int64_t>(p->DataY());
+    v.nv12_data_uv = reinterpret_cast<int64_t>(p->DataUV());
+  }
+  on_frame_(jsonif::to_json(f));
+}
+
 }  // namespace sora_unity_sdk
