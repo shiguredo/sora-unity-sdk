@@ -2,14 +2,16 @@
 
 namespace sora_unity_sdk {
 
+UnityCameraCapturer::UnityCameraCapturer(
+    const UnityCameraCapturerConfig& config)
+    : sora::ScalableVideoTrackSource(config) {}
+
 rtc::scoped_refptr<UnityCameraCapturer> UnityCameraCapturer::Create(
-    UnityContext* context,
-    void* unity_camera_texture,
-    int width,
-    int height) {
-  rtc::scoped_refptr<UnityCameraCapturer> p(
-      new rtc::RefCountedObject<UnityCameraCapturer>());
-  if (!p->Init(context, unity_camera_texture, width, height)) {
+    const UnityCameraCapturerConfig& config) {
+  rtc::scoped_refptr<UnityCameraCapturer> p =
+      rtc::make_ref_counted<UnityCameraCapturer>(config);
+  if (!p->Init(config.context, config.unity_camera_texture, config.width,
+               config.height)) {
     return nullptr;
   }
   return p;
