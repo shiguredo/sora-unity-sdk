@@ -47,6 +47,7 @@ class Sora : public std::enable_shared_from_this<Sora>,
   void SetOnMessage(std::function<void(std::string, std::string)> on_message);
   void SetOnDisconnect(std::function<void(int, std::string)> on_disconnect);
   void SetOnDataChannel(std::function<void(std::string)> on_data_channel);
+  void SetOnCapturerFrame(std::function<void(std::string)> on_capturer_frame);
   void DispatchEvents();
 
   void Connect(const sora_conf::internal::ConnectConfig& cc);
@@ -101,21 +102,35 @@ class Sora : public std::enable_shared_from_this<Sora>,
                       std::string audio_playout_device);
 
   static rtc::scoped_refptr<webrtc::VideoTrackSourceInterface>
-  CreateVideoCapturer(int capturer_type,
-                      void* unity_camera_texture,
-                      std::string video_capturer_device,
-                      int video_width,
-                      int video_height,
-                      rtc::Thread* signaling_thread,
-                      void* jni_env,
-                      void* android_context
+  CreateVideoCapturer(
+      int capturer_type,
+      void* unity_camera_texture,
+      std::string video_capturer_device,
+      int video_width,
+      int video_height,
+      int video_fps,
+      std::function<void(const webrtc::VideoFrame& frame)> on_frame,
+      rtc::Thread* signaling_thread,
+      void* jni_env,
+      void* android_context
 #ifdef SORA_UNITY_SDK_HOLOLENS2
-                      ,
-                      const sora_conf::internal::ConnectConfig& cc
+      ,
+      const sora_conf::internal::ConnectConfig& cc
 #endif
   );
 
   void PushEvent(std::function<void()> f);
+
+  struct CapturerSink : rtc::VideoSinkInterface<webrtc::VideoFrame> {
+    CapturerSink(rtc::scoped_refptr<webrtc::VideoTrackSourceInterface> capturer,
+                 std::function<void(std::string)> on_frame);
+    ~CapturerSink() override;
+    void OnFrame(const webrtc::VideoFrame& frame) override;
+
+   private:
+    rtc::scoped_refptr<webrtc::VideoTrackSourceInterface> capturer_;
+    std::function<void(std::string)> on_frame_;
+  };
 
  private:
   std::unique_ptr<boost::asio::io_context> ioc_;
@@ -132,6 +147,7 @@ class Sora : public std::enable_shared_from_this<Sora>,
   std::function<void(int, std::string)> on_disconnect_;
   std::function<void(std::string)> on_data_channel_;
   std::function<void(const int16_t*, int, int)> on_handle_audio_;
+  std::function<void(std::string)> on_capturer_frame_;
 
   std::unique_ptr<rtc::Thread> io_thread_;
   std::unique_ptr<rtc::Thread> network_thread_;
@@ -149,6 +165,7 @@ class Sora : public std::enable_shared_from_this<Sora>,
 
   rtc::scoped_refptr<webrtc::VideoTrackSourceInterface> capturer_;
   int capturer_type_ = 0;
+  std::shared_ptr<CapturerSink> capturer_sink_;
 
   rtc::scoped_refptr<UnityAudioDevice> unity_adm_;
   webrtc::TaskQueueFactory* task_queue_factory_;

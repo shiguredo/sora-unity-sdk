@@ -106,6 +106,16 @@ void sora_set_on_data_channel(void* p,
   });
 }
 
+void sora_set_on_capturer_frame(void* p,
+                                capturer_frame_cb_t on_capturer_frame,
+                                void* userdata) {
+  auto wsora = (SoraWrapper*)p;
+  wsora->sora->SetOnCapturerFrame(
+      [on_capturer_frame, userdata](std::string data) {
+        on_capturer_frame(data.c_str(), userdata);
+      });
+}
+
 void sora_dispatch_events(void* p) {
   auto wsora = (SoraWrapper*)p;
   wsora->sora->DispatchEvents();

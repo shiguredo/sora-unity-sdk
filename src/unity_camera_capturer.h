@@ -21,6 +21,13 @@
 
 namespace sora_unity_sdk {
 
+struct UnityCameraCapturerConfig : sora::ScalableVideoTrackSourceConfig {
+  UnityContext* context;
+  void* unity_camera_texture;
+  int width;
+  int height;
+};
+
 class UnityCameraCapturer : public sora::ScalableVideoTrackSource,
                             public rtc::VideoSinkInterface<webrtc::VideoFrame> {
   webrtc::Clock* clock_ = webrtc::Clock::GetRealTimeClock();
@@ -125,10 +132,9 @@ class UnityCameraCapturer : public sora::ScalableVideoTrackSource,
 
  public:
   static rtc::scoped_refptr<UnityCameraCapturer> Create(
-      UnityContext* context,
-      void* unity_camera_texture,
-      int width,
-      int height);
+      const UnityCameraCapturerConfig& config);
+
+  UnityCameraCapturer(const UnityCameraCapturerConfig& config);
 
   void OnRender();
 
