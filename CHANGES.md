@@ -11,7 +11,7 @@
 
 ## develop
 
-- [UPDATE] Sora C++ SDK を `2022.12.0` に上げる
+- [UPDATE] Sora C++ SDK を `2022.12.1` に上げる
     - @melpon
 - [FIX] カメラからのフレーム情報が縮小された状態で渡されていたのを修正
     - @melpon
