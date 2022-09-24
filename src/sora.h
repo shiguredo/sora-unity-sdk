@@ -102,15 +102,17 @@ class Sora : public std::enable_shared_from_this<Sora>,
                       std::string audio_playout_device);
 
   static rtc::scoped_refptr<webrtc::VideoTrackSourceInterface>
-  CreateVideoCapturer(int capturer_type,
-                      void* unity_camera_texture,
-                      std::string video_capturer_device,
-                      int video_width,
-                      int video_height,
-                      int video_fps,
-                      rtc::Thread* signaling_thread,
-                      void* jni_env,
-                      void* android_context);
+  CreateVideoCapturer(
+      int capturer_type,
+      void* unity_camera_texture,
+      std::string video_capturer_device,
+      int video_width,
+      int video_height,
+      int video_fps,
+      std::function<void(const webrtc::VideoFrame& frame)> on_frame,
+      rtc::Thread* signaling_thread,
+      void* jni_env,
+      void* android_context);
 
   void PushEvent(std::function<void()> f);
 
