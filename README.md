@@ -95,6 +95,11 @@ Please read https://github.com/shiguredo/oss/blob/master/README.en.md before use
         - H.264 のハードウェアエンコードへの対応
         - H.264 のハードウェアデコードへの対応
 
+## Sora Unity SDK for MS Hololens2
+
+- support/hololens2 ブランチの修正や改善は有償でお受けしています
+- 継続的な有償サポートは提供しておりません
+
 ## 有償での優先実装
 
 - Windows 版 NVIDIA VIDEO CODEC SDK による H.264 エンコーダ対応
