@@ -38,7 +38,7 @@ Please read https://github.com/shiguredo/oss/blob/master/README.en.md before use
 
 ## システム条件
 
-- Sora 2022.1.1 以降
+- WebRTC SFU Sora 2022.1.1 以降
 
 ## 対応プラットフォーム
 
