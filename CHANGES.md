@@ -11,6 +11,9 @@
 
 ## develop
 
+- [FIX] UnityCameraCapturer がマルチスレッド下で正常に終了しないことがあるのを修正
+    - @melpon
+
 ## 2022.5.1 (2022-09-24)
 
 - [UPDATE] Sora C++ SDK を `2022.12.1` に上げる
