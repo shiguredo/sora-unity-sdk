@@ -11,6 +11,8 @@
 
 ## develop
 
+## 2022.5.2 (2022-10-04)
+
 - [FIX] UnityCameraCapturer がマルチスレッド下で正常に終了しないことがあるのを修正
     - @melpon
 
