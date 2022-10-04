@@ -57,6 +57,9 @@ Sora::~Sora() {
     static_cast<sora::AndroidCapturer*>(capturer_.get())->Stop();
   }
 #endif
+  if (capturer_ != nullptr && capturer_type_ != 0) {
+    static_cast<UnityCameraCapturer*>(capturer_.get())->Stop();
+  }
   capturer_sink_ = nullptr;
   capturer_ = nullptr;
   unity_adm_ = nullptr;

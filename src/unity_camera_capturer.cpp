@@ -18,6 +18,11 @@ rtc::scoped_refptr<UnityCameraCapturer> UnityCameraCapturer::Create(
 }
 
 void UnityCameraCapturer::OnRender() {
+  std::lock_guard<std::mutex> guard(mutex_);
+  if (stopped_) {
+    return;
+  }
+
 #if defined(SORA_UNITY_SDK_WINDOWS) || defined(SORA_UNITY_SDK_MACOS) || \
     defined(SORA_UNITY_SDK_IOS) || defined(SORA_UNITY_SDK_ANDROID) ||   \
     defined(SORA_UNITY_SDK_UBUNTU)
@@ -37,6 +42,11 @@ void UnityCameraCapturer::OnRender() {
 
 void UnityCameraCapturer::OnFrame(const webrtc::VideoFrame& frame) {
   OnCapturedFrame(frame);
+}
+
+void UnityCameraCapturer::Stop() {
+  std::lock_guard<std::mutex> guard(mutex_);
+  stopped_ = true;
 }
 
 bool UnityCameraCapturer::Init(UnityContext* context,
