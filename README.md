@@ -112,6 +112,8 @@ Please read https://github.com/shiguredo/oss/blob/master/README.en.md before use
     - [株式会社KDDIテクノロジー](https://kddi-tech.com/) 様
 - Android OpenGL ES 対応
     - 企業名非公開
+- Microsoft HoloLens 2 対応
+    - [NTTコノキュー](https://www.nttqonoq.com/) 様
 
 ## 有償での優先実装が可能な機能一覧
 
@@ -158,4 +160,5 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 ```
+
 
