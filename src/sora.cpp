@@ -804,4 +804,32 @@ void Sora::PushEvent(std::function<void()> f) {
   event_queue_.push_back(std::move(f));
 }
 
+bool Sora::GetAudioEnabled() const {
+  if (audio_track_ == nullptr) {
+    return false;
+  }
+  return audio_track_->enabled();
+}
+
+void Sora::SetAudioEnabled(bool enabled) {
+  if (audio_track_ == nullptr) {
+    return;
+  }
+  audio_track_->set_enabled(enabled);
+}
+
+bool Sora::GetVideoEnabled() const {
+  if (video_track_ == nullptr) {
+    return false;
+  }
+  return video_track_->enabled();
+}
+
+void Sora::SetVideoEnabled(bool enabled) {
+  if (video_track_ == nullptr) {
+    return;
+  }
+  video_track_->set_enabled(enabled);
+}
+
 }  // namespace sora_unity_sdk
