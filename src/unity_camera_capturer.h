@@ -129,6 +129,8 @@ class UnityCameraCapturer : public sora::ScalableVideoTrackSource,
 #endif
 
   std::unique_ptr<Impl> capturer_;
+  std::mutex mutex_;
+  bool stopped_ = false;
 
  public:
   static rtc::scoped_refptr<UnityCameraCapturer> Create(
@@ -137,6 +139,8 @@ class UnityCameraCapturer : public sora::ScalableVideoTrackSource,
   UnityCameraCapturer(const UnityCameraCapturerConfig& config);
 
   void OnRender();
+
+  void Stop();
 
   void OnFrame(const webrtc::VideoFrame& frame) override;
 

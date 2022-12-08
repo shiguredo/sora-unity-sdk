@@ -680,6 +680,18 @@ public class Sora : IDisposable
         return sora_is_h264_supported() != 0;
     }
 
+    public bool AudioEnabled
+    {
+        get { return sora_get_audio_enabled(p) != 0; }
+        set { sora_set_audio_enabled(p, value ? 1 : 0); }
+    }
+
+    public bool VideoEnabled
+    {
+        get { return sora_get_video_enabled(p) != 0; }
+        set { sora_set_video_enabled(p, value ? 1 : 0); }
+    }
+
 #if UNITY_IOS && !UNITY_EDITOR
     private const string DllName = "__Internal";
 #else
@@ -734,4 +746,12 @@ public class Sora : IDisposable
     private static extern int sora_device_enum_audio_playout(DeviceEnumCallbackDelegate f, IntPtr userdata);
     [DllImport(DllName)]
     private static extern int sora_is_h264_supported();
+    [DllImport(DllName)]
+    private static extern int sora_get_audio_enabled(IntPtr p);
+    [DllImport(DllName)]
+    private static extern void sora_set_audio_enabled(IntPtr p, int enabled);
+    [DllImport(DllName)]
+    private static extern int sora_get_video_enabled(IntPtr p);
+    [DllImport(DllName)]
+    private static extern void sora_set_video_enabled(IntPtr p, int enabled);
 }

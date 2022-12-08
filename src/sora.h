@@ -65,6 +65,11 @@ class Sora : public std::enable_shared_from_this<Sora>,
 
   void SendMessage(const std::string& label, const std::string& data);
 
+  bool GetAudioEnabled() const;
+  void SetAudioEnabled(bool enabled);
+  bool GetVideoEnabled() const;
+  void SetVideoEnabled(bool enabled);
+
  private:
   void* GetAndroidApplicationContext(void* env);
   static sora_conf::ErrorCode ToErrorCode(sora::SoraSignalingErrorCode ec);

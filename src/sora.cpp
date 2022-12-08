@@ -57,6 +57,9 @@ Sora::~Sora() {
     static_cast<sora::AndroidCapturer*>(capturer_.get())->Stop();
   }
 #endif
+  if (capturer_ != nullptr && capturer_type_ != 0) {
+    static_cast<UnityCameraCapturer*>(capturer_.get())->Stop();
+  }
   capturer_sink_ = nullptr;
   capturer_ = nullptr;
   unity_adm_ = nullptr;
@@ -830,6 +833,34 @@ void Sora::OnDataChannel(std::string label) {
 void Sora::PushEvent(std::function<void()> f) {
   std::lock_guard<std::mutex> guard(event_mutex_);
   event_queue_.push_back(std::move(f));
+}
+
+bool Sora::GetAudioEnabled() const {
+  if (audio_track_ == nullptr) {
+    return false;
+  }
+  return audio_track_->enabled();
+}
+
+void Sora::SetAudioEnabled(bool enabled) {
+  if (audio_track_ == nullptr) {
+    return;
+  }
+  audio_track_->set_enabled(enabled);
+}
+
+bool Sora::GetVideoEnabled() const {
+  if (video_track_ == nullptr) {
+    return false;
+  }
+  return video_track_->enabled();
+}
+
+void Sora::SetVideoEnabled(bool enabled) {
+  if (video_track_ == nullptr) {
+    return;
+  }
+  video_track_->set_enabled(enabled);
 }
 
 }  // namespace sora_unity_sdk
