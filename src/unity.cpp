@@ -212,6 +212,23 @@ unity_bool_t sora_is_h264_supported() {
 #endif
 }
 
+unity_bool_t sora_get_audio_enabled(void* p) {
+  auto wsora = (SoraWrapper*)p;
+  return wsora->sora->GetAudioEnabled();
+}
+void sora_set_audio_enabled(void* p, unity_bool_t enabled) {
+  auto wsora = (SoraWrapper*)p;
+  wsora->sora->SetAudioEnabled(enabled);
+}
+unity_bool_t sora_get_video_enabled(void* p) {
+  auto wsora = (SoraWrapper*)p;
+  return wsora->sora->GetVideoEnabled();
+}
+void sora_set_video_enabled(void* p, unity_bool_t enabled) {
+  auto wsora = (SoraWrapper*)p;
+  wsora->sora->SetVideoEnabled(enabled);
+}
+
 // iOS の場合は static link で名前が被る可能性があるので、別の名前にしておく
 void UNITY_INTERFACE_EXPORT UNITY_INTERFACE_API
 #if defined(SORA_UNITY_SDK_IOS)

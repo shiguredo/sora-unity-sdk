@@ -38,7 +38,7 @@ Please read https://github.com/shiguredo/oss/blob/master/README.en.md before use
 
 ## システム条件
 
-- WebRTC SFU Sora 2022.1.1 以降
+- WebRTC SFU Sora 2022.1.3 以降
 
 ## 対応プラットフォーム
 
@@ -97,7 +97,7 @@ Please read https://github.com/shiguredo/oss/blob/master/README.en.md before use
 
 ## Sora Unity SDK for MS Hololens2
 
-- support/hololens2 ブランチの修正や改善は有償でお受けしています
+- [support/hololens2](https://github.com/shiguredo/sora-unity-sdk/tree/support/hololens2) ブランチの修正や改善は有償でお受けしています
 - 継続的な有償サポートは提供しておりません
 
 ## 有償での優先実装
@@ -112,6 +112,8 @@ Please read https://github.com/shiguredo/oss/blob/master/README.en.md before use
     - [株式会社KDDIテクノロジー](https://kddi-tech.com/) 様
 - Android OpenGL ES 対応
     - 企業名非公開
+- Microsoft HoloLens 2 対応
+    - [NTTコノキュー](https://www.nttqonoq.com/) 様
 
 ## 有償での優先実装が可能な機能一覧
 
@@ -158,4 +160,5 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 ```
+
 
