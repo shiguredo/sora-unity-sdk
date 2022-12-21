@@ -94,6 +94,7 @@ Please read https://github.com/shiguredo/oss/blob/master/README.en.md before use
     - Windows 版
         - H.264 のハードウェアエンコードへの対応
         - H.264 のハードウェアデコードへの対応
+- ミュート機能
 
 ## Sora Unity SDK for MS Hololens2
 
@@ -114,6 +115,8 @@ Please read https://github.com/shiguredo/oss/blob/master/README.en.md before use
     - 企業名非公開
 - Microsoft HoloLens 2 対応
     - [NTTコノキュー](https://www.nttqonoq.com/) 様
+- ミュート機能
+    - [NTTコノキュー](https://www.nttqonoq.com/) 様
 
 ## 有償での優先実装が可能な機能一覧
 
@@ -125,7 +128,6 @@ Please read https://github.com/shiguredo/oss/blob/master/README.en.md before use
 
 ### 機能
 
-- ミュート機能
 - デバイスをつかまないようにする機能
 - 音声のみ送受信機能
 - サイマルキャスト rid 指定対応
@@ -160,5 +162,3 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 ```
-
-
