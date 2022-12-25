@@ -11,7 +11,9 @@
 
 ## develop
 
-- [UPDATE] Sora C++ SDK を `2022.18.0` に上げる
+- [UPDATE] Sora C++ SDK を `2022.19.0` に上げる
+    - @melpon
+- [ADD] オーディオコーデックに Lyra を追加
     - @melpon
 
 ## 2022.6.0 (2022-12-08)

@@ -22,6 +22,8 @@
 #include <sora/camera_device_capturer.h>
 #include <sora/java_context.h>
 #include <sora/rtc_stats.h>
+#include <sora/sora_audio_decoder_factory.h>
+#include <sora/sora_audio_encoder_factory.h>
 #include <sora/sora_peer_connection_factory.h>
 #include <sora/sora_video_decoder_factory.h>
 #include <sora/sora_video_encoder_factory.h>
@@ -242,9 +244,9 @@ void Sora::DoConnect(const sora_conf::internal::ConnectConfig& cc,
 #endif
 
   media_dependencies.audio_encoder_factory =
-      webrtc::CreateBuiltinAudioEncoderFactory();
+      sora::CreateBuiltinAudioEncoderFactory();
   media_dependencies.audio_decoder_factory =
-      webrtc::CreateBuiltinAudioDecoderFactory();
+      sora::CreateBuiltinAudioDecoderFactory();
 
   void* env = sora::GetJNIEnv();
   void* android_context = GetAndroidApplicationContext(env);
@@ -384,6 +386,16 @@ void Sora::DoConnect(const sora_conf::internal::ConnectConfig& cc,
     config.video_codec_type = cc.video_codec_type;
     config.video_bit_rate = cc.video_bit_rate;
     config.audio_codec_type = cc.audio_codec_type;
+    if (!cc.audio_codec_lyra_params.empty()) {
+      boost::json::error_code ec;
+      auto md = boost::json::parse(cc.audio_codec_lyra_params, ec);
+      if (ec) {
+        RTC_LOG(LS_WARNING) << "Invalid JSON: audio_codec_lyra_params="
+                            << cc.audio_codec_lyra_params;
+      } else {
+        config.audio_codec_lyra_params = md;
+      }
+    }
     config.audio_bit_rate = cc.audio_bit_rate;
     if (cc.enable_data_channel_signaling) {
       config.data_channel_signaling = cc.data_channel_signaling;

@@ -33,6 +33,8 @@ jobs:
         Copy-Item _build\windows_x86_64\release\sora_unity_sdk\Release\SoraUnitySdk.dll ${{ matrix.name }}
         # ソースコード（生成した分も含む）も一緒に入れておく
         Copy-Item -Recurse Sora ${{ matrix.name }}\Sora
+        # Lyra のモデルデータも一緒に入れておく
+        Copy-Item -Recurse _install\windows_x86_64\release\lyra\share\model_coeffs ${{ matrix.name }}\model_coeffs
     - name: Upload ${{ matrix.name }} Artifact
       uses: actions/upload-artifact@v2
       with:
@@ -150,8 +152,10 @@ jobs:
         mkdir -p SoraUnitySdk/Plugins/SoraUnitySdk/ios
         mkdir -p SoraUnitySdk/Plugins/SoraUnitySdk/android/arm64-v8a
         mkdir -p SoraUnitySdk/Plugins/SoraUnitySdk/linux/x86_64
+        mkdir -p SoraUnitySdk/StreamingAssets/SoraUnitySdk
         cp windows_x86_64/SoraUnitySdk.dll SoraUnitySdk/Plugins/SoraUnitySdk/windows/x86_64/
         cp -r windows_x86_64/Sora/ SoraUnitySdk/SoraUnitySdk/
+        cp -r windows_x86_64/model_coeffs SoraUnitySdk/StreamingAssets/SoraUnitySdk/model_coeffs
         cp -r macos_arm64/SoraUnitySdk.bundle SoraUnitySdk/Plugins/SoraUnitySdk/macos/arm64/SoraUnitySdk.bundle
         cp android/libSoraUnitySdk.so SoraUnitySdk/Plugins/SoraUnitySdk/android/arm64-v8a/
         cp android/webrtc.jar SoraUnitySdk/Plugins/SoraUnitySdk/android/

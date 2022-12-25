@@ -212,6 +212,14 @@ unity_bool_t sora_is_h264_supported() {
 #endif
 }
 
+void sora_setenv(const char* name, const char* value) {
+#if defined(SORA_UNITY_SDK_WINDOWS)
+  _putenv_s(name, value);
+#else
+  setenv(name, value);
+#endif
+}
+
 unity_bool_t sora_get_audio_enabled(void* p) {
   auto wsora = (SoraWrapper*)p;
   return wsora->sora->GetAudioEnabled();
