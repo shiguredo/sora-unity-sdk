@@ -216,7 +216,7 @@ void sora_setenv(const char* name, const char* value) {
 #if defined(SORA_UNITY_SDK_WINDOWS)
   _putenv_s(name, value);
 #else
-  setenv(name, value);
+  setenv(name, value, 1);
 #endif
 }
 
