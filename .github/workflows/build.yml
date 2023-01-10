@@ -80,8 +80,8 @@ jobs:
         cp _install/ios/release/boost/lib/libboost_json.a ios/
         cp _install/ios/release/boost/lib/libboost_filesystem.a ios/
         cp _install/ios/release/sora/lib/libsora.a ios/
+        cp _install/ios/release/lyra/lib/liblyra.a ios/
         cp _build/ios/release/sora_unity_sdk/libSoraUnitySdk.a ios/
-        cp _build/ios/release/lyra/lib/liblyra.a ios/
     - name: Upload iOS Artifact
       if: matrix.name == 'ios'
       uses: actions/upload-artifact@v2
