@@ -165,6 +165,8 @@ jobs:
         cp ios/libwebrtc.a SoraUnitySdk/Plugins/SoraUnitySdk/ios/
         cp ios/libboost_json.a SoraUnitySdk/Plugins/SoraUnitySdk/ios/
         cp ios/libsora.a SoraUnitySdk/Plugins/SoraUnitySdk/ios/
+        cp ios/libboost_filesystem.a SoraUnitySdk/Plugins/SoraUnitySdk/ios/
+        cp ios/liblyra.a SoraUnitySdk/Plugins/SoraUnitySdk/ios/
         cp ubuntu-20.04_x86_64/libSoraUnitySdk.so SoraUnitySdk/Plugins/SoraUnitySdk/linux/x86_64/
 
         cp LICENSE SoraUnitySdk/SoraUnitySdk/
