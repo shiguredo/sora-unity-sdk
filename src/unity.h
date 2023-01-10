@@ -93,11 +93,14 @@ sora_device_enum_audio_recording(device_enum_cb_t f, void* userdata);
 UNITY_INTERFACE_EXPORT unity_bool_t
 sora_device_enum_audio_playout(device_enum_cb_t f, void* userdata);
 UNITY_INTERFACE_EXPORT unity_bool_t sora_is_h264_supported();
+UNITY_INTERFACE_EXPORT void sora_setenv(const char* name, const char* value);
 
 UNITY_INTERFACE_EXPORT unity_bool_t sora_get_audio_enabled(void* p);
-UNITY_INTERFACE_EXPORT void sora_set_audio_enabled(void* p, unity_bool_t enabled);
+UNITY_INTERFACE_EXPORT void sora_set_audio_enabled(void* p,
+                                                   unity_bool_t enabled);
 UNITY_INTERFACE_EXPORT unity_bool_t sora_get_video_enabled(void* p);
-UNITY_INTERFACE_EXPORT void sora_set_video_enabled(void* p, unity_bool_t enabled);
+UNITY_INTERFACE_EXPORT void sora_set_video_enabled(void* p,
+                                                   unity_bool_t enabled);
 
 #ifdef __cplusplus
 }

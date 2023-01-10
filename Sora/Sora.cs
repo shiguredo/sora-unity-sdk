@@ -31,6 +31,7 @@ public class Sora : IDisposable
     public enum AudioCodecType
     {
         OPUS,
+        LYRA,
     }
     // SimulcastRid のためのパラメータ
     public enum SimulcastRidType
@@ -94,6 +95,8 @@ public class Sora : IDisposable
         public string AudioRecordingDevice = "";
         public string AudioPlayoutDevice = "";
         public AudioCodecType AudioCodecType = AudioCodecType.OPUS;
+        // AudioCodecType.LYRA の場合は必須
+        public string AudioCodecLyraParams = "";
         public int AudioBitRate = 0;
 
         // DataChannelSignaling を有効にするかどうか
@@ -256,6 +259,7 @@ public class Sora : IDisposable
         cc.audio_recording_device = config.AudioRecordingDevice;
         cc.audio_playout_device = config.AudioPlayoutDevice;
         cc.audio_codec_type = config.AudioCodecType.ToString();
+        cc.audio_codec_lyra_params = config.AudioCodecLyraParams;
         cc.audio_bit_rate = config.AudioBitRate;
         cc.enable_data_channel_signaling = config.EnableDataChannelSignaling;
         cc.data_channel_signaling = config.DataChannelSignaling;
@@ -652,6 +656,11 @@ public class Sora : IDisposable
         return sora_is_h264_supported() != 0;
     }
 
+    public static void Setenv(string name, string value)
+    {
+        sora_setenv(name, value);
+    }
+
     public bool AudioEnabled
     {
         get { return sora_get_audio_enabled(p) != 0; }
@@ -718,6 +727,8 @@ public class Sora : IDisposable
     private static extern int sora_device_enum_audio_playout(DeviceEnumCallbackDelegate f, IntPtr userdata);
     [DllImport(DllName)]
     private static extern int sora_is_h264_supported();
+    [DllImport(DllName)]
+    private static extern void sora_setenv(string name, string value);
     [DllImport(DllName)]
     private static extern int sora_get_audio_enabled(IntPtr p);
     [DllImport(DllName)]
