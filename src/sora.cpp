@@ -213,16 +213,14 @@ void Sora::DoConnect(const sora_conf::internal::ConnectConfig& cc,
           dependencies.task_queue_factory.get());
 
   // worker 上の env
-  auto worker_env = worker_thread_->Invoke<void*>(
-      RTC_FROM_HERE, [] { return sora::GetJNIEnv(); });
+  auto worker_env =
+      worker_thread_->BlockingCall([] { return sora::GetJNIEnv(); });
   // worker 上の context
 #if defined(SORA_UNITY_SDK_ANDROID)
-  void* worker_context =
-      worker_thread_->Invoke<jobject>(RTC_FROM_HERE, [worker_env] {
-        return ::sora_unity_sdk::GetAndroidApplicationContext(
-                   (JNIEnv*)worker_env)
-            .Release();
-      });
+  void* worker_context = worker_thread_->BlockingCall([worker_env] {
+    return ::sora_unity_sdk::GetAndroidApplicationContext((JNIEnv*)worker_env)
+        .Release();
+  });
 #else
   void* worker_context = nullptr;
 #endif
@@ -238,7 +236,7 @@ void Sora::DoConnect(const sora_conf::internal::ConnectConfig& cc,
   media_dependencies.adm = unity_adm_;
 
 #if defined(SORA_UNITY_SDK_ANDROID)
-  worker_thread_->Invoke<void>(RTC_FROM_HERE, [worker_env, worker_context] {
+  worker_thread_->BlockingCall([worker_env, worker_context] {
     ((JNIEnv*)worker_env)->DeleteLocalRef((jobject)worker_context);
   });
 #endif
@@ -440,6 +438,7 @@ void Sora::DoConnect(const sora_conf::internal::ConnectConfig& cc,
     config.proxy_username = cc.proxy_username;
     config.proxy_password = cc.proxy_password;
     config.proxy_agent = cc.proxy_agent;
+    config.audio_streaming_language_code = cc.audio_streaming_language_code;
     config.network_manager = connection_context_->default_network_manager();
     config.socket_factory = connection_context_->default_socket_factory();
 
@@ -517,27 +516,25 @@ rtc::scoped_refptr<UnityAudioDevice> Sora::CreateADM(
   rtc::scoped_refptr<webrtc::AudioDeviceModule> adm;
 
   if (dummy_audio) {
-    adm = worker_thread->Invoke<rtc::scoped_refptr<webrtc::AudioDeviceModule>>(
-        RTC_FROM_HERE, [&] {
-          return webrtc::AudioDeviceModule::Create(
-              webrtc::AudioDeviceModule::kDummyAudio, task_queue_factory);
-        });
+    adm = worker_thread->BlockingCall([&] {
+      return webrtc::AudioDeviceModule::Create(
+          webrtc::AudioDeviceModule::kDummyAudio, task_queue_factory);
+    });
   } else {
     sora::AudioDeviceModuleConfig config;
     config.audio_layer = webrtc::AudioDeviceModule::kPlatformDefaultAudio;
     config.task_queue_factory = task_queue_factory;
     config.jni_env = jni_env;
     config.application_context = android_context;
-    adm = worker_thread->Invoke<rtc::scoped_refptr<webrtc::AudioDeviceModule>>(
-        RTC_FROM_HERE, [&] { return sora::CreateAudioDeviceModule(config); });
+    adm = worker_thread->BlockingCall(
+        [&] { return sora::CreateAudioDeviceModule(config); });
   }
 
-  return worker_thread->Invoke<rtc::scoped_refptr<UnityAudioDevice>>(
-      RTC_FROM_HERE, [&] {
-        return UnityAudioDevice::Create(adm, !unity_audio_input,
-                                        !unity_audio_output, on_handle_audio,
-                                        task_queue_factory);
-      });
+  return worker_thread->BlockingCall([&] {
+    return UnityAudioDevice::Create(adm, !unity_audio_input,
+                                    !unity_audio_output, on_handle_audio,
+                                    task_queue_factory);
+  });
 }
 
 bool Sora::InitADM(rtc::scoped_refptr<webrtc::AudioDeviceModule> adm,

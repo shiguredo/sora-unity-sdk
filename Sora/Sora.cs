@@ -98,6 +98,7 @@ public class Sora : IDisposable
         // AudioCodecType.LYRA の場合は必須
         public string AudioCodecLyraParams = "";
         public int AudioBitRate = 0;
+        public string AudioStreamingLanguageCode = "";
 
         // DataChannelSignaling を有効にするかどうか
         public bool EnableDataChannelSignaling = false;
@@ -261,6 +262,7 @@ public class Sora : IDisposable
         cc.audio_codec_type = config.AudioCodecType.ToString();
         cc.audio_codec_lyra_params = config.AudioCodecLyraParams;
         cc.audio_bit_rate = config.AudioBitRate;
+        cc.audio_streaming_language_code = config.AudioStreamingLanguageCode;
         cc.enable_data_channel_signaling = config.EnableDataChannelSignaling;
         cc.data_channel_signaling = config.DataChannelSignaling;
         cc.data_channel_signaling_timeout = config.DataChannelSignalingTimeout;

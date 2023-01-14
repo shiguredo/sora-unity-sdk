@@ -11,7 +11,15 @@
 
 ## develop
 
-- [UPDATE] Sora C++ SDK を `2022.19.0` に上げる
+- [UPDATE] Sora C++ SDK を `2023.1.0` に上げる
+    - @melpon
+- [UPDATE] libwebrtc を `m109.5414.2.0` に上げる
+    - @melpon
+- [UPDATE] Boost を `1.81.0` に上げる
+    - @melpon
+- [UPDATE] CMake を `3.25.1` に上げる
+    - @melpon
+- [ADD] `Sora.Config` に `AudioStreamingLanguageCode` を追加
     - @melpon
 - [ADD] オーディオコーデックに Lyra を追加
     - @melpon
