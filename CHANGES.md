@@ -21,6 +21,8 @@
     - @melpon
 - [ADD] `Sora.Config` に `AudioStreamingLanguageCode` を追加
     - @melpon
+- [ADD] `Sora.Config` に `SignalingNotifyMetadata` を追加
+    - @melpon
 - [ADD] オーディオコーデックに Lyra を追加
     - @melpon
 

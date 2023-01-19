@@ -433,6 +433,16 @@ void Sora::DoConnect(const sora_conf::internal::ConnectConfig& cc,
         config.metadata = md;
       }
     }
+    if (!cc.signaling_notify_metadata.empty()) {
+      boost::json::error_code ec;
+      auto md = boost::json::parse(cc.signaling_notify_metadata, ec);
+      if (ec) {
+        RTC_LOG(LS_WARNING) << "Invalid JSON: signaling_notify_metadata="
+                            << cc.signaling_notify_metadata;
+      } else {
+        config.signaling_notify_metadata = md;
+      }
+    }
     config.insecure = cc.insecure;
     config.proxy_url = cc.proxy_url;
     config.proxy_username = cc.proxy_username;

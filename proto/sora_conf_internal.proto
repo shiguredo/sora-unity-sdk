@@ -72,4 +72,5 @@ message ConnectConfig {
     string proxy_password = 45;
     string proxy_agent = 46;
     string audio_streaming_language_code = 47;
+    string signaling_notify_metadata = 48;
 }

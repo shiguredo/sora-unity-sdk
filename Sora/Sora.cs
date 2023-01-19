@@ -71,6 +71,7 @@ public class Sora : IDisposable
         public string ClientId = "";
         public string BundleId = "";
         public string Metadata = "";
+        public string SignalingNotifyMetadata = "";
         public Role Role = Sora.Role.Sendonly;
         public bool? Multistream;
         public bool? Spotlight;
@@ -233,6 +234,7 @@ public class Sora : IDisposable
         cc.client_id = config.ClientId;
         cc.bundle_id = config.BundleId;
         cc.metadata = config.Metadata;
+        cc.signaling_notify_metadata = config.SignalingNotifyMetadata;
         cc.role = role;
         cc.enable_multistream = config.Multistream != null;
         cc.multistream = config.Multistream == null ? false : config.Multistream.Value;
