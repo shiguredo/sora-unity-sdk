@@ -19,6 +19,8 @@
     - @melpon
 - [UPDATE] CMake を `3.25.1` に上げる
     - @melpon
+- [UPDATE] actions/checkout@v2 と actions/cache@v2 を @v3 に上げる
+    - @melpon
 - [ADD] `Sora.Config` に `AudioStreamingLanguageCode` を追加
     - @melpon
 - [ADD] `Sora.Config` に `SignalingNotifyMetadata` を追加
