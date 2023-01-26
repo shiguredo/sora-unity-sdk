@@ -21,6 +21,8 @@
     - @melpon
 - [UPDATE] actions/checkout@v2 と actions/cache@v2 を @v3 に上げる
     - @melpon
+- [UPDATE] actions/upload-artifact@v2 と actions/download-artifact@v2 を @v3 に上げる
+    - @melpon
 - [ADD] `Sora.Config` に `AudioStreamingLanguageCode` を追加
     - @melpon
 - [ADD] `Sora.Config` に `SignalingNotifyMetadata` を追加

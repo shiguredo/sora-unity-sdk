@@ -36,7 +36,7 @@ jobs:
         # Lyra のモデルデータも一緒に入れておく
         Copy-Item -Recurse _install\windows_x86_64\release\lyra\share\model_coeffs ${{ matrix.name }}\model_coeffs
     - name: Upload ${{ matrix.name }} Artifact
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v3
       with:
         name: ${{ matrix.name }}
         path: ${{ matrix.name }}
@@ -67,7 +67,7 @@ jobs:
         cp -r _build/macos_arm64/release/sora_unity_sdk/SoraUnitySdk.bundle/ macos_arm64/SoraUnitySdk.bundle/
     - name: Upload macOS arm64 Artifact
       if: matrix.name == 'macos_arm64'
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v3
       with:
         name: macos_arm64
         path: macos_arm64/
@@ -84,7 +84,7 @@ jobs:
         cp _build/ios/release/sora_unity_sdk/libSoraUnitySdk.a ios/
     - name: Upload iOS Artifact
       if: matrix.name == 'ios'
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v3
       with:
         name: ios
         path: ios/
@@ -120,7 +120,7 @@ jobs:
         cp _build/android/release/sora_unity_sdk/libSoraUnitySdk.so android/
     - name: Upload Android Artifact
       if: matrix.name == 'android'
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v3
       with:
         name: android
         path: android/
@@ -132,7 +132,7 @@ jobs:
         cp _build/ubuntu-20.04_x86_64/release/sora_unity_sdk/libSoraUnitySdk.so ubuntu-20.04_x86_64/
     - name: Upload Ubuntu x86_64 Artifact
       if: matrix.name == 'ubuntu-20.04_x86_64'
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v3
       with:
         name: ubuntu-20.04_x86_64
         path: ubuntu-20.04_x86_64/
@@ -145,7 +145,7 @@ jobs:
     steps:
     - uses: actions/checkout@v3
     - name: Download artifacts
-      uses: actions/download-artifact@v2
+      uses: actions/download-artifact@v3
     - name: Packaging
       run: |
         set -ex
@@ -173,7 +173,7 @@ jobs:
         cp NOTICE.md SoraUnitySdk/SoraUnitySdk/
 
     - name: Upload SoraUnitySdk
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v3
       with:
         name: SoraUnitySdk
         path: SoraUnitySdk
@@ -186,7 +186,7 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v3
     - name: Download SoraUnitySdk
-      uses: actions/download-artifact@v2
+      uses: actions/download-artifact@v3
       with:
         name: SoraUnitySdk
         path: SoraUnitySdk
