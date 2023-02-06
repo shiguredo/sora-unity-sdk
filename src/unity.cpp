@@ -65,6 +65,15 @@ void sora_set_on_remove_track(void* p,
       });
 }
 
+void sora_set_on_set_offer(void* p,
+                           set_offer_cb_t on_set_offer,
+                           void* userdata) {
+  auto wsora = (SoraWrapper*)p;
+  wsora->sora->SetOnSetOffer([on_set_offer, userdata](std::string json) {
+    on_set_offer(json.c_str(), userdata);
+  });
+}
+
 void sora_set_on_notify(void* p, notify_cb_t on_notify, void* userdata) {
   auto wsora = (SoraWrapper*)p;
   wsora->sora->SetOnNotify([on_notify, userdata](std::string json) {

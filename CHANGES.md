@@ -27,6 +27,8 @@
     - @melpon
 - [ADD] `Sora.Config` に `SignalingNotifyMetadata` を追加
     - @melpon
+- [ADD] offer 設定時のコールバック関数 `OnSetOffer` を追加
+    - @melpon
 - [ADD] オーディオコーデックに Lyra を追加
     - @melpon
 

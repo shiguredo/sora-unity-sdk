@@ -131,6 +131,7 @@ public class Sora : IDisposable
     IntPtr p;
     GCHandle onAddTrackHandle;
     GCHandle onRemoveTrackHandle;
+    GCHandle onSetOfferHandle;
     GCHandle onNotifyHandle;
     GCHandle onPushHandle;
     GCHandle onMessageHandle;
@@ -157,6 +158,11 @@ public class Sora : IDisposable
         if (onRemoveTrackHandle.IsAllocated)
         {
             onRemoveTrackHandle.Free();
+        }
+
+        if (onSetOfferHandle.IsAllocated)
+        {
+            onSetOfferHandle.Free();
         }
 
         if (onNotifyHandle.IsAllocated)
@@ -368,6 +374,29 @@ public class Sora : IDisposable
 
             onRemoveTrackHandle = GCHandle.Alloc(value);
             sora_set_on_remove_track(p, TrackCallback, GCHandle.ToIntPtr(onRemoveTrackHandle));
+        }
+    }
+
+    private delegate void SetOfferCallbackDelegate(string json, IntPtr userdata);
+
+    [AOT.MonoPInvokeCallback(typeof(SetOfferCallbackDelegate))]
+    static private void SetOfferCallback(string json, IntPtr userdata)
+    {
+        var callback = GCHandle.FromIntPtr(userdata).Target as Action<string>;
+        callback(json);
+    }
+
+    public Action<string> OnSetOffer
+    {
+        set
+        {
+            if (onSetOfferHandle.IsAllocated)
+            {
+                onSetOfferHandle.Free();
+            }
+
+            onSetOfferHandle = GCHandle.Alloc(value);
+            sora_set_on_set_offer(p, SetOfferCallback, GCHandle.ToIntPtr(onSetOfferHandle));
         }
     }
 
@@ -689,6 +718,8 @@ public class Sora : IDisposable
     private static extern void sora_set_on_add_track(IntPtr p, TrackCallbackDelegate on_add_track, IntPtr userdata);
     [DllImport(DllName)]
     private static extern void sora_set_on_remove_track(IntPtr p, TrackCallbackDelegate on_remove_track, IntPtr userdata);
+    [DllImport(DllName)]
+    private static extern void sora_set_on_set_offer(IntPtr p, SetOfferCallbackDelegate on_set_offer, IntPtr userdata);
     [DllImport(DllName)]
     private static extern void sora_set_on_notify(IntPtr p, NotifyCallbackDelegate on_notify, IntPtr userdata);
     [DllImport(DllName)]

@@ -106,6 +106,9 @@ void Sora::SetOnRemoveTrack(
     std::function<void(ptrid_t, std::string)> on_remove_track) {
   on_remove_track_ = on_remove_track;
 }
+void Sora::SetOnSetOffer(std::function<void(std::string)> on_set_offer) {
+  on_set_offer_ = std::move(on_set_offer);
+}
 void Sora::SetOnNotify(std::function<void(std::string)> on_notify) {
   on_notify_ = std::move(on_notify);
 }
@@ -724,6 +727,11 @@ sora_conf::ErrorCode Sora::ToErrorCode(sora::SoraSignalingErrorCode ec) {
 }
 
 void Sora::OnSetOffer(std::string offer) {
+  PushEvent([this, offer]() {
+    if (on_set_offer_) {
+      on_set_offer_(offer);
+    }
+  });
   std::string stream_id = rtc::CreateRandomString(16);
   if (audio_track_ != nullptr) {
     webrtc::RTCErrorOr<rtc::scoped_refptr<webrtc::RtpSenderInterface>>
