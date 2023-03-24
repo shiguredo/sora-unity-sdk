@@ -11,6 +11,11 @@
 
 ## develop
 
+## 2022.6.2 (2023-03-25)
+
+- [FIX] IPHONE_DEPLOYMENT_TARGET を 13 に上げる
+    - @melpon
+
 ## 2022.6.1 (2023-03-24)
 
 - [FIX] Sora C++ SDK を `2022.12.4` に上げる
