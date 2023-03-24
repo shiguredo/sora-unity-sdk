@@ -742,7 +742,7 @@ def main():
             cmake_args += ['-G', 'Xcode']
             cmake_args.append('-DCMAKE_SYSTEM_NAME=iOS')
             cmake_args.append('-DCMAKE_OSX_ARCHITECTURES="x86_64;arm64"')
-            cmake_args.append('-DCMAKE_OSX_DEPLOYMENT_TARGET=10.0')
+            cmake_args.append('-DCMAKE_OSX_DEPLOYMENT_TARGET=13.0')
             cmake_args.append('-DCMAKE_XCODE_ATTRIBUTE_ONLY_ACTIVE_ARCH=NO')
         elif platform == 'android':
             toolchain_file = os.path.join(install_dir, 'android-ndk', 'build', 'cmake', 'android.toolchain.cmake')
