@@ -452,8 +452,10 @@ void Sora::DoConnect(const sora_conf::internal::ConnectConfig& cc,
     config.proxy_password = cc.proxy_password;
     config.proxy_agent = cc.proxy_agent;
     config.audio_streaming_language_code = cc.audio_streaming_language_code;
-    config.network_manager = connection_context_->default_network_manager();
-    config.socket_factory = connection_context_->default_socket_factory();
+    config.network_manager = signaling_thread_->BlockingCall(
+        [this]() { return connection_context_->default_network_manager(); });
+    config.socket_factory = signaling_thread_->BlockingCall(
+        [this]() { return connection_context_->default_socket_factory(); });
 
     signaling_ = sora::SoraSignaling::Create(std::move(config));
     signaling_->Connect();
