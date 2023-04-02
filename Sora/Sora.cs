@@ -97,7 +97,8 @@ public class Sora : IDisposable
         public string AudioPlayoutDevice = "";
         public AudioCodecType AudioCodecType = AudioCodecType.OPUS;
         // AudioCodecType.LYRA の場合は必須
-        public string AudioCodecLyraParams = "";
+        public int AudioCodecLyraBitrate = 0;
+        public bool? AudioCodecLyraUsedtx;
         public int AudioBitRate = 0;
         public string AudioStreamingLanguageCode = "";
 
@@ -268,7 +269,9 @@ public class Sora : IDisposable
         cc.audio_recording_device = config.AudioRecordingDevice;
         cc.audio_playout_device = config.AudioPlayoutDevice;
         cc.audio_codec_type = config.AudioCodecType.ToString();
-        cc.audio_codec_lyra_params = config.AudioCodecLyraParams;
+        cc.audio_codec_lyra_bitrate = config.AudioCodecLyraBitrate;
+        cc.enable_audio_codec_lyra_usedtx = config.AudioCodecLyraUsedtx != null;
+        cc.audio_codec_lyra_usedtx = config.AudioCodecLyraUsedtx == null ? false : config.AudioCodecLyraUsedtx.Value;
         cc.audio_bit_rate = config.AudioBitRate;
         cc.audio_streaming_language_code = config.AudioStreamingLanguageCode;
         cc.enable_data_channel_signaling = config.EnableDataChannelSignaling;

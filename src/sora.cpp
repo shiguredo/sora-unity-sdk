@@ -387,15 +387,9 @@ void Sora::DoConnect(const sora_conf::internal::ConnectConfig& cc,
     config.video_codec_type = cc.video_codec_type;
     config.video_bit_rate = cc.video_bit_rate;
     config.audio_codec_type = cc.audio_codec_type;
-    if (!cc.audio_codec_lyra_params.empty()) {
-      boost::json::error_code ec;
-      auto md = boost::json::parse(cc.audio_codec_lyra_params, ec);
-      if (ec) {
-        RTC_LOG(LS_WARNING) << "Invalid JSON: audio_codec_lyra_params="
-                            << cc.audio_codec_lyra_params;
-      } else {
-        config.audio_codec_lyra_params = md;
-      }
+    config.audio_codec_lyra_bitrate = cc.audio_codec_lyra_bitrate;
+    if (cc.enable_audio_codec_lyra_usedtx) {
+      config.audio_codec_lyra_usedtx = cc.audio_codec_lyra_usedtx;
     }
     config.audio_bit_rate = cc.audio_bit_rate;
     if (cc.enable_data_channel_signaling) {

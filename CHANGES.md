@@ -11,9 +11,9 @@
 
 ## develop
 
-- [UPDATE] Sora C++ SDK を `2023.1.0` に上げる
+- [UPDATE] Sora C++ SDK を `2023.3.0` に上げる
     - @melpon
-- [UPDATE] libwebrtc を `m111.5563.4.3` に上げる
+- [UPDATE] libwebrtc を `m111.5563.4.4` に上げる
     - @melpon
 - [UPDATE] Boost を `1.81.0` に上げる
     - @melpon
