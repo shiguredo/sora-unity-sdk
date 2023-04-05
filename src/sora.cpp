@@ -391,6 +391,7 @@ void Sora::DoConnect(const sora_conf::internal::ConnectConfig& cc,
     if (cc.enable_audio_codec_lyra_usedtx) {
       config.audio_codec_lyra_usedtx = cc.audio_codec_lyra_usedtx;
     }
+    config.check_lyra_version = cc.check_lyra_version;
     config.audio_bit_rate = cc.audio_bit_rate;
     if (cc.enable_data_channel_signaling) {
       config.data_channel_signaling = cc.data_channel_signaling;
