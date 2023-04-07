@@ -99,6 +99,7 @@ public class Sora : IDisposable
         // AudioCodecType.LYRA の場合は必須
         public int AudioCodecLyraBitrate = 0;
         public bool? AudioCodecLyraUsedtx;
+        public bool CheckLyraVersion = false;
         public int AudioBitRate = 0;
         public string AudioStreamingLanguageCode = "";
 
@@ -272,6 +273,7 @@ public class Sora : IDisposable
         cc.audio_codec_lyra_bitrate = config.AudioCodecLyraBitrate;
         cc.enable_audio_codec_lyra_usedtx = config.AudioCodecLyraUsedtx != null;
         cc.audio_codec_lyra_usedtx = config.AudioCodecLyraUsedtx == null ? false : config.AudioCodecLyraUsedtx.Value;
+        cc.check_lyra_version = config.CheckLyraVersion;
         cc.audio_bit_rate = config.AudioBitRate;
         cc.audio_streaming_language_code = config.AudioStreamingLanguageCode;
         cc.enable_data_channel_signaling = config.EnableDataChannelSignaling;
