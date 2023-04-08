@@ -98,6 +98,8 @@ public class Sora : IDisposable
         public AudioCodecType AudioCodecType = AudioCodecType.OPUS;
         // AudioCodecType.LYRA の場合は必須
         public int AudioCodecLyraBitrate = 0;
+        // Lyra の DTX を有効にするかどうか
+        public bool EnableAudioCodecLyraUsedtx =false;
         public bool? AudioCodecLyraUsedtx;
         public bool CheckLyraVersion = false;
         public int AudioBitRate = 0;
