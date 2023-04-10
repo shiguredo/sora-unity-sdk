@@ -31,6 +31,8 @@
     - @melpon
 - [ADD] オーディオコーデックに Lyra を追加
     - @melpon
+- [ADD] `Sora.Config` に `check_lyra_version` を追加
+    - @torikizi
 
 ## 2022.6.2 (2023-03-25)
 
