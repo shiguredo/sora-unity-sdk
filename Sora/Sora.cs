@@ -98,8 +98,6 @@ public class Sora : IDisposable
         public AudioCodecType AudioCodecType = AudioCodecType.OPUS;
         // AudioCodecType.LYRA の場合は必須
         public int AudioCodecLyraBitrate = 0;
-        // Lyra の DTX を有効にするかどうか
-        public bool EnableAudioCodecLyraUsedtx =false;
         public bool? AudioCodecLyraUsedtx;
         public bool CheckLyraVersion = false;
         public int AudioBitRate = 0;
@@ -273,7 +271,7 @@ public class Sora : IDisposable
         cc.audio_playout_device = config.AudioPlayoutDevice;
         cc.audio_codec_type = config.AudioCodecType.ToString();
         cc.audio_codec_lyra_bitrate = config.AudioCodecLyraBitrate;
-        cc.enable_audio_codec_lyra_usedtx = config.EnableAudioCodecLyraUsedtx != null;
+        cc.enable_audio_codec_lyra_usedtx = config.AudioCodecLyraUsedtx != null;
         cc.audio_codec_lyra_usedtx = config.AudioCodecLyraUsedtx == null ? false : config.AudioCodecLyraUsedtx.Value;
         cc.check_lyra_version = config.CheckLyraVersion;
         cc.audio_bit_rate = config.AudioBitRate;
