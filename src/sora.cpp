@@ -664,23 +664,29 @@ rtc::scoped_refptr<webrtc::VideoTrackSourceInterface> Sora::CreateVideoCapturer(
 }
 
 void Sora::GetStats(std::function<void(std::string)> on_get_stats) {
-  auto pc = signaling_ == nullptr ? nullptr : signaling_->GetPeerConnection();
-  if (signaling_ == nullptr || pc == nullptr) {
-    PushEvent(
-        [on_get_stats = std::move(on_get_stats)]() { on_get_stats("[]"); });
-    return;
-  }
+  boost::asio::post([self = shared_from_this(),
+                     on_get_stats = std::move(on_get_stats)]() {
+    auto pc = self->signaling_ == nullptr
+                  ? nullptr
+                  : self->signaling_->GetPeerConnection();
+    if (self->signaling_ == nullptr || pc == nullptr) {
+      self->PushEvent(
+          [on_get_stats = std::move(on_get_stats)]() { on_get_stats("[]"); });
+      return;
+    }
 
-  pc->GetStats(
-      sora::RTCStatsCallback::Create(
-          [self = shared_from_this(), on_get_stats = std::move(on_get_stats)](
-              const rtc::scoped_refptr<const webrtc::RTCStatsReport>& report) {
-            std::string json = report->ToJson();
-            self->PushEvent(
-                [on_get_stats = std::move(on_get_stats),
-                 json = std::move(json)]() { on_get_stats(std::move(json)); });
-          })
-          .get());
+    pc->GetStats(sora::RTCStatsCallback::Create(
+                     [self, on_get_stats = std::move(on_get_stats)](
+                         const rtc::scoped_refptr<const webrtc::RTCStatsReport>&
+                             report) {
+                       std::string json = report->ToJson();
+                       self->PushEvent([on_get_stats = std::move(on_get_stats),
+                                        json = std::move(json)]() {
+                         on_get_stats(std::move(json));
+                       });
+                     })
+                     .get());
+  });
 }
 
 void Sora::SendMessage(const std::string& label, const std::string& data) {
