@@ -17,10 +17,10 @@ jobs:
           - windows_x86_64
     runs-on: windows-2019
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
     - name: Cache
       id: cache
-      uses: actions/cache@v2
+      uses: actions/cache@v3
       with:
         path: _install
         key: ${{ matrix.name }}-v3-${{ hashFiles('VERSIONS') }}
@@ -33,8 +33,10 @@ jobs:
         Copy-Item _build\windows_x86_64\release\sora_unity_sdk\Release\SoraUnitySdk.dll ${{ matrix.name }}
         # ソースコード（生成した分も含む）も一緒に入れておく
         Copy-Item -Recurse Sora ${{ matrix.name }}\Sora
+        # Lyra のモデルデータも一緒に入れておく
+        Copy-Item -Recurse _install\windows_x86_64\release\lyra\share\model_coeffs ${{ matrix.name }}\model_coeffs
     - name: Upload ${{ matrix.name }} Artifact
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v3
       with:
         name: ${{ matrix.name }}
         path: ${{ matrix.name }}
@@ -47,10 +49,10 @@ jobs:
           - ios
     runs-on: macos-12
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
     - name: Cache
       id: cache
-      uses: actions/cache@v2
+      uses: actions/cache@v3
       with:
         path: _install
         key: ${{ matrix.name }}-v7-${{ hashFiles('VERSIONS') }}
@@ -65,7 +67,7 @@ jobs:
         cp -r _build/macos_arm64/release/sora_unity_sdk/SoraUnitySdk.bundle/ macos_arm64/SoraUnitySdk.bundle/
     - name: Upload macOS arm64 Artifact
       if: matrix.name == 'macos_arm64'
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v3
       with:
         name: macos_arm64
         path: macos_arm64/
@@ -76,11 +78,13 @@ jobs:
         mkdir ios/
         cp _install/ios/release/webrtc/lib/libwebrtc.a ios/
         cp _install/ios/release/boost/lib/libboost_json.a ios/
+        cp _install/ios/release/boost/lib/libboost_filesystem.a ios/
         cp _install/ios/release/sora/lib/libsora.a ios/
+        cp _install/ios/release/lyra/lib/liblyra.a ios/
         cp _build/ios/release/sora_unity_sdk/libSoraUnitySdk.a ios/
     - name: Upload iOS Artifact
       if: matrix.name == 'ios'
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v3
       with:
         name: ios
         path: ios/
@@ -93,10 +97,10 @@ jobs:
           - ubuntu-20.04_x86_64
     runs-on: ubuntu-20.04
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
     - name: Cache
       id: cache
-      uses: actions/cache@v2
+      uses: actions/cache@v3
       with:
         path: _install
         key: ${{ matrix.name }}-v1-${{ hashFiles('VERSIONS') }}
@@ -116,7 +120,7 @@ jobs:
         cp _build/android/release/sora_unity_sdk/libSoraUnitySdk.so android/
     - name: Upload Android Artifact
       if: matrix.name == 'android'
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v3
       with:
         name: android
         path: android/
@@ -128,7 +132,7 @@ jobs:
         cp _build/ubuntu-20.04_x86_64/release/sora_unity_sdk/libSoraUnitySdk.so ubuntu-20.04_x86_64/
     - name: Upload Ubuntu x86_64 Artifact
       if: matrix.name == 'ubuntu-20.04_x86_64'
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v3
       with:
         name: ubuntu-20.04_x86_64
         path: ubuntu-20.04_x86_64/
@@ -139,9 +143,9 @@ jobs:
       - build-macos
       - build-ubuntu
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
     - name: Download artifacts
-      uses: actions/download-artifact@v2
+      uses: actions/download-artifact@v3
     - name: Packaging
       run: |
         set -ex
@@ -150,8 +154,10 @@ jobs:
         mkdir -p SoraUnitySdk/Plugins/SoraUnitySdk/ios
         mkdir -p SoraUnitySdk/Plugins/SoraUnitySdk/android/arm64-v8a
         mkdir -p SoraUnitySdk/Plugins/SoraUnitySdk/linux/x86_64
+        mkdir -p SoraUnitySdk/StreamingAssets/SoraUnitySdk
         cp windows_x86_64/SoraUnitySdk.dll SoraUnitySdk/Plugins/SoraUnitySdk/windows/x86_64/
         cp -r windows_x86_64/Sora/ SoraUnitySdk/SoraUnitySdk/
+        cp -r windows_x86_64/model_coeffs SoraUnitySdk/StreamingAssets/SoraUnitySdk/model_coeffs
         cp -r macos_arm64/SoraUnitySdk.bundle SoraUnitySdk/Plugins/SoraUnitySdk/macos/arm64/SoraUnitySdk.bundle
         cp android/libSoraUnitySdk.so SoraUnitySdk/Plugins/SoraUnitySdk/android/arm64-v8a/
         cp android/webrtc.jar SoraUnitySdk/Plugins/SoraUnitySdk/android/
@@ -159,13 +165,15 @@ jobs:
         cp ios/libwebrtc.a SoraUnitySdk/Plugins/SoraUnitySdk/ios/
         cp ios/libboost_json.a SoraUnitySdk/Plugins/SoraUnitySdk/ios/
         cp ios/libsora.a SoraUnitySdk/Plugins/SoraUnitySdk/ios/
+        cp ios/libboost_filesystem.a SoraUnitySdk/Plugins/SoraUnitySdk/ios/
+        cp ios/liblyra.a SoraUnitySdk/Plugins/SoraUnitySdk/ios/
         cp ubuntu-20.04_x86_64/libSoraUnitySdk.so SoraUnitySdk/Plugins/SoraUnitySdk/linux/x86_64/
 
         cp LICENSE SoraUnitySdk/SoraUnitySdk/
         cp NOTICE.md SoraUnitySdk/SoraUnitySdk/
 
     - name: Upload SoraUnitySdk
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v3
       with:
         name: SoraUnitySdk
         path: SoraUnitySdk
@@ -176,9 +184,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Checkout code
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
     - name: Download SoraUnitySdk
-      uses: actions/download-artifact@v2
+      uses: actions/download-artifact@v3
       with:
         name: SoraUnitySdk
         path: SoraUnitySdk

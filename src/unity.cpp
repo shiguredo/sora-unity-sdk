@@ -65,6 +65,15 @@ void sora_set_on_remove_track(void* p,
       });
 }
 
+void sora_set_on_set_offer(void* p,
+                           set_offer_cb_t on_set_offer,
+                           void* userdata) {
+  auto wsora = (SoraWrapper*)p;
+  wsora->sora->SetOnSetOffer([on_set_offer, userdata](std::string json) {
+    on_set_offer(json.c_str(), userdata);
+  });
+}
+
 void sora_set_on_notify(void* p, notify_cb_t on_notify, void* userdata) {
   auto wsora = (SoraWrapper*)p;
   wsora->sora->SetOnNotify([on_notify, userdata](std::string json) {
@@ -209,6 +218,14 @@ unity_bool_t sora_is_h264_supported() {
   return true;
 #else
 #error "Unknown SDK Type"
+#endif
+}
+
+void sora_setenv(const char* name, const char* value) {
+#if defined(SORA_UNITY_SDK_WINDOWS)
+  _putenv_s(name, value);
+#else
+  setenv(name, value, 1);
 #endif
 }
 

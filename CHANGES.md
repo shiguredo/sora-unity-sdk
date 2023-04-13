@@ -11,6 +11,31 @@
 
 ## develop
 
+## 2023.1.0 (2023-04-13)
+
+- [UPDATE] Sora C++ SDK を `2023.4.0` に上げる
+    - @melpon @miosakuma
+- [UPDATE] libwebrtc を `m111.5563.4.4` に上げる
+    - @melpon
+- [UPDATE] Boost を `1.81.0` に上げる
+    - @melpon
+- [UPDATE] CMake を `3.25.1` に上げる
+    - @melpon
+- [UPDATE] actions/checkout@v2 と actions/cache@v2 を @v3 に上げる
+    - @melpon
+- [UPDATE] actions/upload-artifact@v2 と actions/download-artifact@v2 を @v3 に上げる
+    - @melpon
+- [ADD] `Sora.Config` に `AudioStreamingLanguageCode` を追加
+    - @melpon
+- [ADD] `Sora.Config` に `SignalingNotifyMetadata` を追加
+    - @melpon
+- [ADD] offer 設定時のコールバック関数 `OnSetOffer` を追加
+    - @melpon
+- [ADD] オーディオコーデックに Lyra を追加
+    - @melpon
+- [ADD] `Sora.Config` に `check_lyra_version` を追加
+    - @torikizi
+
 ## 2022.6.2 (2023-03-25)
 
 - [FIX] IPHONE_DEPLOYMENT_TARGET を 13 に上げる
