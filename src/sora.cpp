@@ -664,7 +664,7 @@ rtc::scoped_refptr<webrtc::VideoTrackSourceInterface> Sora::CreateVideoCapturer(
 }
 
 void Sora::GetStats(std::function<void(std::string)> on_get_stats) {
-  boost::asio::post([self = shared_from_this(),
+  boost::asio::post(*ioc_, [self = shared_from_this(),
                      on_get_stats = std::move(on_get_stats)]() {
     auto pc = self->signaling_ == nullptr
                   ? nullptr
