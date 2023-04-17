@@ -447,6 +447,22 @@ void Sora::DoConnect(const sora_conf::internal::ConnectConfig& cc,
     config.proxy_password = cc.proxy_password;
     config.proxy_agent = cc.proxy_agent;
     config.audio_streaming_language_code = cc.audio_streaming_language_code;
+    if (cc.enable_forwarding_filter) {
+      sora::SoraSignalingConfig::ForwardingFilter ff;
+      ff.action = cc.forwarding_filter.action;
+      for (const auto& rs : cc.forwarding_filter.rules) {
+        std::vector<sora::SoraSignalingConfig::ForwardingFilter::Rule> ffrs;
+        for (const auto& r : rs.rules) {
+          sora::SoraSignalingConfig::ForwardingFilter::Rule ffr;
+          ffr.field = r.field;
+          ffr.op = r.op;
+          ffr.values = r.values;
+          ffrs.push_back(ffr);
+        }
+        ff.rules.push_back(ffrs);
+      }
+      config.forwarding_filter = ff;
+    }
     config.network_manager = signaling_thread_->BlockingCall(
         [this]() { return connection_context_->default_network_manager(); });
     config.socket_factory = signaling_thread_->BlockingCall(
@@ -665,7 +681,7 @@ rtc::scoped_refptr<webrtc::VideoTrackSourceInterface> Sora::CreateVideoCapturer(
 
 void Sora::GetStats(std::function<void(std::string)> on_get_stats) {
   boost::asio::post(*ioc_, [self = shared_from_this(),
-                     on_get_stats = std::move(on_get_stats)]() {
+                            on_get_stats = std::move(on_get_stats)]() {
     auto pc = self->signaling_ == nullptr
                   ? nullptr
                   : self->signaling_->GetPeerConnection();

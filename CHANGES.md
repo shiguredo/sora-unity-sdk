@@ -11,6 +11,9 @@
 
 ## develop
 
+- [ADD] ForwardingFilter 機能を使えるようにする
+    - @melpon
+
 ## 2023.1.0 (2023-04-13)
 
 - [UPDATE] Sora C++ SDK を `2023.4.0` に上げる
