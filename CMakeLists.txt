@@ -58,7 +58,7 @@ elseif (SORA_UNITY_SDK_PACKAGE STREQUAL "ubuntu-20.04_x86_64")
   set(SORA_UNITY_SDK_PLATFORM Ubuntu)
 endif()
 
-set_target_properties(SoraUnitySdk PROPERTIES CXX_STANDARD 17 C_STANDARD 99)
+set_target_properties(SoraUnitySdk PROPERTIES CXX_STANDARD 20 C_STANDARD 99)
 
 target_sources(SoraUnitySdk
   PRIVATE
