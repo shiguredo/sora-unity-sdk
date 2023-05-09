@@ -24,6 +24,19 @@ message DataChannel {
     bool compress = 12;
 }
 
+message ForwardingFilter {
+    string action = 1;
+    message Rule {
+        string field = 1;
+        string op = 2;
+        repeated string values = 3;
+    }
+    message Rules {
+        repeated Rule rules = 1;
+    }
+    repeated Rules rules = 2;
+}
+
 message ConnectConfig {
     string unity_version = 1;
     repeated string signaling_url = 2;
@@ -76,4 +89,6 @@ message ConnectConfig {
     string proxy_agent = 47;
     string audio_streaming_language_code = 48;
     string signaling_notify_metadata = 49;
+    bool enable_forwarding_filter = 50;
+    ForwardingFilter forwarding_filter = 51;
 }

@@ -63,6 +63,26 @@ public class Sora : IDisposable
         public bool? Compress;
     }
 
+    public const string ActionBlock = "block";
+    public const string ActionAllow = "allow";
+    public const string FieldConnectionId = "connection_id";
+    public const string FieldClientId = "client_id";
+    public const string FieldKind = "kind";
+    public const string OperatorIsIn = "is_in";
+    public const string OperatorIsNotIn = "is_not_in";
+
+    public class ForwardingFilter
+    {
+        public string Action;
+        public class Rule
+        {
+            public string Field;
+            public string Operator;
+            public List<string> Values = new List<string>();
+        }
+        public List<List<Rule>> Rules = new List<List<Rule>>();
+    }
+
     public class Config
     {
         public string SignalingUrl = "";
@@ -128,6 +148,8 @@ public class Sora : IDisposable
         public string ProxyPassword = "";
         // Proxy サーバーに接続するときの User-Agent。未設定ならデフォルト値が使われる
         public string ProxyAgent = "";
+
+        public ForwardingFilter ForwardingFilter;
     }
 
     IntPtr p;
@@ -323,6 +345,27 @@ public class Sora : IDisposable
         cc.proxy_username = config.ProxyUsername;
         cc.proxy_password = config.ProxyPassword;
         cc.proxy_agent = config.ProxyAgent;
+        if (config.ForwardingFilter != null)
+        {
+            cc.enable_forwarding_filter = true;
+            cc.forwarding_filter.action = config.ForwardingFilter.Action;
+            foreach (var rs in config.ForwardingFilter.Rules)
+            {
+                var ccrs = new SoraConf.Internal.ForwardingFilter.Rules();
+                foreach (var r in rs)
+                {
+                    var ccr = new SoraConf.Internal.ForwardingFilter.Rule();
+                    ccr.field = r.Field;
+                    ccr.op = r.Operator;
+                    foreach (var v in r.Values)
+                    {
+                        ccr.values.Add(v);
+                    }
+                    ccrs.rules.Add(ccr);
+                }
+                cc.forwarding_filter.rules.Add(ccrs);
+            }
+        }
 
         sora_connect(p, Jsonif.Json.ToJson(cc));
     }
