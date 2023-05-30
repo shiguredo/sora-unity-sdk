@@ -15,6 +15,8 @@
     - @torikizi @miosakuma
 - [ADD] ForwardingFilter 機能を使えるようにする
     - @melpon
+- [FIX] GetStats でデータレースによりエラーが発生するケースについて修正する
+    - @melpon
 
 ## 2023.1.0 (2023-04-13)
 
