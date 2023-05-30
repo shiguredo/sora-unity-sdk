@@ -11,6 +11,8 @@
 
 ## develop
 
+- [UPDATE] libwebrtc を `m114.5735.2.0` に上げる
+    - @torikizi @miosakuma
 - [ADD] ForwardingFilter 機能を使えるようにする
     - @melpon
 
