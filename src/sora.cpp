@@ -385,6 +385,34 @@ void Sora::DoConnect(const sora_conf::internal::ConnectConfig& cc,
     config.video = cc.video;
     config.audio = cc.audio;
     config.video_codec_type = cc.video_codec_type;
+    if (!cc.video_vp9_params.empty()) {
+      boost::json::error_code ec;
+      auto md = boost::json::parse(cc.video_vp9_params, ec);
+      if (ec) {
+        RTC_LOG(LS_WARNING) << "Invalid JSON: metadata=" << cc.video_vp9_params;
+      } else {
+        config.video_vp9_params = md;
+      }
+    }
+    if (!cc.video_av1_params.empty()) {
+      boost::json::error_code ec;
+      auto md = boost::json::parse(cc.video_av1_params, ec);
+      if (ec) {
+        RTC_LOG(LS_WARNING) << "Invalid JSON: metadata=" << cc.video_av1_params;
+      } else {
+        config.video_av1_params = md;
+      }
+    }
+    if (!cc.video_h264_params.empty()) {
+      boost::json::error_code ec;
+      auto md = boost::json::parse(cc.video_h264_params, ec);
+      if (ec) {
+        RTC_LOG(LS_WARNING)
+            << "Invalid JSON: metadata=" << cc.video_h264_params;
+      } else {
+        config.video_h264_params = md;
+      }
+    }
     config.video_bit_rate = cc.video_bit_rate;
     config.audio_codec_type = cc.audio_codec_type;
     config.audio_codec_lyra_bitrate = cc.audio_codec_lyra_bitrate;
