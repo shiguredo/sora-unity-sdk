@@ -290,8 +290,8 @@ public class Sora : IDisposable
         cc.video_fps = config.VideoFps;
         cc.video_codec_type = config.VideoCodecType.ToString();
         cc.video_vp9_params = config.VideoVp9Params;
-        cc.video_av1_params = config.VideoCodecAv1Params;
-        cc.video_h264_params = config.VideoCodecH264Params;
+        cc.video_av1_params = config.VideoAv1Params;
+        cc.video_h264_params = config.VideoH264Params;
         cc.video_bit_rate = config.VideoBitRate;
         cc.unity_audio_input = config.UnityAudioInput;
         cc.unity_audio_output = config.UnityAudioOutput;
