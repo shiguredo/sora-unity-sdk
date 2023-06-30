@@ -389,7 +389,8 @@ void Sora::DoConnect(const sora_conf::internal::ConnectConfig& cc,
       boost::json::error_code ec;
       auto md = boost::json::parse(cc.video_vp9_params, ec);
       if (ec) {
-        RTC_LOG(LS_WARNING) << "Invalid JSON: metadata=" << cc.video_vp9_params;
+        RTC_LOG(LS_WARNING)
+            << "Invalid JSON: video_vp9_params=" << cc.video_vp9_params;
       } else {
         config.video_vp9_params = md;
       }
@@ -398,7 +399,8 @@ void Sora::DoConnect(const sora_conf::internal::ConnectConfig& cc,
       boost::json::error_code ec;
       auto md = boost::json::parse(cc.video_av1_params, ec);
       if (ec) {
-        RTC_LOG(LS_WARNING) << "Invalid JSON: metadata=" << cc.video_av1_params;
+        RTC_LOG(LS_WARNING)
+            << "Invalid JSON: video_av1_params=" << cc.video_av1_params;
       } else {
         config.video_av1_params = md;
       }
@@ -408,7 +410,7 @@ void Sora::DoConnect(const sora_conf::internal::ConnectConfig& cc,
       auto md = boost::json::parse(cc.video_h264_params, ec);
       if (ec) {
         RTC_LOG(LS_WARNING)
-            << "Invalid JSON: metadata=" << cc.video_h264_params;
+            << "Invalid JSON: video_h264_params=" << cc.video_h264_params;
       } else {
         config.video_h264_params = md;
       }
