@@ -15,6 +15,8 @@
     - @torikizi @miosakuma
 - [ADD] ForwardingFilter 機能を使えるようにする
     - @melpon
+- [ADD] CodecParams 機能を使えるようにする
+    - @torikizi
 - [FIX] GetStats でデータレースによりエラーが発生するケースについて修正する
     - @melpon
 
