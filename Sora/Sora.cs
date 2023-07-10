@@ -110,6 +110,9 @@ public class Sora : IDisposable
         public int VideoHeight = 480;
         public int VideoFps = 30;
         public VideoCodecType VideoCodecType = VideoCodecType.VP9;
+        public string VideoVp9Params = "";
+        public string VideoAv1Params = "";
+        public string VideoH264Params = "";
         public int VideoBitRate = 0;
         public bool UnityAudioInput = false;
         public bool UnityAudioOutput = false;
@@ -286,6 +289,9 @@ public class Sora : IDisposable
         cc.video_height = config.VideoHeight;
         cc.video_fps = config.VideoFps;
         cc.video_codec_type = config.VideoCodecType.ToString();
+        cc.video_vp9_params = config.VideoVp9Params;
+        cc.video_av1_params = config.VideoAv1Params;
+        cc.video_h264_params = config.VideoH264Params;
         cc.video_bit_rate = config.VideoBitRate;
         cc.unity_audio_input = config.UnityAudioInput;
         cc.unity_audio_output = config.UnityAudioOutput;

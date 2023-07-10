@@ -63,6 +63,9 @@ message ConnectConfig {
     int32 video_height = 23;
     int32 video_fps = 24;
     string video_codec_type = 25;
+    string video_vp9_params = 250;
+    string video_av1_params = 251;
+    string video_h264_params = 252;
     int32 video_bit_rate = 26;
     bool unity_audio_input = 27;
     bool unity_audio_output = 28;
