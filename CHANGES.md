@@ -13,7 +13,7 @@
 
 - [UPDATE] libwebrtc を `m114.5735.2.0` に上げる
     - @torikizi @miosakuma
-- [UPDATE] Sora C++ SDK を `2023.7.1` に上げる
+- [UPDATE] Sora C++ SDK を `2023.7.2` に上げる
   - @torikizi @miosakuma
 - [ADD] ForwardingFilter 機能を使えるようにする
   - @melpon
