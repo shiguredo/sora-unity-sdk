@@ -385,6 +385,36 @@ void Sora::DoConnect(const sora_conf::internal::ConnectConfig& cc,
     config.video = cc.video;
     config.audio = cc.audio;
     config.video_codec_type = cc.video_codec_type;
+    if (!cc.video_vp9_params.empty()) {
+      boost::json::error_code ec;
+      auto md = boost::json::parse(cc.video_vp9_params, ec);
+      if (ec) {
+        RTC_LOG(LS_WARNING)
+            << "Invalid JSON: video_vp9_params=" << cc.video_vp9_params;
+      } else {
+        config.video_vp9_params = md;
+      }
+    }
+    if (!cc.video_av1_params.empty()) {
+      boost::json::error_code ec;
+      auto md = boost::json::parse(cc.video_av1_params, ec);
+      if (ec) {
+        RTC_LOG(LS_WARNING)
+            << "Invalid JSON: video_av1_params=" << cc.video_av1_params;
+      } else {
+        config.video_av1_params = md;
+      }
+    }
+    if (!cc.video_h264_params.empty()) {
+      boost::json::error_code ec;
+      auto md = boost::json::parse(cc.video_h264_params, ec);
+      if (ec) {
+        RTC_LOG(LS_WARNING)
+            << "Invalid JSON: video_h264_params=" << cc.video_h264_params;
+      } else {
+        config.video_h264_params = md;
+      }
+    }
     config.video_bit_rate = cc.video_bit_rate;
     config.audio_codec_type = cc.audio_codec_type;
     config.audio_codec_lyra_bitrate = cc.audio_codec_lyra_bitrate;
@@ -447,6 +477,22 @@ void Sora::DoConnect(const sora_conf::internal::ConnectConfig& cc,
     config.proxy_password = cc.proxy_password;
     config.proxy_agent = cc.proxy_agent;
     config.audio_streaming_language_code = cc.audio_streaming_language_code;
+    if (cc.enable_forwarding_filter) {
+      sora::SoraSignalingConfig::ForwardingFilter ff;
+      ff.action = cc.forwarding_filter.action;
+      for (const auto& rs : cc.forwarding_filter.rules) {
+        std::vector<sora::SoraSignalingConfig::ForwardingFilter::Rule> ffrs;
+        for (const auto& r : rs.rules) {
+          sora::SoraSignalingConfig::ForwardingFilter::Rule ffr;
+          ffr.field = r.field;
+          ffr.op = r.op;
+          ffr.values = r.values;
+          ffrs.push_back(ffr);
+        }
+        ff.rules.push_back(ffrs);
+      }
+      config.forwarding_filter = ff;
+    }
     config.network_manager = signaling_thread_->BlockingCall(
         [this]() { return connection_context_->default_network_manager(); });
     config.socket_factory = signaling_thread_->BlockingCall(
@@ -664,23 +710,29 @@ rtc::scoped_refptr<webrtc::VideoTrackSourceInterface> Sora::CreateVideoCapturer(
 }
 
 void Sora::GetStats(std::function<void(std::string)> on_get_stats) {
-  auto pc = signaling_ == nullptr ? nullptr : signaling_->GetPeerConnection();
-  if (signaling_ == nullptr || pc == nullptr) {
-    PushEvent(
-        [on_get_stats = std::move(on_get_stats)]() { on_get_stats("[]"); });
-    return;
-  }
+  boost::asio::post(*ioc_, [self = shared_from_this(),
+                            on_get_stats = std::move(on_get_stats)]() {
+    auto pc = self->signaling_ == nullptr
+                  ? nullptr
+                  : self->signaling_->GetPeerConnection();
+    if (self->signaling_ == nullptr || pc == nullptr) {
+      self->PushEvent(
+          [on_get_stats = std::move(on_get_stats)]() { on_get_stats("[]"); });
+      return;
+    }
 
-  pc->GetStats(
-      sora::RTCStatsCallback::Create(
-          [self = shared_from_this(), on_get_stats = std::move(on_get_stats)](
-              const rtc::scoped_refptr<const webrtc::RTCStatsReport>& report) {
-            std::string json = report->ToJson();
-            self->PushEvent(
-                [on_get_stats = std::move(on_get_stats),
-                 json = std::move(json)]() { on_get_stats(std::move(json)); });
-          })
-          .get());
+    pc->GetStats(sora::RTCStatsCallback::Create(
+                     [self, on_get_stats = std::move(on_get_stats)](
+                         const rtc::scoped_refptr<const webrtc::RTCStatsReport>&
+                             report) {
+                       std::string json = report->ToJson();
+                       self->PushEvent([on_get_stats = std::move(on_get_stats),
+                                        json = std::move(json)]() {
+                         on_get_stats(std::move(json));
+                       });
+                     })
+                     .get());
+  });
 }
 
 void Sora::SendMessage(const std::string& label, const std::string& data) {

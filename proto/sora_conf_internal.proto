@@ -24,6 +24,19 @@ message DataChannel {
     bool compress = 12;
 }
 
+message ForwardingFilter {
+    string action = 1;
+    message Rule {
+        string field = 1;
+        string op = 2;
+        repeated string values = 3;
+    }
+    message Rules {
+        repeated Rule rules = 1;
+    }
+    repeated Rules rules = 2;
+}
+
 message ConnectConfig {
     string unity_version = 1;
     repeated string signaling_url = 2;
@@ -50,6 +63,9 @@ message ConnectConfig {
     int32 video_height = 23;
     int32 video_fps = 24;
     string video_codec_type = 25;
+    string video_vp9_params = 250;
+    string video_av1_params = 251;
+    string video_h264_params = 252;
     int32 video_bit_rate = 26;
     bool unity_audio_input = 27;
     bool unity_audio_output = 28;
@@ -76,4 +92,6 @@ message ConnectConfig {
     string proxy_agent = 47;
     string audio_streaming_language_code = 48;
     string signaling_notify_metadata = 49;
+    bool enable_forwarding_filter = 50;
+    ForwardingFilter forwarding_filter = 51;
 }
