@@ -42,7 +42,7 @@ Please read https://github.com/shiguredo/oss/blob/master/README.en.md before use
 
 ## 対応プラットフォーム
 
-- Windows 10 1809 x86_64 以降
+- Windows 10 22H2 x86_64 以降
 - macOS 13.4.1 M1 以降
 - Android 7 以降
 - iOS 13 以降
