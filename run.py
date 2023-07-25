@@ -408,6 +408,18 @@ def install_boost(version, source_dir, install_dir, sora_version, platform: str)
     extract(archive, output_dir=install_dir, output_dirname='boost')
 
 
+@versioned
+def install_lyra(version, source_dir, install_dir, sora_version, platform: str):
+    win = platform.startswith("windows_")
+    filename = f'lyra-{version}_sora-cpp-sdk-{sora_version}_{platform}.{"zip" if win else "tar.gz"}'
+    rm_rf(os.path.join(source_dir, filename))
+    archive = download(
+        f'https://github.com/shiguredo/sora-cpp-sdk/releases/download/{sora_version}/{filename}',
+        output_dir=source_dir)
+    rm_rf(os.path.join(install_dir, 'lyra'))
+    extract(archive, output_dir=install_dir, output_dirname='lyra')
+
+
 def cmake_path(path: str) -> str:
     return path.replace('\\', '/')
 
@@ -550,6 +562,17 @@ def install_deps(platform: str, build_platform: str, source_dir, build_dir, inst
             'platform': platform,
         }
         install_boost(**install_boost_args)
+
+        # Lyra
+        install_lyra_args = {
+            'version': version['LYRA_VERSION'],
+            'version_file': os.path.join(install_dir, 'lyra.version'),
+            'source_dir': source_dir,
+            'install_dir': install_dir,
+            'sora_version': version['SORA_CPP_SDK_VERSION'],
+            'platform': platform,
+        }
+        install_lyra(**install_lyra_args)
 
         # CMake
         install_cmake_args = {
@@ -719,6 +742,7 @@ def main():
         cmake_args.append(f'-DSORA_UNITY_SDK_VERSION={sora_unity_sdk_version}')
         cmake_args.append(f'-DSORA_UNITY_SDK_COMMIT={sora_unity_sdk_commit}')
         cmake_args.append(f"-DBOOST_ROOT={cmake_path(os.path.join(install_dir, 'boost'))}")
+        cmake_args.append(f"-DLYRA_DIR={cmake_path(os.path.join(install_dir, 'lyra'))}")
         cmake_args.append('-DWEBRTC_LIBRARY_NAME=webrtc')
         cmake_args.append(f"-DWEBRTC_INCLUDE_DIR={cmake_path(webrtc_info.webrtc_include_dir)}")
         cmake_args.append(f"-DWEBRTC_LIBRARY_DIR={cmake_path(webrtc_info.webrtc_library_dir)}")
@@ -745,7 +769,7 @@ def main():
             cmake_args += ['-G', 'Xcode']
             cmake_args.append('-DCMAKE_SYSTEM_NAME=iOS')
             cmake_args.append('-DCMAKE_OSX_ARCHITECTURES="x86_64;arm64"')
-            cmake_args.append('-DCMAKE_OSX_DEPLOYMENT_TARGET=10.0')
+            cmake_args.append('-DCMAKE_OSX_DEPLOYMENT_TARGET=13.0')
             cmake_args.append('-DCMAKE_XCODE_ATTRIBUTE_ONLY_ACTIVE_ARCH=NO')
         elif platform == 'android':
             toolchain_file = os.path.join(install_dir, 'android-ndk', 'build', 'cmake', 'android.toolchain.cmake')

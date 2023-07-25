@@ -24,6 +24,19 @@ message DataChannel {
     bool compress = 12;
 }
 
+message ForwardingFilter {
+    string action = 1;
+    message Rule {
+        string field = 1;
+        string op = 2;
+        repeated string values = 3;
+    }
+    message Rules {
+        repeated Rule rules = 1;
+    }
+    repeated Rules rules = 2;
+}
+
 message ConnectConfig {
     string unity_version = 1;
     repeated string signaling_url = 2;
@@ -50,26 +63,37 @@ message ConnectConfig {
     int32 video_height = 23;
     int32 video_fps = 24;
     string video_codec_type = 25;
+    string video_vp9_params = 250;
+    string video_av1_params = 251;
+    string video_h264_params = 252;
     int32 video_bit_rate = 26;
     bool unity_audio_input = 27;
     bool unity_audio_output = 28;
     string audio_recording_device = 29;
     string audio_playout_device = 30;
     string audio_codec_type = 31;
-    int32 audio_bit_rate = 32;
-    bool enable_data_channel_signaling = 33;
-    bool data_channel_signaling = 34;
-    int32 data_channel_signaling_timeout = 35;
-    bool enable_ignore_disconnect_websocket = 36;
-    bool ignore_disconnect_websocket = 37;
-    int32 disconnect_wait_timeout = 38;
-    repeated DataChannel data_channels = 39;
-    bool insecure = 40;
-    string bundle_id = 41;
-    string proxy_url = 42;
-    string proxy_username = 43;
-    string proxy_password = 44;
-    string proxy_agent = 45;
+    int32 audio_codec_lyra_bitrate = 32;
+    bool enable_audio_codec_lyra_usedtx = 320;
+    bool audio_codec_lyra_usedtx = 321;
+    bool check_lyra_version = 33;
+    int32 audio_bit_rate = 34;
+    bool enable_data_channel_signaling = 35;
+    bool data_channel_signaling = 36;
+    int32 data_channel_signaling_timeout = 37;
+    bool enable_ignore_disconnect_websocket = 38;
+    bool ignore_disconnect_websocket = 39;
+    int32 disconnect_wait_timeout = 40;
+    repeated DataChannel data_channels = 41;
+    bool insecure = 42;
+    string bundle_id = 43;
+    string proxy_url = 44;
+    string proxy_username = 45;
+    string proxy_password = 46;
+    string proxy_agent = 47;
+    string audio_streaming_language_code = 48;
+    string signaling_notify_metadata = 49;
+    bool enable_forwarding_filter = 50;
+    ForwardingFilter forwarding_filter = 51;
 
     bool enable_mrc_hologram_composition_enabled = 100;
     bool mrc_hologram_composition_enabled = 101;

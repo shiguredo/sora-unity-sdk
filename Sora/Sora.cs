@@ -31,6 +31,7 @@ public class Sora : IDisposable
     public enum AudioCodecType
     {
         OPUS,
+        LYRA,
     }
     // SimulcastRid のためのパラメータ
     public enum SimulcastRidType
@@ -62,6 +63,26 @@ public class Sora : IDisposable
         public bool? Compress;
     }
 
+    public const string ActionBlock = "block";
+    public const string ActionAllow = "allow";
+    public const string FieldConnectionId = "connection_id";
+    public const string FieldClientId = "client_id";
+    public const string FieldKind = "kind";
+    public const string OperatorIsIn = "is_in";
+    public const string OperatorIsNotIn = "is_not_in";
+
+    public class ForwardingFilter
+    {
+        public string Action;
+        public class Rule
+        {
+            public string Field;
+            public string Operator;
+            public List<string> Values = new List<string>();
+        }
+        public List<List<Rule>> Rules = new List<List<Rule>>();
+    }
+
     public class Config
     {
         public string SignalingUrl = "";
@@ -70,6 +91,7 @@ public class Sora : IDisposable
         public string ClientId = "";
         public string BundleId = "";
         public string Metadata = "";
+        public string SignalingNotifyMetadata = "";
         public Role Role = Sora.Role.Sendonly;
         public bool? Multistream;
         public bool? Spotlight;
@@ -88,13 +110,21 @@ public class Sora : IDisposable
         public int VideoHeight = 480;
         public int VideoFps = 30;
         public VideoCodecType VideoCodecType = VideoCodecType.VP9;
+        public string VideoVp9Params = "";
+        public string VideoAv1Params = "";
+        public string VideoH264Params = "";
         public int VideoBitRate = 0;
         public bool UnityAudioInput = false;
         public bool UnityAudioOutput = false;
         public string AudioRecordingDevice = "";
         public string AudioPlayoutDevice = "";
         public AudioCodecType AudioCodecType = AudioCodecType.OPUS;
+        // AudioCodecType.LYRA の場合は必須
+        public int AudioCodecLyraBitrate = 0;
+        public bool? AudioCodecLyraUsedtx;
+        public bool CheckLyraVersion = false;
         public int AudioBitRate = 0;
+        public string AudioStreamingLanguageCode = "";
 
         // DataChannelSignaling を有効にするかどうか
         public bool EnableDataChannelSignaling = false;
@@ -122,6 +152,8 @@ public class Sora : IDisposable
         // Proxy サーバーに接続するときの User-Agent。未設定ならデフォルト値が使われる
         public string ProxyAgent = "";
 
+        public ForwardingFilter ForwardingFilter;
+
         // MRC の設定
         public bool? MrcHologramCompositionEnabled;
         public bool? MrcRecordingIndicatorEnabled;
@@ -133,6 +165,7 @@ public class Sora : IDisposable
     IntPtr p;
     GCHandle onAddTrackHandle;
     GCHandle onRemoveTrackHandle;
+    GCHandle onSetOfferHandle;
     GCHandle onNotifyHandle;
     GCHandle onPushHandle;
     GCHandle onMessageHandle;
@@ -159,6 +192,11 @@ public class Sora : IDisposable
         if (onRemoveTrackHandle.IsAllocated)
         {
             onRemoveTrackHandle.Free();
+        }
+
+        if (onSetOfferHandle.IsAllocated)
+        {
+            onSetOfferHandle.Free();
         }
 
         if (onNotifyHandle.IsAllocated)
@@ -236,6 +274,7 @@ public class Sora : IDisposable
         cc.client_id = config.ClientId;
         cc.bundle_id = config.BundleId;
         cc.metadata = config.Metadata;
+        cc.signaling_notify_metadata = config.SignalingNotifyMetadata;
         cc.role = role;
         cc.enable_multistream = config.Multistream != null;
         cc.multistream = config.Multistream == null ? false : config.Multistream.Value;
@@ -257,13 +296,21 @@ public class Sora : IDisposable
         cc.video_height = config.VideoHeight;
         cc.video_fps = config.VideoFps;
         cc.video_codec_type = config.VideoCodecType.ToString();
+        cc.video_vp9_params = config.VideoVp9Params;
+        cc.video_av1_params = config.VideoAv1Params;
+        cc.video_h264_params = config.VideoH264Params;
         cc.video_bit_rate = config.VideoBitRate;
         cc.unity_audio_input = config.UnityAudioInput;
         cc.unity_audio_output = config.UnityAudioOutput;
         cc.audio_recording_device = config.AudioRecordingDevice;
         cc.audio_playout_device = config.AudioPlayoutDevice;
         cc.audio_codec_type = config.AudioCodecType.ToString();
+        cc.audio_codec_lyra_bitrate = config.AudioCodecLyraBitrate;
+        cc.enable_audio_codec_lyra_usedtx = config.AudioCodecLyraUsedtx != null;
+        cc.audio_codec_lyra_usedtx = config.AudioCodecLyraUsedtx == null ? false : config.AudioCodecLyraUsedtx.Value;
+        cc.check_lyra_version = config.CheckLyraVersion;
         cc.audio_bit_rate = config.AudioBitRate;
+        cc.audio_streaming_language_code = config.AudioStreamingLanguageCode;
         cc.enable_data_channel_signaling = config.EnableDataChannelSignaling;
         cc.data_channel_signaling = config.DataChannelSignaling;
         cc.data_channel_signaling_timeout = config.DataChannelSignalingTimeout;
@@ -311,6 +358,27 @@ public class Sora : IDisposable
         cc.proxy_username = config.ProxyUsername;
         cc.proxy_password = config.ProxyPassword;
         cc.proxy_agent = config.ProxyAgent;
+        if (config.ForwardingFilter != null)
+        {
+            cc.enable_forwarding_filter = true;
+            cc.forwarding_filter.action = config.ForwardingFilter.Action;
+            foreach (var rs in config.ForwardingFilter.Rules)
+            {
+                var ccrs = new SoraConf.Internal.ForwardingFilter.Rules();
+                foreach (var r in rs)
+                {
+                    var ccr = new SoraConf.Internal.ForwardingFilter.Rule();
+                    ccr.field = r.Field;
+                    ccr.op = r.Operator;
+                    foreach (var v in r.Values)
+                    {
+                        ccr.values.Add(v);
+                    }
+                    ccrs.rules.Add(ccr);
+                }
+                cc.forwarding_filter.rules.Add(ccrs);
+            }
+        }
 
         if (config.MrcHologramCompositionEnabled != null) {
             cc.enable_mrc_hologram_composition_enabled = true;
@@ -388,6 +456,29 @@ public class Sora : IDisposable
 
             onRemoveTrackHandle = GCHandle.Alloc(value);
             sora_set_on_remove_track(p, TrackCallback, GCHandle.ToIntPtr(onRemoveTrackHandle));
+        }
+    }
+
+    private delegate void SetOfferCallbackDelegate(string json, IntPtr userdata);
+
+    [AOT.MonoPInvokeCallback(typeof(SetOfferCallbackDelegate))]
+    static private void SetOfferCallback(string json, IntPtr userdata)
+    {
+        var callback = GCHandle.FromIntPtr(userdata).Target as Action<string>;
+        callback(json);
+    }
+
+    public Action<string> OnSetOffer
+    {
+        set
+        {
+            if (onSetOfferHandle.IsAllocated)
+            {
+                onSetOfferHandle.Free();
+            }
+
+            onSetOfferHandle = GCHandle.Alloc(value);
+            sora_set_on_set_offer(p, SetOfferCallback, GCHandle.ToIntPtr(onSetOfferHandle));
         }
     }
 
@@ -680,6 +771,11 @@ public class Sora : IDisposable
         return sora_is_h264_supported() != 0;
     }
 
+    public static void Setenv(string name, string value)
+    {
+        sora_setenv(name, value);
+    }
+
     public bool AudioEnabled
     {
         get { return sora_get_audio_enabled(p) != 0; }
@@ -704,6 +800,8 @@ public class Sora : IDisposable
     private static extern void sora_set_on_add_track(IntPtr p, TrackCallbackDelegate on_add_track, IntPtr userdata);
     [DllImport(DllName)]
     private static extern void sora_set_on_remove_track(IntPtr p, TrackCallbackDelegate on_remove_track, IntPtr userdata);
+    [DllImport(DllName)]
+    private static extern void sora_set_on_set_offer(IntPtr p, SetOfferCallbackDelegate on_set_offer, IntPtr userdata);
     [DllImport(DllName)]
     private static extern void sora_set_on_notify(IntPtr p, NotifyCallbackDelegate on_notify, IntPtr userdata);
     [DllImport(DllName)]
@@ -746,6 +844,8 @@ public class Sora : IDisposable
     private static extern int sora_device_enum_audio_playout(DeviceEnumCallbackDelegate f, IntPtr userdata);
     [DllImport(DllName)]
     private static extern int sora_is_h264_supported();
+    [DllImport(DllName)]
+    private static extern void sora_setenv(string name, string value);
     [DllImport(DllName)]
     private static extern int sora_get_audio_enabled(IntPtr p);
     [DllImport(DllName)]

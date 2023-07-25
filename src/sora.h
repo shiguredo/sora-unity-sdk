@@ -42,6 +42,7 @@ class Sora : public std::enable_shared_from_this<Sora>,
   void SetOnAddTrack(std::function<void(ptrid_t, std::string)> on_add_track);
   void SetOnRemoveTrack(
       std::function<void(ptrid_t, std::string)> on_remove_track);
+  void SetOnSetOffer(std::function<void(std::string)> on_set_offer);
   void SetOnNotify(std::function<void(std::string)> on_notify);
   void SetOnPush(std::function<void(std::string)> on_push);
   void SetOnMessage(std::function<void(std::string, std::string)> on_message);
@@ -146,6 +147,7 @@ class Sora : public std::enable_shared_from_this<Sora>,
   rtc::scoped_refptr<webrtc::VideoTrackInterface> video_track_;
   std::function<void(ptrid_t, std::string)> on_add_track_;
   std::function<void(ptrid_t, std::string)> on_remove_track_;
+  std::function<void(std::string)> on_set_offer_;
   std::function<void(std::string)> on_notify_;
   std::function<void(std::string)> on_push_;
   std::function<void(std::string, std::string)> on_message_;

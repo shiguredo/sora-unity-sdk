@@ -22,6 +22,8 @@
 #include <sora/camera_device_capturer.h>
 #include <sora/java_context.h>
 #include <sora/rtc_stats.h>
+#include <sora/sora_audio_decoder_factory.h>
+#include <sora/sora_audio_encoder_factory.h>
 #include <sora/sora_peer_connection_factory.h>
 #include <sora/sora_video_decoder_factory.h>
 #include <sora/sora_video_encoder_factory.h>
@@ -103,6 +105,9 @@ void Sora::SetOnAddTrack(
 void Sora::SetOnRemoveTrack(
     std::function<void(ptrid_t, std::string)> on_remove_track) {
   on_remove_track_ = on_remove_track;
+}
+void Sora::SetOnSetOffer(std::function<void(std::string)> on_set_offer) {
+  on_set_offer_ = std::move(on_set_offer);
 }
 void Sora::SetOnNotify(std::function<void(std::string)> on_notify) {
   on_notify_ = std::move(on_notify);
@@ -211,16 +216,14 @@ void Sora::DoConnect(const sora_conf::internal::ConnectConfig& cc,
           dependencies.task_queue_factory.get());
 
   // worker 上の env
-  auto worker_env = worker_thread_->Invoke<void*>(
-      RTC_FROM_HERE, [] { return sora::GetJNIEnv(); });
+  auto worker_env =
+      worker_thread_->BlockingCall([] { return sora::GetJNIEnv(); });
   // worker 上の context
 #if defined(SORA_UNITY_SDK_ANDROID)
-  void* worker_context =
-      worker_thread_->Invoke<jobject>(RTC_FROM_HERE, [worker_env] {
-        return ::sora_unity_sdk::GetAndroidApplicationContext(
-                   (JNIEnv*)worker_env)
-            .Release();
-      });
+  void* worker_context = worker_thread_->BlockingCall([worker_env] {
+    return ::sora_unity_sdk::GetAndroidApplicationContext((JNIEnv*)worker_env)
+        .Release();
+  });
 #else
   void* worker_context = nullptr;
 #endif
@@ -236,15 +239,15 @@ void Sora::DoConnect(const sora_conf::internal::ConnectConfig& cc,
   media_dependencies.adm = unity_adm_;
 
 #if defined(SORA_UNITY_SDK_ANDROID)
-  worker_thread_->Invoke<void>(RTC_FROM_HERE, [worker_env, worker_context] {
+  worker_thread_->BlockingCall([worker_env, worker_context] {
     ((JNIEnv*)worker_env)->DeleteLocalRef((jobject)worker_context);
   });
 #endif
 
   media_dependencies.audio_encoder_factory =
-      webrtc::CreateBuiltinAudioEncoderFactory();
+      sora::CreateBuiltinAudioEncoderFactory();
   media_dependencies.audio_decoder_factory =
-      webrtc::CreateBuiltinAudioDecoderFactory();
+      sora::CreateBuiltinAudioDecoderFactory();
 
   void* env = sora::GetJNIEnv();
   void* android_context = GetAndroidApplicationContext(env);
@@ -387,8 +390,43 @@ void Sora::DoConnect(const sora_conf::internal::ConnectConfig& cc,
     config.video = cc.video;
     config.audio = cc.audio;
     config.video_codec_type = cc.video_codec_type;
+    if (!cc.video_vp9_params.empty()) {
+      boost::json::error_code ec;
+      auto md = boost::json::parse(cc.video_vp9_params, ec);
+      if (ec) {
+        RTC_LOG(LS_WARNING)
+            << "Invalid JSON: video_vp9_params=" << cc.video_vp9_params;
+      } else {
+        config.video_vp9_params = md;
+      }
+    }
+    if (!cc.video_av1_params.empty()) {
+      boost::json::error_code ec;
+      auto md = boost::json::parse(cc.video_av1_params, ec);
+      if (ec) {
+        RTC_LOG(LS_WARNING)
+            << "Invalid JSON: video_av1_params=" << cc.video_av1_params;
+      } else {
+        config.video_av1_params = md;
+      }
+    }
+    if (!cc.video_h264_params.empty()) {
+      boost::json::error_code ec;
+      auto md = boost::json::parse(cc.video_h264_params, ec);
+      if (ec) {
+        RTC_LOG(LS_WARNING)
+            << "Invalid JSON: video_h264_params=" << cc.video_h264_params;
+      } else {
+        config.video_h264_params = md;
+      }
+    }
     config.video_bit_rate = cc.video_bit_rate;
     config.audio_codec_type = cc.audio_codec_type;
+    config.audio_codec_lyra_bitrate = cc.audio_codec_lyra_bitrate;
+    if (cc.enable_audio_codec_lyra_usedtx) {
+      config.audio_codec_lyra_usedtx = cc.audio_codec_lyra_usedtx;
+    }
+    config.check_lyra_version = cc.check_lyra_version;
     config.audio_bit_rate = cc.audio_bit_rate;
     if (cc.enable_data_channel_signaling) {
       config.data_channel_signaling = cc.data_channel_signaling;
@@ -428,13 +466,42 @@ void Sora::DoConnect(const sora_conf::internal::ConnectConfig& cc,
         config.metadata = md;
       }
     }
+    if (!cc.signaling_notify_metadata.empty()) {
+      boost::json::error_code ec;
+      auto md = boost::json::parse(cc.signaling_notify_metadata, ec);
+      if (ec) {
+        RTC_LOG(LS_WARNING) << "Invalid JSON: signaling_notify_metadata="
+                            << cc.signaling_notify_metadata;
+      } else {
+        config.signaling_notify_metadata = md;
+      }
+    }
     config.insecure = cc.insecure;
     config.proxy_url = cc.proxy_url;
     config.proxy_username = cc.proxy_username;
     config.proxy_password = cc.proxy_password;
     config.proxy_agent = cc.proxy_agent;
-    config.network_manager = connection_context_->default_network_manager();
-    config.socket_factory = connection_context_->default_socket_factory();
+    config.audio_streaming_language_code = cc.audio_streaming_language_code;
+    if (cc.enable_forwarding_filter) {
+      sora::SoraSignalingConfig::ForwardingFilter ff;
+      ff.action = cc.forwarding_filter.action;
+      for (const auto& rs : cc.forwarding_filter.rules) {
+        std::vector<sora::SoraSignalingConfig::ForwardingFilter::Rule> ffrs;
+        for (const auto& r : rs.rules) {
+          sora::SoraSignalingConfig::ForwardingFilter::Rule ffr;
+          ffr.field = r.field;
+          ffr.op = r.op;
+          ffr.values = r.values;
+          ffrs.push_back(ffr);
+        }
+        ff.rules.push_back(ffrs);
+      }
+      config.forwarding_filter = ff;
+    }
+    config.network_manager = signaling_thread_->BlockingCall(
+        [this]() { return connection_context_->default_network_manager(); });
+    config.socket_factory = signaling_thread_->BlockingCall(
+        [this]() { return connection_context_->default_socket_factory(); });
 
     signaling_ = sora::SoraSignaling::Create(std::move(config));
     signaling_->Connect();
@@ -510,27 +577,25 @@ rtc::scoped_refptr<UnityAudioDevice> Sora::CreateADM(
   rtc::scoped_refptr<webrtc::AudioDeviceModule> adm;
 
   if (dummy_audio) {
-    adm = worker_thread->Invoke<rtc::scoped_refptr<webrtc::AudioDeviceModule>>(
-        RTC_FROM_HERE, [&] {
-          return webrtc::AudioDeviceModule::Create(
-              webrtc::AudioDeviceModule::kDummyAudio, task_queue_factory);
-        });
+    adm = worker_thread->BlockingCall([&] {
+      return webrtc::AudioDeviceModule::Create(
+          webrtc::AudioDeviceModule::kDummyAudio, task_queue_factory);
+    });
   } else {
     sora::AudioDeviceModuleConfig config;
     config.audio_layer = webrtc::AudioDeviceModule::kPlatformDefaultAudio;
     config.task_queue_factory = task_queue_factory;
     config.jni_env = jni_env;
     config.application_context = android_context;
-    adm = worker_thread->Invoke<rtc::scoped_refptr<webrtc::AudioDeviceModule>>(
-        RTC_FROM_HERE, [&] { return sora::CreateAudioDeviceModule(config); });
+    adm = worker_thread->BlockingCall(
+        [&] { return sora::CreateAudioDeviceModule(config); });
   }
 
-  return worker_thread->Invoke<rtc::scoped_refptr<UnityAudioDevice>>(
-      RTC_FROM_HERE, [&] {
-        return UnityAudioDevice::Create(adm, !unity_audio_input,
-                                        !unity_audio_output, on_handle_audio,
-                                        task_queue_factory);
-      });
+  return worker_thread->BlockingCall([&] {
+    return UnityAudioDevice::Create(adm, !unity_audio_input,
+                                    !unity_audio_output, on_handle_audio,
+                                    task_queue_factory);
+  });
 }
 
 bool Sora::InitADM(rtc::scoped_refptr<webrtc::AudioDeviceModule> adm,
@@ -676,23 +741,29 @@ rtc::scoped_refptr<webrtc::VideoTrackSourceInterface> Sora::CreateVideoCapturer(
 }
 
 void Sora::GetStats(std::function<void(std::string)> on_get_stats) {
-  auto pc = signaling_ == nullptr ? nullptr : signaling_->GetPeerConnection();
-  if (signaling_ == nullptr || pc == nullptr) {
-    PushEvent(
-        [on_get_stats = std::move(on_get_stats)]() { on_get_stats("[]"); });
-    return;
-  }
+  boost::asio::post(*ioc_, [self = shared_from_this(),
+                            on_get_stats = std::move(on_get_stats)]() {
+    auto pc = self->signaling_ == nullptr
+                  ? nullptr
+                  : self->signaling_->GetPeerConnection();
+    if (self->signaling_ == nullptr || pc == nullptr) {
+      self->PushEvent(
+          [on_get_stats = std::move(on_get_stats)]() { on_get_stats("[]"); });
+      return;
+    }
 
-  pc->GetStats(
-      sora::RTCStatsCallback::Create(
-          [self = shared_from_this(), on_get_stats = std::move(on_get_stats)](
-              const rtc::scoped_refptr<const webrtc::RTCStatsReport>& report) {
-            std::string json = report->ToJson();
-            self->PushEvent(
-                [on_get_stats = std::move(on_get_stats),
-                 json = std::move(json)]() { on_get_stats(std::move(json)); });
-          })
-          .get());
+    pc->GetStats(sora::RTCStatsCallback::Create(
+                     [self, on_get_stats = std::move(on_get_stats)](
+                         const rtc::scoped_refptr<const webrtc::RTCStatsReport>&
+                             report) {
+                       std::string json = report->ToJson();
+                       self->PushEvent([on_get_stats = std::move(on_get_stats),
+                                        json = std::move(json)]() {
+                         on_get_stats(std::move(json));
+                       });
+                     })
+                     .get());
+  });
 }
 
 void Sora::SendMessage(const std::string& label, const std::string& data) {
@@ -736,6 +807,11 @@ sora_conf::ErrorCode Sora::ToErrorCode(sora::SoraSignalingErrorCode ec) {
 }
 
 void Sora::OnSetOffer(std::string offer) {
+  PushEvent([this, offer]() {
+    if (on_set_offer_) {
+      on_set_offer_(offer);
+    }
+  });
   std::string stream_id = rtc::CreateRandomString(16);
   if (audio_track_ != nullptr) {
     webrtc::RTCErrorOr<rtc::scoped_refptr<webrtc::RtpSenderInterface>>

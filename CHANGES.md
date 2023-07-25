@@ -1,236 +1,286 @@
 # 変更履歴
 
 - CHANGE
-    - 下位互換のない変更
+  - 後方互換性のない変更
 - UPDATE
-    - 下位互換がある変更
+  - 後方互換性がある変更
 - ADD
-    - 下位互換がある追加
+  - 後方互換性がある追加
 - FIX
-    - バグ修正
+  - バグ修正
 
 ## develop
+
+## 2023.2.0 (2023-07-19)
+
+- [UPDATE] libwebrtc を `m114.5735.2.0` に上げる
+    - @torikizi @miosakuma
+- [UPDATE] Sora C++ SDK を `2023.7.2` に上げる
+  - @torikizi @miosakuma
+- [ADD] ForwardingFilter 機能を使えるようにする
+  - @melpon
+- [ADD] CodecParams 機能を使えるようにする
+    - @torikizi
+- [FIX] GetStats でデータレースによりエラーが発生するケースについて修正する
+  - @melpon
+
+## 2023.1.0 (2023-04-13)
+
+- [UPDATE] Sora C++ SDK を `2023.4.0` に上げる
+  - @melpon @miosakuma
+- [UPDATE] libwebrtc を `m111.5563.4.4` に上げる
+  - @melpon
+- [UPDATE] Boost を `1.81.0` に上げる
+  - @melpon
+- [UPDATE] CMake を `3.25.1` に上げる
+  - @melpon
+- [UPDATE] actions/checkout@v2 と actions/cache@v2 を @v3 に上げる
+  - @melpon
+- [UPDATE] actions/upload-artifact@v2 と actions/download-artifact@v2 を @v3 に上げる
+  - @melpon
+- [ADD] `Sora.Config` に `AudioStreamingLanguageCode` を追加
+  - @melpon
+- [ADD] `Sora.Config` に `SignalingNotifyMetadata` を追加
+  - @melpon
+- [ADD] offer 設定時のコールバック関数 `OnSetOffer` を追加
+  - @melpon
+- [ADD] オーディオコーデックに Lyra を追加
+  - @melpon
+- [ADD] `Sora.Config` に `check_lyra_version` を追加
+  - @torikizi
+
+## 2022.6.2 (2023-03-25)
+
+- [FIX] IPHONE_DEPLOYMENT_TARGET を 13 に上げる
+  - @melpon
+
+## 2022.6.1 (2023-03-24)
+
+- [FIX] Sora C++ SDK を `2022.12.4` に上げる
+  - Unity で発生した、Websocket 切断時にクラッシュする不具合を修正
+  - Sora C++ SDK で WS 切断時のタイムアウトが起きた際に無効な関数オブジェクトが呼ばれていた
+  - @miosakuma
 
 ## 2022.6.0 (2022-12-08)
 
 - [ADD] 実行時に音声と映像のミュート、ミュート解除をする機能を追加
-    - @melpon
+  - @melpon
 
 ## 2022.5.2 (2022-10-04)
 
 - [FIX] UnityCameraCapturer がマルチスレッド下で正常に終了しないことがあるのを修正
-    - @melpon
+  - @melpon
 
 ## 2022.5.1 (2022-09-24)
 
 - [UPDATE] Sora C++ SDK を `2022.12.1` に上げる
-    - @melpon
+  - @melpon
 - [FIX] カメラからのフレーム情報が縮小された状態で渡されていたのを修正
-    - @melpon
+  - @melpon
 
 ## 2022.5.0 (2022-09-22)
 
 - [ADD] カメラからのフレーム情報を受け取るコールバックを追加
-    - @melpon
+  - @melpon
 - [ADD] カメラデバイスの FPS の設定可能にする
-    - @melpon
+  - @melpon
 
 ## 2022.4.0
 
 - [CHANGE] iOS ビルド向けに Bitcode を off にする設定を追加
-    - @torikizi
+  - @torikizi
 - [UPDATE] Sora C++ SDK を `2022.11.0` に上げる
-    - @melpon
+  - @melpon
 - [UPDATE] libwebrtc を `m105.5195.0.0` に上げる
-    - @melpon
+  - @melpon
 - [UPDATE] Boost を `1.80.0` に上げる
-    - @melpon
+  - @melpon
 - [UPDATE] Android NDK を `r25b` に上げる
-    - @melpon
+  - @melpon
 
 ## 2022.3.0
 
 - [UPDATE] Sora C++ SDK を `2022.9.0` に上げる
-    - @melpon
+  - @melpon
 - [ADD] OnDataChannel を追加
-    - @melpon
+  - @melpon
 - [FIX] Sora Unity SDK のクライアント情報を設定するように追加
-    - @torikizi
+  - @torikizi
 - [FIX] UnityAudioOutput = true で ADM を Stop しても再生中のままになっていたのを修正
-    - @melpon
+  - @melpon
 - [FIX] ProcessAudio が機能してなかったのを修正
-    - @melpon
+  - @melpon
 
 ## 2022.2.1
 
 - [CHANGE] OnAddTrack, OnRemoveTrack に connectionId を追加
-    - @melpon
+  - @melpon
 - [UPDATE] Sora C++ SDK を `2022.7.8` に上げる
-    - @melpon
+  - @melpon
 
 ## 2022.2.0
 
 - [CHANGE] Multistream, Spotlight, Simulcast を Nullable にする
-    - @melpon
+  - @melpon
 - [CHANGE] macOS x86_64 の対応をドロップ
-    - @melpon
+  - @melpon
 - [UPDATE] Sora C++ SDK 化
-    - @melpon
+  - @melpon
 - [UPDATE] Sora C++ SDK を `2022.7.5` に上げる
-    - @melpon
+  - @melpon
 - [UPDATE] libwebrtc を `103.5060.5.0` に上げる
-    - @melpon
+  - @melpon
 - [ADD] macOS M1 に対応
-    - @melpon
+  - @melpon
 - [ADD] Android の OpenGL ES を使った Unity カメラキャプチャに対応
-    - @melpon
+  - @melpon
 - [ADD] Ubuntu に対応
-    - @melpon
+  - @melpon
 - [ADD] BundleId 追加
-    - @melpon
+  - @melpon
 - [ADD] HTTP Proxy に対応
-    - @melpon
+  - @melpon
 
 ## 2022.1.0
 
 - [CHANGE] Github Actions の `macos-latest` を `macos-11` へ変更する
-    - @voluntas
+  - @voluntas
 - [CHANGE] Github Actions の `windows-latest` を `windows-2019` へ変更する
-    - @melpon
+  - @melpon
 - [UPDATE] libwebrtc を `99.4844.1.0` に上げる
-    - @voluntas @melpon @torikizi
+  - @voluntas @melpon @torikizi
 - [ADD] `Insecure`, `Video`, `Audio` フラグを追加
-    - @melpon
+  - @melpon
 
 ## 2021.4.0
 
 - [CHANGE] `data_channel_messaging` を `data_channles` へ変更する
-    - @torikizi
+  - @torikizi
 - [UPDATE] protocol buffers を `3.19.1` に上げる
-    - @voluntas
+  - @voluntas
 - [UPDATE] libwebrtc を `94.4606.3.4` に上げる
-    - @melpon @torikizi @voluntas
+  - @melpon @torikizi @voluntas
 - [UPDATE] Boost のバージョンを `1.78.0` に上げる
-    - @voluntas
+  - @voluntas
 - [UPDATE] signaling mid 対応
-    - @melpon
+  - @melpon
 - [ADD] `Sora.Config.SignalingUrlCandidate` に複数のシグナリング URL 指定を可能にする
-    - @melpon
+  - @melpon
 - [ADD] `"type": "redirect"` でクラスター機能でのリダイレクトに対応
 
 ## 2021.3.1
 
 - [FIX] Let's Encrypt な証明書の SSL 接続が失敗する問題を修正する
-    - @melpon
+  - @melpon
 
 ## 2021.3
 
 - [CHANGE] `Sora.Config` のフィールド名および `Sora.VideoCodec`, `Sora.AudioCodec` の名前を変更する
-    - `VideoCodec` → `VideoCodecType`
-    - `VideoBitrate` → `VideoBitRate`
-    - `AudioCodec` → `AudioCodecType`
-    - `AudioBitrate` → `AudioBitRate`
-    - @melpon
+  - `VideoCodec` → `VideoCodecType`
+  - `VideoBitrate` → `VideoBitRate`
+  - `AudioCodec` → `AudioCodecType`
+  - `AudioBitrate` → `AudioBitRate`
+  - @melpon
 - [CHANGE] `Sora.Connect` 関数の戻り値を `bool` から `void` に変更する
-    - エラーハンドリングは `Sora.Connect` の戻り値ではなく `Sora.OnDisconnect` を利用する
-    - @melpon
+  - エラーハンドリングは `Sora.Connect` の戻り値ではなく `Sora.OnDisconnect` を利用する
+  - @melpon
 - [UPDATE] libwebrtc のバージョンを M92 (4515@{#9}) に上げる
-    - @melpon
+  - @melpon
 - [ADD] `simulcastRid` に対応する
-    - @torikizi
+  - @torikizi
 - [ADD] `clientId` に対応し、 `Sora.config` に `ClientId` を追加する
-    - @torikizi
+  - @torikizi
 - [ADD] `spotlight_focus_rid` と `spotlight_unfocus_rid` に対応し、 `Sora.config` に以下のフィールドを追加する
-    - `SpotlightFocusRid`
-    - `SpotlightUnfocusRid`
-    - @torikizi
+  - `SpotlightFocusRid`
+  - `SpotlightUnfocusRid`
+  - @torikizi
 - [ADD] プッシュ通知に対応する
-    - @melpon
+  - @melpon
 - [ADD] DataChannel を使ったメッセージングに対応しする
-    - @melpon
+  - @melpon
 - [ADD] `Sora.Config` に DataChannel メッセージング用の `List<DataChannelMessaging>` 型のフィールドを追加する
-    - @melpon
+  - @melpon
 - [ADD] `Sora.Config` に DataChannel メッセージング用のフィールドを追加する
-    - `EnableDataChannelSignaling`
-    - `DataChannelSignaling`
-    - `DataChannelSignalingTimeout`
-    - `EnableIgnoreDisconnectWebsocket`
-    - `IgnoreDisconnectWebsocket`
-    - `DisconnectWaitTimeout`
-    - @melpon
+  - `EnableDataChannelSignaling`
+  - `DataChannelSignaling`
+  - `DataChannelSignalingTimeout`
+  - `EnableIgnoreDisconnectWebsocket`
+  - `IgnoreDisconnectWebsocket`
+  - `DisconnectWaitTimeout`
+  - @melpon
 - [ADD] WebSocket シグナリングの re-offer に対応する
-    - @melpon
+  - @melpon
 - [ADD] `Sora.Disconnect` 関数と `Sora.OnDisconnect` コールバックを追加する
-    - @melpon
+  - @melpon
 - [ADD] SRTP/SRTCP で AES-GCM 128/256 を利用可能にする
-    - @melpon
+  - @melpon
 
 ## 2021.2
 
 - [UPDATE] WebRTC のバージョンを M90 (4430@{#3}) に上げる
-    - @melpon
+  - @melpon
 - [UPDATE] Boost のバージョンを 1.76.0 に上げる
-    - @voluntas
+  - @voluntas
 - [ADD] AV1 に対応
-    - @melpon
+  - @melpon
 
 ## 2021.1.2
 
 - [FIX] OpenSSLCertificate では無くなったので BoringSSLCertificate を利用するように修正
-    - TURN-TLS でセグフォする問題を解決
-    - @melpon
+  - TURN-TLS でセグフォする問題を解決
+  - @melpon
 
 ## 2021.1.1
 
 - [FIX] 4K 状態での回転を考慮して縦の最大サイズも 3840 にする
-    - @melpon @torikizi
+  - @melpon @torikizi
 - [FIX] H.264 でデコードした際に内部的な縦横サイズが変わらないのを修正
-    - @melpon @torikizi
+  - @melpon @torikizi
 
 ## 2021.1
 
 - [UPDATE] サイマルキャスト機能に対応する
-    - @melpon @torikizi
+  - @melpon @torikizi
 - [UPDATE] スポットライト機能に対応する
-    - @melpon @torikizi
+  - @melpon @torikizi
 - [UPDATE] WebRTC のバージョンを M89 (4389@{#5}) に上げる
-    - @melpon @torikizi @voluntas
+  - @melpon @torikizi @voluntas
 - [UPDATE] Boost のバージョンを 1.75.0 に上げる
-    - @voluntas
+  - @voluntas
 - [UPDATE] nlohmann/json を Boost.JSON に変更
-    - @melpon
+  - @melpon
 
 ## 2020.10
 
 - [UPDATE] WebRTC のバージョンを M87 (4280@{#10}) に上げる
-    - @melpon @torikizi
+  - @melpon @torikizi
 - [UPDATE] Boost のバージョンを 1.74.0 に上げる
 
 ## 2020.9
 
 - [UPDATE] WebRTC のバージョンを M86 (4240@{#1}) に上げる
-    - @voluntas
+  - @voluntas
 - [UPDATE] json を 3.9.1 に上げる
-    - @voluntas
+  - @voluntas
 
 ## 2020.8
 
 - [ADD] RenderTexture に depth buffer を設定できるようにする
-    - @melpon
+  - @melpon
 
 ## 2020.7
 
 - [ADD] iOS に対応する
-    - @melpon
+  - @melpon
 
 ## 2020.6.1
 
 - [UPDATE] WebRTC のバージョンを M84 (4147@{#11}) に上げる
-    - @voluntas
+  - @voluntas
 - [ADD] GetStats を Unity から呼べるようにする
-    - @melpon
+  - @melpon
 - [FIX] Android でビルドが通らなくなっていたのを `-fuse-ld=gold` にすることで修正
-    - @melpon
+  - @melpon
 
 ## 2020.6
 
@@ -239,131 +289,131 @@
 ## 2020.5
 
 - [UPDATE] Android 対応を正式版としてリリース
-    - @melpon
+  - @melpon
 - [UPDATE] WebRTC のバージョンを M84 (4147@{#10}) に上げる
-    - @melpon
+  - @melpon
 - [UPDATE] json を 3.8.0 に上げる
-    - @voluntas
+  - @voluntas
 - [FIX] EncodedImage::set_buffer が消えてしまったのを修正
-    - @melpon
+  - @melpon
 
 ## 2020.4
 
 - [ADD] 実験的機能として Android に対応する
-    - @melpon
+  - @melpon
 
 ## 2020.3.1
 
 - [FIX] Windows で CUDA が無い環境でも動くようにする
-    - @melpon
+  - @melpon
 
 ## 2020.3
 
 - [UPDATE] Boost のバージョンを 1.73.0 に上げる
-    - @voluntas
+  - @voluntas
 - [UPDATE] WebRTC のバージョンを M83 (4103@{#12}) に上げる
-    - @melpon
+  - @melpon
 - [CHANGE] Sora.Role.Upstream, Sora.Role.Downstream を削除
-    - @melpon
+  - @melpon
 - [FIX] 接続確立中に Sora.Dispose するとエラーになることがあったのを修正
-    - @melpon
+  - @melpon
 - [FIX] 接続が確立する前に ping を受け取ると通信が切断されてしまっていたのを修正
-    - @melpon
+  - @melpon
 - [FIX] Windows 版の H.264 デコードでリサイズが発生した際にエラーになるのを修正
-    - @melpon
+  - @melpon
 
 ## 2020.2
 
 - [UPDATE] WebRTC のバージョンを M81 (4044@{#12}) に上げる
-    - @voluntas
+  - @voluntas
 - [ADD] Windows 版の H.264 デコードに NVIDIA VIDEO CODEC SDK を利用する
-    - 実験的機能
-    - @melpon
+  - 実験的機能
+  - @melpon
 
 ## 2020.1
 
 - [ADD] Windows 版では H.264 エンコードに NVIDIA VIDEO CODEC SDK を利用する（利用可能な場合のみ）
-    - 実験的機能
-    - @melpon
+  - 実験的機能
+  - @melpon
 - [ADD] macOS 版では H.264 のエンコード/デコードに VideoToolbox を利用する
-    - 実験的機能
-    - @melpon
+  - 実験的機能
+  - @melpon
 - [ADD] Sora へ WebRTC 統計情報を送るようにする
-    - @melpon
+  - @melpon
 
 ## 1.0.4
 
 - [UPDATE] webrtc-build を 80.3987.2.2 に上げる
-    - @melpon
+  - @melpon
 - [CHANGE] Sora への接続時に sendonly, recvonly, sendrecv を指定できるようにする
-    - @melpon
+  - @melpon
 
 ## 1.0.3
 
 - [UPDATE] Boost のバージョンを 1.72.0 に上げる
-    - @melpon
+  - @melpon
 - [UPDATE] WebRTC のバージョンを M80 (3987@{#2}) に上げる
-    - @melpon
+  - @melpon
 
 ## 1.0.2
 
 - [UPDATE] WebRTC のバージョンを M79@{#5} に上げる
-    - @melpon
+  - @melpon
 - [UPDATE] Windows 版の WebRTC ライブラリを shiguredo-webrtc-build からダウンロードする
-    - @melpon
+  - @melpon
 - [UPDATE] macOS 版の WebRTC ライブラリを shiguredo-webrtc-build からダウンロードする
-    - @melpon
+  - @melpon
 
 ## 1.0.1
 
 - [ADD] connect 時の文字列に SDK や WebRTC のバージョンを送信する
-    - @melpon
+  - @melpon
 
 ## 1.0.0
 
 - [ADD] Windows 10 x86_64 対応
-    - @melpon
+  - @melpon
 - [ADD] macOS 10.15 対応
-    - @melpon
+  - @melpon
 - [ADD] macOS x86_64 でのデバイス指定機能を追加
-    - @melpon
+  - @melpon
 - [ADD] Windows x86_64 でのデバイス指定機能を追加
-    - @melpon
+  - @melpon
 - [ADD] カメラから映像を取得し Sora で送信
-    - @melpon
+  - @melpon
 - [ADD] カメラから映像を取得し Unity アプリに出力
-    - @melpon
+  - @melpon
 - [ADD] マイクから音声を取得し Sora で送信
-    - @melpon
+  - @melpon
 - [ADD] マイクから音声を取得し Unity アプリに出力
-    - @melpon
+  - @melpon
 - [ADD] Unity アプリで Sora からの音声を受信
-    - @melpon
+  - @melpon
 - [ADD] Unity アプリで Sora からの映像を受信
-    - @melpon
+  - @melpon
 - [ADD] Sora から受信した音声を Unity アプリに出力
-    - @melpon
+  - @melpon
 - [ADD] Sora から受信した映像を Unity アプリに出力
-    - @melpon
+  - @melpon
 - [ADD] マルチストリームへの対応
-    - @melpon
+  - @melpon
 - [ADD] VP8 / VP9 への対応
-    - @melpon
+  - @melpon
 - [ADD] Opus への対応
-    - @melpon
+  - @melpon
 - [ADD] Unity カメラからの映像取得に対応
-    - @melpon
+  - @melpon
 - [ADD] Sora のシグナリング通知に対応
-    - @melpon
+  - @melpon
 - [ADD] Sora の metadata に対応
-    - @melpon
+  - @melpon
 - [ADD] マイクの代わりに Unity からのオーディを出力に対応
-    - @melpon
+  - @melpon
 - [ADD] シグナリング開始時のコーデック指定機能を追加
-    - @melpon
+  - @melpon
 - [ADD] シグナリング開始時のビットレート指定機能を追加
-    - @melpon
+  - @melpon
 - [ADD] Unity 側で受信したオーディオを再生できるようにする
-    - @melpon
+  - @melpon
 - [ADD] 受信したオーディオを AudioClip から再生できるようにする
-    - @melpon
+  - @melpon

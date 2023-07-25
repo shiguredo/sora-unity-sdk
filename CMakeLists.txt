@@ -19,7 +19,8 @@ set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY NEVER)
 set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE NEVER)
 set(CMAKE_FIND_ROOT_PATH_MODE_PACKAGE NEVER)
 
-find_package(Boost REQUIRED COMPONENTS json)
+find_package(Boost REQUIRED COMPONENTS json filesystem)
+# find_package(Lyra REQUIRED)
 find_package(WebRTC REQUIRED)
 find_package(Sora REQUIRED)
 find_package(Threads REQUIRED)
@@ -62,7 +63,7 @@ elseif (SORA_UNITY_SDK_PACKAGE STREQUAL "ubuntu-20.04_x86_64")
   set(SORA_UNITY_SDK_PLATFORM Ubuntu)
 endif()
 
-set_target_properties(SoraUnitySdk PROPERTIES CXX_STANDARD 17 C_STANDARD 99)
+set_target_properties(SoraUnitySdk PROPERTIES CXX_STANDARD 20 C_STANDARD 99)
 
 target_sources(SoraUnitySdk
   PRIVATE

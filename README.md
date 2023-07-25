@@ -1,6 +1,6 @@
 # Sora Unity SDK
 
-[![libwebrtc](https://img.shields.io/badge/libwebrtc-105.5195-blue.svg)](https://chromium.googlesource.com/external/webrtc/+/branch-heads/5195)
+[![libwebrtc](https://img.shields.io/badge/libwebrtc-114.5735-blue.svg)](https://chromium.googlesource.com/external/webrtc/+/branch-heads/5735)
 [![GitHub tag](https://img.shields.io/github/tag/shiguredo/sora-unity-sdk.svg)](https://github.com/shiguredo/sora-unity-sdk)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Actions Status](https://github.com/shiguredo/sora-unity-sdk/workflows/build/badge.svg)](https://github.com/shiguredo/sora-unity-sdk/actions)
@@ -38,15 +38,15 @@ Please read https://github.com/shiguredo/oss/blob/master/README.en.md before use
 
 ## システム条件
 
-- WebRTC SFU Sora 2022.1.3 以降
+- WebRTC SFU Sora 2023.1.0 以降
 
 ## 対応プラットフォーム
 
-- Windows 10 1809 x86_64 以降
-- macOS 12.4 M1 以降
+- Windows 10 22H2 x86_64 以降
+- macOS 13.4.1 M1 以降
 - Android 7 以降
-- iOS 12 以降
-- Ubuntu 20.04
+- iOS 13 以降
+- Ubuntu 20.04 x86_64
 
 ## 対応機能
 
@@ -94,6 +94,9 @@ Please read https://github.com/shiguredo/oss/blob/master/README.en.md before use
     - Windows 版
         - H.264 のハードウェアエンコードへの対応
         - H.264 のハードウェアデコードへの対応
+        - VP8 のハードウェアデコードへの対応
+        - VP9 のハードウェアデコードへの対応
+- ミュート機能
 
 ## Sora Unity SDK for MS Hololens2
 
@@ -114,6 +117,8 @@ Please read https://github.com/shiguredo/oss/blob/master/README.en.md before use
     - 企業名非公開
 - Microsoft HoloLens 2 対応
     - [NTTコノキュー](https://www.nttqonoq.com/) 様
+- ミュート機能
+    - [NTTコノキュー](https://www.nttqonoq.com/) 様
 
 ## 有償での優先実装が可能な機能一覧
 
@@ -125,7 +130,6 @@ Please read https://github.com/shiguredo/oss/blob/master/README.en.md before use
 
 ### 機能
 
-- ミュート機能
 - デバイスをつかまないようにする機能
 - 音声のみ送受信機能
 - サイマルキャスト rid 指定対応
@@ -136,8 +140,6 @@ Please read https://github.com/shiguredo/oss/blob/master/README.en.md before use
 
 ### NVIDIA VIDEO CODEC SDK
 
-- VP8 のハードウェアデコードへの対応
-- VP9 のハードウェアデコードへの対応
 - AV1 のハードウェアデコードへの対応
 
 ## ライセンス
@@ -145,8 +147,8 @@ Please read https://github.com/shiguredo/oss/blob/master/README.en.md before use
 Apache License 2.0
 
 ```
-Copyright 2019-2022, Wandbox LLC (Original Author)
-Copyright 2019-2022, Shiguredo Inc.
+Copyright 2019-2023, Wandbox LLC (Original Author)
+Copyright 2019-2023, Shiguredo Inc.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -160,5 +162,3 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 ```
-
-
