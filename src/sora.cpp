@@ -558,7 +558,16 @@ void Sora::DoSwitchCamera(const sora_conf::internal::CameraConfig& cc) {
   void* env = sora::GetJNIEnv();
   void* android_context = GetAndroidApplicationContext(env);
 
+#if defined(SORA_UNITY_SDK_ANDROID)
+  if (capturer_ != nullptr && capturer_type_ == 0) {
+    static_cast<sora::AndroidCapturer*>(capturer_.get())->Stop();
+  }
+#endif
+  if (capturer_ != nullptr && capturer_type_ != 0) {
+    static_cast<UnityCameraCapturer*>(capturer_.get())->Stop();
+  }
   capturer_ = nullptr;
+
   auto capturer = CreateVideoCapturer(
       cc.capturer_type, (void*)cc.unity_camera_texture,
       cc.video_capturer_device, cc.video_width, cc.video_height, cc.video_fps,
