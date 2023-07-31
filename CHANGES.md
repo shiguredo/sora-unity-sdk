@@ -11,6 +11,12 @@
 
 ## develop
 
+- [CHANGE] `Sora.Config` 中にあるキャプチャラに関するフィールドを `Sora.CameraConfig` に移動する
+    - 修正方法は （TODO: @miosakuma がドキュメントへのリンクに差し替える） を参照して下さい
+    - @melpon
+- [ADD] 接続中にキャプチャラを切り替える機能を実装
+    - @melpon
+
 ## 2023.2.0 (2023-07-19)
 
 - [UPDATE] libwebrtc を `m114.5735.2.0` に上げる
