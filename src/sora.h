@@ -53,6 +53,7 @@ class Sora : public std::enable_shared_from_this<Sora>,
 
   void Connect(const sora_conf::internal::ConnectConfig& cc);
   void Disconnect();
+  void SwitchCamera(const sora_conf::internal::CameraConfig& cc);
 
   static void UNITY_INTERFACE_API RenderCallbackStatic(int event_id);
   int GetRenderCallbackEventID() const;
@@ -91,6 +92,7 @@ class Sora : public std::enable_shared_from_this<Sora>,
  private:
   void DoConnect(const sora_conf::internal::ConnectConfig& config,
                  std::function<void(int, std::string)> on_disconnect);
+  void DoSwitchCamera(const sora_conf::internal::CameraConfig& cc);
 
   static rtc::scoped_refptr<UnityAudioDevice> CreateADM(
       webrtc::TaskQueueFactory* task_queue_factory,
@@ -140,6 +142,7 @@ class Sora : public std::enable_shared_from_this<Sora>,
   std::unique_ptr<UnityRenderer> renderer_;
   rtc::scoped_refptr<webrtc::AudioTrackInterface> audio_track_;
   rtc::scoped_refptr<webrtc::VideoTrackInterface> video_track_;
+  rtc::scoped_refptr<webrtc::RtpSenderInterface> video_sender_;
   std::function<void(ptrid_t, std::string)> on_add_track_;
   std::function<void(ptrid_t, std::string)> on_remove_track_;
   std::function<void(std::string)> on_set_offer_;

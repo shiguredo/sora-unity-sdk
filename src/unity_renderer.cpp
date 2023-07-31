@@ -19,6 +19,11 @@ UnityRenderer::Sink::~Sink() {
 ptrid_t UnityRenderer::Sink::GetSinkID() const {
   return ptrid_;
 }
+void UnityRenderer::Sink::SetTrack(webrtc::VideoTrackInterface* track) {
+  track_->RemoveSink(this);
+  track->AddOrUpdateSink(this, rtc::VideoSinkWants());
+  track_ = track;
+}
 
 rtc::scoped_refptr<webrtc::VideoFrameBuffer>
 UnityRenderer::Sink::GetFrameBuffer() {
@@ -105,6 +110,20 @@ ptrid_t UnityRenderer::RemoveTrack(webrtc::VideoTrackInterface* track) {
   auto sink_id = it->second->GetSinkID();
   sinks_.erase(std::remove_if(sinks_.begin(), sinks_.end(), f), sinks_.end());
   return sink_id;
+}
+
+void UnityRenderer::ReplaceTrack(webrtc::VideoTrackInterface* oldTrack,
+                                 webrtc::VideoTrackInterface* newTrack) {
+  RTC_LOG(LS_INFO) << "UnityRenderer::ReplaceTrack";
+  auto it = std::find_if(sinks_.begin(), sinks_.end(),
+                         [oldTrack](const VideoSinkVector::value_type& sink) {
+                           return sink.first == oldTrack;
+                         });
+  if (it == sinks_.end()) {
+    return;
+  }
+  it->first = newTrack;
+  it->second->SetTrack(newTrack);
 }
 
 }  // namespace sora_unity_sdk
