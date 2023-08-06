@@ -380,23 +380,28 @@ public class Sora : IDisposable
             }
         }
 
-        if (config.MrcHologramCompositionEnabled != null) {
+        if (config.MrcHologramCompositionEnabled != null)
+        {
             cc.enable_mrc_hologram_composition_enabled = true;
             cc.mrc_hologram_composition_enabled = config.MrcHologramCompositionEnabled.Value;
         }
-        if (config.MrcRecordingIndicatorEnabled != null) {
+        if (config.MrcRecordingIndicatorEnabled != null)
+        {
             cc.enable_mrc_recording_indicator_enabled = true;
             cc.mrc_recording_indicator_enabled = config.MrcRecordingIndicatorEnabled.Value;
         }
-        if (config.MrcVideoStabilizationEnabled != null) {
+        if (config.MrcVideoStabilizationEnabled != null)
+        {
             cc.enable_mrc_video_stabilization_enabled = true;
             cc.mrc_video_stabilization_enabled = config.MrcVideoStabilizationEnabled.Value;
         }
-        if (config.MrcVideoStabilizationBufferLength != null) {
+        if (config.MrcVideoStabilizationBufferLength != null)
+        {
             cc.enable_mrc_video_stabilization_buffer_length = true;
             cc.mrc_video_stabilization_buffer_length = config.MrcVideoStabilizationBufferLength.Value;
         }
-        if (config.GlobalOpacityCoefficient != null) {
+        if (config.GlobalOpacityCoefficient != null)
+        {
             cc.enable_mrc_global_opacity_coefficient = true;
             cc.mrc_global_opacity_coefficient = config.GlobalOpacityCoefficient.Value;
         }
@@ -639,6 +644,7 @@ public class Sora : IDisposable
     [AOT.MonoPInvokeCallback(typeof(CapturerFrameCallbackDelegate))]
     static private void CapturerFrameCallback(string data, IntPtr userdata)
     {
+        UnityEngine.Debug.LogFormat("CapturerFrameCallback: json={0}", data);
         var callback = GCHandle.FromIntPtr(userdata).Target as Action<SoraConf.VideoFrame>;
         var frame = Jsonif.Json.FromJson<SoraConf.VideoFrame>(data);
         callback(frame);

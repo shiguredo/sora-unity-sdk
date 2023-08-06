@@ -331,6 +331,9 @@ void Sora::DoConnect(const sora_conf::internal::ConnectConfig& cc,
           v.nv12_data_y = reinterpret_cast<int64_t>(p->DataY());
           v.nv12_data_uv = reinterpret_cast<int64_t>(p->DataUV());
         }
+        RTC_LOG(LS_INFO) << "[hololens2-debug] Sora::DoConnect::on_frame: "
+                            "webrtc::VideoFrameBuffer::Type="
+                         << (int)vfb->type() << " json=" << jsonif::to_json(f);
         on_frame(jsonif::to_json(f));
       };
     }
