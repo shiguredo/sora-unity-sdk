@@ -11,6 +11,9 @@
 
 ## develop
 
+- [UPDATE] Sora C++ SDK を `2023.9.0` に上げる
+  - @torikizi
+
 ## 2023.2.0 (2023-07-19)
 
 - [UPDATE] libwebrtc を `m114.5735.2.0` に上げる
