@@ -644,7 +644,7 @@ public class Sora : IDisposable
     [AOT.MonoPInvokeCallback(typeof(CapturerFrameCallbackDelegate))]
     static private void CapturerFrameCallback(string data, IntPtr userdata)
     {
-        UnityEngine.Debug.LogFormat("CapturerFrameCallback: json={0}", data);
+        //UnityEngine.Debug.LogFormat("CapturerFrameCallback: json={0}", data);
         var callback = GCHandle.FromIntPtr(userdata).Target as Action<SoraConf.VideoFrame>;
         var frame = Jsonif.Json.FromJson<SoraConf.VideoFrame>(data);
         callback(frame);
