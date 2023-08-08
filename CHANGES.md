@@ -11,6 +11,8 @@
 
 ## develop
 
+## 2023.3.0 (2023-08-08)
+
 - [UPDATE] Sora C++ SDK を `2023.9.0` に上げる
   - @torikizi
 
