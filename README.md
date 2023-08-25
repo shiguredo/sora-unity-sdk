@@ -130,7 +130,7 @@ Please read https://github.com/shiguredo/oss/blob/master/README.en.md before use
 
 ### 機能
 
-- デバイス切り替え機能
+- 音声出力先変更機能
 - デバイスをつかまないようにする機能
 - 音声のみ送受信機能
 - サイマルキャスト rid 指定対応
