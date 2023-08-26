@@ -13,8 +13,8 @@
 
 ## 2023.3.0 (2023-08-08)
 
-- [UPDATE] Sora C++ SDK を `2023.9.0` に上げる
-  - @torikizi
+- [UPDATE] Sora C++ SDK を `2023.10.0` に上げる
+  - @torikizi @voluntas
 - [UPDATE] libwebrtc を `m115.5790.7.0` に上げる
   - @torikizi
 
