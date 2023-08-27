@@ -17,6 +17,13 @@
 - [ADD] 接続中にキャプチャラを切り替える機能を実装
     - @melpon
 
+## 2023.3.0 (2023-08-08)
+
+- [UPDATE] Sora C++ SDK を `2023.10.0` に上げる
+  - @torikizi @voluntas
+- [UPDATE] libwebrtc を `m115.5790.7.0` に上げる
+  - @torikizi
+
 ## 2023.2.0 (2023-07-19)
 
 - [UPDATE] libwebrtc を `m114.5735.2.0` に上げる

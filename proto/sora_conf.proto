@@ -33,7 +33,8 @@ message VideoFrameBuffer {
         kI444 = 4;
         kI010 = 5;
         kI210 = 6;
-        kNV12 = 7;
+        kI410 = 7;
+        kNV12 = 8;
     }
     int64 baseptr = 1;
     Type type = 2;
