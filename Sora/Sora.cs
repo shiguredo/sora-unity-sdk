@@ -100,6 +100,8 @@ public class Sora : IDisposable
         public SpotlightFocusRidType? SpotlightUnfocusRid;
         public bool? Simulcast;
         public SimulcastRidType? SimulcastRid = null;
+        public bool NoVideoDevice = false;
+        public bool NoAudioDevice = false;
         public CapturerType CapturerType = Sora.CapturerType.DeviceCamera;
         public UnityEngine.Camera UnityCamera = null;
         public int UnityCameraRenderTargetDepthBuffer = 16;
@@ -282,6 +284,8 @@ public class Sora : IDisposable
         cc.simulcast = config.Simulcast.GetValueOrDefault();
         cc.simulcast_rid = config.SimulcastRid == null ? "" : config.SimulcastRid.Value.ToString().ToLower();
         cc.insecure = config.Insecure;
+        cc.no_video_device = config.NoVideoDevice;
+        cc.no_audio_device = config.NoAudioDevice;
         cc.capturer_type = (int)config.CapturerType;
         cc.unity_camera_texture = unityCameraTexture.ToInt64();
         cc.video = config.Video;

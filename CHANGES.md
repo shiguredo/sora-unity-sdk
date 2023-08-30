@@ -11,7 +11,9 @@
 
 ## develop
 
-- [ADD] ハードウェアエンコーダを利用するかどうかを設定する `UseHardwareEncoder` オプションを追加
+- [ADD] デバイスを掴まないようにする `NoVideoDevice`, `NoAudioDevice` を追加
+  - @melpon
+- [ADD] ハードウェアエンコーダを利用するかどうかを設定する `UseHardwareEncoder` を追加
   - @melpon
 - [UPDATE] SoraClientContext を利用してコードを短くする
   - @melpon

@@ -209,10 +209,10 @@ void Sora::DoConnect(const sora_conf::internal::ConnectConfig& cc,
 #endif
 
         unity_adm_ = CreateADM(
-            media_dependencies.task_queue_factory, false, cc.unity_audio_input,
-            cc.unity_audio_output, on_handle_audio_, cc.audio_recording_device,
-            cc.audio_playout_device, dependencies.worker_thread, worker_env,
-            worker_context);
+            media_dependencies.task_queue_factory, cc.no_audio_device,
+            cc.unity_audio_input, cc.unity_audio_output, on_handle_audio_,
+            cc.audio_recording_device, cc.audio_playout_device,
+            dependencies.worker_thread, worker_env, worker_context);
         media_dependencies.adm = unity_adm_;
 
 #if defined(SORA_UNITY_SDK_ANDROID)
@@ -279,11 +279,11 @@ void Sora::DoConnect(const sora_conf::internal::ConnectConfig& cc,
     }
 
     auto capturer = CreateVideoCapturer(
-        cc.capturer_type, (void*)cc.unity_camera_texture,
+        cc.capturer_type, (void*)cc.unity_camera_texture, cc.no_video_device,
         cc.video_capturer_device, cc.video_width, cc.video_height, cc.video_fps,
         on_frame, sora_context_->signaling_thread(), env, android_context,
         unity_context_);
-    if (!capturer) {
+    if (!cc.no_video_device && !capturer) {
       on_disconnect((int)sora_conf::ErrorCode::INTERNAL_ERROR,
                     "Capturer Init Failed");
       return;
@@ -297,9 +297,12 @@ void Sora::DoConnect(const sora_conf::internal::ConnectConfig& cc,
         audio_track_id, sora_context_->peer_connection_factory()
                             ->CreateAudioSource(cricket::AudioOptions())
                             .get());
-    std::string video_track_id = rtc::CreateRandomString(16);
-    video_track_ = sora_context_->peer_connection_factory()->CreateVideoTrack(
-        video_track_id, capturer.get());
+
+    if (capturer) {
+      std::string video_track_id = rtc::CreateRandomString(16);
+      video_track_ = sora_context_->peer_connection_factory()->CreateVideoTrack(
+          video_track_id, capturer.get());
+    }
   }
 
   {
@@ -627,6 +630,7 @@ bool Sora::InitADM(rtc::scoped_refptr<webrtc::AudioDeviceModule> adm,
 rtc::scoped_refptr<webrtc::VideoTrackSourceInterface> Sora::CreateVideoCapturer(
     int capturer_type,
     void* unity_camera_texture,
+    bool no_video_device,
     std::string video_capturer_device,
     int video_width,
     int video_height,
@@ -637,6 +641,10 @@ rtc::scoped_refptr<webrtc::VideoTrackSourceInterface> Sora::CreateVideoCapturer(
     void* android_context,
     UnityContext* unity_context) {
   if (capturer_type == 0) {
+    if (no_video_device) {
+      return nullptr;
+    }
+
     // 実カメラ（デバイス）を使う
     sora::CameraDeviceCapturerConfig config;
     config.width = video_width;

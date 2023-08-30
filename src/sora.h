@@ -112,6 +112,7 @@ class Sora : public std::enable_shared_from_this<Sora>,
   CreateVideoCapturer(
       int capturer_type,
       void* unity_camera_texture,
+      bool no_video_device,
       std::string video_capturer_device,
       int video_width,
       int video_height,

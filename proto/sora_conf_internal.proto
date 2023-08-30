@@ -54,6 +54,8 @@ message ConnectConfig {
     bool enable_simulcast = 14;
     bool simulcast = 15;
     string simulcast_rid = 16;
+    bool no_video_device = 160;
+    bool no_audio_device = 161;
     int32 capturer_type = 17;
     int64 unity_camera_texture = 18;
     string video_capturer_device = 19;
