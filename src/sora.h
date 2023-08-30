@@ -6,6 +6,7 @@
 #include <thread>
 
 // Sora
+#include <sora/sora_client_context.h>
 #include <sora/sora_signaling.h>
 
 // Boost
@@ -118,7 +119,8 @@ class Sora : public std::enable_shared_from_this<Sora>,
       std::function<void(const webrtc::VideoFrame& frame)> on_frame,
       rtc::Thread* signaling_thread,
       void* jni_env,
-      void* android_context);
+      void* android_context,
+      UnityContext* unity_context);
 
   void PushEvent(std::function<void()> f);
 
@@ -136,7 +138,7 @@ class Sora : public std::enable_shared_from_this<Sora>,
  private:
   std::unique_ptr<boost::asio::io_context> ioc_;
   std::shared_ptr<sora::SoraSignaling> signaling_;
-  UnityContext* context_;
+  UnityContext* unity_context_;
   std::unique_ptr<UnityRenderer> renderer_;
   rtc::scoped_refptr<webrtc::AudioTrackInterface> audio_track_;
   rtc::scoped_refptr<webrtc::VideoTrackInterface> video_track_;
@@ -151,12 +153,8 @@ class Sora : public std::enable_shared_from_this<Sora>,
   std::function<void(const int16_t*, int, int)> on_handle_audio_;
   std::function<void(std::string)> on_capturer_frame_;
 
+  std::shared_ptr<sora::SoraClientContext> sora_context_;
   std::unique_ptr<rtc::Thread> io_thread_;
-  std::unique_ptr<rtc::Thread> network_thread_;
-  std::unique_ptr<rtc::Thread> worker_thread_;
-  std::unique_ptr<rtc::Thread> signaling_thread_;
-  rtc::scoped_refptr<webrtc::PeerConnectionFactoryInterface> factory_;
-  rtc::scoped_refptr<webrtc::ConnectionContext> connection_context_;
 
   std::mutex event_mutex_;
   std::deque<std::function<void()>> event_queue_;
