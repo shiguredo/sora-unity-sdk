@@ -189,6 +189,7 @@ void Sora::DoConnect(const sora_conf::internal::ConnectConfig& cc,
 
   sora::SoraClientContextConfig client_config;
   client_config.use_audio_device = false;
+  client_config.use_hardware_encoder = cc.use_hardware_encoder;
   client_config.configure_media_dependencies =
       [&, this](const webrtc::PeerConnectionFactoryDependencies& dependencies,
                 cricket::MediaEngineDependencies& media_dependencies) {

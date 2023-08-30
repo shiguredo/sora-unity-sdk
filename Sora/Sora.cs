@@ -153,6 +153,8 @@ public class Sora : IDisposable
         public string ProxyAgent = "";
 
         public ForwardingFilter ForwardingFilter;
+
+        public bool? UseHardwareEncoder;
     }
 
     IntPtr p;
@@ -270,14 +272,14 @@ public class Sora : IDisposable
         cc.signaling_notify_metadata = config.SignalingNotifyMetadata;
         cc.role = role;
         cc.enable_multistream = config.Multistream != null;
-        cc.multistream = config.Multistream == null ? false : config.Multistream.Value;
+        cc.multistream = config.Multistream.GetValueOrDefault();
         cc.enable_spotlight = config.Spotlight != null;
-        cc.spotlight = config.Spotlight == null ? false : config.Spotlight.Value;
+        cc.spotlight = config.Spotlight.GetValueOrDefault();
         cc.spotlight_number = config.SpotlightNumber;
         cc.spotlight_focus_rid = config.SpotlightFocusRid == null ? "" : config.SpotlightFocusRid.Value.ToString().ToLower();
         cc.spotlight_unfocus_rid = config.SpotlightUnfocusRid == null ? "" : config.SpotlightUnfocusRid.Value.ToString().ToLower();
         cc.enable_simulcast = config.Simulcast != null;
-        cc.simulcast = config.Simulcast == null ? false : config.Simulcast.Value;
+        cc.simulcast = config.Simulcast.GetValueOrDefault();
         cc.simulcast_rid = config.SimulcastRid == null ? "" : config.SimulcastRid.Value.ToString().ToLower();
         cc.insecure = config.Insecure;
         cc.capturer_type = (int)config.CapturerType;
@@ -300,7 +302,7 @@ public class Sora : IDisposable
         cc.audio_codec_type = config.AudioCodecType.ToString();
         cc.audio_codec_lyra_bitrate = config.AudioCodecLyraBitrate;
         cc.enable_audio_codec_lyra_usedtx = config.AudioCodecLyraUsedtx != null;
-        cc.audio_codec_lyra_usedtx = config.AudioCodecLyraUsedtx == null ? false : config.AudioCodecLyraUsedtx.Value;
+        cc.audio_codec_lyra_usedtx = config.AudioCodecLyraUsedtx.GetValueOrDefault();
         cc.check_lyra_version = config.CheckLyraVersion;
         cc.audio_bit_rate = config.AudioBitRate;
         cc.audio_streaming_language_code = config.AudioStreamingLanguageCode;
@@ -372,6 +374,8 @@ public class Sora : IDisposable
                 cc.forwarding_filter.rules.Add(ccrs);
             }
         }
+        cc.enable_use_hardware_encoder = config.UseHardwareEncoder != null;
+        cc.use_hardware_encoder = config.UseHardwareEncoder.GetValueOrDefault();
 
         sora_connect(p, Jsonif.Json.ToJson(cc));
     }

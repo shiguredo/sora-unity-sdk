@@ -11,6 +11,8 @@
 
 ## develop
 
+- [ADD] ハードウェアエンコーダを利用するかどうかを設定する `UseHardwareEncoder` オプションを追加
+  - @melpon
 - [UPDATE] SoraClientContext を利用してコードを短くする
   - @melpon
 

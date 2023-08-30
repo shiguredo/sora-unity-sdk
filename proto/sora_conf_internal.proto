@@ -94,4 +94,6 @@ message ConnectConfig {
     string signaling_notify_metadata = 49;
     bool enable_forwarding_filter = 50;
     ForwardingFilter forwarding_filter = 51;
+    bool enable_use_hardware_encoder = 52;
+    bool use_hardware_encoder = 53;
 }
