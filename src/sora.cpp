@@ -152,14 +152,18 @@ void Sora::Connect(const sora_conf::internal::ConnectConfig& cc) {
     return;
   }
 
-  IosAudioInit(
-      [this, on_disconnect = std::move(on_disconnect)](std::string error) {
-        if (!error.empty()) {
-          RTC_LOG(LS_ERROR) << "Failed to IosAudioInit: error=" << error;
-          on_disconnect((int)sora_conf::ErrorCode::INTERNAL_ERROR,
-                        "Failed to IosAudioInit: error=" + error);
-        }
-      });
+  static bool ios_audio_init = false;
+  if (!ios_audio_init) {
+    IosAudioInit(
+        [this, on_disconnect = std::move(on_disconnect)](std::string error) {
+          if (!error.empty()) {
+            RTC_LOG(LS_ERROR) << "Failed to IosAudioInit: error=" << error;
+            on_disconnect((int)sora_conf::ErrorCode::INTERNAL_ERROR,
+                          "Failed to IosAudioInit: error=" + error);
+          }
+          ios_audio_init = true;
+        });
+  }
   DoConnect(cc, std::move(on_disconnect));
 #else
   DoConnect(cc, std::move(on_disconnect));
