@@ -11,11 +11,15 @@
 
 ## develop
 
+- [UPDATE] SoraClientContext を利用してコードを短くする
+  - @melpon
+- [UPDATE] Sora C++ SDK を `2023.11.0` に上げる
+  - @melpon
+- [UPDATE] libwebrtc を `m116.5845.6.1` に上げる
+  - @melpon
 - [ADD] デバイスを掴まないようにする `NoVideoDevice`, `NoAudioDevice` を追加
   - @melpon
 - [ADD] ハードウェアエンコーダを利用するかどうかを設定する `UseHardwareEncoder` を追加
-  - @melpon
-- [UPDATE] SoraClientContext を利用してコードを短くする
   - @melpon
 
 ## 2023.3.0 (2023-08-08)
