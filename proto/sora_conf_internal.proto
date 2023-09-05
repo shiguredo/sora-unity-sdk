@@ -37,6 +37,15 @@ message ForwardingFilter {
     repeated Rules rules = 2;
 }
 
+message CameraConfig {
+    int32 capturer_type = 17;
+    int64 unity_camera_texture = 18;
+    string video_capturer_device = 19;
+    int32 video_width = 22;
+    int32 video_height = 23;
+    int32 video_fps = 24;
+}
+
 message ConnectConfig {
     string unity_version = 1;
     repeated string signaling_url = 2;
@@ -54,14 +63,9 @@ message ConnectConfig {
     bool enable_simulcast = 14;
     bool simulcast = 15;
     string simulcast_rid = 16;
-    int32 capturer_type = 17;
-    int64 unity_camera_texture = 18;
-    string video_capturer_device = 19;
+    CameraConfig camera_config = 17;
     bool video = 20;
     bool audio = 21;
-    int32 video_width = 22;
-    int32 video_height = 23;
-    int32 video_fps = 24;
     string video_codec_type = 25;
     string video_vp9_params = 250;
     string video_av1_params = 251;

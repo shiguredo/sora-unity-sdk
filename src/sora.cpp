@@ -66,6 +66,7 @@ Sora::~Sora() {
   capturer_ = nullptr;
   unity_adm_ = nullptr;
 
+  video_sender_ = nullptr;
   audio_track_ = nullptr;
   video_track_ = nullptr;
   connection_context_ = nullptr;
@@ -145,6 +146,40 @@ void Sora::DispatchEvents() {
     }
     f();
   }
+}
+
+static sora_conf::VideoFrame VideoFrameToConfig(
+    const webrtc::VideoFrame& frame) {
+  sora_conf::VideoFrame f;
+  f.baseptr = reinterpret_cast<int64_t>(&frame);
+  f.id = frame.id();
+  f.timestamp_us = frame.timestamp_us();
+  f.timestamp = frame.timestamp();
+  f.ntp_time_ms = frame.ntp_time_ms();
+  f.rotation = (int)frame.rotation();
+  auto& v = f.video_frame_buffer;
+  auto vfb = frame.video_frame_buffer();
+  v.baseptr = reinterpret_cast<int64_t>(vfb.get());
+  v.type = (sora_conf::VideoFrameBuffer::Type)vfb->type();
+  v.width = vfb->width();
+  v.height = vfb->height();
+  if (vfb->type() == webrtc::VideoFrameBuffer::Type::kI420) {
+    auto p = vfb->GetI420();
+    v.i420_stride_y = p->StrideY();
+    v.i420_stride_u = p->StrideU();
+    v.i420_stride_v = p->StrideV();
+    v.i420_data_y = reinterpret_cast<int64_t>(p->DataY());
+    v.i420_data_u = reinterpret_cast<int64_t>(p->DataU());
+    v.i420_data_v = reinterpret_cast<int64_t>(p->DataV());
+  }
+  if (vfb->type() == webrtc::VideoFrameBuffer::Type::kNV12) {
+    auto p = vfb->GetNV12();
+    v.nv12_stride_y = p->StrideY();
+    v.nv12_stride_uv = p->StrideUV();
+    v.nv12_data_y = reinterpret_cast<int64_t>(p->DataY());
+    v.nv12_data_uv = reinterpret_cast<int64_t>(p->DataUV());
+  }
+  return f;
 }
 
 void Sora::Connect(const sora_conf::internal::ConnectConfig& cc) {
@@ -302,43 +337,17 @@ void Sora::DoConnect(const sora_conf::internal::ConnectConfig& cc,
     if (on_capturer_frame_) {
       on_frame = [on_frame =
                       on_capturer_frame_](const webrtc::VideoFrame& frame) {
-        sora_conf::VideoFrame f;
-        f.baseptr = reinterpret_cast<int64_t>(&frame);
-        f.id = frame.id();
-        f.timestamp_us = frame.timestamp_us();
-        f.timestamp = frame.timestamp();
-        f.ntp_time_ms = frame.ntp_time_ms();
-        f.rotation = (int)frame.rotation();
-        auto& v = f.video_frame_buffer;
-        auto vfb = frame.video_frame_buffer();
-        v.baseptr = reinterpret_cast<int64_t>(vfb.get());
-        v.type = (sora_conf::VideoFrameBuffer::Type)vfb->type();
-        v.width = vfb->width();
-        v.height = vfb->height();
-        if (vfb->type() == webrtc::VideoFrameBuffer::Type::kI420) {
-          auto p = vfb->GetI420();
-          v.i420_stride_y = p->StrideY();
-          v.i420_stride_u = p->StrideU();
-          v.i420_stride_v = p->StrideV();
-          v.i420_data_y = reinterpret_cast<int64_t>(p->DataY());
-          v.i420_data_u = reinterpret_cast<int64_t>(p->DataU());
-          v.i420_data_v = reinterpret_cast<int64_t>(p->DataV());
-        }
-        if (vfb->type() == webrtc::VideoFrameBuffer::Type::kNV12) {
-          auto p = vfb->GetNV12();
-          v.nv12_stride_y = p->StrideY();
-          v.nv12_stride_uv = p->StrideUV();
-          v.nv12_data_y = reinterpret_cast<int64_t>(p->DataY());
-          v.nv12_data_uv = reinterpret_cast<int64_t>(p->DataUV());
-        }
+        sora_conf::VideoFrame f = VideoFrameToConfig(frame);
         on_frame(jsonif::to_json(f));
       };
     }
 
     auto capturer = CreateVideoCapturer(
-        cc.capturer_type, (void*)cc.unity_camera_texture,
-        cc.video_capturer_device, cc.video_width, cc.video_height, cc.video_fps,
-        on_frame, signaling_thread_.get(), env, android_context);
+        cc.camera_config.capturer_type,
+        (void*)cc.camera_config.unity_camera_texture,
+        cc.camera_config.video_capturer_device, cc.camera_config.video_width,
+        cc.camera_config.video_height, cc.camera_config.video_fps, on_frame,
+        signaling_thread_.get(), env, android_context);
     if (!capturer) {
       on_disconnect((int)sora_conf::ErrorCode::INTERNAL_ERROR,
                     "Capturer Init Failed");
@@ -346,7 +355,7 @@ void Sora::DoConnect(const sora_conf::internal::ConnectConfig& cc,
     }
 
     capturer_ = capturer;
-    capturer_type_ = cc.capturer_type;
+    capturer_type_ = cc.camera_config.capturer_type;
 
     std::string audio_track_id = rtc::CreateRandomString(16);
     audio_track_ = factory_->CreateAudioTrack(
@@ -528,6 +537,54 @@ void Sora::Disconnect() {
     return;
   }
   signaling_->Disconnect();
+}
+
+void Sora::SwitchCamera(const sora_conf::internal::CameraConfig& cc) {
+  RTC_LOG(LS_INFO) << "SwitchCamera: " << jsonif::to_json(cc);
+  boost::asio::post(*ioc_, [self = shared_from_this(), cc = cc]() {
+    self->DoSwitchCamera(cc);
+  });
+}
+void Sora::DoSwitchCamera(const sora_conf::internal::CameraConfig& cc) {
+  std::function<void(const webrtc::VideoFrame& frame)> on_frame;
+  if (on_capturer_frame_) {
+    on_frame = [on_frame =
+                    on_capturer_frame_](const webrtc::VideoFrame& frame) {
+      sora_conf::VideoFrame f = VideoFrameToConfig(frame);
+      on_frame(jsonif::to_json(f));
+    };
+  }
+
+  void* env = sora::GetJNIEnv();
+  void* android_context = GetAndroidApplicationContext(env);
+
+#if defined(SORA_UNITY_SDK_ANDROID)
+  if (capturer_ != nullptr && capturer_type_ == 0) {
+    static_cast<sora::AndroidCapturer*>(capturer_.get())->Stop();
+  }
+#endif
+  if (capturer_ != nullptr && capturer_type_ != 0) {
+    static_cast<UnityCameraCapturer*>(capturer_.get())->Stop();
+  }
+  capturer_ = nullptr;
+
+  auto capturer = CreateVideoCapturer(
+      cc.capturer_type, (void*)cc.unity_camera_texture,
+      cc.video_capturer_device, cc.video_width, cc.video_height, cc.video_fps,
+      on_frame, signaling_thread_.get(), env, android_context);
+  if (!capturer) {
+    RTC_LOG(LS_ERROR) << "Failed to CreateVideoCapturer";
+    return;
+  }
+
+  capturer_ = capturer;
+  capturer_type_ = cc.capturer_type;
+
+  std::string video_track_id = rtc::CreateRandomString(16);
+  auto video_track = factory_->CreateVideoTrack(video_track_id, capturer.get());
+  renderer_->ReplaceTrack(video_track_.get(), video_track.get());
+  video_sender_->SetTrack(video_track.get());
+  video_track_ = video_track;
 }
 
 void Sora::RenderCallbackStatic(int event_id) {
@@ -791,6 +848,7 @@ void Sora::OnSetOffer(std::string offer) {
     webrtc::RTCErrorOr<rtc::scoped_refptr<webrtc::RtpSenderInterface>>
         video_result = signaling_->GetPeerConnection()->AddTrack(video_track_,
                                                                  {stream_id});
+    video_sender_ = video_result.value();
   }
 
   if (video_track_ != nullptr) {

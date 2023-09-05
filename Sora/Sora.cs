@@ -83,6 +83,44 @@ public class Sora : IDisposable
         public List<List<Rule>> Rules = new List<List<Rule>>();
     }
 
+    public class CameraConfig
+    {
+        public CapturerType CapturerType = Sora.CapturerType.DeviceCamera;
+        public UnityEngine.Camera UnityCamera = null;
+        public int UnityCameraRenderTargetDepthBuffer = 16;
+        public string VideoCapturerDevice = "";
+        public int VideoWidth = 640;
+        public int VideoHeight = 480;
+        public int VideoFps = 30;
+
+        public static CameraConfig FromUnityCamera(UnityEngine.Camera unityCamera, int unityCameraRenderTargetDepthBuffer, int videoWidth, int videoHeight, int videoFps)
+        {
+            return new CameraConfig()
+            {
+                CapturerType = Sora.CapturerType.UnityCamera,
+                UnityCamera = unityCamera,
+                UnityCameraRenderTargetDepthBuffer = unityCameraRenderTargetDepthBuffer,
+                VideoCapturerDevice = "",
+                VideoWidth = videoWidth,
+                VideoHeight = videoHeight,
+                VideoFps = videoFps,
+            };
+        }
+        public static CameraConfig FromDeviceCamera(string videoCapturerDevice, int videoWidth, int videoHeight, int videoFps)
+        {
+            return new CameraConfig()
+            {
+                CapturerType = Sora.CapturerType.DeviceCamera,
+                UnityCamera = null,
+                UnityCameraRenderTargetDepthBuffer = 16,
+                VideoCapturerDevice = videoCapturerDevice,
+                VideoWidth = videoWidth,
+                VideoHeight = videoHeight,
+                VideoFps = videoFps,
+            };
+        }
+    }
+
     public class Config
     {
         public string SignalingUrl = "";
@@ -100,15 +138,9 @@ public class Sora : IDisposable
         public SpotlightFocusRidType? SpotlightUnfocusRid;
         public bool? Simulcast;
         public SimulcastRidType? SimulcastRid = null;
-        public CapturerType CapturerType = Sora.CapturerType.DeviceCamera;
-        public UnityEngine.Camera UnityCamera = null;
-        public int UnityCameraRenderTargetDepthBuffer = 16;
+        public CameraConfig CameraConfig = new CameraConfig();
         public bool Video = true;
         public bool Audio = true;
-        public string VideoCapturerDevice = "";
-        public int VideoWidth = 640;
-        public int VideoHeight = 480;
-        public int VideoFps = 30;
         public VideoCodecType VideoCodecType = VideoCodecType.VP9;
         public string VideoVp9Params = "";
         public string VideoAv1Params = "";
@@ -237,10 +269,10 @@ public class Sora : IDisposable
     public void Connect(Config config)
     {
         IntPtr unityCameraTexture = IntPtr.Zero;
-        if (config.CapturerType == CapturerType.UnityCamera)
+        if (config.CameraConfig.CapturerType == CapturerType.UnityCamera)
         {
-            unityCamera = config.UnityCamera;
-            var texture = new UnityEngine.RenderTexture(config.VideoWidth, config.VideoHeight, config.UnityCameraRenderTargetDepthBuffer, UnityEngine.RenderTextureFormat.BGRA32);
+            unityCamera = config.CameraConfig.UnityCamera;
+            var texture = new UnityEngine.RenderTexture(config.CameraConfig.VideoWidth, config.CameraConfig.VideoHeight, config.CameraConfig.UnityCameraRenderTargetDepthBuffer, UnityEngine.RenderTextureFormat.BGRA32);
             unityCamera.targetTexture = texture;
             unityCamera.enabled = true;
             unityCameraTexture = texture.GetNativeTexturePtr();
@@ -280,14 +312,14 @@ public class Sora : IDisposable
         cc.simulcast = config.Simulcast == null ? false : config.Simulcast.Value;
         cc.simulcast_rid = config.SimulcastRid == null ? "" : config.SimulcastRid.Value.ToString().ToLower();
         cc.insecure = config.Insecure;
-        cc.capturer_type = (int)config.CapturerType;
-        cc.unity_camera_texture = unityCameraTexture.ToInt64();
         cc.video = config.Video;
         cc.audio = config.Audio;
-        cc.video_capturer_device = config.VideoCapturerDevice;
-        cc.video_width = config.VideoWidth;
-        cc.video_height = config.VideoHeight;
-        cc.video_fps = config.VideoFps;
+        cc.camera_config.capturer_type = (int)config.CameraConfig.CapturerType;
+        cc.camera_config.unity_camera_texture = unityCameraTexture.ToInt64();
+        cc.camera_config.video_capturer_device = config.CameraConfig.VideoCapturerDevice;
+        cc.camera_config.video_width = config.CameraConfig.VideoWidth;
+        cc.camera_config.video_height = config.CameraConfig.VideoHeight;
+        cc.camera_config.video_fps = config.CameraConfig.VideoFps;
         cc.video_codec_type = config.VideoCodecType.ToString();
         cc.video_vp9_params = config.VideoVp9Params;
         cc.video_av1_params = config.VideoAv1Params;
@@ -378,6 +410,34 @@ public class Sora : IDisposable
     public void Disconnect()
     {
         sora_disconnect(p);
+    }
+
+    public void SwitchCamera(CameraConfig config)
+    {
+        if (unityCamera != null)
+        {
+            unityCamera.enabled = false;
+            unityCamera.targetTexture = null;
+            unityCamera = null;
+        }
+
+        IntPtr unityCameraTexture = IntPtr.Zero;
+        if (config.CapturerType == CapturerType.UnityCamera)
+        {
+            unityCamera = config.UnityCamera;
+            var texture = new UnityEngine.RenderTexture(config.VideoWidth, config.VideoHeight, config.UnityCameraRenderTargetDepthBuffer, UnityEngine.RenderTextureFormat.BGRA32);
+            unityCamera.targetTexture = texture;
+            unityCamera.enabled = true;
+            unityCameraTexture = texture.GetNativeTexturePtr();
+        }
+        var cc = new SoraConf.Internal.CameraConfig();
+        cc.capturer_type = (int)config.CapturerType;
+        cc.unity_camera_texture = unityCameraTexture.ToInt64();
+        cc.video_capturer_device = config.VideoCapturerDevice;
+        cc.video_width = config.VideoWidth;
+        cc.video_height = config.VideoHeight;
+        cc.video_fps = config.VideoFps;
+        sora_switch_camera(p, Jsonif.Json.ToJson(cc));
     }
 
     // Unity 側でレンダリングが完了した時（yield return new WaitForEndOfFrame() の後）に呼ぶイベント
@@ -790,6 +850,8 @@ public class Sora : IDisposable
     private static extern void sora_connect(IntPtr p, string config);
     [DllImport(DllName)]
     private static extern void sora_disconnect(IntPtr p);
+    [DllImport(DllName)]
+    private static extern void sora_switch_camera(IntPtr p, string config);
     [DllImport(DllName)]
     private static extern IntPtr sora_get_texture_update_callback();
     [DllImport(DllName)]

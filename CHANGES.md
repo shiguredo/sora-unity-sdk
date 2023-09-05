@@ -11,6 +11,12 @@
 
 ## develop
 
+- [CHANGE] `Sora.Config` 中にあるキャプチャラに関するフィールドを `Sora.CameraConfig` に移動する
+    - 修正方法は （TODO: @miosakuma がドキュメントへのリンクに差し替える） を参照して下さい
+    - @melpon
+- [ADD] 接続中にキャプチャラを切り替える機能を実装
+    - @melpon
+
 ## 2023.3.0 (2023-08-08)
 
 - [UPDATE] Sora C++ SDK を `2023.10.0` に上げる
