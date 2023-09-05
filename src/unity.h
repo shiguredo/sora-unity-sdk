@@ -106,6 +106,15 @@ UNITY_INTERFACE_EXPORT unity_bool_t sora_get_video_enabled(void* p);
 UNITY_INTERFACE_EXPORT void sora_set_video_enabled(void* p,
                                                    unity_bool_t enabled);
 
+UNITY_INTERFACE_EXPORT int sora_get_selected_signaling_url_size(void* p);
+UNITY_INTERFACE_EXPORT int sora_get_connected_signaling_url_size(void* p);
+UNITY_INTERFACE_EXPORT void sora_get_selected_signaling_url(void* p,
+                                                            void* buf,
+                                                            int size);
+UNITY_INTERFACE_EXPORT void sora_get_connected_signaling_url(void* p,
+                                                             void* buf,
+                                                             int size);
+
 #ifdef __cplusplus
 }
 #endif

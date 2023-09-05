@@ -21,6 +21,8 @@
   - @melpon
 - [ADD] ハードウェアエンコーダを利用するかどうかを設定する `UseHardwareEncoder` を追加
   - @melpon
+- [ADD] `SelectedSignalingURL` と `ConnectedSignalingURL` プロパティを追加
+  - @melpon
 
 ## 2023.3.0 (2023-08-08)
 

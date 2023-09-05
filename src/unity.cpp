@@ -246,6 +246,27 @@ void sora_set_video_enabled(void* p, unity_bool_t enabled) {
   wsora->sora->SetVideoEnabled(enabled);
 }
 
+// get_*_signaling_url_size() から get_*_signaling_url() までの間に値が変わった場合、
+// 落ちることは無いが、文字列が切り詰められる可能性があるので注意
+int sora_get_selected_signaling_url_size(void* p) {
+  auto wsora = (SoraWrapper*)p;
+  return wsora->sora->GetSelectedSignalingURL().size();
+}
+int sora_get_connected_signaling_url_size(void* p) {
+  auto wsora = (SoraWrapper*)p;
+  return wsora->sora->GetConnectedSignalingURL().size();
+}
+void sora_get_selected_signaling_url(void* p, void* buf, int size) {
+  auto wsora = (SoraWrapper*)p;
+  std::string str = wsora->sora->GetSelectedSignalingURL();
+  std::memcpy(buf, str.c_str(), std::min(size, (int)str.size()));
+}
+void sora_get_connected_signaling_url(void* p, void* buf, int size) {
+  auto wsora = (SoraWrapper*)p;
+  std::string str = wsora->sora->GetConnectedSignalingURL();
+  std::memcpy(buf, str.c_str(), std::min(size, (int)str.size()));
+}
+
 // iOS の場合は static link で名前が被る可能性があるので、別の名前にしておく
 void UNITY_INTERFACE_EXPORT UNITY_INTERFACE_API
 #if defined(SORA_UNITY_SDK_IOS)

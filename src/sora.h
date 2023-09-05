@@ -72,6 +72,9 @@ class Sora : public std::enable_shared_from_this<Sora>,
   bool GetVideoEnabled() const;
   void SetVideoEnabled(bool enabled);
 
+  std::string GetSelectedSignalingURL() const;
+  std::string GetConnectedSignalingURL() const;
+
  private:
   void* GetAndroidApplicationContext(void* env);
   static sora_conf::ErrorCode ToErrorCode(sora::SoraSignalingErrorCode ec);

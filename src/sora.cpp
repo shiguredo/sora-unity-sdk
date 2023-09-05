@@ -871,4 +871,18 @@ void Sora::SetVideoEnabled(bool enabled) {
   video_track_->set_enabled(enabled);
 }
 
+std::string Sora::GetSelectedSignalingURL() const {
+  if (signaling_ == nullptr) {
+    return "";
+  }
+  return signaling_->GetSelectedSignalingURL();
+}
+
+std::string Sora::GetConnectedSignalingURL() const {
+  if (signaling_ == nullptr) {
+    return "";
+  }
+  return signaling_->GetConnectedSignalingURL();
+}
+
 }  // namespace sora_unity_sdk

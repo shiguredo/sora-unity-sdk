@@ -768,6 +768,28 @@ public class Sora : IDisposable
         set { sora_set_video_enabled(p, value ? 1 : 0); }
     }
 
+    public string SelectedSignalingURL
+    {
+        get
+        {
+            int size = sora_get_selected_signaling_url_size(p);
+            byte[] buf = new byte[size];
+            sora_get_selected_signaling_url(p, buf, size);
+            return System.Text.Encoding.UTF8.GetString(buf);
+        }
+    }
+
+    public string ConnectedSignalingURL
+    {
+        get
+        {
+            int size = sora_get_connected_signaling_url_size(p);
+            byte[] buf = new byte[size];
+            sora_get_connected_signaling_url(p, buf, size);
+            return System.Text.Encoding.UTF8.GetString(buf);
+        }
+    }
+
 #if UNITY_IOS && !UNITY_EDITOR
     private const string DllName = "__Internal";
 #else
@@ -834,4 +856,12 @@ public class Sora : IDisposable
     private static extern int sora_get_video_enabled(IntPtr p);
     [DllImport(DllName)]
     private static extern void sora_set_video_enabled(IntPtr p, int enabled);
+    [DllImport(DllName)]
+    private static extern int sora_get_selected_signaling_url_size(IntPtr p);
+    [DllImport(DllName)]
+    private static extern int sora_get_connected_signaling_url_size(IntPtr p);
+    [DllImport(DllName)]
+    private static extern void sora_get_selected_signaling_url(IntPtr p, [Out] byte[] buf, int size);
+    [DllImport(DllName)]
+    private static extern void sora_get_connected_signaling_url(IntPtr p, [Out] byte[] buf, int size);
 }
