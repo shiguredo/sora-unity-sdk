@@ -60,6 +60,7 @@ UNITY_INTERFACE_EXPORT void sora_set_on_capturer_frame(void* p,
 UNITY_INTERFACE_EXPORT void sora_dispatch_events(void* p);
 UNITY_INTERFACE_EXPORT void sora_connect(void* p, const char* config);
 UNITY_INTERFACE_EXPORT void sora_disconnect(void* p);
+UNITY_INTERFACE_EXPORT void sora_switch_camera(void* p, const char* config);
 UNITY_INTERFACE_EXPORT void* sora_get_texture_update_callback();
 UNITY_INTERFACE_EXPORT void sora_destroy(void* sora);
 

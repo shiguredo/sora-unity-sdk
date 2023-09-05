@@ -142,6 +142,13 @@ void sora_disconnect(void* p) {
   wsora->sora->Disconnect();
 }
 
+void sora_switch_camera(void* p, const char* config_json) {
+  auto wsora = (SoraWrapper*)p;
+  auto config =
+      jsonif::from_json<sora_conf::internal::CameraConfig>(config_json);
+  wsora->sora->SwitchCamera(config);
+}
+
 void* sora_get_texture_update_callback() {
   return (void*)&sora_unity_sdk::UnityRenderer::Sink::TextureUpdateCallback;
 }
