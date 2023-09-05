@@ -294,7 +294,8 @@ void Sora::DoConnect(const sora_conf::internal::ConnectConfig& cc,
         (void*)cc.camera_config.unity_camera_texture, cc.no_video_device,
         cc.camera_config.video_capturer_device, cc.camera_config.video_width,
         cc.camera_config.video_height, cc.camera_config.video_fps, on_frame,
-        signaling_thread_.get(), env, android_context);
+        sora_context_->signaling_thread(), env, android_context,
+        unity_context_);
     if (!cc.no_video_device && !capturer) {
       on_disconnect((int)sora_conf::ErrorCode::INTERNAL_ERROR,
                     "Capturer Init Failed");
@@ -527,7 +528,8 @@ void Sora::DoSwitchCamera(const sora_conf::internal::CameraConfig& cc) {
   auto capturer = CreateVideoCapturer(
       cc.capturer_type, (void*)cc.unity_camera_texture, false,
       cc.video_capturer_device, cc.video_width, cc.video_height, cc.video_fps,
-      on_frame, signaling_thread_.get(), env, android_context);
+      on_frame, sora_context_->signaling_thread(), env, android_context,
+      unity_context_);
   if (!capturer) {
     RTC_LOG(LS_ERROR) << "Failed to CreateVideoCapturer";
     return;
@@ -537,7 +539,8 @@ void Sora::DoSwitchCamera(const sora_conf::internal::CameraConfig& cc) {
   capturer_type_ = cc.capturer_type;
 
   std::string video_track_id = rtc::CreateRandomString(16);
-  auto video_track = factory_->CreateVideoTrack(video_track_id, capturer.get());
+  auto video_track = sora_context_->peer_connection_factory()->CreateVideoTrack(
+      video_track_id, capturer.get());
   if (video_track_ == nullptr) {
     auto track_id = renderer_->AddTrack(video_track.get());
     PushEvent([this, track_id]() {
