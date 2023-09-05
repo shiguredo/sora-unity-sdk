@@ -23,6 +23,8 @@
   - @melpon
 - [ADD] `SelectedSignalingURL` と `ConnectedSignalingURL` プロパティを追加
   - @melpon
+- [FIX] IosAudioInit を初回接続の場合のみ呼び出すようにすることで、iOS で連続して接続しようとすると落ちることがあったのを修正
+  - @melpon
 
 ## 2023.3.0 (2023-08-08)
 
