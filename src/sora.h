@@ -92,7 +92,9 @@ class Sora : public std::enable_shared_from_this<Sora>,
  private:
   void DoConnect(const sora_conf::internal::ConnectConfig& config,
                  std::function<void(int, std::string)> on_disconnect);
-  void DoSwitchCamera(const sora_conf::internal::CameraConfig& cc);
+  void DoSwitchCamera(
+      const sora_conf::internal::CameraConfig& cc,
+      rtc::scoped_refptr<webrtc::VideoTrackInterface> video_track);
 
   static rtc::scoped_refptr<UnityAudioDevice> CreateADM(
       webrtc::TaskQueueFactory* task_queue_factory,
@@ -167,6 +169,8 @@ class Sora : public std::enable_shared_from_this<Sora>,
   ptrid_t ptrid_;
 
   std::map<ptrid_t, std::string> connection_ids_;
+
+  std::string stream_id_;
 
   rtc::scoped_refptr<webrtc::VideoTrackSourceInterface> capturer_;
   int capturer_type_ = 0;
