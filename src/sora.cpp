@@ -38,6 +38,10 @@
 #include "mac_helper/ios_audio_init.h"
 #endif
 
+#ifdef SORA_UNITY_SDK_MACOS
+#include <sora/mac/mac_capturer.h>
+#endif
+
 namespace sora_unity_sdk {
 
 Sora::Sora(UnityContext* context) : context_(context) {
