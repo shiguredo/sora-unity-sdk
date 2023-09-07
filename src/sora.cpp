@@ -34,6 +34,7 @@
 #endif
 
 #ifdef SORA_UNITY_SDK_IOS
+#include <sora/mac/mac_capturer.h>
 #include "mac_helper/ios_audio_init.h"
 #endif
 
@@ -57,6 +58,11 @@ Sora::~Sora() {
 #if defined(SORA_UNITY_SDK_ANDROID)
   if (capturer_ != nullptr && capturer_type_ == 0) {
     static_cast<sora::AndroidCapturer*>(capturer_.get())->Stop();
+  }
+#endif
+#if defined(SORA_UNITY_SDK_IOS) || defined(SORA_UNITY_SDK_MACOS)
+  if (capturer_ != nullptr && capturer_type_ == 0) {
+    static_cast<sora::MacCapturer*>(capturer_.get())->Stop();
   }
 #endif
   if (capturer_ != nullptr && capturer_type_ != 0) {
@@ -560,6 +566,11 @@ void Sora::SwitchCamera(const sora_conf::internal::CameraConfig& cc) {
 #if defined(SORA_UNITY_SDK_ANDROID)
   if (capturer_ != nullptr && capturer_type_ == 0) {
     static_cast<sora::AndroidCapturer*>(capturer_.get())->Stop();
+  }
+#endif
+#if defined(SORA_UNITY_SDK_IOS) || defined(SORA_UNITY_SDK_MACOS)
+  if (capturer_ != nullptr && capturer_type_ == 0) {
+    static_cast<sora::MacCapturer*>(capturer_.get())->Stop();
   }
 #endif
   if (capturer_ != nullptr && capturer_type_ != 0) {

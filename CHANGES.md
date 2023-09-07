@@ -14,6 +14,10 @@
 - [CHANGE] `Sora.Config` 中にあるキャプチャラに関するフィールドを `Sora.CameraConfig` に移動する
     - 修正方法は （TODO: @miosakuma がドキュメントへのリンクに差し替える） を参照して下さい
     - @melpon
+- [UPDATE] Sora C++ SDK を `2023.12.0` に上げる
+    - @melpon
+- [UPDATE] libwebrtc を `m116.5845.6.1` に上げる
+    - @melpon
 - [ADD] 接続中にキャプチャラを切り替える機能を実装
     - @melpon
 
