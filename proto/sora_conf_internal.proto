@@ -63,6 +63,8 @@ message ConnectConfig {
     bool enable_simulcast = 14;
     bool simulcast = 15;
     string simulcast_rid = 16;
+    bool no_video_device = 160;
+    bool no_audio_device = 161;
     CameraConfig camera_config = 17;
     bool video = 20;
     bool audio = 21;
@@ -98,4 +100,6 @@ message ConnectConfig {
     string signaling_notify_metadata = 49;
     bool enable_forwarding_filter = 50;
     ForwardingFilter forwarding_filter = 51;
+    bool enable_use_hardware_encoder = 52;
+    bool use_hardware_encoder = 53;
 }

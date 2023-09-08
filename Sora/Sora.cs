@@ -138,6 +138,8 @@ public class Sora : IDisposable
         public SpotlightFocusRidType? SpotlightUnfocusRid;
         public bool? Simulcast;
         public SimulcastRidType? SimulcastRid = null;
+        public bool NoVideoDevice = false;
+        public bool NoAudioDevice = false;
         public CameraConfig CameraConfig = new CameraConfig();
         public bool Video = true;
         public bool Audio = true;
@@ -185,6 +187,8 @@ public class Sora : IDisposable
         public string ProxyAgent = "";
 
         public ForwardingFilter ForwardingFilter;
+
+        public bool? UseHardwareEncoder;
     }
 
     IntPtr p;
@@ -302,16 +306,18 @@ public class Sora : IDisposable
         cc.signaling_notify_metadata = config.SignalingNotifyMetadata;
         cc.role = role;
         cc.enable_multistream = config.Multistream != null;
-        cc.multistream = config.Multistream == null ? false : config.Multistream.Value;
+        cc.multistream = config.Multistream.GetValueOrDefault();
         cc.enable_spotlight = config.Spotlight != null;
-        cc.spotlight = config.Spotlight == null ? false : config.Spotlight.Value;
+        cc.spotlight = config.Spotlight.GetValueOrDefault();
         cc.spotlight_number = config.SpotlightNumber;
         cc.spotlight_focus_rid = config.SpotlightFocusRid == null ? "" : config.SpotlightFocusRid.Value.ToString().ToLower();
         cc.spotlight_unfocus_rid = config.SpotlightUnfocusRid == null ? "" : config.SpotlightUnfocusRid.Value.ToString().ToLower();
         cc.enable_simulcast = config.Simulcast != null;
-        cc.simulcast = config.Simulcast == null ? false : config.Simulcast.Value;
+        cc.simulcast = config.Simulcast.GetValueOrDefault();
         cc.simulcast_rid = config.SimulcastRid == null ? "" : config.SimulcastRid.Value.ToString().ToLower();
         cc.insecure = config.Insecure;
+        cc.no_video_device = config.NoVideoDevice;
+        cc.no_audio_device = config.NoAudioDevice;
         cc.video = config.Video;
         cc.audio = config.Audio;
         cc.camera_config.capturer_type = (int)config.CameraConfig.CapturerType;
@@ -332,7 +338,7 @@ public class Sora : IDisposable
         cc.audio_codec_type = config.AudioCodecType.ToString();
         cc.audio_codec_lyra_bitrate = config.AudioCodecLyraBitrate;
         cc.enable_audio_codec_lyra_usedtx = config.AudioCodecLyraUsedtx != null;
-        cc.audio_codec_lyra_usedtx = config.AudioCodecLyraUsedtx == null ? false : config.AudioCodecLyraUsedtx.Value;
+        cc.audio_codec_lyra_usedtx = config.AudioCodecLyraUsedtx.GetValueOrDefault();
         cc.check_lyra_version = config.CheckLyraVersion;
         cc.audio_bit_rate = config.AudioBitRate;
         cc.audio_streaming_language_code = config.AudioStreamingLanguageCode;
@@ -404,6 +410,8 @@ public class Sora : IDisposable
                 cc.forwarding_filter.rules.Add(ccrs);
             }
         }
+        cc.enable_use_hardware_encoder = config.UseHardwareEncoder != null;
+        cc.use_hardware_encoder = config.UseHardwareEncoder.GetValueOrDefault();
 
         sora_connect(p, Jsonif.Json.ToJson(cc));
     }
@@ -820,6 +828,28 @@ public class Sora : IDisposable
         set { sora_set_video_enabled(p, value ? 1 : 0); }
     }
 
+    public string SelectedSignalingURL
+    {
+        get
+        {
+            int size = sora_get_selected_signaling_url_size(p);
+            byte[] buf = new byte[size];
+            sora_get_selected_signaling_url(p, buf, size);
+            return System.Text.Encoding.UTF8.GetString(buf);
+        }
+    }
+
+    public string ConnectedSignalingURL
+    {
+        get
+        {
+            int size = sora_get_connected_signaling_url_size(p);
+            byte[] buf = new byte[size];
+            sora_get_connected_signaling_url(p, buf, size);
+            return System.Text.Encoding.UTF8.GetString(buf);
+        }
+    }
+
 #if UNITY_IOS && !UNITY_EDITOR
     private const string DllName = "__Internal";
 #else
@@ -888,4 +918,12 @@ public class Sora : IDisposable
     private static extern int sora_get_video_enabled(IntPtr p);
     [DllImport(DllName)]
     private static extern void sora_set_video_enabled(IntPtr p, int enabled);
+    [DllImport(DllName)]
+    private static extern int sora_get_selected_signaling_url_size(IntPtr p);
+    [DllImport(DllName)]
+    private static extern int sora_get_connected_signaling_url_size(IntPtr p);
+    [DllImport(DllName)]
+    private static extern void sora_get_selected_signaling_url(IntPtr p, [Out] byte[] buf, int size);
+    [DllImport(DllName)]
+    private static extern void sora_get_connected_signaling_url(IntPtr p, [Out] byte[] buf, int size);
 }
