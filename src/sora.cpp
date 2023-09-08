@@ -34,7 +34,12 @@
 #endif
 
 #ifdef SORA_UNITY_SDK_IOS
+#include <sora/mac/mac_capturer.h>
 #include "mac_helper/ios_audio_init.h"
+#endif
+
+#ifdef SORA_UNITY_SDK_MACOS
+#include <sora/mac/mac_capturer.h>
 #endif
 
 namespace sora_unity_sdk {
@@ -57,6 +62,11 @@ Sora::~Sora() {
 #if defined(SORA_UNITY_SDK_ANDROID)
   if (capturer_ != nullptr && capturer_type_ == 0) {
     static_cast<sora::AndroidCapturer*>(capturer_.get())->Stop();
+  }
+#endif
+#if defined(SORA_UNITY_SDK_IOS) || defined(SORA_UNITY_SDK_MACOS)
+  if (capturer_ != nullptr && capturer_type_ == 0) {
+    static_cast<sora::MacCapturer*>(capturer_.get())->Stop();
   }
 #endif
   if (capturer_ != nullptr && capturer_type_ != 0) {
@@ -498,11 +508,10 @@ void Sora::Disconnect() {
 
 void Sora::SwitchCamera(const sora_conf::internal::CameraConfig& cc) {
   RTC_LOG(LS_INFO) << "SwitchCamera: " << jsonif::to_json(cc);
-  boost::asio::post(*ioc_, [self = shared_from_this(), cc = cc]() {
-    self->DoSwitchCamera(cc);
-  });
-}
-void Sora::DoSwitchCamera(const sora_conf::internal::CameraConfig& cc) {
+
+  // このあたりのキャプチャラ作成は、IO スレッドではなく Unity スレッドで行う。
+  // （DoConnect で作成したキャプチャラは Unity スレッド上で実行されてるので、
+  //   全て同じスレッドでやる必要がある）
   std::function<void(const webrtc::VideoFrame& frame)> on_frame;
   if (on_capturer_frame_) {
     on_frame = [on_frame =
@@ -518,6 +527,11 @@ void Sora::DoSwitchCamera(const sora_conf::internal::CameraConfig& cc) {
 #if defined(SORA_UNITY_SDK_ANDROID)
   if (capturer_ != nullptr && capturer_type_ == 0) {
     static_cast<sora::AndroidCapturer*>(capturer_.get())->Stop();
+  }
+#endif
+#if defined(SORA_UNITY_SDK_IOS) || defined(SORA_UNITY_SDK_MACOS)
+  if (capturer_ != nullptr && capturer_type_ == 0) {
+    static_cast<sora::MacCapturer*>(capturer_.get())->Stop();
   }
 #endif
   if (capturer_ != nullptr && capturer_type_ != 0) {
@@ -541,7 +555,29 @@ void Sora::DoSwitchCamera(const sora_conf::internal::CameraConfig& cc) {
   std::string video_track_id = rtc::CreateRandomString(16);
   auto video_track = sora_context_->peer_connection_factory()->CreateVideoTrack(
       video_track_id, capturer.get());
+
+  // video_track_ をこのスレッド(Unity スレッド)で設定したいので、
+  // IO スレッドの実行完了を待つ
+  std::promise<void> p;
+  std::future<void> f = p.get_future();
+  boost::asio::post(*ioc_,
+                    [self = shared_from_this(), cc = cc, video_track, &p]() {
+                      self->DoSwitchCamera(cc, video_track);
+                      p.set_value();
+                    });
+  f.wait();
+
+  video_track_ = video_track;
+}
+void Sora::DoSwitchCamera(
+    const sora_conf::internal::CameraConfig& cc,
+    rtc::scoped_refptr<webrtc::VideoTrackInterface> video_track) {
   if (video_track_ == nullptr) {
+    webrtc::RTCErrorOr<rtc::scoped_refptr<webrtc::RtpSenderInterface>>
+        video_result = signaling_->GetPeerConnection()->AddTrack(video_track,
+                                                                 {stream_id_});
+    video_sender_ = video_result.value();
+
     auto track_id = renderer_->AddTrack(video_track.get());
     PushEvent([this, track_id]() {
       if (on_add_track_) {
@@ -552,7 +588,6 @@ void Sora::DoSwitchCamera(const sora_conf::internal::CameraConfig& cc) {
     renderer_->ReplaceTrack(video_track_.get(), video_track.get());
   }
   video_sender_->SetTrack(video_track.get());
-  video_track_ = video_track;
 }
 
 void Sora::RenderCallbackStatic(int event_id) {
@@ -812,16 +847,16 @@ void Sora::OnSetOffer(std::string offer) {
       on_set_offer_(offer);
     }
   });
-  std::string stream_id = rtc::CreateRandomString(16);
+  stream_id_ = rtc::CreateRandomString(16);
   if (audio_track_ != nullptr) {
     webrtc::RTCErrorOr<rtc::scoped_refptr<webrtc::RtpSenderInterface>>
         audio_result = signaling_->GetPeerConnection()->AddTrack(audio_track_,
-                                                                 {stream_id});
+                                                                 {stream_id_});
   }
   if (video_track_ != nullptr) {
     webrtc::RTCErrorOr<rtc::scoped_refptr<webrtc::RtpSenderInterface>>
         video_result = signaling_->GetPeerConnection()->AddTrack(video_track_,
-                                                                 {stream_id});
+                                                                 {stream_id_});
     video_sender_ = video_result.value();
   }
 

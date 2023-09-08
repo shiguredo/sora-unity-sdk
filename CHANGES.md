@@ -16,10 +16,10 @@
     - @melpon
 - [UPDATE] SoraClientContext を利用してコードを短くする
   - @melpon
-- [UPDATE] Sora C++ SDK を `2023.11.0` に上げる
-  - @melpon
+- [UPDATE] Sora C++ SDK を `2023.12.0` に上げる
+    - @melpon
 - [UPDATE] libwebrtc を `m116.5845.6.1` に上げる
-  - @melpon
+    - @melpon
 - [ADD] 接続中にキャプチャラを切り替える機能を実装
     - @melpon
 - [ADD] デバイスを掴まないようにする `NoVideoDevice`, `NoAudioDevice` を追加
