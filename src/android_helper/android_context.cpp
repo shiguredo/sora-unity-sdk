@@ -23,6 +23,14 @@ webrtc::ScopedJavaLocalRef<jobject> GetAndroidApplicationContext(JNIEnv* env) {
   webrtc::ScopedJavaLocalRef<jobject> context(
       env, env->CallObjectMethod(activity.obj(), ctxid));
 
+  // org.webrtc.ContextUtils.initialize(context)
+  // を呼ぶ。これをしないと ADM が生成できない
+  webrtc::ScopedJavaLocalRef<jclass> cucls =
+      webrtc::GetClass(env, "org/webrtc/ContextUtils");
+  jmethodID initid = env->GetStaticMethodID(cucls.obj(), "initialize",
+                                            "(Landroid/content/Context;)V");
+  env->CallStaticObjectMethod(cucls.obj(), initid, context.obj());
+
   return context;
 }
 

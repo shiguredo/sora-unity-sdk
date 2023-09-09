@@ -262,7 +262,8 @@ void Sora::DoConnect(const sora_conf::internal::ConnectConfig& cc,
             cc.unity_audio_input, cc.unity_audio_output, on_handle_audio_,
             cc.audio_recording_device, cc.audio_playout_device,
             dependencies.worker_thread, worker_env, worker_context);
-        media_dependencies.adm = unity_adm_;
+        dependencies.worker_thread->BlockingCall(
+            [&] { media_dependencies.adm = unity_adm_; });
 
 #if defined(SORA_UNITY_SDK_ANDROID)
         dependencies.worker_thread->BlockingCall([worker_env, worker_context] {
