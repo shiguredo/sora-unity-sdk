@@ -183,6 +183,8 @@ class Sora : public std::enable_shared_from_this<Sora>,
 #if defined(SORA_UNITY_SDK_ANDROID)
   webrtc::ScopedJavaGlobalRef<jobject> android_context_;
 #endif
+
+  std::atomic<bool> set_offer_;
 };
 
 }  // namespace sora_unity_sdk

@@ -508,6 +508,10 @@ void Sora::Disconnect() {
 }
 
 void Sora::SwitchCamera(const sora_conf::internal::CameraConfig& cc) {
+  if (!set_offer_) {
+    return;
+  }
+
   RTC_LOG(LS_INFO) << "SwitchCamera: " << jsonif::to_json(cc);
 
   // このあたりのキャプチャラ作成は、IO スレッドではなく Unity スレッドで行う。
@@ -869,6 +873,8 @@ void Sora::OnSetOffer(std::string offer) {
       }
     });
   }
+
+  set_offer_ = true;
 }
 void Sora::OnDisconnect(sora::SoraSignalingErrorCode ec, std::string message) {
   RTC_LOG(LS_INFO) << "OnDisconnect: " << message;
