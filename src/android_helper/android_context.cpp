@@ -29,7 +29,7 @@ webrtc::ScopedJavaLocalRef<jobject> GetAndroidApplicationContext(JNIEnv* env) {
       webrtc::GetClass(env, "org/webrtc/ContextUtils");
   jmethodID initid = env->GetStaticMethodID(cucls.obj(), "initialize",
                                             "(Landroid/content/Context;)V");
-  env->CallStaticObjectMethod(cucls.obj(), initid, context.obj());
+  env->CallStaticVoidMethod(cucls.obj(), initid, context.obj());
 
   return context;
 }
