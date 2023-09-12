@@ -970,7 +970,7 @@ public class Sora : IDisposable
 #endif
 
         [DllImport(DllName)]
-        private static extern IntPtr sora_audio_output_helper_create(change_route_cb_t cb, IntPtr userdata);
+        private static extern IntPtr sora_audio_output_helper_create(ChangeRouteCallbackDelegate cb, IntPtr userdata);
         [DllImport(DllName)]
         private static extern void sora_audio_output_helper_destroy(IntPtr p);
         [DllImport(DllName)]
