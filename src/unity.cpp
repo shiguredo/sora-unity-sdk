@@ -1,4 +1,8 @@
 #include "unity.h"
+
+// Sora
+#include <sora/audio_output_helper.h>
+
 #include "device_list.h"
 #include "sora.h"
 #include "sora_conf.json.h"
@@ -272,6 +276,37 @@ void sora_get_connected_signaling_url(void* p, void* buf, int size) {
   auto wsora = (SoraWrapper*)p;
   std::string str = wsora->sora->GetConnectedSignalingURL();
   std::memcpy(buf, str.c_str(), std::min(size, (int)str.size()));
+}
+
+struct AudioOutputHelperImpl : public sora::AudioOutputHelper {
+  AudioOutputHelperImpl(change_route_cb_t cb, void* userdata)
+      : helper_(sora::CreateAudioOutputHelper()),
+        cb_(cb),
+        userdata_(userdata) {}
+  void OnChangeRoute() override { cb_(userdata_); }
+
+  bool IsHandsFree() override { return helper_->IsHandsFree(); }
+  void SetHandsFree(bool enabled) override { helper_->SetHandsFree(enabled); }
+
+ private:
+  std::unique_ptr<sora::AudioOutputHelper> helper_;
+  change_route_cb_t cb_;
+  void* userdata_;
+};
+
+void* sora_audio_output_helper_create(change_route_cb_t cb, void* userdata) {
+  return new AudioOutputHelperImpl(cb, userdata);
+}
+void sora_audio_output_helper_destroy(void* p) {
+  delete (AudioOutputHelperImpl*)p;
+}
+unity_bool_t sora_audio_output_helper_is_handsfree(void* p) {
+  auto helper = (AudioOutputHelperImpl*)p;
+  return helper->IsHandsFree() ? 1 : 0;
+}
+void sora_audio_output_helper_set_handsfree(void* p, unity_bool_t enabled) {
+  auto helper = (AudioOutputHelperImpl*)p;
+  helper->SetHandsFree(enabled != 0);
 }
 
 // iOS の場合は static link で名前が被る可能性があるので、別の名前にしておく
