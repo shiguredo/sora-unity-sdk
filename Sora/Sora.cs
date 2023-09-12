@@ -927,7 +927,7 @@ public class Sora : IDisposable
     [DllImport(DllName)]
     private static extern void sora_get_connected_signaling_url(IntPtr p, [Out] byte[] buf, int size);
 
-    class AudioOutputHelper : IDisposable
+    public class AudioOutputHelper : IDisposable
     {
         private delegate void ChangeRouteCallbackDelegate(IntPtr userdata);
 
