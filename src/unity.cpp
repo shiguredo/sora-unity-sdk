@@ -278,16 +278,15 @@ void sora_get_connected_signaling_url(void* p, void* buf, int size) {
   std::memcpy(buf, str.c_str(), std::min(size, (int)str.size()));
 }
 
-struct AudioOutputHelperImpl : public sora::AudioOutputHelperInterface,
-                               public sora::AudioChangeRouteObserver {
+struct AudioOutputHelperImpl : public sora::AudioChangeRouteObserver {
   AudioOutputHelperImpl(change_route_cb_t cb, void* userdata)
       : helper_(sora::CreateAudioOutputHelper(this)),
         cb_(cb),
         userdata_(userdata) {}
   void OnChangeRoute() override { cb_(userdata_); }
 
-  bool IsHandsfree() override { return helper_->IsHandsfree(); }
-  void SetHandsfree(bool enabled) override { helper_->SetHandsfree(enabled); }
+  bool IsHandsfree() { return helper_->IsHandsfree(); }
+  void SetHandsfree(bool enabled) { helper_->SetHandsfree(enabled); }
 
  private:
   std::unique_ptr<sora::AudioOutputHelperInterface> helper_;
