@@ -116,6 +116,17 @@ UNITY_INTERFACE_EXPORT void sora_get_connected_signaling_url(void* p,
                                                              void* buf,
                                                              int size);
 
+typedef void (*change_route_cb_t)(void* userdata);
+UNITY_INTERFACE_EXPORT void* sora_audio_output_helper_create(
+    change_route_cb_t cb,
+    void* userdata);
+UNITY_INTERFACE_EXPORT void sora_audio_output_helper_destroy(void* p);
+UNITY_INTERFACE_EXPORT unity_bool_t
+sora_audio_output_helper_is_handsfree(void* p);
+UNITY_INTERFACE_EXPORT void sora_audio_output_helper_set_handsfree(
+    void* p,
+    unity_bool_t enabled);
+
 #ifdef __cplusplus
 }
 #endif

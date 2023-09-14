@@ -926,4 +926,57 @@ public class Sora : IDisposable
     private static extern void sora_get_selected_signaling_url(IntPtr p, [Out] byte[] buf, int size);
     [DllImport(DllName)]
     private static extern void sora_get_connected_signaling_url(IntPtr p, [Out] byte[] buf, int size);
+
+    public class AudioOutputHelper : IDisposable
+    {
+        private delegate void ChangeRouteCallbackDelegate(IntPtr userdata);
+
+        [AOT.MonoPInvokeCallback(typeof(ChangeRouteCallbackDelegate))]
+        static private void ChangeRouteCallback(IntPtr userdata)
+        {
+            var callback = GCHandle.FromIntPtr(userdata).Target as Action;
+            callback();
+        }
+
+        GCHandle onChangeRouteHandle;
+        IntPtr p;
+
+        public AudioOutputHelper(Action onChangeRoute)
+        {
+            onChangeRouteHandle = GCHandle.Alloc(onChangeRoute);
+            p = sora_audio_output_helper_create(ChangeRouteCallback, GCHandle.ToIntPtr(onChangeRouteHandle));
+        }
+
+        public void Dispose()
+        {
+            sora_audio_output_helper_destroy(p);
+            onChangeRouteHandle.Free();
+        }
+
+        public bool IsHandsfree()
+        {
+            return sora_audio_output_helper_is_handsfree(p) != 0;
+        }
+
+        public void SetHandsfree(bool enabled)
+        {
+            sora_audio_output_helper_set_handsfree(p, enabled ? 1 : 0);
+        }
+
+#if UNITY_IOS && !UNITY_EDITOR
+        private const string DllName = "__Internal";
+#else
+        private const string DllName = "SoraUnitySdk";
+#endif
+
+        [DllImport(DllName)]
+        private static extern IntPtr sora_audio_output_helper_create(ChangeRouteCallbackDelegate cb, IntPtr userdata);
+        [DllImport(DllName)]
+        private static extern void sora_audio_output_helper_destroy(IntPtr p);
+        [DllImport(DllName)]
+        private static extern int sora_audio_output_helper_is_handsfree(IntPtr p);
+        [DllImport(DllName)]
+        private static extern void sora_audio_output_helper_set_handsfree(IntPtr p, int enabled);
+    }
+
 }

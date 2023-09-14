@@ -16,7 +16,7 @@
     - @melpon
 - [UPDATE] SoraClientContext を利用してコードを短くする
   - @melpon
-- [UPDATE] Sora C++ SDK を `2023.12.1` に上げる
+- [UPDATE] Sora C++ SDK を `2023.13.1` に上げる
     - @melpon
 - [UPDATE] libwebrtc を `m116.5845.6.1` に上げる
     - @melpon
