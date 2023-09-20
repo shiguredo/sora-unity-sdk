@@ -17,7 +17,7 @@ jobs:
           - windows_x86_64
     runs-on: windows-2019
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - name: Cache
       id: cache
       uses: actions/cache@v3
@@ -49,7 +49,7 @@ jobs:
           - ios
     runs-on: macos-12
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - name: Cache
       id: cache
       uses: actions/cache@v3
@@ -97,7 +97,7 @@ jobs:
           - ubuntu-20.04_x86_64
     runs-on: ubuntu-20.04
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - name: Cache
       id: cache
       uses: actions/cache@v3
@@ -143,7 +143,7 @@ jobs:
       - build-macos
       - build-ubuntu
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - name: Download artifacts
       uses: actions/download-artifact@v3
     - name: Packaging
@@ -184,7 +184,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Checkout code
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
     - name: Download SoraUnitySdk
       uses: actions/download-artifact@v3
       with:
