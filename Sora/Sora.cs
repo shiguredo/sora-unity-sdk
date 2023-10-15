@@ -949,8 +949,12 @@ public class Sora : IDisposable
 
         public void Dispose()
         {
-            sora_audio_output_helper_destroy(p);
-            onChangeRouteHandle.Free();
+            if (p != IntPtr.Zero)
+            {
+                sora_audio_output_helper_destroy(p);
+                onChangeRouteHandle.Free();
+                p = IntPtr.Zero;
+            }
         }
 
         public bool IsHandsfree()
