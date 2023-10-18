@@ -19,4 +19,11 @@ void IosAudioInit(std::function<void(std::string)> on_complete) {
   }];
 }
 
+void IosSyncAudioSession() {
+  auto config = [RTCAudioSessionConfiguration webRTCConfiguration];
+  auto session = [AVAudioSession sharedInstance];
+  config.category = session.category;
+  config.mode = session.mode;
+}
+
 }
