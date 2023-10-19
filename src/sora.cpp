@@ -197,7 +197,6 @@ void Sora::Connect(const sora_conf::internal::ConnectConfig& cc) {
     return;
   }
 
-  IosSyncAudioSession();
   static bool ios_audio_initializing = false;
   if (!ios_audio_initializing) {
     ios_audio_initializing = true;
