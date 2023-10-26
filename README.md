@@ -34,7 +34,7 @@ Please read https://github.com/shiguredo/oss/blob/master/README.en.md before use
 
 ## 対応 Unity バージョン
 
-- Unity 2021.3 (LTS)
+- Unity 2022.3 (LTS)
 
 ## システム条件
 
