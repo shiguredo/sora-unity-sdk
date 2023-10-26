@@ -18,9 +18,10 @@
   - @melpon
 - [UPDATE] SoraClientContext を利用してコードを短くする
   - @melpon
-- [UPDATE] Sora C++ SDK を `2023.14.0` に上げる
-  - @melpon @torikizi
 - [UPDATE] libwebrtc を `m117.5938.2.0` に上げる
+  - @melpon @torikizi
+- [ADD] Sora C++ SDK を `2023.14.0` に上げる
+  - `AudioOutputHelper` を追加
   - @melpon @torikizi
 - [ADD] 接続中にキャプチャラを切り替える機能を実装
   - @melpon
