@@ -60,6 +60,7 @@ UNITY_INTERFACE_EXPORT void sora_set_on_capturer_frame(void* p,
 UNITY_INTERFACE_EXPORT void sora_dispatch_events(void* p);
 UNITY_INTERFACE_EXPORT void sora_connect(void* p, const char* config);
 UNITY_INTERFACE_EXPORT void sora_disconnect(void* p);
+UNITY_INTERFACE_EXPORT void sora_switch_camera(void* p, const char* config);
 UNITY_INTERFACE_EXPORT void* sora_get_texture_update_callback();
 UNITY_INTERFACE_EXPORT void sora_destroy(void* sora);
 
@@ -105,6 +106,26 @@ UNITY_INTERFACE_EXPORT void sora_set_audio_enabled(void* p,
 UNITY_INTERFACE_EXPORT unity_bool_t sora_get_video_enabled(void* p);
 UNITY_INTERFACE_EXPORT void sora_set_video_enabled(void* p,
                                                    unity_bool_t enabled);
+
+UNITY_INTERFACE_EXPORT int sora_get_selected_signaling_url_size(void* p);
+UNITY_INTERFACE_EXPORT int sora_get_connected_signaling_url_size(void* p);
+UNITY_INTERFACE_EXPORT void sora_get_selected_signaling_url(void* p,
+                                                            void* buf,
+                                                            int size);
+UNITY_INTERFACE_EXPORT void sora_get_connected_signaling_url(void* p,
+                                                             void* buf,
+                                                             int size);
+
+typedef void (*change_route_cb_t)(void* userdata);
+UNITY_INTERFACE_EXPORT void* sora_audio_output_helper_create(
+    change_route_cb_t cb,
+    void* userdata);
+UNITY_INTERFACE_EXPORT void sora_audio_output_helper_destroy(void* p);
+UNITY_INTERFACE_EXPORT unity_bool_t
+sora_audio_output_helper_is_handsfree(void* p);
+UNITY_INTERFACE_EXPORT void sora_audio_output_helper_set_handsfree(
+    void* p,
+    unity_bool_t enabled);
 
 #ifdef __cplusplus
 }

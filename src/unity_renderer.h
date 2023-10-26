@@ -27,6 +27,7 @@ class UnityRenderer {
     Sink(webrtc::VideoTrackInterface* track);
     ~Sink();
     ptrid_t GetSinkID() const;
+    void SetTrack(webrtc::VideoTrackInterface* track);
 
    private:
     rtc::scoped_refptr<webrtc::VideoFrameBuffer> GetFrameBuffer();
@@ -47,6 +48,8 @@ class UnityRenderer {
  public:
   ptrid_t AddTrack(webrtc::VideoTrackInterface* track);
   ptrid_t RemoveTrack(webrtc::VideoTrackInterface* track);
+  void ReplaceTrack(webrtc::VideoTrackInterface* oldTrack,
+                    webrtc::VideoTrackInterface* newTrack);
 };
 
 }  // namespace sora_unity_sdk

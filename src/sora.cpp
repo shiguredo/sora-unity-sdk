@@ -34,12 +34,17 @@
 #endif
 
 #ifdef SORA_UNITY_SDK_IOS
+#include <sora/mac/mac_capturer.h>
 #include "mac_helper/ios_audio_init.h"
+#endif
+
+#ifdef SORA_UNITY_SDK_MACOS
+#include <sora/mac/mac_capturer.h>
 #endif
 
 namespace sora_unity_sdk {
 
-Sora::Sora(UnityContext* context) : context_(context) {
+Sora::Sora(UnityContext* context) : unity_context_(context) {
   ptrid_ = IdPointer::Instance().Register(this);
 #if defined(SORA_UNITY_SDK_ANDROID)
   auto env = sora::GetJNIEnv();
@@ -59,6 +64,11 @@ Sora::~Sora() {
     static_cast<sora::AndroidCapturer*>(capturer_.get())->Stop();
   }
 #endif
+#if defined(SORA_UNITY_SDK_IOS) || defined(SORA_UNITY_SDK_MACOS)
+  if (capturer_ != nullptr && capturer_type_ == 0) {
+    static_cast<sora::MacCapturer*>(capturer_.get())->Stop();
+  }
+#endif
   if (capturer_ != nullptr && capturer_type_ != 0) {
     static_cast<UnityCameraCapturer*>(capturer_.get())->Stop();
   }
@@ -66,10 +76,9 @@ Sora::~Sora() {
   capturer_ = nullptr;
   unity_adm_ = nullptr;
 
+  video_sender_ = nullptr;
   audio_track_ = nullptr;
   video_track_ = nullptr;
-  connection_context_ = nullptr;
-  factory_ = nullptr;
 
   if (ioc_ != nullptr) {
     ioc_->stop();
@@ -80,18 +89,7 @@ Sora::~Sora() {
     io_thread_->Stop();
     io_thread_.reset();
   }
-  if (network_thread_) {
-    network_thread_->Stop();
-    network_thread_.reset();
-  }
-  if (worker_thread_) {
-    worker_thread_->Stop();
-    worker_thread_.reset();
-  }
-  if (signaling_thread_) {
-    signaling_thread_->Stop();
-    signaling_thread_.reset();
-  }
+  sora_context_ = nullptr;
   RTC_LOG(LS_INFO) << "Sora object destroy finished";
 }
 
@@ -147,6 +145,40 @@ void Sora::DispatchEvents() {
   }
 }
 
+static sora_conf::VideoFrame VideoFrameToConfig(
+    const webrtc::VideoFrame& frame) {
+  sora_conf::VideoFrame f;
+  f.baseptr = reinterpret_cast<int64_t>(&frame);
+  f.id = frame.id();
+  f.timestamp_us = frame.timestamp_us();
+  f.timestamp = frame.timestamp();
+  f.ntp_time_ms = frame.ntp_time_ms();
+  f.rotation = (int)frame.rotation();
+  auto& v = f.video_frame_buffer;
+  auto vfb = frame.video_frame_buffer();
+  v.baseptr = reinterpret_cast<int64_t>(vfb.get());
+  v.type = (sora_conf::VideoFrameBuffer::Type)vfb->type();
+  v.width = vfb->width();
+  v.height = vfb->height();
+  if (vfb->type() == webrtc::VideoFrameBuffer::Type::kI420) {
+    auto p = vfb->GetI420();
+    v.i420_stride_y = p->StrideY();
+    v.i420_stride_u = p->StrideU();
+    v.i420_stride_v = p->StrideV();
+    v.i420_data_y = reinterpret_cast<int64_t>(p->DataY());
+    v.i420_data_u = reinterpret_cast<int64_t>(p->DataU());
+    v.i420_data_v = reinterpret_cast<int64_t>(p->DataV());
+  }
+  if (vfb->type() == webrtc::VideoFrameBuffer::Type::kNV12) {
+    auto p = vfb->GetNV12();
+    v.nv12_stride_y = p->StrideY();
+    v.nv12_stride_uv = p->StrideUV();
+    v.nv12_data_y = reinterpret_cast<int64_t>(p->DataY());
+    v.nv12_data_uv = reinterpret_cast<int64_t>(p->DataUV());
+  }
+  return f;
+}
+
 void Sora::Connect(const sora_conf::internal::ConnectConfig& cc) {
   auto on_disconnect = [this](int error_code, std::string reason) {
     PushEvent([this, error_code, reason = std::move(reason)]() {
@@ -165,14 +197,19 @@ void Sora::Connect(const sora_conf::internal::ConnectConfig& cc) {
     return;
   }
 
-  IosAudioInit(
-      [this, on_disconnect = std::move(on_disconnect)](std::string error) {
-        if (!error.empty()) {
-          RTC_LOG(LS_ERROR) << "Failed to IosAudioInit: error=" << error;
-          on_disconnect((int)sora_conf::ErrorCode::INTERNAL_ERROR,
-                        "Failed to IosAudioInit: error=" + error);
-        }
-      });
+  static bool ios_audio_initializing = false;
+  if (!ios_audio_initializing) {
+    ios_audio_initializing = true;
+    IosAudioInit(
+        [this, on_disconnect = std::move(on_disconnect)](std::string error) {
+          if (!error.empty()) {
+            RTC_LOG(LS_ERROR) << "Failed to IosAudioInit: error=" << error;
+            on_disconnect((int)sora_conf::ErrorCode::INTERNAL_ERROR,
+                          "Failed to IosAudioInit: error=" + error);
+          }
+          ios_audio_initializing = false;
+        });
+  }
   DoConnect(cc, std::move(on_disconnect));
 #else
   DoConnect(cc, std::move(on_disconnect));
@@ -196,97 +233,54 @@ void Sora::DoConnect(const sora_conf::internal::ConnectConfig& cc,
     return;
   }
 
-  rtc::InitializeSSL();
-
-  network_thread_ = rtc::Thread::CreateWithSocketServer();
-  network_thread_->Start();
-  worker_thread_ = rtc::Thread::Create();
-  worker_thread_->Start();
-  signaling_thread_ = rtc::Thread::Create();
-  signaling_thread_->Start();
-
-  webrtc::PeerConnectionFactoryDependencies dependencies;
-  dependencies.network_thread = network_thread_.get();
-  dependencies.worker_thread = worker_thread_.get();
-  dependencies.signaling_thread = signaling_thread_.get();
-  dependencies.task_queue_factory = webrtc::CreateDefaultTaskQueueFactory();
-  dependencies.call_factory = webrtc::CreateCallFactory();
-  dependencies.event_log_factory =
-      absl::make_unique<webrtc::RtcEventLogFactory>(
-          dependencies.task_queue_factory.get());
-
-  // worker 上の env
-  auto worker_env =
-      worker_thread_->BlockingCall([] { return sora::GetJNIEnv(); });
-  // worker 上の context
-#if defined(SORA_UNITY_SDK_ANDROID)
-  void* worker_context = worker_thread_->BlockingCall([worker_env] {
-    return ::sora_unity_sdk::GetAndroidApplicationContext((JNIEnv*)worker_env)
-        .Release();
-  });
-#else
-  void* worker_context = nullptr;
-#endif
-
-  // media_dependencies
-  cricket::MediaEngineDependencies media_dependencies;
-  media_dependencies.task_queue_factory = dependencies.task_queue_factory.get();
-  unity_adm_ =
-      CreateADM(media_dependencies.task_queue_factory, false,
-                cc.unity_audio_input, cc.unity_audio_output, on_handle_audio_,
-                cc.audio_recording_device, cc.audio_playout_device,
-                worker_thread_.get(), worker_env, worker_context);
-  media_dependencies.adm = unity_adm_;
-
-#if defined(SORA_UNITY_SDK_ANDROID)
-  worker_thread_->BlockingCall([worker_env, worker_context] {
-    ((JNIEnv*)worker_env)->DeleteLocalRef((jobject)worker_context);
-  });
-#endif
-
-  media_dependencies.audio_encoder_factory =
-      sora::CreateBuiltinAudioEncoderFactory();
-  media_dependencies.audio_decoder_factory =
-      sora::CreateBuiltinAudioDecoderFactory();
-
+  // このスレッド上の env と context
   void* env = sora::GetJNIEnv();
   void* android_context = GetAndroidApplicationContext(env);
 
-  auto cuda_context = sora::CudaContext::Create();
-  {
-    auto config = sora::GetDefaultVideoEncoderFactoryConfig(cuda_context, env);
-    config.use_simulcast_adapter = true;
-    media_dependencies.video_encoder_factory =
-        absl::make_unique<sora::SoraVideoEncoderFactory>(std::move(config));
-  }
-  {
-    auto config = sora::GetDefaultVideoDecoderFactoryConfig(cuda_context, env);
-    media_dependencies.video_decoder_factory =
-        absl::make_unique<sora::SoraVideoDecoderFactory>(std::move(config));
-  }
+  sora::SoraClientContextConfig client_config;
+  client_config.use_audio_device = false;
+  client_config.use_hardware_encoder = cc.use_hardware_encoder;
+  client_config.configure_media_dependencies =
+      [&, this](const webrtc::PeerConnectionFactoryDependencies& dependencies,
+                cricket::MediaEngineDependencies& media_dependencies) {
+        // worker 上の env
+        auto worker_env = dependencies.worker_thread->BlockingCall(
+            [] { return sora::GetJNIEnv(); });
+    // worker 上の context
+#if defined(SORA_UNITY_SDK_ANDROID)
+        void* worker_context =
+            dependencies.worker_thread->BlockingCall([worker_env] {
+              return ::sora_unity_sdk::GetAndroidApplicationContext(
+                         (JNIEnv*)worker_env)
+                  .Release();
+            });
+#else
+        void* worker_context = nullptr;
+#endif
 
-  media_dependencies.audio_mixer = nullptr;
-  media_dependencies.audio_processing =
-      webrtc::AudioProcessingBuilder().Create();
+        unity_adm_ = CreateADM(
+            media_dependencies.task_queue_factory, cc.no_audio_device,
+            cc.unity_audio_input, cc.unity_audio_output, on_handle_audio_,
+            cc.audio_recording_device, cc.audio_playout_device,
+            dependencies.worker_thread, worker_env, worker_context);
+        dependencies.worker_thread->BlockingCall(
+            [&] { media_dependencies.adm = unity_adm_; });
 
-  dependencies.media_engine =
-      cricket::CreateMediaEngine(std::move(media_dependencies));
+#if defined(SORA_UNITY_SDK_ANDROID)
+        dependencies.worker_thread->BlockingCall([worker_env, worker_context] {
+          ((JNIEnv*)worker_env)->DeleteLocalRef((jobject)worker_context);
+        });
+#endif
+      };
 
-  factory_ = sora::CreateModularPeerConnectionFactoryWithContext(
-      std::move(dependencies), connection_context_);
+  sora_context_ = sora::SoraClientContext::Create(client_config);
 
-  if (factory_ == nullptr) {
+  if (sora_context_ == nullptr) {
     RTC_LOG(LS_ERROR) << "Failed to create PeerConnectionFactory";
     on_disconnect((int)sora_conf::ErrorCode::INTERNAL_ERROR,
                   "Failed to create PeerConnectionFactory");
     return;
   }
-
-  webrtc::PeerConnectionFactoryInterface::Options factory_options;
-  factory_options.disable_encryption = false;
-  factory_options.ssl_max_version = rtc::SSL_PROTOCOL_DTLS_12;
-  factory_options.crypto_options.srtp.enable_gcm_crypto_suites = true;
-  factory_->SetOptions(factory_options);
 
   if (!InitADM(unity_adm_, cc.audio_recording_device,
                cc.audio_playout_device)) {
@@ -302,58 +296,38 @@ void Sora::DoConnect(const sora_conf::internal::ConnectConfig& cc,
     if (on_capturer_frame_) {
       on_frame = [on_frame =
                       on_capturer_frame_](const webrtc::VideoFrame& frame) {
-        sora_conf::VideoFrame f;
-        f.baseptr = reinterpret_cast<int64_t>(&frame);
-        f.id = frame.id();
-        f.timestamp_us = frame.timestamp_us();
-        f.timestamp = frame.timestamp();
-        f.ntp_time_ms = frame.ntp_time_ms();
-        f.rotation = (int)frame.rotation();
-        auto& v = f.video_frame_buffer;
-        auto vfb = frame.video_frame_buffer();
-        v.baseptr = reinterpret_cast<int64_t>(vfb.get());
-        v.type = (sora_conf::VideoFrameBuffer::Type)vfb->type();
-        v.width = vfb->width();
-        v.height = vfb->height();
-        if (vfb->type() == webrtc::VideoFrameBuffer::Type::kI420) {
-          auto p = vfb->GetI420();
-          v.i420_stride_y = p->StrideY();
-          v.i420_stride_u = p->StrideU();
-          v.i420_stride_v = p->StrideV();
-          v.i420_data_y = reinterpret_cast<int64_t>(p->DataY());
-          v.i420_data_u = reinterpret_cast<int64_t>(p->DataU());
-          v.i420_data_v = reinterpret_cast<int64_t>(p->DataV());
-        }
-        if (vfb->type() == webrtc::VideoFrameBuffer::Type::kNV12) {
-          auto p = vfb->GetNV12();
-          v.nv12_stride_y = p->StrideY();
-          v.nv12_stride_uv = p->StrideUV();
-          v.nv12_data_y = reinterpret_cast<int64_t>(p->DataY());
-          v.nv12_data_uv = reinterpret_cast<int64_t>(p->DataUV());
-        }
+        sora_conf::VideoFrame f = VideoFrameToConfig(frame);
         on_frame(jsonif::to_json(f));
       };
     }
 
     auto capturer = CreateVideoCapturer(
-        cc.capturer_type, (void*)cc.unity_camera_texture,
-        cc.video_capturer_device, cc.video_width, cc.video_height, cc.video_fps,
-        on_frame, signaling_thread_.get(), env, android_context);
-    if (!capturer) {
+        cc.camera_config.capturer_type,
+        (void*)cc.camera_config.unity_camera_texture, cc.no_video_device,
+        cc.camera_config.video_capturer_device, cc.camera_config.video_width,
+        cc.camera_config.video_height, cc.camera_config.video_fps, on_frame,
+        sora_context_->signaling_thread(), env, android_context,
+        unity_context_);
+    if (!cc.no_video_device && !capturer) {
       on_disconnect((int)sora_conf::ErrorCode::INTERNAL_ERROR,
                     "Capturer Init Failed");
       return;
     }
 
     capturer_ = capturer;
-    capturer_type_ = cc.capturer_type;
+    capturer_type_ = cc.camera_config.capturer_type;
 
     std::string audio_track_id = rtc::CreateRandomString(16);
-    audio_track_ = factory_->CreateAudioTrack(
-        audio_track_id,
-        factory_->CreateAudioSource(cricket::AudioOptions()).get());
-    std::string video_track_id = rtc::CreateRandomString(16);
-    video_track_ = factory_->CreateVideoTrack(video_track_id, capturer.get());
+    audio_track_ = sora_context_->peer_connection_factory()->CreateAudioTrack(
+        audio_track_id, sora_context_->peer_connection_factory()
+                            ->CreateAudioSource(cricket::AudioOptions())
+                            .get());
+
+    if (capturer) {
+      std::string video_track_id = rtc::CreateRandomString(16);
+      video_track_ = sora_context_->peer_connection_factory()->CreateVideoTrack(
+          video_track_id, capturer.get());
+    }
   }
 
   {
@@ -361,7 +335,7 @@ void Sora::DoConnect(const sora_conf::internal::ConnectConfig& cc,
     ioc_.reset(new boost::asio::io_context(1));
     sora::SoraSignalingConfig config;
     config.observer = shared_from_this();
-    config.pc_factory = factory_;
+    config.pc_factory = sora_context_->peer_connection_factory();
     config.io_context = ioc_.get();
     config.role = cc.role;
     config.sora_client = SORA_CLIENT;
@@ -493,10 +467,14 @@ void Sora::DoConnect(const sora_conf::internal::ConnectConfig& cc,
       }
       config.forwarding_filter = ff;
     }
-    config.network_manager = signaling_thread_->BlockingCall(
-        [this]() { return connection_context_->default_network_manager(); });
-    config.socket_factory = signaling_thread_->BlockingCall(
-        [this]() { return connection_context_->default_socket_factory(); });
+    config.network_manager =
+        sora_context_->signaling_thread()->BlockingCall([this]() {
+          return sora_context_->connection_context()->default_network_manager();
+        });
+    config.socket_factory =
+        sora_context_->signaling_thread()->BlockingCall([this]() {
+          return sora_context_->connection_context()->default_socket_factory();
+        });
 
     signaling_ = sora::SoraSignaling::Create(std::move(config));
     signaling_->Connect();
@@ -528,6 +506,94 @@ void Sora::Disconnect() {
     return;
   }
   signaling_->Disconnect();
+}
+
+void Sora::SwitchCamera(const sora_conf::internal::CameraConfig& cc) {
+  if (!set_offer_) {
+    return;
+  }
+
+  RTC_LOG(LS_INFO) << "SwitchCamera: " << jsonif::to_json(cc);
+
+  // このあたりのキャプチャラ作成は、IO スレッドではなく Unity スレッドで行う。
+  // （DoConnect で作成したキャプチャラは Unity スレッド上で実行されてるので、
+  //   全て同じスレッドでやる必要がある）
+  std::function<void(const webrtc::VideoFrame& frame)> on_frame;
+  if (on_capturer_frame_) {
+    on_frame = [on_frame =
+                    on_capturer_frame_](const webrtc::VideoFrame& frame) {
+      sora_conf::VideoFrame f = VideoFrameToConfig(frame);
+      on_frame(jsonif::to_json(f));
+    };
+  }
+
+  void* env = sora::GetJNIEnv();
+  void* android_context = GetAndroidApplicationContext(env);
+
+#if defined(SORA_UNITY_SDK_ANDROID)
+  if (capturer_ != nullptr && capturer_type_ == 0) {
+    static_cast<sora::AndroidCapturer*>(capturer_.get())->Stop();
+  }
+#endif
+#if defined(SORA_UNITY_SDK_IOS) || defined(SORA_UNITY_SDK_MACOS)
+  if (capturer_ != nullptr && capturer_type_ == 0) {
+    static_cast<sora::MacCapturer*>(capturer_.get())->Stop();
+  }
+#endif
+  if (capturer_ != nullptr && capturer_type_ != 0) {
+    static_cast<UnityCameraCapturer*>(capturer_.get())->Stop();
+  }
+  capturer_ = nullptr;
+
+  auto capturer = CreateVideoCapturer(
+      cc.capturer_type, (void*)cc.unity_camera_texture, false,
+      cc.video_capturer_device, cc.video_width, cc.video_height, cc.video_fps,
+      on_frame, sora_context_->signaling_thread(), env, android_context,
+      unity_context_);
+  if (!capturer) {
+    RTC_LOG(LS_ERROR) << "Failed to CreateVideoCapturer";
+    return;
+  }
+
+  capturer_ = capturer;
+  capturer_type_ = cc.capturer_type;
+
+  std::string video_track_id = rtc::CreateRandomString(16);
+  auto video_track = sora_context_->peer_connection_factory()->CreateVideoTrack(
+      video_track_id, capturer.get());
+
+  // video_track_ をこのスレッド(Unity スレッド)で設定したいので、
+  // IO スレッドの実行完了を待つ
+  std::promise<void> p;
+  std::future<void> f = p.get_future();
+  boost::asio::post(*ioc_,
+                    [self = shared_from_this(), cc = cc, video_track, &p]() {
+                      self->DoSwitchCamera(cc, video_track);
+                      p.set_value();
+                    });
+  f.wait();
+
+  video_track_ = video_track;
+}
+void Sora::DoSwitchCamera(
+    const sora_conf::internal::CameraConfig& cc,
+    rtc::scoped_refptr<webrtc::VideoTrackInterface> video_track) {
+  if (video_track_ == nullptr) {
+    webrtc::RTCErrorOr<rtc::scoped_refptr<webrtc::RtpSenderInterface>>
+        video_result = signaling_->GetPeerConnection()->AddTrack(video_track,
+                                                                 {stream_id_});
+    video_sender_ = video_result.value();
+
+    auto track_id = renderer_->AddTrack(video_track.get());
+    PushEvent([this, track_id]() {
+      if (on_add_track_) {
+        on_add_track_(track_id, "");
+      }
+    });
+  } else {
+    renderer_->ReplaceTrack(video_track_.get(), video_track.get());
+  }
+  video_sender_->SetTrack(video_track.get());
 }
 
 void Sora::RenderCallbackStatic(int event_id) {
@@ -677,6 +743,7 @@ bool Sora::InitADM(rtc::scoped_refptr<webrtc::AudioDeviceModule> adm,
 rtc::scoped_refptr<webrtc::VideoTrackSourceInterface> Sora::CreateVideoCapturer(
     int capturer_type,
     void* unity_camera_texture,
+    bool no_video_device,
     std::string video_capturer_device,
     int video_width,
     int video_height,
@@ -684,8 +751,13 @@ rtc::scoped_refptr<webrtc::VideoTrackSourceInterface> Sora::CreateVideoCapturer(
     std::function<void(const webrtc::VideoFrame& frame)> on_frame,
     rtc::Thread* signaling_thread,
     void* jni_env,
-    void* android_context) {
+    void* android_context,
+    UnityContext* unity_context) {
   if (capturer_type == 0) {
+    if (no_video_device) {
+      return nullptr;
+    }
+
     // 実カメラ（デバイス）を使う
     sora::CameraDeviceCapturerConfig config;
     config.width = video_width;
@@ -701,7 +773,7 @@ rtc::scoped_refptr<webrtc::VideoTrackSourceInterface> Sora::CreateVideoCapturer(
   } else {
     // Unity のカメラからの映像を使う
     UnityCameraCapturerConfig config;
-    config.context = &UnityContext::Instance();
+    config.context = unity_context;
     config.unity_camera_texture = unity_camera_texture;
     config.width = video_width;
     config.height = video_height;
@@ -781,16 +853,17 @@ void Sora::OnSetOffer(std::string offer) {
       on_set_offer_(offer);
     }
   });
-  std::string stream_id = rtc::CreateRandomString(16);
+  stream_id_ = rtc::CreateRandomString(16);
   if (audio_track_ != nullptr) {
     webrtc::RTCErrorOr<rtc::scoped_refptr<webrtc::RtpSenderInterface>>
         audio_result = signaling_->GetPeerConnection()->AddTrack(audio_track_,
-                                                                 {stream_id});
+                                                                 {stream_id_});
   }
   if (video_track_ != nullptr) {
     webrtc::RTCErrorOr<rtc::scoped_refptr<webrtc::RtpSenderInterface>>
         video_result = signaling_->GetPeerConnection()->AddTrack(video_track_,
-                                                                 {stream_id});
+                                                                 {stream_id_});
+    video_sender_ = video_result.value();
   }
 
   if (video_track_ != nullptr) {
@@ -801,6 +874,8 @@ void Sora::OnSetOffer(std::string offer) {
       }
     });
   }
+
+  set_offer_ = true;
 }
 void Sora::OnDisconnect(sora::SoraSignalingErrorCode ec, std::string message) {
   RTC_LOG(LS_INFO) << "OnDisconnect: " << message;
@@ -906,6 +981,20 @@ void Sora::SetVideoEnabled(bool enabled) {
     return;
   }
   video_track_->set_enabled(enabled);
+}
+
+std::string Sora::GetSelectedSignalingURL() const {
+  if (signaling_ == nullptr) {
+    return "";
+  }
+  return signaling_->GetSelectedSignalingURL();
+}
+
+std::string Sora::GetConnectedSignalingURL() const {
+  if (signaling_ == nullptr) {
+    return "";
+  }
+  return signaling_->GetConnectedSignalingURL();
 }
 
 }  // namespace sora_unity_sdk

@@ -11,21 +11,47 @@
 
 ## develop
 
+## 2023.4.0 (2023-10-26)
+
+- [CHANGE] `Sora.Config` 中にあるキャプチャラに関するフィールドを `Sora.CameraConfig` に移動する
+  - 修正方法は [Sora Unity SDK ドキュメント](https://sora-unity-sdk.shiguredo.jp/2023_3_0_to_2023_4_0) を参照して下さい
+  - @melpon
+- [UPDATE] SoraClientContext を利用してコードを短くする
+  - @melpon
+- [UPDATE] Sora C++ SDK を `2023.14.0` に上げる
+  - @melpon @torikizi
+- [UPDATE] libwebrtc を `m117.5938.2.0` に上げる
+  - @melpon @torikizi
+- [ADD] 接続中にキャプチャラを切り替える機能を実装
+  - @melpon
+- [ADD] デバイスを掴まないようにする `NoVideoDevice`, `NoAudioDevice` を追加
+  - @melpon
+- [ADD] ハードウェアエンコーダを利用するかどうかを設定する `UseHardwareEncoder` を追加
+  - @melpon
+- [ADD] `SelectedSignalingURL` と `ConnectedSignalingURL` プロパティを追加
+  - @melpon
+- [FIX] IosAudioInit を初回接続の場合のみ呼び出すようにすることで、iOS で連続して接続しようとすると落ちることがあったのを修正
+  - @melpon
+- [FIX] AudioOutputHelper.Dispose() を複数回呼んでもクラッシュしないように修正
+  - @melpon
+
 ## 2023.3.0 (2023-08-08)
 
-- [UPDATE] Sora C++ SDK を `2023.9.0` に上げる
+- [UPDATE] Sora C++ SDK を `2023.10.0` に上げる
+  - @torikizi @voluntas
+- [UPDATE] libwebrtc を `m115.5790.7.0` に上げる
   - @torikizi
 
 ## 2023.2.0 (2023-07-19)
 
 - [UPDATE] libwebrtc を `m114.5735.2.0` に上げる
-    - @torikizi @miosakuma
+  - @torikizi @miosakuma
 - [UPDATE] Sora C++ SDK を `2023.7.2` に上げる
   - @torikizi @miosakuma
 - [ADD] ForwardingFilter 機能を使えるようにする
   - @melpon
 - [ADD] CodecParams 機能を使えるようにする
-    - @torikizi
+  - @torikizi
 - [FIX] GetStats でデータレースによりエラーが発生するケースについて修正する
   - @melpon
 

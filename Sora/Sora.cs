@@ -83,6 +83,44 @@ public class Sora : IDisposable
         public List<List<Rule>> Rules = new List<List<Rule>>();
     }
 
+    public class CameraConfig
+    {
+        public CapturerType CapturerType = Sora.CapturerType.DeviceCamera;
+        public UnityEngine.Camera UnityCamera = null;
+        public int UnityCameraRenderTargetDepthBuffer = 16;
+        public string VideoCapturerDevice = "";
+        public int VideoWidth = 640;
+        public int VideoHeight = 480;
+        public int VideoFps = 30;
+
+        public static CameraConfig FromUnityCamera(UnityEngine.Camera unityCamera, int unityCameraRenderTargetDepthBuffer, int videoWidth, int videoHeight, int videoFps)
+        {
+            return new CameraConfig()
+            {
+                CapturerType = Sora.CapturerType.UnityCamera,
+                UnityCamera = unityCamera,
+                UnityCameraRenderTargetDepthBuffer = unityCameraRenderTargetDepthBuffer,
+                VideoCapturerDevice = "",
+                VideoWidth = videoWidth,
+                VideoHeight = videoHeight,
+                VideoFps = videoFps,
+            };
+        }
+        public static CameraConfig FromDeviceCamera(string videoCapturerDevice, int videoWidth, int videoHeight, int videoFps)
+        {
+            return new CameraConfig()
+            {
+                CapturerType = Sora.CapturerType.DeviceCamera,
+                UnityCamera = null,
+                UnityCameraRenderTargetDepthBuffer = 16,
+                VideoCapturerDevice = videoCapturerDevice,
+                VideoWidth = videoWidth,
+                VideoHeight = videoHeight,
+                VideoFps = videoFps,
+            };
+        }
+    }
+
     public class Config
     {
         public string SignalingUrl = "";
@@ -100,15 +138,11 @@ public class Sora : IDisposable
         public SpotlightFocusRidType? SpotlightUnfocusRid;
         public bool? Simulcast;
         public SimulcastRidType? SimulcastRid = null;
-        public CapturerType CapturerType = Sora.CapturerType.DeviceCamera;
-        public UnityEngine.Camera UnityCamera = null;
-        public int UnityCameraRenderTargetDepthBuffer = 16;
+        public bool NoVideoDevice = false;
+        public bool NoAudioDevice = false;
+        public CameraConfig CameraConfig = new CameraConfig();
         public bool Video = true;
         public bool Audio = true;
-        public string VideoCapturerDevice = "";
-        public int VideoWidth = 640;
-        public int VideoHeight = 480;
-        public int VideoFps = 30;
         public VideoCodecType VideoCodecType = VideoCodecType.VP9;
         public string VideoVp9Params = "";
         public string VideoAv1Params = "";
@@ -153,6 +187,8 @@ public class Sora : IDisposable
         public string ProxyAgent = "";
 
         public ForwardingFilter ForwardingFilter;
+
+        public bool? UseHardwareEncoder;
     }
 
     IntPtr p;
@@ -237,10 +273,10 @@ public class Sora : IDisposable
     public void Connect(Config config)
     {
         IntPtr unityCameraTexture = IntPtr.Zero;
-        if (config.CapturerType == CapturerType.UnityCamera)
+        if (config.CameraConfig.CapturerType == CapturerType.UnityCamera)
         {
-            unityCamera = config.UnityCamera;
-            var texture = new UnityEngine.RenderTexture(config.VideoWidth, config.VideoHeight, config.UnityCameraRenderTargetDepthBuffer, UnityEngine.RenderTextureFormat.BGRA32);
+            unityCamera = config.CameraConfig.UnityCamera;
+            var texture = new UnityEngine.RenderTexture(config.CameraConfig.VideoWidth, config.CameraConfig.VideoHeight, config.CameraConfig.UnityCameraRenderTargetDepthBuffer, UnityEngine.RenderTextureFormat.BGRA32);
             unityCamera.targetTexture = texture;
             unityCamera.enabled = true;
             unityCameraTexture = texture.GetNativeTexturePtr();
@@ -270,24 +306,26 @@ public class Sora : IDisposable
         cc.signaling_notify_metadata = config.SignalingNotifyMetadata;
         cc.role = role;
         cc.enable_multistream = config.Multistream != null;
-        cc.multistream = config.Multistream == null ? false : config.Multistream.Value;
+        cc.multistream = config.Multistream.GetValueOrDefault();
         cc.enable_spotlight = config.Spotlight != null;
-        cc.spotlight = config.Spotlight == null ? false : config.Spotlight.Value;
+        cc.spotlight = config.Spotlight.GetValueOrDefault();
         cc.spotlight_number = config.SpotlightNumber;
         cc.spotlight_focus_rid = config.SpotlightFocusRid == null ? "" : config.SpotlightFocusRid.Value.ToString().ToLower();
         cc.spotlight_unfocus_rid = config.SpotlightUnfocusRid == null ? "" : config.SpotlightUnfocusRid.Value.ToString().ToLower();
         cc.enable_simulcast = config.Simulcast != null;
-        cc.simulcast = config.Simulcast == null ? false : config.Simulcast.Value;
+        cc.simulcast = config.Simulcast.GetValueOrDefault();
         cc.simulcast_rid = config.SimulcastRid == null ? "" : config.SimulcastRid.Value.ToString().ToLower();
         cc.insecure = config.Insecure;
-        cc.capturer_type = (int)config.CapturerType;
-        cc.unity_camera_texture = unityCameraTexture.ToInt64();
+        cc.no_video_device = config.NoVideoDevice;
+        cc.no_audio_device = config.NoAudioDevice;
         cc.video = config.Video;
         cc.audio = config.Audio;
-        cc.video_capturer_device = config.VideoCapturerDevice;
-        cc.video_width = config.VideoWidth;
-        cc.video_height = config.VideoHeight;
-        cc.video_fps = config.VideoFps;
+        cc.camera_config.capturer_type = (int)config.CameraConfig.CapturerType;
+        cc.camera_config.unity_camera_texture = unityCameraTexture.ToInt64();
+        cc.camera_config.video_capturer_device = config.CameraConfig.VideoCapturerDevice;
+        cc.camera_config.video_width = config.CameraConfig.VideoWidth;
+        cc.camera_config.video_height = config.CameraConfig.VideoHeight;
+        cc.camera_config.video_fps = config.CameraConfig.VideoFps;
         cc.video_codec_type = config.VideoCodecType.ToString();
         cc.video_vp9_params = config.VideoVp9Params;
         cc.video_av1_params = config.VideoAv1Params;
@@ -300,7 +338,7 @@ public class Sora : IDisposable
         cc.audio_codec_type = config.AudioCodecType.ToString();
         cc.audio_codec_lyra_bitrate = config.AudioCodecLyraBitrate;
         cc.enable_audio_codec_lyra_usedtx = config.AudioCodecLyraUsedtx != null;
-        cc.audio_codec_lyra_usedtx = config.AudioCodecLyraUsedtx == null ? false : config.AudioCodecLyraUsedtx.Value;
+        cc.audio_codec_lyra_usedtx = config.AudioCodecLyraUsedtx.GetValueOrDefault();
         cc.check_lyra_version = config.CheckLyraVersion;
         cc.audio_bit_rate = config.AudioBitRate;
         cc.audio_streaming_language_code = config.AudioStreamingLanguageCode;
@@ -372,12 +410,42 @@ public class Sora : IDisposable
                 cc.forwarding_filter.rules.Add(ccrs);
             }
         }
+        cc.enable_use_hardware_encoder = config.UseHardwareEncoder != null;
+        cc.use_hardware_encoder = config.UseHardwareEncoder.GetValueOrDefault();
 
         sora_connect(p, Jsonif.Json.ToJson(cc));
     }
     public void Disconnect()
     {
         sora_disconnect(p);
+    }
+
+    public void SwitchCamera(CameraConfig config)
+    {
+        if (unityCamera != null)
+        {
+            unityCamera.enabled = false;
+            unityCamera.targetTexture = null;
+            unityCamera = null;
+        }
+
+        IntPtr unityCameraTexture = IntPtr.Zero;
+        if (config.CapturerType == CapturerType.UnityCamera)
+        {
+            unityCamera = config.UnityCamera;
+            var texture = new UnityEngine.RenderTexture(config.VideoWidth, config.VideoHeight, config.UnityCameraRenderTargetDepthBuffer, UnityEngine.RenderTextureFormat.BGRA32);
+            unityCamera.targetTexture = texture;
+            unityCamera.enabled = true;
+            unityCameraTexture = texture.GetNativeTexturePtr();
+        }
+        var cc = new SoraConf.Internal.CameraConfig();
+        cc.capturer_type = (int)config.CapturerType;
+        cc.unity_camera_texture = unityCameraTexture.ToInt64();
+        cc.video_capturer_device = config.VideoCapturerDevice;
+        cc.video_width = config.VideoWidth;
+        cc.video_height = config.VideoHeight;
+        cc.video_fps = config.VideoFps;
+        sora_switch_camera(p, Jsonif.Json.ToJson(cc));
     }
 
     // Unity 側でレンダリングが完了した時（yield return new WaitForEndOfFrame() の後）に呼ぶイベント
@@ -760,6 +828,28 @@ public class Sora : IDisposable
         set { sora_set_video_enabled(p, value ? 1 : 0); }
     }
 
+    public string SelectedSignalingURL
+    {
+        get
+        {
+            int size = sora_get_selected_signaling_url_size(p);
+            byte[] buf = new byte[size];
+            sora_get_selected_signaling_url(p, buf, size);
+            return System.Text.Encoding.UTF8.GetString(buf);
+        }
+    }
+
+    public string ConnectedSignalingURL
+    {
+        get
+        {
+            int size = sora_get_connected_signaling_url_size(p);
+            byte[] buf = new byte[size];
+            sora_get_connected_signaling_url(p, buf, size);
+            return System.Text.Encoding.UTF8.GetString(buf);
+        }
+    }
+
 #if UNITY_IOS && !UNITY_EDITOR
     private const string DllName = "__Internal";
 #else
@@ -790,6 +880,8 @@ public class Sora : IDisposable
     private static extern void sora_connect(IntPtr p, string config);
     [DllImport(DllName)]
     private static extern void sora_disconnect(IntPtr p);
+    [DllImport(DllName)]
+    private static extern void sora_switch_camera(IntPtr p, string config);
     [DllImport(DllName)]
     private static extern IntPtr sora_get_texture_update_callback();
     [DllImport(DllName)]
@@ -826,4 +918,69 @@ public class Sora : IDisposable
     private static extern int sora_get_video_enabled(IntPtr p);
     [DllImport(DllName)]
     private static extern void sora_set_video_enabled(IntPtr p, int enabled);
+    [DllImport(DllName)]
+    private static extern int sora_get_selected_signaling_url_size(IntPtr p);
+    [DllImport(DllName)]
+    private static extern int sora_get_connected_signaling_url_size(IntPtr p);
+    [DllImport(DllName)]
+    private static extern void sora_get_selected_signaling_url(IntPtr p, [Out] byte[] buf, int size);
+    [DllImport(DllName)]
+    private static extern void sora_get_connected_signaling_url(IntPtr p, [Out] byte[] buf, int size);
+
+    public class AudioOutputHelper : IDisposable
+    {
+        private delegate void ChangeRouteCallbackDelegate(IntPtr userdata);
+
+        [AOT.MonoPInvokeCallback(typeof(ChangeRouteCallbackDelegate))]
+        static private void ChangeRouteCallback(IntPtr userdata)
+        {
+            var callback = GCHandle.FromIntPtr(userdata).Target as Action;
+            callback();
+        }
+
+        GCHandle onChangeRouteHandle;
+        IntPtr p;
+
+        public AudioOutputHelper(Action onChangeRoute)
+        {
+            onChangeRouteHandle = GCHandle.Alloc(onChangeRoute);
+            p = sora_audio_output_helper_create(ChangeRouteCallback, GCHandle.ToIntPtr(onChangeRouteHandle));
+        }
+
+        public void Dispose()
+        {
+            if (p != IntPtr.Zero)
+            {
+                sora_audio_output_helper_destroy(p);
+                onChangeRouteHandle.Free();
+                p = IntPtr.Zero;
+            }
+        }
+
+        public bool IsHandsfree()
+        {
+            return sora_audio_output_helper_is_handsfree(p) != 0;
+        }
+
+        public void SetHandsfree(bool enabled)
+        {
+            sora_audio_output_helper_set_handsfree(p, enabled ? 1 : 0);
+        }
+
+#if UNITY_IOS && !UNITY_EDITOR
+        private const string DllName = "__Internal";
+#else
+        private const string DllName = "SoraUnitySdk";
+#endif
+
+        [DllImport(DllName)]
+        private static extern IntPtr sora_audio_output_helper_create(ChangeRouteCallbackDelegate cb, IntPtr userdata);
+        [DllImport(DllName)]
+        private static extern void sora_audio_output_helper_destroy(IntPtr p);
+        [DllImport(DllName)]
+        private static extern int sora_audio_output_helper_is_handsfree(IntPtr p);
+        [DllImport(DllName)]
+        private static extern void sora_audio_output_helper_set_handsfree(IntPtr p, int enabled);
+    }
+
 }
