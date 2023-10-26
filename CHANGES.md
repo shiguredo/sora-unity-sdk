@@ -11,6 +11,8 @@
 
 ## develop
 
+## 2023.4.0 (2023-10-26)
+
 - [CHANGE] `Sora.Config` 中にあるキャプチャラに関するフィールドを `Sora.CameraConfig` に移動する
   - 修正方法は [Sora Unity SDK ドキュメント](https://sora-unity-sdk.shiguredo.jp/2023_3_0_to_2023_4_0) を参照して下さい
   - @melpon
