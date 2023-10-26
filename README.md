@@ -17,7 +17,6 @@ Please read https://github.com/shiguredo/oss/blob/master/README.en.md before use
 
 利用前に https://github.com/shiguredo/oss をお読みください。
 
-
 ## ドキュメント
 
 [Sora Unity SDK ドキュメント](https://sora-unity-sdk.shiguredo.jp/)
@@ -38,7 +37,7 @@ Please read https://github.com/shiguredo/oss/blob/master/README.en.md before use
 
 ## システム条件
 
-- WebRTC SFU Sora 2023.1.0 以降
+- WebRTC SFU Sora 2023.1.3 以降
 
 ## 対応プラットフォーム
 
@@ -53,7 +52,7 @@ Please read https://github.com/shiguredo/oss/blob/master/README.en.md before use
 - AV1 への対応
 - Windows への対応
 - macOS への対応
-    - Apple M1 対応
+  - Apple M1 対応
 - Android への対応
 - Android OpenGL ES への対応
 - iOS 対応
@@ -86,17 +85,18 @@ Please read https://github.com/shiguredo/oss/blob/master/README.en.md before use
 - Sora スポットライトへの対応
 - Sora データチャネルへの対応
 - Sora データチャネルメッセージングへの対応
-    - 実験的機能
+  - 実験的機能
 - Apple VideoToolbox
-    - H.264 ハードウェアエンコードへの対応
-    - H.264 ハードウェアデコードへの対応
+  - H.264 ハードウェアエンコードへの対応
+  - H.264 ハードウェアデコードへの対応
 - NVIDIA VIDEO CODEC SDK
-    - Windows 版
-        - H.264 のハードウェアエンコードへの対応
-        - H.264 のハードウェアデコードへの対応
-        - VP8 のハードウェアデコードへの対応
-        - VP9 のハードウェアデコードへの対応
+  - Windows 版
+    - H.264 のハードウェアエンコードへの対応
+    - H.264 のハードウェアデコードへの対応
+    - VP8 のハードウェアデコードへの対応
+    - VP9 のハードウェアデコードへの対応
 - ミュート機能
+- デバイスをつかまないようにする機能
 
 ## Sora Unity SDK for MS Hololens2
 
@@ -106,19 +106,19 @@ Please read https://github.com/shiguredo/oss/blob/master/README.en.md before use
 ## 有償での優先実装
 
 - Windows 版 NVIDIA VIDEO CODEC SDK による H.264 エンコーダ対応
-    - [スロースネットワークス株式会社](http://www.sloth-networks.co.jp) 様
+  - [スロースネットワークス株式会社](http://www.sloth-networks.co.jp) 様
 - WebRTC's Statistics 対応
-    - 企業名非公開
+  - 企業名非公開
 - Windows 版 NVIDIA VIDEO CODEC SDK による H.264 デコーダ対応
-    - [スロースネットワークス株式会社](http://www.sloth-networks.co.jp) 様
+  - [スロースネットワークス株式会社](http://www.sloth-networks.co.jp) 様
 - Android 版対応
-    - [株式会社KDDIテクノロジー](https://kddi-tech.com/) 様
+  - [株式会社 KDDI テクノロジー](https://kddi-tech.com/) 様
 - Android OpenGL ES 対応
-    - 企業名非公開
+  - 企業名非公開
 - Microsoft HoloLens 2 対応
-    - [NTTコノキュー](https://www.nttqonoq.com/) 様
+  - [NTT コノキュー](https://www.nttqonoq.com/) 様
 - ミュート機能
-    - [NTTコノキュー](https://www.nttqonoq.com/) 様
+  - [NTT コノキュー](https://www.nttqonoq.com/) 様
 
 ## 有償での優先実装が可能な機能一覧
 
@@ -126,12 +126,11 @@ Please read https://github.com/shiguredo/oss/blob/master/README.en.md before use
 
 - オープンソースでの公開が前提
 - 可能であれば企業名の公開
-    - 公開が難しい場合は `企業名非公開` と書かせていただきます
+  - 公開が難しい場合は `企業名非公開` と書かせていただきます
 
 ### 機能
 
 - 音声出力先変更機能
-- デバイスをつかまないようにする機能
 - 音声のみ送受信機能
 - サイマルキャスト rid 指定対応
 
