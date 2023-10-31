@@ -121,7 +121,7 @@ Please read https://github.com/shiguredo/oss/blob/master/README.en.md before use
   - [株式会社NTTコノキュー](https://www.nttqonoq.com/) 様
 - ミュート機能
   - [株式会社NTTコノキュー](https://www.nttqonoq.com/) 様
-- 音声出力先変更機能
+- iOS 向け音声出力先変更機能
   - [KDDI株式会社](https://www.kddi.com/) 様
 - 接続確立後のカメラ切り替え機能
   - [KDDI株式会社](https://www.kddi.com/) 様
@@ -140,6 +140,7 @@ Please read https://github.com/shiguredo/oss/blob/master/README.en.md before use
 
 - 音声のみ送受信機能
 - サイマルキャスト rid 指定対応
+- iOS 以外の音声出力先変更機能
 
 ### NVIDIA VIDEO CODEC SDK
 
