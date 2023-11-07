@@ -30,9 +30,10 @@
   - @melpon
 - [UPDATE] libwebrtc を `m117.5938.2.0` に上げる
   - @melpon @torikizi
-- [ADD] Sora C++ SDK を `2023.14.0` に上げる
-  - `AudioOutputHelper` を追加
+- [UPDATE] Sora C++ SDK を `2023.14.0` に上げる
   - @melpon @torikizi
+- [ADD] iOS デバイスのハンズフリーを可能とする `AudioOutputHelper` を追加
+  - @melpon
 - [ADD] 接続中にキャプチャラを切り替える機能を実装
   - @melpon
 - [ADD] デバイスを掴まないようにする `NoVideoDevice`, `NoAudioDevice` を追加
