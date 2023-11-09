@@ -11,8 +11,9 @@
 
 ## develop
 
-- [UPDATE] Sora C++ SDK を `2023.15.0` に上げる
-  - アップデートに伴い関連するライブラリもアップデート
+- [UPDATE] Sora C++ SDK を `2023.15.1` に上げる
+  - 修正取り込みのため Sora C++ SDK 2023.15.1 にアップデート
+  - Sora C++ SDK 2023.15.0 アップデート時に関連するライブラリもアップデート
   - WEBRTC_BUILD_VERSION を `m119.6045.2.1` にアップデート
   - CMAKE_VERSION を `3.27.7` にアップデート
   - ANDROID_NDK_VERSION を `r26b` にアップデート
