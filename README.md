@@ -1,6 +1,6 @@
 # Sora Unity SDK
 
-[![libwebrtc](https://img.shields.io/badge/libwebrtc-117.5938-blue.svg)](https://chromium.googlesource.com/external/webrtc/+/branch-heads/5938)
+[![libwebrtc](https://img.shields.io/badge/libwebrtc-119.6045-blue.svg)](https://chromium.googlesource.com/external/webrtc/+/branch-heads/6045)
 [![GitHub tag](https://img.shields.io/github/tag/shiguredo/sora-unity-sdk.svg)](https://github.com/shiguredo/sora-unity-sdk)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Actions Status](https://github.com/shiguredo/sora-unity-sdk/workflows/build/badge.svg)](https://github.com/shiguredo/sora-unity-sdk/actions)
