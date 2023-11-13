@@ -360,7 +360,7 @@ def get_webrtc_info(webrtcbuild: bool, source_dir: str, build_dir: str, install_
             webrtc_library_dir=os.path.join(webrtc_build_dir, 'obj')
             if platform.system() == 'Windows' else webrtc_build_dir, clang_dir=os.path.join(
                 webrtc_source_dir, 'src', 'third_party', 'llvm-build', 'Release+Asserts'),
-            libcxx_dir=os.path.join(webrtc_source_dir, 'src', 'buildtools', 'third_party', 'libc++', 'trunk'),)
+            libcxx_dir=os.path.join(webrtc_source_dir, 'src', 'third_party', 'libc++', 'src'),)
     else:
         return WebrtcInfo(
             version_file=os.path.join(webrtc_install_dir, 'VERSIONS'),
@@ -522,7 +522,8 @@ def install_deps(platform: str, build_platform: str, source_dir, build_dir, inst
 
         install_webrtc(**install_webrtc_args)
 
-        webrtc_info = get_webrtc_info(False, source_dir, build_dir, install_dir)
+        webrtc_info = get_webrtc_info(
+            False, source_dir, build_dir, install_dir)
         webrtc_version = read_version_file(webrtc_info.version_file)
 
         # Windows は MSVC を使うので不要
@@ -532,8 +533,8 @@ def install_deps(platform: str, build_platform: str, source_dir, build_dir, inst
             # LLVM
             tools_url = webrtc_version['WEBRTC_SRC_TOOLS_URL']
             tools_commit = webrtc_version['WEBRTC_SRC_TOOLS_COMMIT']
-            libcxx_url = webrtc_version['WEBRTC_SRC_BUILDTOOLS_THIRD_PARTY_LIBCXX_TRUNK_URL']
-            libcxx_commit = webrtc_version['WEBRTC_SRC_BUILDTOOLS_THIRD_PARTY_LIBCXX_TRUNK_COMMIT']
+            libcxx_url = webrtc_version['WEBRTC_SRC_THIRD_PARTY_LIBCXX_SRC_URL']
+            libcxx_commit = webrtc_version['WEBRTC_SRC_THIRD_PARTY_LIBCXX_SRC_COMMIT']
             buildtools_url = webrtc_version['WEBRTC_SRC_BUILDTOOLS_URL']
             buildtools_commit = webrtc_version['WEBRTC_SRC_BUILDTOOLS_COMMIT']
             install_llvm_args = {
@@ -595,7 +596,8 @@ def install_deps(platform: str, build_platform: str, source_dir, build_dir, inst
         install_cmake(**install_cmake_args)
 
         if build_platform in ('macos_x86_64', 'macos_arm64'):
-            add_path(os.path.join(install_dir, 'cmake', 'CMake.app', 'Contents', 'bin'))
+            add_path(os.path.join(install_dir, 'cmake',
+                     'CMake.app', 'Contents', 'bin'))
         else:
             add_path(os.path.join(install_dir, 'cmake', 'bin'))
 
@@ -683,7 +685,8 @@ def get_build_platform():
         raise Exception(f'OS {os} not supported')
 
 
-AVAILABLE_TARGETS = ['windows_x86_64', 'macos_arm64', 'ubuntu-20.04_x86_64', 'ios', 'android']
+AVAILABLE_TARGETS = ['windows_x86_64', 'macos_arm64',
+                     'ubuntu-20.04_x86_64', 'ios', 'android']
 
 BUILD_PLATFORM = {
     'windows_x86_64': ['windows_x86_64'],
@@ -691,6 +694,7 @@ BUILD_PLATFORM = {
     'macos_arm64': ['macos_x86_64', 'macos_arm64', 'ios'],
     'ubuntu-20.04_x86_64': ['ubuntu-20.04_x86_64', 'android'],
 }
+
 
 def main():
     parser = argparse.ArgumentParser()
@@ -705,17 +709,20 @@ def main():
     if build_platform not in BUILD_PLATFORM:
         raise Exception(f'Build platform {build_platform} is not supported.')
     if platform not in BUILD_PLATFORM[build_platform]:
-        raise Exception(f'Target {platform} is not supported on this build platform {build_platform}.')
+        raise Exception(
+            f'Target {platform} is not supported on this build platform {build_platform}.')
 
     configuration_dir = 'debug' if args.debug else 'release'
     source_dir = os.path.join(BASE_DIR, '_source', platform, configuration_dir)
     build_dir = os.path.join(BASE_DIR, '_build', platform, configuration_dir)
-    install_dir = os.path.join(BASE_DIR, '_install', platform, configuration_dir)
+    install_dir = os.path.join(
+        BASE_DIR, '_install', platform, configuration_dir)
     mkdir_p(source_dir)
     mkdir_p(build_dir)
     mkdir_p(install_dir)
 
-    install_deps(platform, build_platform, source_dir, build_dir, install_dir, args.debug)
+    install_deps(platform, build_platform, source_dir,
+                 build_dir, install_dir, args.debug)
 
     if args.debug:
         configuration = 'Debug'
@@ -727,7 +734,8 @@ def main():
     unity_build_dir = os.path.join(build_dir, 'sora_unity_sdk')
     mkdir_p(unity_build_dir)
     with cd(unity_build_dir):
-        webrtc_info = get_webrtc_info(False, source_dir, build_dir, install_dir)
+        webrtc_info = get_webrtc_info(
+            False, source_dir, build_dir, install_dir)
         webrtc_version = read_version_file(webrtc_info.version_file)
         webrtc_commit = webrtc_version['WEBRTC_COMMIT']
         with cd(BASE_DIR):
@@ -741,15 +749,22 @@ def main():
         cmake_args.append(f'-DSORA_UNITY_SDK_PACKAGE={platform}')
         cmake_args.append(f'-DSORA_UNITY_SDK_VERSION={sora_unity_sdk_version}')
         cmake_args.append(f'-DSORA_UNITY_SDK_COMMIT={sora_unity_sdk_commit}')
-        cmake_args.append(f"-DBOOST_ROOT={cmake_path(os.path.join(install_dir, 'boost'))}")
-        cmake_args.append(f"-DLYRA_DIR={cmake_path(os.path.join(install_dir, 'lyra'))}")
+        cmake_args.append(
+            f"-DBOOST_ROOT={cmake_path(os.path.join(install_dir, 'boost'))}")
+        cmake_args.append(
+            f"-DLYRA_DIR={cmake_path(os.path.join(install_dir, 'lyra'))}")
         cmake_args.append('-DWEBRTC_LIBRARY_NAME=webrtc')
-        cmake_args.append(f"-DWEBRTC_INCLUDE_DIR={cmake_path(webrtc_info.webrtc_include_dir)}")
-        cmake_args.append(f"-DWEBRTC_LIBRARY_DIR={cmake_path(webrtc_info.webrtc_library_dir)}")
+        cmake_args.append(
+            f"-DWEBRTC_INCLUDE_DIR={cmake_path(webrtc_info.webrtc_include_dir)}")
+        cmake_args.append(
+            f"-DWEBRTC_LIBRARY_DIR={cmake_path(webrtc_info.webrtc_library_dir)}")
         cmake_args.append(f"-DWEBRTC_COMMIT={webrtc_commit}")
-        cmake_args.append(f"-DSORA_DIR={cmake_path(os.path.join(install_dir, 'sora'))}")
-        cmake_args.append(f"-DPROTOBUF_DIR={cmake_path(os.path.join(install_dir, 'protobuf'))}")
-        cmake_args.append(f"-DPROTOC_GEN_JSONIF_DIR={cmake_path(os.path.join(install_dir, 'protoc-gen-jsonif'))}")
+        cmake_args.append(
+            f"-DSORA_DIR={cmake_path(os.path.join(install_dir, 'sora'))}")
+        cmake_args.append(
+            f"-DPROTOBUF_DIR={cmake_path(os.path.join(install_dir, 'protobuf'))}")
+        cmake_args.append(
+            f"-DPROTOC_GEN_JSONIF_DIR={cmake_path(os.path.join(install_dir, 'protoc-gen-jsonif'))}")
         if platform == 'windows_x86_64':
             pass
         elif platform in ('macos_x86_64', 'macos_arm64'):
@@ -769,10 +784,13 @@ def main():
             cmake_args.append('-DCMAKE_OSX_DEPLOYMENT_TARGET=13.0')
             cmake_args.append('-DCMAKE_XCODE_ATTRIBUTE_ONLY_ACTIVE_ARCH=NO')
         elif platform == 'android':
-            toolchain_file = os.path.join(install_dir, 'android-ndk', 'build', 'cmake', 'android.toolchain.cmake')
+            toolchain_file = os.path.join(
+                install_dir, 'android-ndk', 'build', 'cmake', 'android.toolchain.cmake')
             cmake_args.append(f"-DCMAKE_TOOLCHAIN_FILE={toolchain_file}")
-            cmake_args.append(f"-DANDROID_PLATFORM=android-{android_native_api_level}")
-            cmake_args.append(f"-DANDROID_NATIVE_API_LEVEL={android_native_api_level}")
+            cmake_args.append(
+                f"-DANDROID_PLATFORM=android-{android_native_api_level}")
+            cmake_args.append(
+                f"-DANDROID_NATIVE_API_LEVEL={android_native_api_level}")
             cmake_args.append('-DANDROID_ABI=arm64-v8a')
             cmake_args.append('-DANDROID_STL=none')
             cmake_args.append(
@@ -782,8 +800,10 @@ def main():
             # https://github.com/android/ndk/issues/1618
             cmake_args.append('-DCMAKE_ANDROID_EXCEPTIONS=ON')
         elif platform == 'ubuntu-20.04_x86_64':
-            cmake_args.append(f"-DCMAKE_C_COMPILER={os.path.join(webrtc_info.clang_dir, 'bin', 'clang')}")
-            cmake_args.append(f"-DCMAKE_CXX_COMPILER={os.path.join(webrtc_info.clang_dir, 'bin', 'clang++')}")
+            cmake_args.append(
+                f"-DCMAKE_C_COMPILER={os.path.join(webrtc_info.clang_dir, 'bin', 'clang')}")
+            cmake_args.append(
+                f"-DCMAKE_CXX_COMPILER={os.path.join(webrtc_info.clang_dir, 'bin', 'clang++')}")
             cmake_args.append(
                 f"-DLIBCXX_INCLUDE_DIR={cmake_path(os.path.join(webrtc_info.libcxx_dir, 'include'))}")
         else:
@@ -806,10 +826,12 @@ def main():
                  '-sdk', 'iphoneos'])
             cmd(['lipo', '-create',
                  '-output', os.path.join(unity_build_dir, 'libSoraUnitySdk.a'),
-                 os.path.join(unity_build_dir, 'Release-iphonesimulator', 'libSoraUnitySdk.a'),
+                 os.path.join(unity_build_dir,
+                              'Release-iphonesimulator', 'libSoraUnitySdk.a'),
                  os.path.join(unity_build_dir, 'Release-iphoneos', 'libSoraUnitySdk.a')])
         else:
-            cmd(['cmake', '--build', '.', f'-j{multiprocessing.cpu_count()}', '--config', configuration])
+            cmd(['cmake', '--build', '.',
+                f'-j{multiprocessing.cpu_count()}', '--config', configuration])
 
 
 if __name__ == '__main__':

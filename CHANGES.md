@@ -11,6 +11,19 @@
 
 ## develop
 
+## 2023.5.0 (2023-11-13)
+
+- [UPDATE] Sora C++ SDK を `2023.15.1` に上げる
+  - 修正取り込みのため Sora C++ SDK 2023.15.1 にアップデート
+  - Sora C++ SDK 2023.15.0 アップデート時に関連するライブラリもアップデート
+  - WEBRTC_BUILD_VERSION を `m119.6045.2.1` にアップデート
+  - CMAKE_VERSION を `3.27.7` にアップデート
+  - ANDROID_NDK_VERSION を `r26b` にアップデート
+  - @torikizi
+- [UPDATE] パッケージディレクトリ変更に追従する
+  - WEBRTC_BUILD_VERSION のアップデートに伴い、パッケージディレクトリが変更されたためそれに追従する
+  - @torikizi
+
 ## 2023.4.0 (2023-10-26)
 
 - [CHANGE] `Sora.Config` 中にあるキャプチャラに関するフィールドを `Sora.CameraConfig` に移動する
@@ -18,10 +31,12 @@
   - @melpon
 - [UPDATE] SoraClientContext を利用してコードを短くする
   - @melpon
-- [UPDATE] Sora C++ SDK を `2023.14.0` に上げる
-  - @melpon @torikizi
 - [UPDATE] libwebrtc を `m117.5938.2.0` に上げる
   - @melpon @torikizi
+- [UPDATE] Sora C++ SDK を `2023.14.0` に上げる
+  - @melpon @torikizi
+- [ADD] iOS デバイスのハンズフリーを可能とする `AudioOutputHelper` を追加
+  - @melpon
 - [ADD] 接続中にキャプチャラを切り替える機能を実装
   - @melpon
 - [ADD] デバイスを掴まないようにする `NoVideoDevice`, `NoAudioDevice` を追加
