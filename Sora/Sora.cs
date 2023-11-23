@@ -527,10 +527,11 @@ public class Sora : IDisposable
     }
 
     /// <summary>
-    /// 指定した Unity カメラの映像を Sora 側のテクスチャにレンダリングする
+    /// 指定した Unity カメラの映像をキャプチャする
     /// </summary>
     /// <remarks>
-    /// この関数は Unity 側でレンダリングが完了した時（yield return new WaitForEndOfFrame() の後）に呼び出して下さい。
+    /// Unity カメラから１フレーム分の映像をキャプチャし、Sora に送信します。
+    /// この関数は Unity 側でレンダリングが完了した後（yield return new WaitForEndOfFrame() の後）に呼び出して下さい。
     /// </remarks>
     public void OnRender()
     {
@@ -538,8 +539,12 @@ public class Sora : IDisposable
     }
 
     /// <summary>
-    /// trackId で受信した映像を texutre にレンダリングする
+    /// trackId で受信した映像を texture にレンダリングする
     /// </summary>
+    /// <remarks>
+    /// Role.Sendonly または Role.Sendrecv で映像を送信している場合、
+    /// 自身の trackId を指定すれば、自身が送信している映像を texture にレンダリングすることもできます。
+    /// </remarks>
     public void RenderTrackToTexture(uint trackId, UnityEngine.Texture texture)
     {
         commandBuffer.IssuePluginCustomTextureUpdateV2(sora_get_texture_update_callback(), texture, trackId);
@@ -556,6 +561,13 @@ public class Sora : IDisposable
         callback(trackId, connectionId);
     }
 
+    /// <summary>
+    /// トラックが追加された時のコールバック
+    /// </summary>
+    /// <remarks>
+    /// Action の引数は uint trackId, string connectionId です。
+    /// connectionId が空文字だった場合、送信者自身のトラックが追加されたことを表します。
+    /// </remarks>
     public Action<uint, string> OnAddTrack
     {
         set
@@ -794,6 +806,19 @@ public class Sora : IDisposable
         callback(frame);
     }
 
+    /// <summary>
+    /// カメラからの映像をキャプチャする際のコールバック
+    /// </summary>
+    /// <remarks>
+    /// RenderTrackToTexture() でもカメラからの映像データを取得することはできますが、
+    /// ビットレートに応じて縮小された後のデータになってしまいます。
+    /// 
+    /// OnCapturerFrame でコールバックされるのは、縮小される前の、カメラから取得した直後のサイズのデータになります。
+    /// 高画質な映像を取得したい場合は、このコールバックを利用してください。
+    /// 
+    /// このコールバックは Unity スレッドとは別のスレッドから呼ばれることに注意して下さい。
+    /// また、Android ではこのコールバックを利用できません。
+    /// </remarks>
     public Action<SoraConf.VideoFrame> OnCapturerFrame
     {
         set
