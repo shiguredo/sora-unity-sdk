@@ -180,8 +180,9 @@ public class Sora : IDisposable
         public string VideoAv1Params = "";
         public string VideoH264Params = "";
         public int VideoBitRate = 0;
-        // Unity からの音の出力を、録音データとして取り込む
+        // デバイスから録音する代わりに Sora.ProcessAudio() で指定したデータを録音データとして利用するかどうか
         public bool UnityAudioInput = false;
+        // 再生データをデバイスで再生する代わりに Sora.OnHandleAudio コールバックで再生データを受け取るようにするかどうか
         public bool UnityAudioOutput = false;
         /// <summary>
         /// 録音時のデバイス名
