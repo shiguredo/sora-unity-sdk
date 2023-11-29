@@ -1,5 +1,6 @@
 #include "unity_renderer.h"
 
+// libwebrtc
 #include <rtc_base/logging.h>
 
 namespace sora_unity_sdk {
@@ -70,6 +71,9 @@ void UnityRenderer::Sink::TextureUpdateCallback(int eventID, void* data) {
       //                 << "] Sink::TextureUpdateCallback Begin Sink is null";
       return;
     }
+    // TODO(melpon): p を取得した直後、updating_ = true にするまでの間に Sink が削除されたら
+    // セグフォしてしまうので、問題になるようなら Lookup の時点でロックを獲得する必要がある
+
     if (p->deleting_) {
       //RTC_LOG(LS_INFO) << "[" << (void*)p
       //                 << "] Sink::TextureUpdateCallback Begin deleting";
