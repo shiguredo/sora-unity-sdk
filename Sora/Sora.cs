@@ -83,11 +83,22 @@ public class Sora : IDisposable
         public List<List<Rule>> Rules = new List<List<Rule>>();
     }
 
+    /// <summary>
+    /// カメラの設定
+    /// </summary>
+    /// <remarks>
+    /// デバイスカメラまたは Unity カメラの設定を行います。
+    /// 各フィールドに直接値を入力しても構いませんが、FromDeviceCamera() または FromUnityCamera() を使って生成することを推奨します。
+    /// 
+    /// Sora.GetVideoCapturerDevices() で取得した DeviceName または UniqueName を VideoCapturerDevice に設定することで、
+    /// 指定したデバイスのカメラを利用することが出来ます。
+    /// </remarks>
     public class CameraConfig
     {
         public CapturerType CapturerType = Sora.CapturerType.DeviceCamera;
         public UnityEngine.Camera UnityCamera = null;
         public int UnityCameraRenderTargetDepthBuffer = 16;
+        // 空文字ならデフォルトデバイスを利用する
         public string VideoCapturerDevice = "";
         public int VideoWidth = 640;
         public int VideoHeight = 480;
@@ -121,8 +132,24 @@ public class Sora : IDisposable
         }
     }
 
+    /// <summary>
+    /// Sora の設定
+    /// </summary>
+    /// <remarks>
+    /// Sora オブジェクトに渡す設定です。
+    /// 多くのフィールドは WebRTC SFU Sora に接続する時のパラメータと同じなので、基本的には WebRTC SFU Sora ドキュメントの
+    /// <see href="https://sora-doc.shiguredo.jp/SIGNALING/">WebSocket 経由のシグナリング</see> を参照してください。
+    /// </remarks>
     public class Config
     {
+        /// <summary>
+        /// シグナリング URL
+        /// </summary>
+        /// <remarks>
+        /// SignalingUrlCandidate を使って複数の URL を指定することもできます。
+        /// 複数の URL が指定されている場合、すべての URL に接続を試み、最初に接続が確立した URL だけ残して、他の URL は切断します。
+        /// SignalingUrl と SignalingUrlCandidate の両方に値が設定されている場合、両方の URL を使って接続を試みます。
+        /// </remarks>
         public string SignalingUrl = "";
         public string[] SignalingUrlCandidate = new string[0];
         public string ChannelId = "";
@@ -138,6 +165,11 @@ public class Sora : IDisposable
         public SpotlightFocusRidType? SpotlightUnfocusRid;
         public bool? Simulcast;
         public SimulcastRidType? SimulcastRid = null;
+        // NoVideoDevice と NoAudioDevice を true にすると、ビデオデバイスまたはオーディオデバイスを掴まなくなります。
+        // Video, Audio を false にすると、ビデオやオーディオデータの送信は行わなくなりますが、依然としてデバイスそのものは掴んでしまうので、
+        // もしデバイスを掴まないようにしたい場合はこれらのフィールドを true にしてください。
+        // また、この設定はデバイスのみに作用するものなので、
+        // Unity カメラや Unity オーディオを利用する場合は NoVideoDevice や NoAudioDevice の設定は効果がありません。
         public bool NoVideoDevice = false;
         public bool NoAudioDevice = false;
         public CameraConfig CameraConfig = new CameraConfig();
@@ -148,9 +180,27 @@ public class Sora : IDisposable
         public string VideoAv1Params = "";
         public string VideoH264Params = "";
         public int VideoBitRate = 0;
+        // デバイスから録音する代わりに Sora.ProcessAudio() で指定したデータを録音データとして利用するかどうか
         public bool UnityAudioInput = false;
+        // 再生データをデバイスで再生する代わりに Sora.OnHandleAudio コールバックで再生データを受け取るようにするかどうか
         public bool UnityAudioOutput = false;
+        /// <summary>
+        /// 録音時のデバイス名
+        /// </summary>
+        /// <remarks>
+        /// 空文字ならデフォルトデバイスを利用します。
+        /// Sora.GetAudioRecordingDevices() で取得した DeviceName または UniqueName を AudioRecordingDevice に設定することで、
+        /// 指定したデバイスのマイクを利用することが出来ます。
+        /// </remarks>
         public string AudioRecordingDevice = "";
+        /// <summary>
+        /// 再生時のデバイス名
+        /// </summary>
+        /// <remarks>
+        /// 空文字ならデフォルトデバイスを利用します。
+        /// SoraGetAudioPlayoutDevices() で取得した DeviceName または UniqueName を AudioPlayoutDevice に設定することで、
+        /// 指定したデバイスのスピーカーを利用することが出来ます。
+        /// </remarks>
         public string AudioPlayoutDevice = "";
         public AudioCodecType AudioCodecType = AudioCodecType.OPUS;
         // AudioCodecType.LYRA の場合は必須
@@ -188,6 +238,7 @@ public class Sora : IDisposable
 
         public ForwardingFilter ForwardingFilter;
 
+        // ハードウェアエンコーダー/デコーダーを利用するかどうか。null の場合は実装依存となる
         public bool? UseHardwareEncoder;
     }
 
@@ -205,6 +256,13 @@ public class Sora : IDisposable
     UnityEngine.Rendering.CommandBuffer commandBuffer;
     UnityEngine.Camera unityCamera;
 
+    /// <summary>
+    /// Sora オブジェクトを破棄します。
+    /// </summary>
+    /// <remarks>
+    /// 既に Connect() を呼び出している場合、この関数を呼び出す前に、OnDisconnect コールバックが呼ばれていることを確認して下さい。
+    /// OnDisconnect コールバックが呼ばれる前に Dispose() を呼び出した場合の動作は未定義です。
+    /// </remarks>
     public void Dispose()
     {
         if (p != IntPtr.Zero)
@@ -270,6 +328,12 @@ public class Sora : IDisposable
         commandBuffer = new UnityEngine.Rendering.CommandBuffer();
     }
 
+    /// <summary>
+    /// Sora に接続します。
+    /// </summary>
+    /// <remarks>
+    /// この関数を呼び出した後は、エラー時や切断時に必ず１回だけ OnDisconnect コールバックが呼ばれます。
+    /// </remarks>
     public void Connect(Config config)
     {
         IntPtr unityCameraTexture = IntPtr.Zero;
@@ -415,11 +479,25 @@ public class Sora : IDisposable
 
         sora_connect(p, Jsonif.Json.ToJson(cc));
     }
+    /// <summary>
+    /// Sora から切断します。
+    /// </summary>
+    /// <remarks>
+    /// この関数は何度呼び出しても構いませんが、既に切断されている場合 OnDisconnect コールバックは呼ばれません。
+    /// </remarks>
     public void Disconnect()
     {
         sora_disconnect(p);
     }
 
+    /// <summary>
+    /// カメラを切り替えます。
+    /// </summary>
+    /// <remarks>
+    /// 接続中のカメラを別のカメラに切り替えます。
+    /// この時、NoVideoDevice の設定は無視されます。
+    /// つまり NoVideoDevice = false かつ Video = true で接続した後に SwitchCamera() を呼び出すと、指定したカメラに切り替わります。
+    /// </remarks>
     public void SwitchCamera(CameraConfig config)
     {
         if (unityCamera != null)
@@ -448,14 +526,25 @@ public class Sora : IDisposable
         sora_switch_camera(p, Jsonif.Json.ToJson(cc));
     }
 
-    // Unity 側でレンダリングが完了した時（yield return new WaitForEndOfFrame() の後）に呼ぶイベント
-    // 指定した Unity カメラの映像を Sora 側のテクスチャにレンダリングしたりする
+    /// <summary>
+    /// 指定した Unity カメラの映像をキャプチャする
+    /// </summary>
+    /// <remarks>
+    /// Unity カメラから１フレーム分の映像をキャプチャし、Sora に送信します。
+    /// この関数は Unity 側でレンダリングが完了した後（yield return new WaitForEndOfFrame() の後）に呼び出して下さい。
+    /// </remarks>
     public void OnRender()
     {
         UnityEngine.GL.IssuePluginEvent(sora_get_render_callback(), sora_get_render_callback_event_id(p));
     }
 
-    // trackId で受信した映像を texutre にレンダリングする
+    /// <summary>
+    /// trackId で受信した映像を texture にレンダリングする
+    /// </summary>
+    /// <remarks>
+    /// Role.Sendonly または Role.Sendrecv で映像を送信している場合、
+    /// 自身の trackId を指定すれば、自身が送信している映像を texture にレンダリングすることもできます。
+    /// </remarks>
     public void RenderTrackToTexture(uint trackId, UnityEngine.Texture texture)
     {
         commandBuffer.IssuePluginCustomTextureUpdateV2(sora_get_texture_update_callback(), texture, trackId);
@@ -472,6 +561,13 @@ public class Sora : IDisposable
         callback(trackId, connectionId);
     }
 
+    /// <summary>
+    /// トラックが追加された時のコールバック
+    /// </summary>
+    /// <remarks>
+    /// Action の引数は uint trackId, string connectionId です。
+    /// connectionId が空文字だった場合、送信者自身のトラックが追加されたことを表します。
+    /// </remarks>
     public Action<uint, string> OnAddTrack
     {
         set
@@ -639,11 +735,29 @@ public class Sora : IDisposable
         }
     }
 
+    /// <summary>
+    /// Sora クラスから発生したイベントを処理します。
+    /// </summary>
+    /// <remarks>
+    /// OnAddTrack や OnRemoveTrack, OnDisconnect といったコールバックは、一部を除き、この関数を呼び出すことで発生します。
+    /// そのため、この関数は Update() などの定期的に実行される場所で呼び出すようにして下さい。
+    ///
+    /// 例外として、OnHandleAudio と OnCapturerFrame はこの関数を呼ばなくても発生しますが、
+    /// Unity スレッドとは別のスレッドから呼び出されるため同期に注意する必要があります。
+    /// </remarks>
     public void DispatchEvents()
     {
         sora_dispatch_events(p);
     }
 
+    /// <summary>
+    /// 録音データを処理します。
+    /// </summary>
+    /// <remarks>
+    /// Config.UnityAudioInput = true の場合のみ有効です。
+    /// 録音デバイスからの入力の代わりに、この ProcessAudio() で渡したデータを入力として扱うことが出来ます。
+    /// 現在は 48000Hz Stereo のデータのみ受け取ることができます。
+    /// </remarks>
     public void ProcessAudio(float[] data, int offset, int samples)
     {
         sora_process_audio(p, data, offset, samples);
@@ -660,6 +774,14 @@ public class Sora : IDisposable
         callback(buf2, samples, channels);
     }
 
+    /// <summary>
+    /// オーディオ再生用のコールバック
+    /// </summary>
+    /// <remarks>
+    /// Config.UnityAudioOutput = true の場合のみ有効です。
+    /// 再生デバイスで直接再生する代わりに、再生するためのデータをこのコールバックに渡します。
+    /// また、このコールバックは Unity スレッドとは別のスレッドから呼ばれることに注意して下さい。
+    /// </remarks>
     public Action<short[], int, int> OnHandleAudio
     {
         set
@@ -684,6 +806,19 @@ public class Sora : IDisposable
         callback(frame);
     }
 
+    /// <summary>
+    /// カメラからの映像をキャプチャする際のコールバック
+    /// </summary>
+    /// <remarks>
+    /// RenderTrackToTexture() でもカメラからの映像データを取得することはできますが、
+    /// ビットレートに応じて縮小された後のデータになってしまいます。
+    /// 
+    /// OnCapturerFrame でコールバックされるのは、縮小される前の、カメラから取得した直後のサイズのデータになります。
+    /// 高画質な映像を取得したい場合は、このコールバックを利用してください。
+    /// 
+    /// このコールバックは Unity スレッドとは別のスレッドから呼ばれることに注意して下さい。
+    /// また、Android ではこのコールバックを利用できません。
+    /// </remarks>
     public Action<SoraConf.VideoFrame> OnCapturerFrame
     {
         set
@@ -715,6 +850,9 @@ public class Sora : IDisposable
         sora_get_stats(p, StatsCallback, GCHandle.ToIntPtr(handle));
     }
 
+    /// <summary>
+    /// 指定した label のデータチャンネルに buf を送信します。
+    /// </summary>
     public void SendMessage(string label, byte[] buf)
     {
         sora_send_message(p, label, buf, buf.Length);
@@ -828,6 +966,13 @@ public class Sora : IDisposable
         set { sora_set_video_enabled(p, value ? 1 : 0); }
     }
 
+    /// <summary>
+    /// 候補の中から実際に接続されたシグナリング URL
+    /// </summary>
+    /// <remarks>
+    /// Sora の接続時に指定したシグナリング URL の中から、どのシグナリング URL に接続したのかを返します。
+    /// 必ず Config.SignalingUrl または Config.SignalingUrlCandidate で指定された値のいずれかを返します。
+    /// </remarks>
     public string SelectedSignalingURL
     {
         get
@@ -839,6 +984,14 @@ public class Sora : IDisposable
         }
     }
 
+    /// <summary>
+    /// 最終的に接続されたシグナリング URL
+    /// </summary>
+    /// <remarks>
+    /// Sora でクラスターを組んでいる場合は、リダイレクトによって別のシグナリング URL に接続することがあります。
+    /// この関数はリダイレクト時に指定されたシグナリング URL を返します。
+    /// この値は Config.SignalingUrl または Config.SignalingUrlCandidate で指定された値とは異なる場合があります。
+    /// </remarks>
     public string ConnectedSignalingURL
     {
         get

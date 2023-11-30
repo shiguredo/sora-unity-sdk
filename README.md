@@ -102,8 +102,9 @@ Please read https://github.com/shiguredo/oss/blob/master/README.en.md before use
 
 ## Sora Unity SDK for MS Hololens2
 
+- Discord でのお問い合わせはお受けしておりません
 - [support/hololens2](https://github.com/shiguredo/sora-unity-sdk/tree/support/hololens2) ブランチの修正や改善は有償でお受けしています
-- 継続的な有償サポートは提供しておりません
+- 継続的な有償サポートを提供しています
 
 ## 有償での優先実装
 

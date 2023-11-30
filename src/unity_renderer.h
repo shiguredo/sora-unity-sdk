@@ -22,6 +22,8 @@ class UnityRenderer {
     std::mutex mutex_;
     rtc::scoped_refptr<webrtc::VideoFrameBuffer> frame_buffer_;
     uint8_t* temp_buf_ = nullptr;
+    std::atomic<bool> deleting_;
+    std::atomic<bool> updating_;
 
    public:
     Sink(webrtc::VideoTrackInterface* track);
