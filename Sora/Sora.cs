@@ -27,6 +27,7 @@ public class Sora : IDisposable
         VP8,
         H264,
         AV1,
+        H265,
     }
     public enum AudioCodecType
     {
