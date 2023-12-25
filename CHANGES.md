@@ -11,9 +11,11 @@
 
 ## develop
 
-- [FIX] Sora C++ SDK を `2023.17.0` に上げる
+- [UPDATE] Sora C++ SDK を `2023.17.0` に上げる
   - Sora C++ SDK 2023.17.0 アップデート時に関連するライブラリもアップデート
   - WEBRTC_BUILD_VERSION を `m120.6099.1.2` にアップデート
+  - @torikizi
+- [ADD] VideoCodecType に H265 を追加
   - @torikizi
 
 ## 2023.5.2 (2023-12-02)
