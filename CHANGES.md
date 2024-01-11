@@ -17,6 +17,8 @@
   - @torikizi
 - [ADD] VideoCodecType に H265 を追加
   - @torikizi
+- [ADD] ForwardinfFilter に version と metadata を追加
+  - @torikizi
 
 ## 2023.5.2 (2023-12-02)
 

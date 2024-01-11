@@ -82,6 +82,9 @@ public class Sora : IDisposable
             public List<string> Values = new List<string>();
         }
         public List<List<Rule>> Rules = new List<List<Rule>>();
+        // 以下は null でない場合のみ設定される
+        public string? Version;
+        public string? Metadata;
     }
 
     /// <summary>

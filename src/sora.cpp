@@ -465,6 +465,12 @@ void Sora::DoConnect(const sora_conf::internal::ConnectConfig& cc,
         }
         ff.rules.push_back(ffrs);
       }
+      if (cc.forwarding_filter.version) {
+        ff.version = cc.forwarding_filter.version;
+      }
+      if (cc.forwarding_filter.metadata) {
+        ff.metadata = cc.forwarding_filter.metadata;
+      }
       config.forwarding_filter = ff;
     }
     config.network_manager =

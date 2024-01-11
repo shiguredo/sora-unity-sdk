@@ -35,6 +35,8 @@ message ForwardingFilter {
         repeated Rule rules = 1;
     }
     repeated Rules rules = 2;
+    string version = 4;
+    string metadata = 5;
 }
 
 message CameraConfig {
