@@ -465,11 +465,18 @@ void Sora::DoConnect(const sora_conf::internal::ConnectConfig& cc,
         }
         ff.rules.push_back(ffrs);
       }
-      if (cc.forwarding_filter.version) {
+      if (!cc.forwarding_filter.version.empty()) {
         ff.version = cc.forwarding_filter.version;
       }
-      if (cc.forwarding_filter.metadata) {
-        ff.metadata = cc.forwarding_filter.metadata;
+      if (!cc.forwarding_filter.metadata.empty()) {
+        boost::json::error_code ec;
+        auto md = boost::json::parse(cc.forwarding_filter.metadata, ec);
+        if (ec) {
+          RTC_LOG(LS_WARNING) << "Invalid JSON: forwarding_filter metadata="
+                              << cc.forwarding_filter.metadata;
+        } else {
+          config.metadata = md;
+        }
       }
       config.forwarding_filter = ff;
     }

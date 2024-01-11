@@ -476,6 +476,8 @@ public class Sora : IDisposable
                     ccrs.rules.Add(ccr);
                 }
                 cc.forwarding_filter.rules.Add(ccrs);
+                cc.forwarding_filter.version = config.ForwardingFilter.Version != null;
+                cc.forwarding_filter.metadata = config.ForwardingFilter.Metadata != null;
             }
         }
         cc.enable_use_hardware_encoder = config.UseHardwareEncoder != null;
