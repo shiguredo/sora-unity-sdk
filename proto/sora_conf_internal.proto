@@ -25,7 +25,8 @@ message DataChannel {
 }
 
 message ForwardingFilter {
-    string action = 1;
+    bool enable_action = 1;
+    string action = 2;
     message Rule {
         string field = 1;
         string op = 2;
@@ -34,9 +35,11 @@ message ForwardingFilter {
     message Rules {
         repeated Rule rules = 1;
     }
-    repeated Rules rules = 2;
-    string version = 4;
-    string metadata = 5;
+    repeated Rules rules = 3;
+    bool enable_version = 4;
+    string version = 5;
+    bool enable_metadata = 6;
+    string metadata = 7;
 }
 
 message CameraConfig {

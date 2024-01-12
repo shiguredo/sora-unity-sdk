@@ -460,7 +460,11 @@ public class Sora : IDisposable
         if (config.ForwardingFilter != null)
         {
             cc.enable_forwarding_filter = true;
-            cc.forwarding_filter.action = config.ForwardingFilter.Action;
+            if (config.ForwardingFilter.Action != null)
+            {
+                cc.forwarding_filter.enable_action = true;
+                cc.forwarding_filter.action = config.ForwardingFilter.Action;
+            }
             foreach (var rs in config.ForwardingFilter.Rules)
             {
                 var ccrs = new SoraConf.Internal.ForwardingFilter.Rules();
@@ -476,8 +480,16 @@ public class Sora : IDisposable
                     ccrs.rules.Add(ccr);
                 }
                 cc.forwarding_filter.rules.Add(ccrs);
-                cc.forwarding_filter.version = config.ForwardingFilter.Version != null;
-                cc.forwarding_filter.metadata = config.ForwardingFilter.Metadata != null;
+            }
+            if (config.ForwardingFilter.Version != null)
+            {
+                cc.forwarding_filter.enable_version = true;
+                cc.forwarding_filter.version = config.ForwardingFilter.Version;
+            }
+            if (config.ForwardingFilter.Metadata != null)
+            {
+                cc.forwarding_filter.enable_metadata = true;
+                cc.forwarding_filter.metadata = config.ForwardingFilter.Metadata;
             }
         }
         cc.enable_use_hardware_encoder = config.UseHardwareEncoder != null;

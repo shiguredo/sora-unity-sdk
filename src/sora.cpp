@@ -453,7 +453,9 @@ void Sora::DoConnect(const sora_conf::internal::ConnectConfig& cc,
     config.audio_streaming_language_code = cc.audio_streaming_language_code;
     if (cc.enable_forwarding_filter) {
       sora::SoraSignalingConfig::ForwardingFilter ff;
-      ff.action = cc.forwarding_filter.action;
+      if (cc.forwarding_filter.enable_action) {
+        ff.action = cc.forwarding_filter.action;
+      }
       for (const auto& rs : cc.forwarding_filter.rules) {
         std::vector<sora::SoraSignalingConfig::ForwardingFilter::Rule> ffrs;
         for (const auto& r : rs.rules) {
@@ -465,17 +467,17 @@ void Sora::DoConnect(const sora_conf::internal::ConnectConfig& cc,
         }
         ff.rules.push_back(ffrs);
       }
-      if (!cc.forwarding_filter.version.empty()) {
+      if (cc.forwarding_filter.enable_version) {
         ff.version = cc.forwarding_filter.version;
       }
-      if (!cc.forwarding_filter.metadata.empty()) {
+      if (cc.forwarding_filter.enable_metadata) {
         boost::json::error_code ec;
-        auto md = boost::json::parse(cc.forwarding_filter.metadata, ec);
+        auto ffmd = boost::json::parse(cc.forwarding_filter.metadata, ec);
         if (ec) {
           RTC_LOG(LS_WARNING) << "Invalid JSON: forwarding_filter metadata="
                               << cc.forwarding_filter.metadata;
         } else {
-          config.metadata = md;
+          ff.metadata = ffmd;
         }
       }
       config.forwarding_filter = ff;
