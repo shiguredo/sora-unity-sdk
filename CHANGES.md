@@ -11,9 +11,6 @@
 
 ## develop
 
-- [CHANGE] ForwardingFilter の Action をオプション項目に変更
-  - 必須項目からオプション項目に変更となるため、破壊的変更となる
-  - @torikizi
 - [UPDATE] Sora C++ SDK を `2023.17.0` に上げる
   - Sora C++ SDK 2023.17.0 アップデート時に関連するライブラリもアップデート
   - WEBRTC_BUILD_VERSION を `m120.6099.1.2` にアップデート
@@ -21,6 +18,9 @@
 - [ADD] VideoCodecType に H265 を追加
   - @torikizi
 - [ADD] ForwardingFilter に version と metadata を追加
+  - @torikizi
+- [FIX] ForwardingFilter の action をオプション項目に変更
+  - Sora C++ SDK の変更に追従
   - @torikizi
 
 ## 2023.5.2 (2023-12-02)
