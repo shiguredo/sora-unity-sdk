@@ -180,9 +180,9 @@ public class Sora : IDisposable
         public bool Video = true;
         public bool Audio = true;
         public VideoCodecType VideoCodecType = VideoCodecType.VP9;
-        public string? VideoVp9Params;
-        public string? VideoAv1Params;
-        public string? VideoH264Params;
+        public string VideoVp9Params;
+        public string VideoAv1Params;
+        public string VideoH264Params;
         public int VideoBitRate = 0;
         // デバイスから録音する代わりに Sora.ProcessAudio() で指定したデータを録音データとして利用するかどうか
         public bool UnityAudioInput = false;
