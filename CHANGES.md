@@ -11,11 +11,16 @@
 
 ## develop
 
-- [UPDATE] Sora C++ SDK を `2023.17.0` に上げる
-  - Sora C++ SDK 2023.17.0 アップデート時に関連するライブラリもアップデート
+- [UPDATE] Sora C++ SDK を `2024.1.0` に上げる
+  - Sora C++ SDK 2024.1.0 アップデート時に関連するライブラリもアップデート
   - WEBRTC_BUILD_VERSION を `m120.6099.1.2` にアップデート
   - @torikizi
 - [ADD] VideoCodecType に H265 を追加
+  - @torikizi
+- [ADD] ForwardingFilter に version と metadata を追加
+  - @torikizi
+- [FIX] ForwardingFilter の action をオプション項目に変更
+  - Sora C++ SDK の変更に追従
   - @torikizi
 
 ## 2023.5.2 (2023-12-02)
