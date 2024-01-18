@@ -74,7 +74,7 @@ public class Sora : IDisposable
 
     public class ForwardingFilter
     {
-        public string Action;
+        public string? Action;
         public class Rule
         {
             public string Field;
