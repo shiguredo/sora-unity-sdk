@@ -6,6 +6,7 @@
 #include <thread>
 
 // Sora
+#include <sora/sora_client_context.h>
 #include <sora/sora_signaling.h>
 
 // Boost
@@ -53,6 +54,7 @@ class Sora : public std::enable_shared_from_this<Sora>,
 
   void Connect(const sora_conf::internal::ConnectConfig& cc);
   void Disconnect();
+  void SwitchCamera(const sora_conf::internal::CameraConfig& cc);
 
   static void UNITY_INTERFACE_API RenderCallbackStatic(int event_id);
   int GetRenderCallbackEventID() const;
@@ -70,6 +72,9 @@ class Sora : public std::enable_shared_from_this<Sora>,
   void SetAudioEnabled(bool enabled);
   bool GetVideoEnabled() const;
   void SetVideoEnabled(bool enabled);
+
+  std::string GetSelectedSignalingURL() const;
+  std::string GetConnectedSignalingURL() const;
 
  private:
   void* GetAndroidApplicationContext(void* env);
@@ -91,6 +96,9 @@ class Sora : public std::enable_shared_from_this<Sora>,
  private:
   void DoConnect(const sora_conf::internal::ConnectConfig& config,
                  std::function<void(int, std::string)> on_disconnect);
+  void DoSwitchCamera(
+      const sora_conf::internal::CameraConfig& cc,
+      rtc::scoped_refptr<webrtc::VideoTrackInterface> video_track);
 
   static rtc::scoped_refptr<UnityAudioDevice> CreateADM(
       webrtc::TaskQueueFactory* task_queue_factory,
@@ -111,6 +119,7 @@ class Sora : public std::enable_shared_from_this<Sora>,
   CreateVideoCapturer(
       int capturer_type,
       void* unity_camera_texture,
+      bool no_video_device,
       std::string video_capturer_device,
       int video_width,
       int video_height,
@@ -118,12 +127,13 @@ class Sora : public std::enable_shared_from_this<Sora>,
       std::function<void(const webrtc::VideoFrame& frame)> on_frame,
       rtc::Thread* signaling_thread,
       void* jni_env,
-      void* android_context
+      void* android_context,
+      UnityContext* unity_context
 #ifdef SORA_UNITY_SDK_HOLOLENS2
       ,
       const sora_conf::internal::ConnectConfig& cc
 #endif
-  );
+      );
 
   void PushEvent(std::function<void()> f);
 
@@ -141,10 +151,11 @@ class Sora : public std::enable_shared_from_this<Sora>,
  private:
   std::unique_ptr<boost::asio::io_context> ioc_;
   std::shared_ptr<sora::SoraSignaling> signaling_;
-  UnityContext* context_;
+  UnityContext* unity_context_;
   std::unique_ptr<UnityRenderer> renderer_;
   rtc::scoped_refptr<webrtc::AudioTrackInterface> audio_track_;
   rtc::scoped_refptr<webrtc::VideoTrackInterface> video_track_;
+  rtc::scoped_refptr<webrtc::RtpSenderInterface> video_sender_;
   std::function<void(ptrid_t, std::string)> on_add_track_;
   std::function<void(ptrid_t, std::string)> on_remove_track_;
   std::function<void(std::string)> on_set_offer_;
@@ -156,12 +167,8 @@ class Sora : public std::enable_shared_from_this<Sora>,
   std::function<void(const int16_t*, int, int)> on_handle_audio_;
   std::function<void(std::string)> on_capturer_frame_;
 
+  std::shared_ptr<sora::SoraClientContext> sora_context_;
   std::unique_ptr<rtc::Thread> io_thread_;
-  std::unique_ptr<rtc::Thread> network_thread_;
-  std::unique_ptr<rtc::Thread> worker_thread_;
-  std::unique_ptr<rtc::Thread> signaling_thread_;
-  rtc::scoped_refptr<webrtc::PeerConnectionFactoryInterface> factory_;
-  rtc::scoped_refptr<webrtc::ConnectionContext> connection_context_;
 
   std::mutex event_mutex_;
   std::deque<std::function<void()>> event_queue_;
@@ -169,6 +176,8 @@ class Sora : public std::enable_shared_from_this<Sora>,
   ptrid_t ptrid_;
 
   std::map<ptrid_t, std::string> connection_ids_;
+
+  std::string stream_id_;
 
   rtc::scoped_refptr<webrtc::VideoTrackSourceInterface> capturer_;
   int capturer_type_ = 0;
@@ -179,6 +188,8 @@ class Sora : public std::enable_shared_from_this<Sora>,
 #if defined(SORA_UNITY_SDK_ANDROID)
   webrtc::ScopedJavaGlobalRef<jobject> android_context_;
 #endif
+
+  std::atomic<bool> set_offer_ = false;
 };
 
 }  // namespace sora_unity_sdk

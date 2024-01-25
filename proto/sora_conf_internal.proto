@@ -25,7 +25,8 @@ message DataChannel {
 }
 
 message ForwardingFilter {
-    string action = 1;
+    bool enable_action = 1;
+    string action = 2;
     message Rule {
         string field = 1;
         string op = 2;
@@ -34,7 +35,20 @@ message ForwardingFilter {
     message Rules {
         repeated Rule rules = 1;
     }
-    repeated Rules rules = 2;
+    repeated Rules rules = 3;
+    bool enable_version = 4;
+    string version = 5;
+    bool enable_metadata = 6;
+    string metadata = 7;
+}
+
+message CameraConfig {
+    int32 capturer_type = 17;
+    int64 unity_camera_texture = 18;
+    string video_capturer_device = 19;
+    int32 video_width = 22;
+    int32 video_height = 23;
+    int32 video_fps = 24;
 }
 
 message ConnectConfig {
@@ -54,14 +68,11 @@ message ConnectConfig {
     bool enable_simulcast = 14;
     bool simulcast = 15;
     string simulcast_rid = 16;
-    int32 capturer_type = 17;
-    int64 unity_camera_texture = 18;
-    string video_capturer_device = 19;
+    bool no_video_device = 160;
+    bool no_audio_device = 161;
+    CameraConfig camera_config = 17;
     bool video = 20;
     bool audio = 21;
-    int32 video_width = 22;
-    int32 video_height = 23;
-    int32 video_fps = 24;
     string video_codec_type = 25;
     string video_vp9_params = 250;
     string video_av1_params = 251;
@@ -95,14 +106,17 @@ message ConnectConfig {
     bool enable_forwarding_filter = 50;
     ForwardingFilter forwarding_filter = 51;
 
-    bool enable_mrc_hologram_composition_enabled = 100;
-    bool mrc_hologram_composition_enabled = 101;
-    bool enable_mrc_recording_indicator_enabled = 102;
-    bool mrc_recording_indicator_enabled = 103;
-    bool enable_mrc_video_stabilization_enabled = 104;
-    bool mrc_video_stabilization_enabled = 105;
-    bool enable_mrc_video_stabilization_buffer_length = 106;
-    uint32 mrc_video_stabilization_buffer_length = 107;
-    bool enable_mrc_global_opacity_coefficient = 108;
-    float mrc_global_opacity_coefficient = 109;
+    bool enable_use_hardware_encoder = 52;
+    bool use_hardware_encoder = 53;
+
+    bool enable_mrc_hologram_composition_enabled = 1000;
+    bool mrc_hologram_composition_enabled = 1001;
+    bool enable_mrc_recording_indicator_enabled = 1002;
+    bool mrc_recording_indicator_enabled = 1003;
+    bool enable_mrc_video_stabilization_enabled = 1004;
+    bool mrc_video_stabilization_enabled = 1005;
+    bool enable_mrc_video_stabilization_buffer_length = 1006;
+    uint32 mrc_video_stabilization_buffer_length = 1007;
+    bool enable_mrc_global_opacity_coefficient = 1008;
+    float mrc_global_opacity_coefficient = 1009;
 }

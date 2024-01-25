@@ -1,4 +1,8 @@
 #include "unity.h"
+
+// Sora
+#include <sora/audio_output_helper.h>
+
 #include "device_list.h"
 #include "sora.h"
 #include "sora_conf.json.h"
@@ -142,6 +146,13 @@ void sora_disconnect(void* p) {
   wsora->sora->Disconnect();
 }
 
+void sora_switch_camera(void* p, const char* config_json) {
+  auto wsora = (SoraWrapper*)p;
+  auto config =
+      jsonif::from_json<sora_conf::internal::CameraConfig>(config_json);
+  wsora->sora->SwitchCamera(config);
+}
+
 void* sora_get_texture_update_callback() {
   return (void*)&sora_unity_sdk::UnityRenderer::Sink::TextureUpdateCallback;
 }
@@ -247,6 +258,58 @@ unity_bool_t sora_get_video_enabled(void* p) {
 void sora_set_video_enabled(void* p, unity_bool_t enabled) {
   auto wsora = (SoraWrapper*)p;
   wsora->sora->SetVideoEnabled(enabled);
+}
+
+// get_*_signaling_url_size() から get_*_signaling_url() までの間に値が変わった場合、
+// 落ちることは無いが、文字列が切り詰められる可能性があるので注意
+int sora_get_selected_signaling_url_size(void* p) {
+  auto wsora = (SoraWrapper*)p;
+  return wsora->sora->GetSelectedSignalingURL().size();
+}
+int sora_get_connected_signaling_url_size(void* p) {
+  auto wsora = (SoraWrapper*)p;
+  return wsora->sora->GetConnectedSignalingURL().size();
+}
+void sora_get_selected_signaling_url(void* p, void* buf, int size) {
+  auto wsora = (SoraWrapper*)p;
+  std::string str = wsora->sora->GetSelectedSignalingURL();
+  std::memcpy(buf, str.c_str(), std::min(size, (int)str.size()));
+}
+void sora_get_connected_signaling_url(void* p, void* buf, int size) {
+  auto wsora = (SoraWrapper*)p;
+  std::string str = wsora->sora->GetConnectedSignalingURL();
+  std::memcpy(buf, str.c_str(), std::min(size, (int)str.size()));
+}
+
+struct AudioOutputHelperImpl : public sora::AudioChangeRouteObserver {
+  AudioOutputHelperImpl(change_route_cb_t cb, void* userdata)
+      : helper_(sora::CreateAudioOutputHelper(this)),
+        cb_(cb),
+        userdata_(userdata) {}
+  void OnChangeRoute() override { cb_(userdata_); }
+
+  bool IsHandsfree() { return helper_->IsHandsfree(); }
+  void SetHandsfree(bool enabled) { helper_->SetHandsfree(enabled); }
+
+ private:
+  std::unique_ptr<sora::AudioOutputHelperInterface> helper_;
+  change_route_cb_t cb_;
+  void* userdata_;
+};
+
+void* sora_audio_output_helper_create(change_route_cb_t cb, void* userdata) {
+  return new AudioOutputHelperImpl(cb, userdata);
+}
+void sora_audio_output_helper_destroy(void* p) {
+  delete (AudioOutputHelperImpl*)p;
+}
+unity_bool_t sora_audio_output_helper_is_handsfree(void* p) {
+  auto helper = (AudioOutputHelperImpl*)p;
+  return helper->IsHandsfree() ? 1 : 0;
+}
+void sora_audio_output_helper_set_handsfree(void* p, unity_bool_t enabled) {
+  auto helper = (AudioOutputHelperImpl*)p;
+  helper->SetHandsfree(enabled != 0);
 }
 
 // iOS の場合は static link で名前が被る可能性があるので、別の名前にしておく
