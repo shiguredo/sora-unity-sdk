@@ -565,15 +565,15 @@ def install_deps(platform: str, build_platform: str, source_dir, build_dir, inst
         install_boost(**install_boost_args)
 
         # Lyra
-        install_lyra_args = {
-            'version': version['LYRA_VERSION'],
-            'version_file': os.path.join(install_dir, 'lyra.version'),
-            'source_dir': source_dir,
-            'install_dir': install_dir,
-            'sora_version': version['SORA_CPP_SDK_VERSION'],
-            'platform': platform,
-        }
-        install_lyra(**install_lyra_args)
+        # install_lyra_args = {
+        #     'version': version['LYRA_VERSION'],
+        #     'version_file': os.path.join(install_dir, 'lyra.version'),
+        #     'source_dir': source_dir,
+        #     'install_dir': install_dir,
+        #     'sora_version': version['SORA_CPP_SDK_VERSION'],
+        #     'platform': platform,
+        # }
+        # install_lyra(**install_lyra_args)
 
         # CMake
         install_cmake_args = {
