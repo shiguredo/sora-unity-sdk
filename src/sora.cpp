@@ -220,6 +220,9 @@ void Sora::DoConnect(const sora_conf::internal::ConnectConfig& cc,
                      std::function<void(int, std::string)> on_disconnect) {
   RTC_LOG(LS_INFO) << "Sora::Connect " << jsonif::to_json(cc);
 
+#ifdef SORA_UNITY_SDK_HOLOLENS2
+  connect_config_ = cc;
+#endif
   if (cc.role != "sendonly" && cc.role != "recvonly" && cc.role != "sendrecv") {
     RTC_LOG(LS_ERROR) << "Invalid role: " << cc.role;
     on_disconnect((int)sora_conf::ErrorCode::INVALID_PARAMETER,
@@ -568,7 +571,12 @@ void Sora::SwitchCamera(const sora_conf::internal::CameraConfig& cc) {
       cc.capturer_type, (void*)cc.unity_camera_texture, false,
       cc.video_capturer_device, cc.video_width, cc.video_height, cc.video_fps,
       on_frame, sora_context_->signaling_thread(), env, android_context,
-      unity_context_);
+      unity_context_
+#ifdef SORA_UNITY_SDK_HOLOLENS2
+      ,
+      connect_config_
+#endif
+  );
   if (!capturer) {
     RTC_LOG(LS_ERROR) << "Failed to CreateVideoCapturer";
     return;

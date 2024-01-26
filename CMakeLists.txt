@@ -124,7 +124,7 @@ if (SORA_UNITY_SDK_PACKAGE STREQUAL "windows_x86_64")
   # 文字コードを utf-8 として扱うのと、シンボルテーブル数を増やす
   target_compile_options(SoraUnitySdk
     PRIVATE
-      "$<$<COMPILE_LANGUAGE:CXX>:/utf-8;/bigobj>"
+      "$<$<COMPILE_LANGUAGE:CXX>:/utf-8;/bigobj;/w34996>"
   )
   set_target_properties(SoraUnitySdk
     PROPERTIES
@@ -172,7 +172,7 @@ elseif (SORA_UNITY_SDK_PACKAGE STREQUAL "windows_hololens2")
   # 文字コードを utf-8 として扱うのと、シンボルテーブル数を増やす
   target_compile_options(SoraUnitySdk
     PRIVATE
-      "$<$<COMPILE_LANGUAGE:CXX>:/utf-8;/bigobj>"
+      "$<$<COMPILE_LANGUAGE:CXX>:/utf-8;/bigobj;/w34996>"
   )
   set_target_properties(SoraUnitySdk
     PROPERTIES

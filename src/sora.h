@@ -133,7 +133,7 @@ class Sora : public std::enable_shared_from_this<Sora>,
       ,
       const sora_conf::internal::ConnectConfig& cc
 #endif
-      );
+  );
 
   void PushEvent(std::function<void()> f);
 
@@ -190,6 +190,10 @@ class Sora : public std::enable_shared_from_this<Sora>,
 #endif
 
   std::atomic<bool> set_offer_ = false;
+
+#ifdef SORA_UNITY_SDK_HOLOLENS2
+  sora_conf::internal::ConnectConfig connect_config_;
+#endif
 };
 
 }  // namespace sora_unity_sdk
