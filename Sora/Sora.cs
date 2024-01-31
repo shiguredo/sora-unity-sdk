@@ -1134,7 +1134,7 @@ if (config.ForwardingFilter.Version != null)
         public AudioOutputHelper(Action onChangeRoute)
         {
 #if UNITY_ANDROID && !UNITY_EDITOR
-            AndroidJavaClass unityPlayerClass = new AndroidJavaClass("jp.shiguredo.sora.unityaudiomanager.SoraAudioManagedActivity");
+            AndroidJavaClass unityPlayerClass = new AndroidJavaClass("com.unity3d.player.UnityPlayer");
             currentActivity = unityPlayerClass.GetStatic<AndroidJavaObject>("currentActivity");
 
             if (onChangeRoute != null) {
