@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
+using UnityEngine;
 
 public class Sora : IDisposable
 {
@@ -27,7 +28,7 @@ public class Sora : IDisposable
         VP8,
         H264,
         AV1,
-        H265,
+H265,
     }
     public enum AudioCodecType
     {
@@ -82,7 +83,7 @@ public class Sora : IDisposable
             public List<string> Values = new List<string>();
         }
         public List<List<Rule>> Rules = new List<List<Rule>>();
-        public string? Version;
+public string? Version;
         public string? Metadata;
     }
 
@@ -459,11 +460,11 @@ public class Sora : IDisposable
         if (config.ForwardingFilter != null)
         {
             cc.enable_forwarding_filter = true;
-            if (config.ForwardingFilter.Action != null)
+if (config.ForwardingFilter.Action != null)
             {
                 cc.forwarding_filter.enable_action = true;
-                cc.forwarding_filter.action = config.ForwardingFilter.Action;
-            }
+            cc.forwarding_filter.action = config.ForwardingFilter.Action;
+}
             foreach (var rs in config.ForwardingFilter.Rules)
             {
                 var ccrs = new SoraConf.Internal.ForwardingFilter.Rules();
@@ -480,7 +481,7 @@ public class Sora : IDisposable
                 }
                 cc.forwarding_filter.rules.Add(ccrs);
             }
-            if (config.ForwardingFilter.Version != null)
+if (config.ForwardingFilter.Version != null)
             {
                 cc.forwarding_filter.enable_version = true;
                 cc.forwarding_filter.version = config.ForwardingFilter.Version;
@@ -1101,6 +1102,24 @@ public class Sora : IDisposable
     {
         private delegate void ChangeRouteCallbackDelegate(IntPtr userdata);
 
+#if UNITY_ANDROID && !UNITY_EDITOR
+        private AndroidJavaObject currentActivity;
+        private ChangeRouteCallbackProxy callbackProxy;
+
+        private class ChangeRouteCallbackProxy : AndroidJavaProxy
+        {
+            public event Action OnChangeRoute;
+
+            public ChangeRouteCallbackProxy() : base("jp.shiguredo.sora.audiomanager.SoraAudioManager.OnChangeRouteObserver")
+            {
+            }
+
+            public void onChangeRoute()
+            {
+                OnChangeRoute?.Invoke();
+            }
+        }
+#else
         [AOT.MonoPInvokeCallback(typeof(ChangeRouteCallbackDelegate))]
         static private void ChangeRouteCallback(IntPtr userdata)
         {
@@ -1110,31 +1129,57 @@ public class Sora : IDisposable
 
         GCHandle onChangeRouteHandle;
         IntPtr p;
+#endif
 
         public AudioOutputHelper(Action onChangeRoute)
         {
+#if UNITY_ANDROID && !UNITY_EDITOR
+            AndroidJavaClass unityPlayerClass = new AndroidJavaClass("jp.shiguredo.sora.unityaudiomanager.SoraAudioManagedActivity");
+            currentActivity = unityPlayerClass.GetStatic<AndroidJavaObject>("currentActivity");
+
+            if (onChangeRoute != null) {
+                callbackProxy = new ChangeRouteCallbackProxy();
+                callbackProxy.OnChangeRoute += onChangeRoute;
+            }
+            currentActivity.Call("startAudioManager", callbackProxy);
+#else
             onChangeRouteHandle = GCHandle.Alloc(onChangeRoute);
             p = sora_audio_output_helper_create(ChangeRouteCallback, GCHandle.ToIntPtr(onChangeRouteHandle));
+#endif
         }
 
         public void Dispose()
         {
+#if UNITY_ANDROID && !UNITY_EDITOR
+            currentActivity.Call("stopAudioManager");
+            currentActivity = null;
+            callbackProxy = null;
+#else
             if (p != IntPtr.Zero)
             {
                 sora_audio_output_helper_destroy(p);
                 onChangeRouteHandle.Free();
                 p = IntPtr.Zero;
             }
+#endif
         }
 
         public bool IsHandsfree()
         {
+#if UNITY_ANDROID && !UNITY_EDITOR
+            return currentActivity.Call<bool>("isHandsfree");
+#else
             return sora_audio_output_helper_is_handsfree(p) != 0;
+#endif
         }
 
         public void SetHandsfree(bool enabled)
         {
+#if UNITY_ANDROID && !UNITY_EDITOR
+            currentActivity.Call("setHandsfree", enabled);
+#else
             sora_audio_output_helper_set_handsfree(p, enabled ? 1 : 0);
+#endif
         }
 
 #if UNITY_IOS && !UNITY_EDITOR
