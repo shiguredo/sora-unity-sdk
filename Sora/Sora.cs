@@ -1108,15 +1108,15 @@ if (config.ForwardingFilter.Version != null)
 
         private class ChangeRouteCallbackProxy : AndroidJavaProxy
         {
-            public event Action OnChangeRoute;
+            public event Action onChangeRoute;
 
-            public ChangeRouteCallbackProxy() : base("jp.shiguredo.sora.audiomanager.SoraAudioManager.OnChangeRouteObserver")
+            public ChangeRouteCallbackProxy() : base("jp.shiguredo.sora.audiomanager.SoraAudioManager$OnChangeRouteObserver")
             {
             }
 
-            public void onChangeRoute()
+            public void OnChangeRoute()
             {
-                OnChangeRoute?.Invoke();
+                onChangeRoute?.Invoke();
             }
         }
 #else
@@ -1139,7 +1139,7 @@ if (config.ForwardingFilter.Version != null)
 
             if (onChangeRoute != null) {
                 callbackProxy = new ChangeRouteCallbackProxy();
-                callbackProxy.OnChangeRoute += onChangeRoute;
+                callbackProxy.onChangeRoute += onChangeRoute;
             }
             currentActivity.Call("startAudioManager", callbackProxy);
 #else
