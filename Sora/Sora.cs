@@ -1125,6 +1125,18 @@ if (config.ForwardingFilter.Version != null)
             }
         }
 
+        public AndroidAudioOutputHelper(Action onChangeRoute)
+        {
+            AndroidJavaClass unityPlayerClass = new AndroidJavaClass("com.unity3d.player.UnityPlayer");
+            currentActivity = unityPlayerClass.GetStatic<AndroidJavaObject>("currentActivity");
+
+            if (onChangeRoute != null) {
+                callbackProxy = new ChangeRouteCallbackProxy();
+                callbackProxy.onChangeRoute += onChangeRoute;
+            }
+            currentActivity.Call("startAudioManager", callbackProxy);
+        }
+
         public void Dispose()
         {
             currentActivity.Call("stopAudioManager");
@@ -1158,6 +1170,12 @@ if (config.ForwardingFilter.Version != null)
 
         GCHandle onChangeRouteHandle;
         IntPtr p;
+
+        public DefaultAudioOutputHelper(Action onChangeRoute)
+        {
+            onChangeRouteHandle = GCHandle.Alloc(onChangeRoute);
+            p = sora_audio_output_helper_create(ChangeRouteCallback, GCHandle.ToIntPtr(onChangeRouteHandle));
+        }
 
         public void Dispose()
         {
