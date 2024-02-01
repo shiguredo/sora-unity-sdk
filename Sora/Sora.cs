@@ -1098,11 +1098,16 @@ if (config.ForwardingFilter.Version != null)
     [DllImport(DllName)]
     private static extern void sora_get_connected_signaling_url(IntPtr p, [Out] byte[] buf, int size);
 
-    public class AudioOutputHelper : IDisposable
+    public interface IAudioOutputHelper : IDisposable
     {
-        private delegate void ChangeRouteCallbackDelegate(IntPtr userdata);
+        bool IsHandsfree();
+        void SetHandsfree(bool enabled);
+    }
 
 #if UNITY_ANDROID && !UNITY_EDITOR
+    // Androidの実装
+    public class AndroidAudioOutputHelper : IAudioOutputHelper
+    {
         private AndroidJavaObject currentActivity;
         private ChangeRouteCallbackProxy callbackProxy;
 
@@ -1119,7 +1124,31 @@ if (config.ForwardingFilter.Version != null)
                 onChangeRoute?.Invoke();
             }
         }
-#else
+
+        public void Dispose()
+        {
+            currentActivity.Call("stopAudioManager");
+            currentActivity = null;
+            callbackProxy = null;
+        }
+
+        public bool IsHandsfree()
+        {
+            return currentActivity.Call<bool>("isHandsfree");
+        }
+
+        public void SetHandsfree(bool enabled)
+        {
+            currentActivity.Call("setHandsfree", enabled);
+        }
+    }
+#endif
+
+    // 他のプラットフォームの実装
+    public class DefaultAudioOutputHelper : IAudioOutputHelper
+    {
+        private delegate void ChangeRouteCallbackDelegate(IntPtr userdata);
+
         [AOT.MonoPInvokeCallback(typeof(ChangeRouteCallbackDelegate))]
         static private void ChangeRouteCallback(IntPtr userdata)
         {
@@ -1129,57 +1158,25 @@ if (config.ForwardingFilter.Version != null)
 
         GCHandle onChangeRouteHandle;
         IntPtr p;
-#endif
-
-        public AudioOutputHelper(Action onChangeRoute)
-        {
-#if UNITY_ANDROID && !UNITY_EDITOR
-            AndroidJavaClass unityPlayerClass = new AndroidJavaClass("com.unity3d.player.UnityPlayer");
-            currentActivity = unityPlayerClass.GetStatic<AndroidJavaObject>("currentActivity");
-
-            if (onChangeRoute != null) {
-                callbackProxy = new ChangeRouteCallbackProxy();
-                callbackProxy.onChangeRoute += onChangeRoute;
-            }
-            currentActivity.Call("startAudioManager", callbackProxy);
-#else
-            onChangeRouteHandle = GCHandle.Alloc(onChangeRoute);
-            p = sora_audio_output_helper_create(ChangeRouteCallback, GCHandle.ToIntPtr(onChangeRouteHandle));
-#endif
-        }
 
         public void Dispose()
         {
-#if UNITY_ANDROID && !UNITY_EDITOR
-            currentActivity.Call("stopAudioManager");
-            currentActivity = null;
-            callbackProxy = null;
-#else
             if (p != IntPtr.Zero)
             {
                 sora_audio_output_helper_destroy(p);
                 onChangeRouteHandle.Free();
                 p = IntPtr.Zero;
             }
-#endif
         }
 
         public bool IsHandsfree()
         {
-#if UNITY_ANDROID && !UNITY_EDITOR
-            return currentActivity.Call<bool>("isHandsfree");
-#else
             return sora_audio_output_helper_is_handsfree(p) != 0;
-#endif
         }
 
         public void SetHandsfree(bool enabled)
         {
-#if UNITY_ANDROID && !UNITY_EDITOR
-            currentActivity.Call("setHandsfree", enabled);
-#else
             sora_audio_output_helper_set_handsfree(p, enabled ? 1 : 0);
-#endif
         }
 
 #if UNITY_IOS && !UNITY_EDITOR
@@ -1198,4 +1195,15 @@ if (config.ForwardingFilter.Version != null)
         private static extern void sora_audio_output_helper_set_handsfree(IntPtr p, int enabled);
     }
 
+    public class AudioOutputHelperFactory
+    {
+        public static IAudioOutputHelper Create(Action onChangeRoute)
+        {
+#if UNITY_ANDROID && !UNITY_EDITOR
+            return new AndroidAudioOutputHelper(onChangeRoute);
+#else
+            return new DefaultAudioOutputHelper(onChangeRoute);
+#endif
+        }
+    }
 }
