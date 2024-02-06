@@ -1,5 +1,6 @@
 #include "unity_renderer.h"
 
+#include <cstring>
 #include <thread>
 
 // libwebrtc
@@ -15,6 +16,12 @@ UnityRenderer::Sink::Sink(webrtc::VideoTrackInterface* track) : track_(track) {
   updating_ = false;
   ptrid_ = IdPointer::Instance().Register(this);
   track_->AddOrUpdateSink(this, rtc::VideoSinkWants());
+  track_id_ = track->id();
+
+  // track_id_c_ = track_id_.c_str();
+  size_t size = strlen(track_id_.c_str());
+  track_id_c_ = new char[size + 1];
+  strcpy(track_id_c_, track_id_.c_str());
 }
 UnityRenderer::Sink::~Sink() {
   RTC_LOG(LS_INFO) << "[" << (void*)this << "] Sink::~Sink";
@@ -25,12 +32,22 @@ UnityRenderer::Sink::~Sink() {
     // RTC_LOG(LS_INFO) << "[" << (void*)this << "] Sink::~Sink waiting...";
     std::this_thread::sleep_for(std::chrono::milliseconds(10));
   }
+
+  // track_id_c_ を開放すると Unity Editor がクラッシュする
+  // delete[] track_id_c_;
   track_->RemoveSink(this);
   IdPointer::Instance().Unregister(ptrid_);
 }
 ptrid_t UnityRenderer::Sink::GetSinkID() const {
   return ptrid_;
 }
+std::string UnityRenderer::Sink::GetTrackId() const {
+  return track_id_;
+}
+char* UnityRenderer::Sink::GetTrackIdC() const {
+  return track_id_c_;
+}
+
 void UnityRenderer::Sink::SetTrack(webrtc::VideoTrackInterface* track) {
   track_->RemoveSink(this);
   track->AddOrUpdateSink(this, rtc::VideoSinkWants());

@@ -8,6 +8,7 @@
 #include "sora_conf.json.h"
 #include "sora_conf_internal.json.h"
 #include "unity_context.h"
+#include "unity_renderer.h"
 
 #if defined(SORA_UNITY_SDK_WINDOWS) || defined(SORA_UNITY_SDK_UBUNTU)
 #include <sora/hwenc_nvcodec/nvcodec_h264_encoder.h>
@@ -307,6 +308,15 @@ unity_bool_t sora_audio_output_helper_is_handsfree(void* p) {
 void sora_audio_output_helper_set_handsfree(void* p, unity_bool_t enabled) {
   auto helper = (AudioOutputHelperImpl*)p;
   helper->SetHandsfree(enabled != 0);
+}
+
+UNITY_INTERFACE_EXPORT const char* get_track_id(ptrid_t track_id) {
+  auto sink = (sora_unity_sdk::UnityRenderer::Sink*)
+                  sora_unity_sdk::IdPointer::Instance()
+                      .Lookup(track_id);
+
+  // return sink->GetTrackId().c_str();
+  return sink->GetTrackIdC();
 }
 
 // iOS の場合は static link で名前が被る可能性があるので、別の名前にしておく

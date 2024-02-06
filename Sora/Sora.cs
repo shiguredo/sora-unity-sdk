@@ -867,6 +867,10 @@ public class Sora : IDisposable
         sora_get_stats(p, StatsCallback, GCHandle.ToIntPtr(handle));
     }
 
+    public string GetTrackId(uint trackId) {
+        return get_track_id(trackId);
+    }
+
     /// <summary>
     /// 指定した label のデータチャンネルに buf を送信します。
     /// </summary>
@@ -1096,6 +1100,9 @@ public class Sora : IDisposable
     private static extern void sora_get_selected_signaling_url(IntPtr p, [Out] byte[] buf, int size);
     [DllImport(DllName)]
     private static extern void sora_get_connected_signaling_url(IntPtr p, [Out] byte[] buf, int size);
+    [DllImport(DllName)]
+    [return: MarshalAs(UnmanagedType.LPStr)]
+    private static extern string get_track_id(uint track_id);
 
     public class AudioOutputHelper : IDisposable
     {

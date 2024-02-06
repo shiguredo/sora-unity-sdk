@@ -126,6 +126,7 @@ sora_audio_output_helper_is_handsfree(void* p);
 UNITY_INTERFACE_EXPORT void sora_audio_output_helper_set_handsfree(
     void* p,
     unity_bool_t enabled);
+UNITY_INTERFACE_EXPORT const char* get_track_id(ptrid_t track_id);
 
 #ifdef __cplusplus
 }

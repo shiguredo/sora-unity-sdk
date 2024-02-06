@@ -19,6 +19,8 @@ class UnityRenderer {
   class Sink : public rtc::VideoSinkInterface<webrtc::VideoFrame> {
     rtc::scoped_refptr<webrtc::VideoTrackInterface> track_;
     ptrid_t ptrid_;
+    std::string track_id_;
+    char* track_id_c_;
     std::mutex mutex_;
     rtc::scoped_refptr<webrtc::VideoFrameBuffer> frame_buffer_;
     uint8_t* temp_buf_ = nullptr;
@@ -29,6 +31,8 @@ class UnityRenderer {
     Sink(webrtc::VideoTrackInterface* track);
     ~Sink();
     ptrid_t GetSinkID() const;
+    std::string GetTrackId() const;
+    char* GetTrackIdC() const;
     void SetTrack(webrtc::VideoTrackInterface* track);
 
    private:
