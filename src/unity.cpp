@@ -184,6 +184,8 @@ void sora_set_on_handle_audio(void* p, handle_audio_cb_t f, void* userdata) {
 
 void sora_get_stats(void* p, stats_cb_t f, void* userdata) {
   auto wsora = (SoraWrapper*)p;
+
+  wsora->sora->GetTracks();
   wsora->sora->GetStats(
       [f, userdata](std::string json) { f(json.c_str(), userdata); });
 }

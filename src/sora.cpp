@@ -1012,4 +1012,60 @@ std::string Sora::GetConnectedSignalingURL() const {
   return signaling_->GetConnectedSignalingURL();
 }
 
+void Sora::GetTracks() const {
+  RTC_LOG(LS_INFO) << __func__ << " start";
+  auto conn = signaling_->GetPeerConnection();
+  RTC_LOG(LS_INFO) << __func__ << " hoge";
+
+  if (conn != nullptr) {
+    RTC_LOG(LS_INFO) << __func__ << " A";
+  } else {
+    RTC_LOG(LS_INFO) << __func__ << " B";
+  }
+
+  auto conf = conn->GetConfiguration();
+  if (conf.sdp_semantics == webrtc::SdpSemantics::kUnifiedPlan) {
+    RTC_LOG(LS_INFO) << __func__ << " sdp_semantics: kUnifiedPlan";
+  } else {
+    RTC_LOG(LS_INFO) << __func__ << " sdp_semantics: kPlanB";
+  }
+
+  if (conf.sdp_semantics != webrtc::SdpSemantics::kUnifiedPlan) {
+    auto local_streams = conn->local_streams();
+    for (int i = 0; i < local_streams->count(); i++) {
+      auto stream = local_streams->at(i);
+      RTC_LOG(LS_INFO) << __func__ << " local stream: " << stream->id();
+      auto audio_tracks = stream->GetAudioTracks();
+      for (auto track : audio_tracks) {
+        RTC_LOG(LS_INFO) << __func__ << " local audio track: " << track->id();
+      }
+
+      auto video_tracks = stream->GetAudioTracks();
+      for (auto track : video_tracks) {
+        RTC_LOG(LS_INFO) << __func__ << " local video track: " << track->id();
+      }
+    }
+    // auto remote_streams = conn.remote_streams();
+  } else {
+    auto transceivers = conn->GetTransceivers();
+    for (auto transceiver : transceivers) {
+      auto sender = transceiver->sender();
+      auto sender_stream_ids = sender->stream_ids();
+      if (sender_stream_ids.size() != 0) {
+        RTC_LOG(LS_INFO) << __func__
+                         << " sender_stream_id=" << sender_stream_ids[0]
+                         << ", track_id=" << sender->track()->id();
+      }
+
+      auto receiver = transceiver->receiver();
+      auto receiver_stream_ids = receiver->stream_ids();
+      if (receiver_stream_ids.size() != 0) {
+        RTC_LOG(LS_INFO) << __func__
+                         << " receiver_stream_id=" << receiver_stream_ids[0]
+                         << ", track_id=" << receiver->track()->id();
+      }
+    }
+  }
+}
+
 }  // namespace sora_unity_sdk
