@@ -867,8 +867,10 @@ public class Sora : IDisposable
         sora_get_stats(p, StatsCallback, GCHandle.ToIntPtr(handle));
     }
 
-    public string GetTrackId(uint trackId) {
-        return get_track_id(trackId);
+    public (bool, string) GetTrackId(uint trackId) {
+        bool found = false;
+        string trackId_ = get_track_id(trackId, ref found);
+        return (found, trackId_);
     }
 
     /// <summary>
@@ -1102,7 +1104,7 @@ public class Sora : IDisposable
     private static extern void sora_get_connected_signaling_url(IntPtr p, [Out] byte[] buf, int size);
     [DllImport(DllName)]
     [return: MarshalAs(UnmanagedType.LPStr)]
-    private static extern string get_track_id(uint track_id);
+    private static extern string get_track_id(uint track_id, [MarshalAs(UnmanagedType.I1)] ref bool found);
 
     public class AudioOutputHelper : IDisposable
     {
