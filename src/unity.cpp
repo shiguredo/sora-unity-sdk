@@ -313,8 +313,9 @@ void sora_audio_output_helper_set_handsfree(void* p, unity_bool_t enabled) {
 UNITY_INTERFACE_EXPORT const char* get_track_id(ptrid_t track_id,
                                                 unity_bool_t* found) {
   void* p = sora_unity_sdk::IdPointer::Instance().Lookup(track_id);
-
   *found = p != nullptr ? 1 : 0;
+
+  // return *found ? ((sora_unity_sdk::UnityRenderer::Sink*)p)->GetTrackId().c_str()
   return *found ? ((sora_unity_sdk::UnityRenderer::Sink*)p)->GetTrackIdC()
                 : nullptr;
 }
