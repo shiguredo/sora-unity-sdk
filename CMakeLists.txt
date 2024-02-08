@@ -81,9 +81,11 @@ add_custom_command(
   OUTPUT
     "${CMAKE_CURRENT_BINARY_DIR}/proto/cpp/sora_conf.json.h"
     "${CMAKE_CURRENT_BINARY_DIR}/proto/cpp/sora_conf_internal.json.h"
+    "${CMAKE_CURRENT_BINARY_DIR}/proto/cpp/rtc.json.h"
     "${CMAKE_CURRENT_SOURCE_DIR}/Sora/Generated/SoraConf.cs"
     "${CMAKE_CURRENT_SOURCE_DIR}/Sora/Generated/SoraConfInternal.cs"
     "${CMAKE_CURRENT_SOURCE_DIR}/Sora/Generated/Jsonif.cs"
+    "${CMAKE_CURRENT_SOURCE_DIR}/Sora/Generated/Rtc.cs"
   COMMAND
     "${PROTOBUF_DIR}/bin/protoc${EXE_EXT}"
   ARGS
@@ -94,6 +96,7 @@ add_custom_command(
     -I "${CMAKE_CURRENT_SOURCE_DIR}/proto/"
     "${CMAKE_CURRENT_SOURCE_DIR}/proto/sora_conf.proto"
     "${CMAKE_CURRENT_SOURCE_DIR}/proto/sora_conf_internal.proto"
+    "${CMAKE_CURRENT_SOURCE_DIR}/proto/rtc.proto"
   DEPENDS
     "${CMAKE_CURRENT_SOURCE_DIR}/proto/sora_conf.proto"
     "${CMAKE_CURRENT_SOURCE_DIR}/proto/sora_conf_internal.proto"

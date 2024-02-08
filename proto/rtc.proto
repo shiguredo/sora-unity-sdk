@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+package rtc;
+
+enum TrackKind {
+    VIDEO = 0;
+    AUDIO = 1;
+}
+
+message Track {
+	TrackKind kind = 1;
+	string track_id = 2;
+	string connection_id = 3;
+}
+
+message Tracks {
+	repeated Track track = 1;
+}
