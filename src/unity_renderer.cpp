@@ -17,10 +17,6 @@ UnityRenderer::Sink::Sink(webrtc::VideoTrackInterface* track)
   updating_ = false;
   ptrid_ = IdPointer::Instance().Register(this);
   track_->AddOrUpdateSink(this, rtc::VideoSinkWants());
-
-  size_t size = strlen(track_id_.c_str());
-  track_id_c_ = new char[size + 1];
-  strcpy(track_id_c_, track_id_.c_str());
 }
 UnityRenderer::Sink::~Sink() {
   RTC_LOG(LS_INFO) << "[" << (void*)this << "] Sink::~Sink";
@@ -40,9 +36,6 @@ ptrid_t UnityRenderer::Sink::GetSinkID() const {
 }
 const std::string& UnityRenderer::Sink::GetTrackId() const {
   return track_id_;
-}
-char* UnityRenderer::Sink::GetTrackIdC() const {
-  return track_id_c_;
 }
 
 void UnityRenderer::Sink::SetTrack(webrtc::VideoTrackInterface* track) {

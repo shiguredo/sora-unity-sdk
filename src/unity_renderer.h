@@ -32,7 +32,6 @@ class UnityRenderer {
     ~Sink();
     ptrid_t GetSinkID() const;
     const std::string& GetTrackId() const;
-    char* GetTrackIdC() const;
     void SetTrack(webrtc::VideoTrackInterface* track);
 
    private:

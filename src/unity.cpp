@@ -310,14 +310,11 @@ void sora_audio_output_helper_set_handsfree(void* p, unity_bool_t enabled) {
   helper->SetHandsfree(enabled != 0);
 }
 
-UNITY_INTERFACE_EXPORT const char* get_track_id(ptrid_t track_id,
-                                                unity_bool_t* found) {
+UNITY_INTERFACE_EXPORT const char* get_track_id(ptrid_t track_id) {
   void* p = sora_unity_sdk::IdPointer::Instance().Lookup(track_id);
-  *found = p != nullptr ? 1 : 0;
-
-  // return *found ? ((sora_unity_sdk::UnityRenderer::Sink*)p)->GetTrackId().c_str()
-  return *found ? ((sora_unity_sdk::UnityRenderer::Sink*)p)->GetTrackIdC()
-                : nullptr;
+  return p != nullptr
+             ? ((sora_unity_sdk::UnityRenderer::Sink*)p)->GetTrackId().c_str()
+             : nullptr;
 }
 
 // iOS の場合は static link で名前が被る可能性があるので、別の名前にしておく
