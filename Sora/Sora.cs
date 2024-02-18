@@ -1108,7 +1108,7 @@ if (config.ForwardingFilter.Version != null)
     // Androidの実装
     public class AndroidAudioOutputHelper : IAudioOutputHelper
     {
-        private AndroidJavaObject currentActivity;
+        private AndroidJavaObject soraAudioManager;
         private ChangeRouteCallbackProxy callbackProxy;
 
         private class ChangeRouteCallbackProxy : AndroidJavaProxy
@@ -1127,31 +1127,36 @@ if (config.ForwardingFilter.Version != null)
 
         public AndroidAudioOutputHelper(Action onChangeRoute)
         {
-            AndroidJavaClass unityPlayerClass = new AndroidJavaClass("com.unity3d.player.UnityPlayer");
-            currentActivity = unityPlayerClass.GetStatic<AndroidJavaObject>("currentActivity");
+            using (var soraAudioManagerFactoryClass = new AndroidJavaClass("jp.shiguredo.sora.audiomanager.SoraAudioManagerFactory"))
+            {
+                AndroidJavaClass unityPlayerClass = new AndroidJavaClass("com.unity3d.player.UnityPlayer");
+                AndroidJavaObject currentActivity = unityPlayerClass.GetStatic<AndroidJavaObject>("currentActivity");
+                soraAudioManager = soraAudioManagerFactoryClass.CallStatic<AndroidJavaObject>("createWithMainThreadWrapper", currentActivity);
 
-            if (onChangeRoute != null) {
-                callbackProxy = new ChangeRouteCallbackProxy();
-                callbackProxy.onChangeRoute += onChangeRoute;
+                if (onChangeRoute != null)
+                {
+                    callbackProxy = new ChangeRouteCallbackProxy();
+                    callbackProxy.onChangeRoute += onChangeRoute;
+                }
+                soraAudioManager.Call("start", callbackProxy);
             }
-            currentActivity.Call("startAudioManager", callbackProxy);
         }
 
         public void Dispose()
         {
-            currentActivity.Call("stopAudioManager");
-            currentActivity = null;
+            soraAudioManager.Call("stop");
+            soraAudioManager = null;
             callbackProxy = null;
         }
 
         public bool IsHandsfree()
         {
-            return currentActivity.Call<bool>("isHandsfree");
+            return soraAudioManager.Call<bool>("isHandsfree");
         }
 
         public void SetHandsfree(bool enabled)
         {
-            currentActivity.Call("setHandsfree", enabled);
+            soraAudioManager.Call("setHandsfree", enabled);
         }
     }
 #endif
