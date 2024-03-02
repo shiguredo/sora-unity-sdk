@@ -1169,6 +1169,8 @@ if (config.ForwardingFilter.Version != null)
         [AOT.MonoPInvokeCallback(typeof(ChangeRouteCallbackDelegate))]
         static private void ChangeRouteCallback(IntPtr userdata)
         {
+            if (userdata == IntPtr.Zero) return;
+
             var callback = GCHandle.FromIntPtr(userdata).Target as Action;
             callback();
         }
@@ -1178,8 +1180,16 @@ if (config.ForwardingFilter.Version != null)
 
         public DefaultAudioOutputHelper(Action onChangeRoute)
         {
-            onChangeRouteHandle = GCHandle.Alloc(onChangeRoute);
-            p = sora_audio_output_helper_create(ChangeRouteCallback, GCHandle.ToIntPtr(onChangeRouteHandle));
+            if (onChangeRoute != null)
+            {
+                onChangeRouteHandle = GCHandle.Alloc(onChangeRoute);
+                p = sora_audio_output_helper_create(ChangeRouteCallback, GCHandle.ToIntPtr(onChangeRouteHandle));
+            }
+            else
+            {
+                onChangeRouteHandle = new GCHandle();
+                p = sora_audio_output_helper_create(ChangeRouteCallback, IntPtr.Zero);
+            }
         }
 
         public void Dispose()
@@ -1187,7 +1197,10 @@ if (config.ForwardingFilter.Version != null)
             if (p != IntPtr.Zero)
             {
                 sora_audio_output_helper_destroy(p);
-                onChangeRouteHandle.Free();
+                if (onChangeRouteHandle.IsAllocated)
+                {
+                    onChangeRouteHandle.Free();
+                }
                 p = IntPtr.Zero;
             }
         }
