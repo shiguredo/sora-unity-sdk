@@ -28,7 +28,7 @@ public class Sora : IDisposable
         VP8,
         H264,
         AV1,
-H265,
+        H265,
     }
     public enum AudioCodecType
     {
@@ -83,7 +83,7 @@ H265,
             public List<string> Values = new List<string>();
         }
         public List<List<Rule>> Rules = new List<List<Rule>>();
-public string? Version;
+        public string? Version;
         public string? Metadata;
     }
 
@@ -460,11 +460,11 @@ public string? Version;
         if (config.ForwardingFilter != null)
         {
             cc.enable_forwarding_filter = true;
-if (config.ForwardingFilter.Action != null)
+            if (config.ForwardingFilter.Action != null)
             {
                 cc.forwarding_filter.enable_action = true;
-            cc.forwarding_filter.action = config.ForwardingFilter.Action;
-}
+                cc.forwarding_filter.action = config.ForwardingFilter.Action;
+            }
             foreach (var rs in config.ForwardingFilter.Rules)
             {
                 var ccrs = new SoraConf.Internal.ForwardingFilter.Rules();
@@ -481,7 +481,7 @@ if (config.ForwardingFilter.Action != null)
                 }
                 cc.forwarding_filter.rules.Add(ccrs);
             }
-if (config.ForwardingFilter.Version != null)
+            if (config.ForwardingFilter.Version != null)
             {
                 cc.forwarding_filter.enable_version = true;
                 cc.forwarding_filter.version = config.ForwardingFilter.Version;
