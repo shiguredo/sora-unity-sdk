@@ -1180,16 +1180,13 @@ public class Sora : IDisposable
 
         public DefaultAudioOutputHelper(Action onChangeRoute)
         {
-            if (onChangeRoute != null)
+            if (onChangeRoute == null)
             {
-                onChangeRouteHandle = GCHandle.Alloc(onChangeRoute);
-                p = sora_audio_output_helper_create(ChangeRouteCallback, GCHandle.ToIntPtr(onChangeRouteHandle));
+                onChangeRoute = () => {}; // 空のアクションを割り当てる
             }
-            else
-            {
-                onChangeRouteHandle = new GCHandle();
-                p = sora_audio_output_helper_create(ChangeRouteCallback, IntPtr.Zero);
-            }
+
+            onChangeRouteHandle = GCHandle.Alloc(onChangeRoute);
+            p = sora_audio_output_helper_create(ChangeRouteCallback, GCHandle.ToIntPtr(onChangeRouteHandle));
         }
 
         public void Dispose()
