@@ -1169,8 +1169,6 @@ public class Sora : IDisposable
         [AOT.MonoPInvokeCallback(typeof(ChangeRouteCallbackDelegate))]
         static private void ChangeRouteCallback(IntPtr userdata)
         {
-            if (userdata == IntPtr.Zero) return;
-
             var callback = GCHandle.FromIntPtr(userdata).Target as Action;
             callback();
         }
