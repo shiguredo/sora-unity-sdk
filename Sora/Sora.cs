@@ -1192,10 +1192,7 @@ public class Sora : IDisposable
             if (p != IntPtr.Zero)
             {
                 sora_audio_output_helper_destroy(p);
-                if (onChangeRouteHandle.IsAllocated)
-                {
-                    onChangeRouteHandle.Free();
-                }
+                onChangeRouteHandle.Free();
                 p = IntPtr.Zero;
             }
         }
