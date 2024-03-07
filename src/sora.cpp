@@ -393,11 +393,6 @@ void Sora::DoConnect(const sora_conf::internal::ConnectConfig& cc,
     }
     config.video_bit_rate = cc.video_bit_rate;
     config.audio_codec_type = cc.audio_codec_type;
-    config.audio_codec_lyra_bitrate = cc.audio_codec_lyra_bitrate;
-    if (cc.has_audio_codec_lyra_usedtx()) {
-      config.audio_codec_lyra_usedtx = cc.audio_codec_lyra_usedtx;
-    }
-    config.check_lyra_version = cc.check_lyra_version;
     config.audio_bit_rate = cc.audio_bit_rate;
     if (cc.has_data_channel_signaling()) {
       config.data_channel_signaling = cc.data_channel_signaling;

@@ -11,6 +11,11 @@
 
 ## develop
 
+- [CHANGE] Lyra を Sora Unity SDK から外す
+  - Lyra を利用するための記述をビルドプロセスから削除
+  - Lyra をパラメータとして指定できるようにしていた箇所も合わせて削除
+  - @torikizi
+
 ## 2024.1.0 (2024-01-22)
 
 - [UPDATE] Sora C++ SDK を `2024.1.0` に上げる
