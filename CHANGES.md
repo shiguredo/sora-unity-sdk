@@ -11,6 +11,14 @@
 
 ## develop
 
+- [CHANGE] Android 向けのハンズフリー機能を追加
+  - `Sora.cs` に Android 向けのハンズフリー機能を追加
+  - @tnoho
+- [CHANGE] AudioOutputHelper を IAudioOutputHelper に変更
+  - Android のハンズフリー機能の追加に伴い、AudioOutputHelper を IAudioOutputHelper に変更
+  - これは破壊的な変更になるため、既存の AudioOutputHelper を利用している場合は、IAudioOutputHelper に変更する必要があります
+  - @tnoho
+
 ## 2024.1.0 (2024-01-22)
 
 - [UPDATE] Sora C++ SDK を `2024.1.0` に上げる
