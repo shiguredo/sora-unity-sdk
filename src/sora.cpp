@@ -325,7 +325,7 @@ void Sora::DoConnect(const sora_conf::internal::ConnectConfig& cc,
     if (capturer) {
       std::string video_track_id = rtc::CreateRandomString(16);
       video_track_ = sora_context_->peer_connection_factory()->CreateVideoTrack(
-          video_track_id, capturer.get());
+          capturer, video_track_id);
     }
   }
 
@@ -569,7 +569,7 @@ void Sora::SwitchCamera(const sora_conf::internal::CameraConfig& cc) {
 
   std::string video_track_id = rtc::CreateRandomString(16);
   auto video_track = sora_context_->peer_connection_factory()->CreateVideoTrack(
-      video_track_id, capturer.get());
+      capturer, video_track_id);
 
   // video_track_ をこのスレッド(Unity スレッド)で設定したいので、
   // IO スレッドの実行完了を待つ
