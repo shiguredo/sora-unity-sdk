@@ -114,8 +114,7 @@ jobs:
       run: |
         mkdir android/
         cp _install/android/release/webrtc/jar/webrtc.jar android/
-        : # sora-cpp-sdk のリリース後にコメントアウト
-        : # cp _install/android/release/sora/lib/Sora.aar android/
+        cp _install/android/release/sora/lib/Sora.aar android/
         cp _build/android/release/sora_unity_sdk/libSoraUnitySdk.so android/
     - name: Upload Android Artifact
       if: matrix.name == 'android'
@@ -159,8 +158,7 @@ jobs:
         cp -r macos_arm64/SoraUnitySdk.bundle SoraUnitySdk/Plugins/SoraUnitySdk/macos/arm64/SoraUnitySdk.bundle
         cp android/libSoraUnitySdk.so SoraUnitySdk/Plugins/SoraUnitySdk/android/arm64-v8a/
         cp android/webrtc.jar SoraUnitySdk/Plugins/SoraUnitySdk/android/
-        : # sora-cpp-sdk のリリース後にコメントアウト
-        : # cp android/Sora.aar SoraUnitySdk/Plugins/SoraUnitySdk/android/
+        cp android/Sora.aar SoraUnitySdk/Plugins/SoraUnitySdk/android/
         cp ios/libSoraUnitySdk.a SoraUnitySdk/Plugins/SoraUnitySdk/ios/
         cp ios/libwebrtc.a SoraUnitySdk/Plugins/SoraUnitySdk/ios/
         cp ios/libboost_json.a SoraUnitySdk/Plugins/SoraUnitySdk/ios/
