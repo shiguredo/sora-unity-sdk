@@ -18,12 +18,25 @@
   - Sora.AudioCodecType から LYRA を削除
   - VERSION ファイルから LYRA_VERSION を削除
   - @melpon
+- [CHANGE] AudioOutputHelper を IAudioOutputHelper に変更
+  - Android のハンズフリー機能の追加に伴い、AudioOutputHelper を IAudioOutputHelper に変更
+  - これは破壊的な変更になるため、既存の AudioOutputHelper を利用している場合は、IAudioOutputHelper に変更が必要になる
+  - 以下のような理由から IAudioOutputHelper へ変更
+  - iOS と Android の異なるハンズフリー機能を同一の実装で呼び出せるように、現状のハンズフリー機能の呼び出し方法を変更
+    - Sora.AudioOutputHelper の生成を Factory にて行う
+    - AudioOutputHelper(Action onChangeRoute) から AudioOutputHelperFactory.create(Action onChangeRoute) に変更
+    - Sora.AudioOutputHelper は interface となるため Sora.IAudioOutputHelper に変更
+  - @tnoho
 - [UPDATE] Sora C++ SDK を `2024.3.1` に上げる
   - Sora C++ SDK 2024.3.1 アップデート時に関連するライブラリもアップデート
   - WEBRTC_BUILD_VERSION を `m121.6167.3.0` にアップデート
   - BOOST_VERSION を 1.84.0 にアップデート
   - CMAKE_VERSION を 3.28.1 にアップデート
   - @melpon @miosakuma
+- [ADD] Android 向けのハンズフリー機能を追加
+  - `Sora.cs` に Android 向けのハンズフリー機能を追加
+  - iOS と同様に Android でもハンズフリー機能の利用を可能にする
+  - @tnoho
 
 ## 2024.1.0 (2024-01-22)
 

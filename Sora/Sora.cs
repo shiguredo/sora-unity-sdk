@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
+using UnityEngine;
 
 public class Sora : IDisposable
 {
@@ -1094,7 +1095,71 @@ public class Sora : IDisposable
     [DllImport(DllName)]
     private static extern void sora_get_connected_signaling_url(IntPtr p, [Out] byte[] buf, int size);
 
-    public class AudioOutputHelper : IDisposable
+    public interface IAudioOutputHelper : IDisposable
+    {
+        bool IsHandsfree();
+        void SetHandsfree(bool enabled);
+    }
+
+#if UNITY_ANDROID && !UNITY_EDITOR
+    // Androidの実装
+    public class AndroidAudioOutputHelper : IAudioOutputHelper
+    {
+        private AndroidJavaObject soraAudioManager;
+        private ChangeRouteCallbackProxy callbackProxy;
+
+        private class ChangeRouteCallbackProxy : AndroidJavaProxy
+        {
+            public event Action onChangeRoute;
+
+            public ChangeRouteCallbackProxy() : base("jp.shiguredo.sora.audiomanager.SoraAudioManager$OnChangeRouteObserver")
+            {
+            }
+
+            public void OnChangeRoute()
+            {
+                onChangeRoute?.Invoke();
+            }
+        }
+
+        public AndroidAudioOutputHelper(Action onChangeRoute)
+        {
+            using (var soraAudioManagerFactoryClass = new AndroidJavaClass("jp.shiguredo.sora.audiomanager.SoraAudioManagerFactory"))
+            {
+                AndroidJavaClass unityPlayerClass = new AndroidJavaClass("com.unity3d.player.UnityPlayer");
+                AndroidJavaObject currentActivity = unityPlayerClass.GetStatic<AndroidJavaObject>("currentActivity");
+                soraAudioManager = soraAudioManagerFactoryClass.CallStatic<AndroidJavaObject>("createWithMainThreadWrapper", currentActivity);
+
+                if (onChangeRoute != null)
+                {
+                    callbackProxy = new ChangeRouteCallbackProxy();
+                    callbackProxy.onChangeRoute += onChangeRoute;
+                }
+                soraAudioManager.Call("start", callbackProxy);
+            }
+        }
+
+        public void Dispose()
+        {
+            soraAudioManager.Call("stop");
+            soraAudioManager = null;
+            callbackProxy = null;
+        }
+
+        public bool IsHandsfree()
+        {
+            return soraAudioManager.Call<bool>("isHandsfree");
+        }
+
+        public void SetHandsfree(bool enabled)
+        {
+            soraAudioManager.Call("setHandsfree", enabled);
+        }
+    }
+#endif
+
+    // 他のプラットフォームの実装
+    public class DefaultAudioOutputHelper : IAudioOutputHelper
     {
         private delegate void ChangeRouteCallbackDelegate(IntPtr userdata);
 
@@ -1108,8 +1173,13 @@ public class Sora : IDisposable
         GCHandle onChangeRouteHandle;
         IntPtr p;
 
-        public AudioOutputHelper(Action onChangeRoute)
+        public DefaultAudioOutputHelper(Action onChangeRoute)
         {
+            if (onChangeRoute == null)
+            {
+                onChangeRoute = () => {}; // 空のアクションを割り当てる
+            }
+
             onChangeRouteHandle = GCHandle.Alloc(onChangeRoute);
             p = sora_audio_output_helper_create(ChangeRouteCallback, GCHandle.ToIntPtr(onChangeRouteHandle));
         }
@@ -1150,4 +1220,15 @@ public class Sora : IDisposable
         private static extern void sora_audio_output_helper_set_handsfree(IntPtr p, int enabled);
     }
 
+    public class AudioOutputHelperFactory
+    {
+        public static IAudioOutputHelper Create(Action onChangeRoute)
+        {
+#if UNITY_ANDROID && !UNITY_EDITOR
+            return new AndroidAudioOutputHelper(onChangeRoute);
+#else
+            return new DefaultAudioOutputHelper(onChangeRoute);
+#endif
+        }
+    }
 }
