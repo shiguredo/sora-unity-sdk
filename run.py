@@ -704,14 +704,10 @@ def install_deps(
             add_path(os.path.join(install_dir, "cmake", "bin"))
 
         # Sora C++ SDK
-        install_sora_args = {
-            "version": version["SORA_CPP_SDK_VERSION"],
-            "version_file": os.path.join(install_dir, "sora.version"),
-            "source_dir": source_dir,
-            "install_dir": install_dir,
-            "platform": platform,
-        }
-        install_sora(**install_sora_args)
+        if sora_dir is None:
+            install_sora_and_deps(platform, source_dir, install_dir)
+        else:
+            build_sora(platform, sora_dir, sora_args, debug, webrtc_build_dir)
 
         # protobuf
         install_protobuf_args = {
