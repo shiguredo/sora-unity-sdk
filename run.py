@@ -1,15 +1,17 @@
 import argparse
+import filecmp
 import logging
 import multiprocessing
 import os
 import platform
+import shlex
 import shutil
 import stat
 import subprocess
 import tarfile
 import urllib.parse
 import zipfile
-from typing import Dict, NamedTuple, Optional
+from typing import Dict, List, NamedTuple, Optional
 
 logging.basicConfig(level=logging.DEBUG)
 
@@ -316,6 +318,12 @@ def git_clone_shallow(url, hash, dir):
         cmd(["git", "reset", "--hard", "FETCH_HEAD"])
 
 
+def copyfile_if_different(src, dst):
+    if os.path.exists(dst) and filecmp.cmp(src, dst, shallow=False):
+        return
+    shutil.copyfile(src, dst)
+
+
 @versioned
 def install_android_ndk(version, install_dir, source_dir):
     archive = download(
@@ -338,40 +346,70 @@ def install_webrtc(version, source_dir, install_dir, platform: str):
     extract(archive, output_dir=install_dir, output_dirname="webrtc")
 
 
+def build_webrtc(platform, webrtc_build_dir, webrtc_build_args, debug):
+    with cd(webrtc_build_dir):
+        args = ["--webrtc-nobuild-ios-framework", "--webrtc-nobuild-android-aar"]
+        if debug:
+            args += ["--debug"]
+
+        args += webrtc_build_args
+
+        cmd(["python3", "run.py", "build", platform, *args])
+
+        # インクルードディレクトリを増やしたくないので、
+        # __config_site を libc++ のディレクトリにコピーしておく
+        webrtc_source_dir = os.path.join(webrtc_build_dir, "_source", platform, "webrtc")
+        src_config = os.path.join(
+            webrtc_source_dir, "src", "buildtools", "third_party", "libc++", "__config_site"
+        )
+        dst_config = os.path.join(
+            webrtc_source_dir, "src", "third_party", "libc++", "src", "include", "__config_site"
+        )
+        copyfile_if_different(src_config, dst_config)
+
+
 class WebrtcInfo(NamedTuple):
     version_file: str
+    deps_file: str
     webrtc_include_dir: str
+    webrtc_source_dir: Optional[str]
     webrtc_library_dir: str
     clang_dir: str
     libcxx_dir: str
 
 
 def get_webrtc_info(
-    webrtcbuild: bool, source_dir: str, build_dir: str, install_dir: str
+    platform: str, webrtc_build_dir: Optional[str], install_dir: str, debug: bool
 ) -> WebrtcInfo:
-    webrtc_source_dir = os.path.join(source_dir, "webrtc")
-    webrtc_build_dir = os.path.join(build_dir, "webrtc")
     webrtc_install_dir = os.path.join(install_dir, "webrtc")
 
-    if webrtcbuild:
-        return WebrtcInfo(
-            version_file=os.path.join(source_dir, "webrtc-build", "VERSION"),
-            webrtc_include_dir=os.path.join(webrtc_source_dir, "src"),
-            webrtc_library_dir=os.path.join(webrtc_build_dir, "obj")
-            if platform.system() == "Windows"
-            else webrtc_build_dir,
-            clang_dir=os.path.join(
-                webrtc_source_dir, "src", "third_party", "llvm-build", "Release+Asserts"
-            ),
-            libcxx_dir=os.path.join(webrtc_source_dir, "src", "third_party", "libc++", "src"),
-        )
-    else:
+    if webrtc_build_dir is None:
         return WebrtcInfo(
             version_file=os.path.join(webrtc_install_dir, "VERSIONS"),
+            deps_file=os.path.join(webrtc_install_dir, "DEPS"),
             webrtc_include_dir=os.path.join(webrtc_install_dir, "include"),
-            webrtc_library_dir=os.path.join(install_dir, "webrtc", "lib"),
+            webrtc_source_dir=None,
+            webrtc_library_dir=os.path.join(webrtc_install_dir, "lib"),
             clang_dir=os.path.join(install_dir, "llvm", "clang"),
             libcxx_dir=os.path.join(install_dir, "llvm", "libcxx"),
+        )
+    else:
+        webrtc_build_source_dir = os.path.join(webrtc_build_dir, "_source", platform, "webrtc")
+        configuration = "debug" if debug else "release"
+        webrtc_build_build_dir = os.path.join(
+            webrtc_build_dir, "_build", platform, configuration, "webrtc"
+        )
+
+        return WebrtcInfo(
+            version_file=os.path.join(webrtc_build_dir, "VERSION"),
+            deps_file=os.path.join(webrtc_build_dir, "DEPS"),
+            webrtc_include_dir=os.path.join(webrtc_build_source_dir, "src"),
+            webrtc_source_dir=os.path.join(webrtc_build_source_dir, "src"),
+            webrtc_library_dir=webrtc_build_build_dir,
+            clang_dir=os.path.join(
+                webrtc_build_source_dir, "src", "third_party", "llvm-build", "Release+Asserts"
+            ),
+            libcxx_dir=os.path.join(webrtc_build_source_dir, "src", "third_party", "libc++", "src"),
         )
 
 
@@ -457,6 +495,61 @@ def install_sora(version, source_dir, install_dir, platform: str):
     extract(archive, output_dir=install_dir, output_dirname="sora")
 
 
+class SoraInfo(NamedTuple):
+    sora_install_dir: str
+    boost_install_dir: str
+
+
+def install_sora_and_deps(platform: str, source_dir: str, install_dir: str):
+    version = read_version_file("VERSION")
+
+    # Boost
+    install_boost_args = {
+        "version": version["BOOST_VERSION"],
+        "version_file": os.path.join(install_dir, "boost.version"),
+        "source_dir": source_dir,
+        "install_dir": install_dir,
+        "sora_version": version["SORA_CPP_SDK_VERSION"],
+        "platform": platform,
+    }
+    install_boost(**install_boost_args)
+
+    # Sora C++ SDK
+    install_sora_args = {
+        "version": version["SORA_CPP_SDK_VERSION"],
+        "version_file": os.path.join(install_dir, "sora.version"),
+        "source_dir": source_dir,
+        "install_dir": install_dir,
+        "platform": platform,
+    }
+    install_sora(**install_sora_args)
+
+
+def build_sora(
+    platform: str, sora_dir: str, sora_args: List[str], debug: bool, webrtc_build_dir: Optional[str]
+):
+    if debug and "--debug" not in sora_args:
+        sora_args = ["--debug", *sora_args]
+    if webrtc_build_dir is not None:
+        sora_args = ["--webrtc-build-dir", webrtc_build_dir, *sora_args]
+
+    with cd(sora_dir):
+        cmd(["python3", "run.py", platform, *sora_args])
+
+
+def get_sora_info(
+    platform: str, sora_dir: Optional[str], install_dir: str, debug: bool
+) -> SoraInfo:
+    if sora_dir is not None:
+        configuration = "debug" if debug else "release"
+        install_dir = os.path.join(sora_dir, "_install", platform, configuration)
+
+    return SoraInfo(
+        sora_install_dir=os.path.join(install_dir, "sora"),
+        boost_install_dir=os.path.join(install_dir, "boost"),
+    )
+
+
 @versioned
 def install_protobuf(version, source_dir, install_dir, platform: str):
     # platform:
@@ -507,7 +600,18 @@ def install_protoc_gen_jsonif(version, source_dir, install_dir, platform: str):
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 
 
-def install_deps(platform: str, build_platform: str, source_dir, build_dir, install_dir, debug):
+def install_deps(
+    platform: str,
+    build_platform: str,
+    source_dir,
+    build_dir,
+    install_dir,
+    debug,
+    webrtc_build_dir: Optional[str],
+    webrtc_build_args: List[str],
+    sora_dir: Optional[str],
+    sora_args: List[str],
+):
     with cd(BASE_DIR):
         version = read_version_file("VERSION")
 
@@ -522,23 +626,36 @@ def install_deps(platform: str, build_platform: str, source_dir, build_dir, inst
             install_android_ndk(**install_android_ndk_args)
 
         # WebRTC
-        install_webrtc_args = {
-            "version": version["WEBRTC_BUILD_VERSION"],
-            "version_file": os.path.join(install_dir, "webrtc.version"),
-            "source_dir": source_dir,
-            "install_dir": install_dir,
-            "platform": platform,
-        }
+        if webrtc_build_dir is None:
+            install_webrtc_args = {
+                "version": version["WEBRTC_BUILD_VERSION"],
+                "version_file": os.path.join(install_dir, "webrtc.version"),
+                "source_dir": source_dir,
+                "install_dir": install_dir,
+                "platform": platform,
+            }
+            install_webrtc(**install_webrtc_args)
+        else:
+            build_webrtc_args = {
+                "platform": platform,
+                "webrtc_build_dir": webrtc_build_dir,
+                "webrtc_build_args": webrtc_build_args,
+                "debug": debug,
+            }
+            build_webrtc(**build_webrtc_args)
 
-        install_webrtc(**install_webrtc_args)
-
-        webrtc_info = get_webrtc_info(False, source_dir, build_dir, install_dir)
-        webrtc_version = read_version_file(webrtc_info.version_file)
+        webrtc_info = get_webrtc_info(platform, webrtc_build_dir, install_dir, debug)
 
         # Windows は MSVC を使うので不要
         # macOS と iOS は Apple Clang を使うので不要
         # Android は libc++ のために必要
-        if platform not in ("windows_x86_64", "macos_x86_64", "macos_arm64", "ios"):
+        # webrtc-build をソースビルドしてる場合は既にローカルにあるので不要
+        if (
+            platform not in ("windows_x86_64", "macos_x86_64", "macos_arm64", "ios")
+            and webrtc_build_dir is None
+        ):
+            webrtc_version = read_version_file(webrtc_info.version_file)
+
             # LLVM
             tools_url = webrtc_version["WEBRTC_SRC_TOOLS_URL"]
             tools_commit = webrtc_version["WEBRTC_SRC_TOOLS_COMMIT"]
@@ -560,17 +677,6 @@ def install_deps(platform: str, build_platform: str, source_dir, build_dir, inst
                 "buildtools_commit": buildtools_commit,
             }
             install_llvm(**install_llvm_args)
-
-        # Boost
-        install_boost_args = {
-            "version": version["BOOST_VERSION"],
-            "version_file": os.path.join(install_dir, "boost.version"),
-            "source_dir": source_dir,
-            "install_dir": install_dir,
-            "sora_version": version["SORA_CPP_SDK_VERSION"],
-            "platform": platform,
-        }
-        install_boost(**install_boost_args)
 
         # CMake
         install_cmake_args = {
@@ -695,6 +801,10 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--debug", action="store_true")
     parser.add_argument("--relwithdebinfo", action="store_true")
+    parser.add_argument("--webrtc-build-dir", type=os.path.abspath)
+    parser.add_argument("--webrtc-build-args", default="", type=shlex.split)
+    parser.add_argument("--sora-dir", type=os.path.abspath)
+    parser.add_argument("--sora-args", default="", type=shlex.split)
     parser.add_argument("target", choices=AVAILABLE_TARGETS)
 
     args = parser.parse_args()
@@ -716,7 +826,18 @@ def main():
     mkdir_p(build_dir)
     mkdir_p(install_dir)
 
-    install_deps(platform, build_platform, source_dir, build_dir, install_dir, args.debug)
+    install_deps(
+        platform,
+        build_platform,
+        source_dir,
+        build_dir,
+        install_dir,
+        args.debug,
+        args.webrtc_build_dir,
+        args.webrtc_build_args,
+        args.sora_dir,
+        args.sora_args,
+    )
 
     if args.debug:
         configuration = "Debug"
@@ -728,7 +849,8 @@ def main():
     unity_build_dir = os.path.join(build_dir, "sora_unity_sdk")
     mkdir_p(unity_build_dir)
     with cd(unity_build_dir):
-        webrtc_info = get_webrtc_info(False, source_dir, build_dir, install_dir)
+        webrtc_info = get_webrtc_info(platform, args.webrtc_build_dir, install_dir, args.debug)
+        sora_info = get_sora_info(platform, args.sora_dir, install_dir, args.debug)
         webrtc_version = read_version_file(webrtc_info.version_file)
         webrtc_commit = webrtc_version["WEBRTC_COMMIT"]
         with cd(BASE_DIR):
@@ -742,12 +864,12 @@ def main():
         cmake_args.append(f"-DSORA_UNITY_SDK_PACKAGE={platform}")
         cmake_args.append(f"-DSORA_UNITY_SDK_VERSION={sora_unity_sdk_version}")
         cmake_args.append(f"-DSORA_UNITY_SDK_COMMIT={sora_unity_sdk_commit}")
-        cmake_args.append(f"-DBOOST_ROOT={cmake_path(os.path.join(install_dir, 'boost'))}")
+        cmake_args.append(f"-DBOOST_ROOT={cmake_path(sora_info.boost_install_dir)}")
         cmake_args.append("-DWEBRTC_LIBRARY_NAME=webrtc")
         cmake_args.append(f"-DWEBRTC_INCLUDE_DIR={cmake_path(webrtc_info.webrtc_include_dir)}")
         cmake_args.append(f"-DWEBRTC_LIBRARY_DIR={cmake_path(webrtc_info.webrtc_library_dir)}")
         cmake_args.append(f"-DWEBRTC_COMMIT={webrtc_commit}")
-        cmake_args.append(f"-DSORA_DIR={cmake_path(os.path.join(install_dir, 'sora'))}")
+        cmake_args.append(f"-DSORA_DIR={cmake_path(sora_info.sora_install_dir)}")
         cmake_args.append(f"-DPROTOBUF_DIR={cmake_path(os.path.join(install_dir, 'protobuf'))}")
         cmake_args.append(
             f"-DPROTOC_GEN_JSONIF_DIR={cmake_path(os.path.join(install_dir, 'protoc-gen-jsonif'))}"

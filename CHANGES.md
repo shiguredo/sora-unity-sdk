@@ -37,6 +37,10 @@
   - `Sora.cs` に Android 向けのハンズフリー機能を追加
   - iOS と同様に Android でもハンズフリー機能の利用を可能にする
   - @tnoho
+- [ADD] run.py に --sora-dir と --sora-args オプションを追加
+  - @melpon
+- [ADD] run.py に --webrtc-build-dir と --webrtc-build-args オプションを追加
+  - @melpon
 
 ## 2024.1.0 (2024-01-22)
 
