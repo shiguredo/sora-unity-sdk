@@ -32,7 +32,6 @@ public class Sora : IDisposable
     public enum AudioCodecType
     {
         OPUS,
-        LYRA,
     }
     // SimulcastRid のためのパラメータ
     public enum SimulcastRidType
@@ -206,10 +205,6 @@ public class Sora : IDisposable
         /// </remarks>
         public string AudioPlayoutDevice = "";
         public AudioCodecType AudioCodecType = AudioCodecType.OPUS;
-        // AudioCodecType.LYRA の場合は必須
-        public int AudioCodecLyraBitrate = 0;
-        public bool? AudioCodecLyraUsedtx;
-        public bool CheckLyraVersion = false;
         public int AudioBitRate = 0;
         public string AudioStreamingLanguageCode = "";
 
@@ -410,12 +405,6 @@ public class Sora : IDisposable
         cc.audio_recording_device = config.AudioRecordingDevice;
         cc.audio_playout_device = config.AudioPlayoutDevice;
         cc.audio_codec_type = config.AudioCodecType.ToString();
-        cc.audio_codec_lyra_bitrate = config.AudioCodecLyraBitrate;
-        if (config.AudioCodecLyraUsedtx.HasValue)
-        {
-            cc.SetAudioCodecLyraUsedtx(config.AudioCodecLyraUsedtx.Value);
-        }
-        cc.check_lyra_version = config.CheckLyraVersion;
         cc.audio_bit_rate = config.AudioBitRate;
         cc.audio_streaming_language_code = config.AudioStreamingLanguageCode;
         if (config.EnableDataChannelSignaling)

@@ -65,9 +65,6 @@ message ConnectConfig {
     string audio_recording_device = 29;
     string audio_playout_device = 30;
     string audio_codec_type = 31;
-    int32 audio_codec_lyra_bitrate = 32;
-    optional bool audio_codec_lyra_usedtx = 321;
-    bool check_lyra_version = 33;
     int32 audio_bit_rate = 34;
     optional bool data_channel_signaling = 36;
     int32 data_channel_signaling_timeout = 37;

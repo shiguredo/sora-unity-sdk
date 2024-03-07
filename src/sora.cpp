@@ -22,8 +22,6 @@
 #include <sora/camera_device_capturer.h>
 #include <sora/java_context.h>
 #include <sora/rtc_stats.h>
-#include <sora/sora_audio_decoder_factory.h>
-#include <sora/sora_audio_encoder_factory.h>
 #include <sora/sora_peer_connection_factory.h>
 #include <sora/sora_video_decoder_factory.h>
 #include <sora/sora_video_encoder_factory.h>
@@ -242,9 +240,8 @@ void Sora::DoConnect(const sora_conf::internal::ConnectConfig& cc,
   if (cc.has_use_hardware_encoder()) {
     client_config.use_hardware_encoder = cc.use_hardware_encoder;
   }
-  client_config.configure_media_dependencies =
-      [&, this](const webrtc::PeerConnectionFactoryDependencies& dependencies,
-                cricket::MediaEngineDependencies& media_dependencies) {
+  client_config.configure_dependencies =
+      [&, this](webrtc::PeerConnectionFactoryDependencies& dependencies) {
         // worker 上の env
         auto worker_env = dependencies.worker_thread->BlockingCall(
             [] { return sora::GetJNIEnv(); });
@@ -261,12 +258,12 @@ void Sora::DoConnect(const sora_conf::internal::ConnectConfig& cc,
 #endif
 
         unity_adm_ = CreateADM(
-            media_dependencies.task_queue_factory, cc.no_audio_device,
+            dependencies.task_queue_factory.get(), cc.no_audio_device,
             cc.unity_audio_input, cc.unity_audio_output, on_handle_audio_,
             cc.audio_recording_device, cc.audio_playout_device,
             dependencies.worker_thread, worker_env, worker_context);
         dependencies.worker_thread->BlockingCall(
-            [&] { media_dependencies.adm = unity_adm_; });
+            [&] { dependencies.adm = unity_adm_; });
 
 #if defined(SORA_UNITY_SDK_ANDROID)
         dependencies.worker_thread->BlockingCall([worker_env, worker_context] {
@@ -393,11 +390,6 @@ void Sora::DoConnect(const sora_conf::internal::ConnectConfig& cc,
     }
     config.video_bit_rate = cc.video_bit_rate;
     config.audio_codec_type = cc.audio_codec_type;
-    config.audio_codec_lyra_bitrate = cc.audio_codec_lyra_bitrate;
-    if (cc.has_audio_codec_lyra_usedtx()) {
-      config.audio_codec_lyra_usedtx = cc.audio_codec_lyra_usedtx;
-    }
-    config.check_lyra_version = cc.check_lyra_version;
     config.audio_bit_rate = cc.audio_bit_rate;
     if (cc.has_data_channel_signaling()) {
       config.data_channel_signaling = cc.data_channel_signaling;

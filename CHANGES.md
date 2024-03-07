@@ -11,10 +11,23 @@
 
 ## develop
 
+- [CHANGE] Lyra を削除
+  - Sora.Config から AudioCodecLyraBitrate を削除
+  - Sora.Config から AudioCodecLyraUsedtx を削除
+  - Sora.Config から CheckLyraVersion を削除
+  - Sora.AudioCodecType から LYRA を削除
+  - VERSION ファイルから LYRA_VERSION を削除
+  - @melpon
+- [UPDATE] Sora C++ SDK を `2024.3.1` に上げる
+  - Sora C++ SDK 2024.3.1 アップデート時に関連するライブラリもアップデート
+  - WEBRTC_BUILD_VERSION を `m121.6167.3.0` にアップデート
+  - BOOST_VERSION を 1.84.0 にアップデート
+  - CMAKE_VERSION を 3.28.1 にアップデート
+  - @melpon @miosakuma
+
 ## 2024.1.0 (2024-01-22)
 
 - [UPDATE] Sora C++ SDK を `2024.1.0` に上げる
-  - Sora C++ SDK 2024.1.0 アップデート時に関連するライブラリもアップデート
   - WEBRTC_BUILD_VERSION を `m120.6099.1.2` にアップデート
   - @torikizi
 - [ADD] VideoCodecType に H265 を追加
