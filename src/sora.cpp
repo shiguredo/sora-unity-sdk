@@ -22,8 +22,6 @@
 #include <sora/camera_device_capturer.h>
 #include <sora/java_context.h>
 #include <sora/rtc_stats.h>
-#include <sora/sora_audio_decoder_factory.h>
-#include <sora/sora_audio_encoder_factory.h>
 #include <sora/sora_peer_connection_factory.h>
 #include <sora/sora_video_decoder_factory.h>
 #include <sora/sora_video_encoder_factory.h>
@@ -239,10 +237,11 @@ void Sora::DoConnect(const sora_conf::internal::ConnectConfig& cc,
 
   sora::SoraClientContextConfig client_config;
   client_config.use_audio_device = false;
-  client_config.use_hardware_encoder = cc.use_hardware_encoder;
-  client_config.configure_media_dependencies =
-      [&, this](const webrtc::PeerConnectionFactoryDependencies& dependencies,
-                cricket::MediaEngineDependencies& media_dependencies) {
+  if (cc.has_use_hardware_encoder()) {
+    client_config.use_hardware_encoder = cc.use_hardware_encoder;
+  }
+  client_config.configure_dependencies =
+      [&, this](webrtc::PeerConnectionFactoryDependencies& dependencies) {
         // worker 上の env
         auto worker_env = dependencies.worker_thread->BlockingCall(
             [] { return sora::GetJNIEnv(); });
@@ -259,12 +258,12 @@ void Sora::DoConnect(const sora_conf::internal::ConnectConfig& cc,
 #endif
 
         unity_adm_ = CreateADM(
-            media_dependencies.task_queue_factory, cc.no_audio_device,
+            dependencies.task_queue_factory.get(), cc.no_audio_device,
             cc.unity_audio_input, cc.unity_audio_output, on_handle_audio_,
             cc.audio_recording_device, cc.audio_playout_device,
             dependencies.worker_thread, worker_env, worker_context);
         dependencies.worker_thread->BlockingCall(
-            [&] { media_dependencies.adm = unity_adm_; });
+            [&] { dependencies.adm = unity_adm_; });
 
 #if defined(SORA_UNITY_SDK_ANDROID)
         dependencies.worker_thread->BlockingCall([worker_env, worker_context] {
@@ -339,16 +338,16 @@ void Sora::DoConnect(const sora_conf::internal::ConnectConfig& cc,
     config.io_context = ioc_.get();
     config.role = cc.role;
     config.sora_client = SORA_CLIENT;
-    if (cc.enable_multistream) {
+    if (cc.has_multistream()) {
       config.multistream = cc.multistream;
     }
-    if (cc.enable_spotlight) {
+    if (cc.has_spotlight()) {
       config.spotlight = cc.spotlight;
     }
     config.spotlight_number = cc.spotlight_number;
     config.spotlight_focus_rid = cc.spotlight_focus_rid;
     config.spotlight_unfocus_rid = cc.spotlight_unfocus_rid;
-    if (cc.enable_simulcast) {
+    if (cc.has_simulcast()) {
       config.simulcast = cc.simulcast;
     }
     config.simulcast_rid = cc.simulcast_rid;
@@ -391,17 +390,12 @@ void Sora::DoConnect(const sora_conf::internal::ConnectConfig& cc,
     }
     config.video_bit_rate = cc.video_bit_rate;
     config.audio_codec_type = cc.audio_codec_type;
-    config.audio_codec_lyra_bitrate = cc.audio_codec_lyra_bitrate;
-    if (cc.enable_audio_codec_lyra_usedtx) {
-      config.audio_codec_lyra_usedtx = cc.audio_codec_lyra_usedtx;
-    }
-    config.check_lyra_version = cc.check_lyra_version;
     config.audio_bit_rate = cc.audio_bit_rate;
-    if (cc.enable_data_channel_signaling) {
+    if (cc.has_data_channel_signaling()) {
       config.data_channel_signaling = cc.data_channel_signaling;
     }
     config.data_channel_signaling_timeout = cc.data_channel_signaling_timeout;
-    if (cc.enable_ignore_disconnect_websocket) {
+    if (cc.has_ignore_disconnect_websocket()) {
       config.ignore_disconnect_websocket = cc.ignore_disconnect_websocket;
     }
     config.disconnect_wait_timeout = cc.disconnect_wait_timeout;
@@ -409,19 +403,19 @@ void Sora::DoConnect(const sora_conf::internal::ConnectConfig& cc,
       sora::SoraSignalingConfig::DataChannel d;
       d.label = dc.label;
       d.direction = dc.direction;
-      if (dc.enable_ordered) {
+      if (dc.has_ordered()) {
         d.ordered = dc.ordered;
       }
-      if (dc.enable_max_packet_life_time) {
+      if (dc.has_max_packet_life_time()) {
         d.max_packet_life_time = dc.max_packet_life_time;
       }
-      if (dc.enable_max_retransmits) {
+      if (dc.has_max_retransmits()) {
         d.max_retransmits = dc.max_retransmits;
       }
-      if (dc.enable_protocol) {
+      if (dc.has_protocol()) {
         d.protocol = dc.protocol;
       }
-      if (dc.enable_compress) {
+      if (dc.has_compress()) {
         d.compress = dc.compress;
       }
       config.data_channels.push_back(std::move(d));
@@ -451,9 +445,9 @@ void Sora::DoConnect(const sora_conf::internal::ConnectConfig& cc,
     config.proxy_password = cc.proxy_password;
     config.proxy_agent = cc.proxy_agent;
     config.audio_streaming_language_code = cc.audio_streaming_language_code;
-    if (cc.enable_forwarding_filter) {
+    if (cc.has_forwarding_filter()) {
       sora::SoraSignalingConfig::ForwardingFilter ff;
-      if (cc.forwarding_filter.enable_action) {
+      if (cc.forwarding_filter.has_action()) {
         ff.action = cc.forwarding_filter.action;
       }
       for (const auto& rs : cc.forwarding_filter.rules) {
@@ -467,10 +461,10 @@ void Sora::DoConnect(const sora_conf::internal::ConnectConfig& cc,
         }
         ff.rules.push_back(ffrs);
       }
-      if (cc.forwarding_filter.enable_version) {
+      if (cc.forwarding_filter.has_version()) {
         ff.version = cc.forwarding_filter.version;
       }
-      if (cc.forwarding_filter.enable_metadata) {
+      if (cc.forwarding_filter.has_metadata()) {
         boost::json::error_code ec;
         auto ffmd = boost::json::parse(cc.forwarding_filter.metadata, ec);
         if (ec) {
