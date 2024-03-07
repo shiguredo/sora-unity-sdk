@@ -13,9 +13,12 @@
 
 ## 2024.1.0 (2024-01-22)
 
-- [UPDATE] Sora C++ SDK を `2024.1.0` に上げる
+- [UPDATE] Sora C++ SDK を `2024.2.0` に上げる
   - Sora C++ SDK 2024.1.0 アップデート時に関連するライブラリもアップデート
-  - WEBRTC_BUILD_VERSION を `m120.6099.1.2` にアップデート
+  - WEBRTC_BUILD_VERSION を `m121.6167.3.0` にアップデート
+  - BOOST_VERSION を 1.84.0 にアップデート
+  - LYRA_VERSION を 1.3.2 にアップデート
+  - CMAKE_VERSION を 3.28.1 にアップデート
   - @torikizi
 - [ADD] VideoCodecType に H265 を追加
   - @torikizi
