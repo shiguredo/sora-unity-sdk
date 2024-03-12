@@ -96,7 +96,7 @@ Please read https://github.com/shiguredo/oss/blob/master/README.en.md before use
     - VP8 のハードウェアデコードへの対応
     - VP9 のハードウェアデコードへの対応
 - ミュート機能
-- 音声出力先変更機能
+- iOS, Android 向け音声出力先変更機能
 - マイクやカメラ等のメディアデバイスをつかまないようにする機能
 - 接続確立後のカメラ切り替え機能
 
@@ -140,7 +140,7 @@ Please read https://github.com/shiguredo/oss/blob/master/README.en.md before use
 ### 機能
 
 - サイマルキャスト rid 指定対応
-- iOS 以外の音声出力先変更機能
+- iOS, Android 以外の音声出力先変更機能
 - ビデオ・トラック ID 取得機能 (統計情報との紐づけによる利用を想定)
 - オーディオ・トラック ID 取得機能 (統計情報との紐づけによる利用を想定)
 
