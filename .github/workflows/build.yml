@@ -33,8 +33,6 @@ jobs:
         Copy-Item _build\windows_x86_64\release\sora_unity_sdk\Release\SoraUnitySdk.dll ${{ matrix.name }}
         # ソースコード（生成した分も含む）も一緒に入れておく
         Copy-Item -Recurse Sora ${{ matrix.name }}\Sora
-        # Lyra のモデルデータも一緒に入れておく
-        Copy-Item -Recurse _install\windows_x86_64\release\lyra\share\model_coeffs ${{ matrix.name }}\model_coeffs
     - name: Upload ${{ matrix.name }} Artifact
       uses: actions/upload-artifact@v3
       with:
@@ -80,7 +78,6 @@ jobs:
         cp _install/ios/release/boost/lib/libboost_json.a ios/
         cp _install/ios/release/boost/lib/libboost_filesystem.a ios/
         cp _install/ios/release/sora/lib/libsora.a ios/
-        cp _install/ios/release/lyra/lib/liblyra.a ios/
         cp _build/ios/release/sora_unity_sdk/libSoraUnitySdk.a ios/
     - name: Upload iOS Artifact
       if: matrix.name == 'ios'
@@ -117,6 +114,7 @@ jobs:
       run: |
         mkdir android/
         cp _install/android/release/webrtc/jar/webrtc.jar android/
+        cp _install/android/release/sora/lib/Sora.aar android/
         cp _build/android/release/sora_unity_sdk/libSoraUnitySdk.so android/
     - name: Upload Android Artifact
       if: matrix.name == 'android'
@@ -157,16 +155,15 @@ jobs:
         mkdir -p SoraUnitySdk/StreamingAssets/SoraUnitySdk
         cp windows_x86_64/SoraUnitySdk.dll SoraUnitySdk/Plugins/SoraUnitySdk/windows/x86_64/
         cp -r windows_x86_64/Sora/ SoraUnitySdk/SoraUnitySdk/
-        cp -r windows_x86_64/model_coeffs SoraUnitySdk/StreamingAssets/SoraUnitySdk/model_coeffs
         cp -r macos_arm64/SoraUnitySdk.bundle SoraUnitySdk/Plugins/SoraUnitySdk/macos/arm64/SoraUnitySdk.bundle
         cp android/libSoraUnitySdk.so SoraUnitySdk/Plugins/SoraUnitySdk/android/arm64-v8a/
         cp android/webrtc.jar SoraUnitySdk/Plugins/SoraUnitySdk/android/
+        cp android/Sora.aar SoraUnitySdk/Plugins/SoraUnitySdk/android/
         cp ios/libSoraUnitySdk.a SoraUnitySdk/Plugins/SoraUnitySdk/ios/
         cp ios/libwebrtc.a SoraUnitySdk/Plugins/SoraUnitySdk/ios/
         cp ios/libboost_json.a SoraUnitySdk/Plugins/SoraUnitySdk/ios/
         cp ios/libsora.a SoraUnitySdk/Plugins/SoraUnitySdk/ios/
         cp ios/libboost_filesystem.a SoraUnitySdk/Plugins/SoraUnitySdk/ios/
-        cp ios/liblyra.a SoraUnitySdk/Plugins/SoraUnitySdk/ios/
         cp ubuntu-20.04_x86_64/libSoraUnitySdk.so SoraUnitySdk/Plugins/SoraUnitySdk/linux/x86_64/
 
         cp LICENSE SoraUnitySdk/SoraUnitySdk/

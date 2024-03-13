@@ -1,16 +1,17 @@
-import subprocess
+import argparse
+import filecmp
 import logging
+import multiprocessing
 import os
+import platform
+import shlex
+import shutil
 import stat
+import subprocess
+import tarfile
 import urllib.parse
 import zipfile
-import tarfile
-import shutil
-import platform
-import multiprocessing
-import argparse
-from typing import Callable, NamedTuple, Optional, List, Union, Dict
-
+from typing import Dict, List, NamedTuple, Optional
 
 logging.basicConfig(level=logging.DEBUG)
 
@@ -21,11 +22,11 @@ class ChangeDirectory(object):
 
     def __enter__(self):
         self._old_cwd = os.getcwd()
-        logging.debug(f'pushd {self._old_cwd} --> {self._cwd}')
+        logging.debug(f"pushd {self._old_cwd} --> {self._cwd}")
         os.chdir(self._cwd)
 
     def __exit__(self, exctype, excvalue, trace):
-        logging.debug(f'popd {self._old_cwd} <-- {self._cwd}')
+        logging.debug(f"popd {self._old_cwd} <-- {self._cwd}")
         os.chdir(self._old_cwd)
         return False
 
@@ -35,12 +36,12 @@ def cd(cwd):
 
 
 def cmd(args, **kwargs):
-    logging.debug(f'+{args} {kwargs}')
-    if 'check' not in kwargs:
-        kwargs['check'] = True
-    if 'resolve' in kwargs:
-        resolve = kwargs['resolve']
-        del kwargs['resolve']
+    logging.debug(f"+{args} {kwargs}")
+    if "check" not in kwargs:
+        kwargs["check"] = True
+    if "resolve" in kwargs:
+        resolve = kwargs["resolve"]
+        del kwargs["resolve"]
     else:
         resolve = True
     if resolve:
@@ -52,53 +53,53 @@ def cmd(args, **kwargs):
 def cmdcap(args, **kwargs):
     # 3.7 でしか使えない
     # kwargs['capture_output'] = True
-    kwargs['stdout'] = subprocess.PIPE
-    kwargs['stderr'] = subprocess.PIPE
-    kwargs['encoding'] = 'utf-8'
+    kwargs["stdout"] = subprocess.PIPE
+    kwargs["stderr"] = subprocess.PIPE
+    kwargs["encoding"] = "utf-8"
     return cmd(args, **kwargs).stdout.strip()
 
 
 def rm_rf(path: str):
     if not os.path.exists(path):
-        logging.debug(f'rm -rf {path} => path not found')
+        logging.debug(f"rm -rf {path} => path not found")
         return
     if os.path.isfile(path) or os.path.islink(path):
         os.remove(path)
-        logging.debug(f'rm -rf {path} => file removed')
+        logging.debug(f"rm -rf {path} => file removed")
     if os.path.isdir(path):
         shutil.rmtree(path)
-        logging.debug(f'rm -rf {path} => directory removed')
+        logging.debug(f"rm -rf {path} => directory removed")
 
 
 def mkdir_p(path: str):
     if os.path.exists(path):
-        logging.debug(f'mkdir -p {path} => already exists')
+        logging.debug(f"mkdir -p {path} => already exists")
         return
     os.makedirs(path, exist_ok=True)
-    logging.debug(f'mkdir -p {path} => directory created')
+    logging.debug(f"mkdir -p {path} => directory created")
 
 
-if platform.system() == 'Windows':
-    PATH_SEPARATOR = ';'
+if platform.system() == "Windows":
+    PATH_SEPARATOR = ";"
 else:
-    PATH_SEPARATOR = ':'
+    PATH_SEPARATOR = ":"
 
 
 def add_path(path: str, is_after=False):
-    logging.debug(f'add_path: {path}')
-    if 'PATH' not in os.environ:
-        os.environ['PATH'] = path
+    logging.debug(f"add_path: {path}")
+    if "PATH" not in os.environ:
+        os.environ["PATH"] = path
         return
 
     if is_after:
-        os.environ['PATH'] = os.environ['PATH'] + PATH_SEPARATOR + path
+        os.environ["PATH"] = os.environ["PATH"] + PATH_SEPARATOR + path
     else:
-        os.environ['PATH'] = path + PATH_SEPARATOR + os.environ['PATH']
+        os.environ["PATH"] = path + PATH_SEPARATOR + os.environ["PATH"]
 
 
 def download(url: str, output_dir: Optional[str] = None, filename: Optional[str] = None) -> str:
     if filename is None:
-        output_path = urllib.parse.urlparse(url).path.split('/')[-1]
+        output_path = urllib.parse.urlparse(url).path.split("/")[-1]
     else:
         output_path = filename
 
@@ -109,7 +110,7 @@ def download(url: str, output_dir: Optional[str] = None, filename: Optional[str]
         return output_path
 
     try:
-        if shutil.which('curl') is not None:
+        if shutil.which("curl") is not None:
             cmd(["curl", "-fLo", output_path, url])
         else:
             cmd(["wget", "-cO", output_path, url])
@@ -130,14 +131,14 @@ def read_version_file(path: str) -> Dict[str, str]:
         line = line.strip()
 
         # コメント行
-        if line[:1] == '#':
+        if line[:1] == "#":
             continue
 
         # 空行
         if len(line) == 0:
             continue
 
-        [a, b] = map(lambda x: x.strip(), line.split('=', 2))
+        [a, b] = map(lambda x: x.strip(), line.split("=", 2))
         versions[a] = b.strip('"')
 
     return versions
@@ -152,10 +153,10 @@ def enum_all_files(dir, dir2):
 
 def versioned(func):
     def wrapper(version, version_file, *args, **kwargs):
-        if 'ignore_version' in kwargs:
-            if kwargs.get('ignore_version'):
+        if "ignore_version" in kwargs:
+            if kwargs.get("ignore_version"):
                 rm_rf(version_file)
-            del kwargs['ignore_version']
+            del kwargs["ignore_version"]
 
         if os.path.exists(version_file):
             ver = open(version_file).read()
@@ -164,7 +165,7 @@ def versioned(func):
 
         r = func(version=version, *args, **kwargs)
 
-        with open(version_file, 'w') as f:
+        with open(version_file, "w") as f:
             f.write(version)
 
         return r
@@ -176,21 +177,19 @@ def versioned(func):
 #
 # 単一のディレクトリに格納されている場合はそのディレクトリ名を返す。
 # そうでない場合は None を返す。
-def _is_single_dir(infos: List[Union[zipfile.ZipInfo, tarfile.TarInfo]],
-                   get_name: Callable[[Union[zipfile.ZipInfo, tarfile.TarInfo]], str],
-                   is_dir: Callable[[Union[zipfile.ZipInfo, tarfile.TarInfo]], bool]) -> Optional[str]:
+def _is_single_dir(infos, get_name, is_dir) -> Optional[str]:
     # tarfile: ['path', 'path/to', 'path/to/file.txt']
     # zipfile: ['path/', 'path/to/', 'path/to/file.txt']
     # どちらも / 区切りだが、ディレクトリの場合、後ろに / が付くかどうかが違う
     dirname = None
     for info in infos:
         name = get_name(info)
-        n = name.rstrip('/').find('/')
+        n = name.rstrip("/").find("/")
         if n == -1:
             # ルートディレクトリにファイルが存在している
             if not is_dir(info):
                 return None
-            dir = name.rstrip('/')
+            dir = name.rstrip("/")
         else:
             dir = name[0:n]
         # ルートディレクトリに２個以上のディレクトリが存在している
@@ -212,7 +211,7 @@ def is_single_dir_zip(zip: zipfile.ZipFile) -> Optional[str]:
 # 解凍した上でファイル属性を付与する
 def _extractzip(z: zipfile.ZipFile, path: str):
     z.extractall(path)
-    if platform.system() == 'Windows':
+    if platform.system() == "Windows":
         return
     for info in z.infolist():
         if info.is_dir():
@@ -221,7 +220,7 @@ def _extractzip(z: zipfile.ZipFile, path: str):
         mod = info.external_attr >> 16
         if (mod & 0o120000) == 0o120000:
             # シンボリックリンク
-            with open(filepath, 'r') as f:
+            with open(filepath, "r") as f:
                 src = f.read()
             os.remove(filepath)
             with cd(os.path.dirname(filepath)):
@@ -257,7 +256,7 @@ def _extractzip(z: zipfile.ZipFile, path: str):
 def extract(file: str, output_dir: str, output_dirname: str, filetype: Optional[str] = None):
     path = os.path.join(output_dir, output_dirname)
     logging.info(f"Extract {file} to {path}")
-    if filetype == 'gzip' or file.endswith('.tar.gz'):
+    if filetype == "gzip" or file.endswith(".tar.gz"):
         rm_rf(path)
         with tarfile.open(file) as t:
             dir = is_single_dir_tar(t)
@@ -272,7 +271,7 @@ def extract(file: str, output_dir: str, output_dirname: str, filetype: Optional[
                 if path != path2:
                     logging.debug(f"mv {path2} {path}")
                     os.replace(path2, path)
-    elif filetype == 'zip' or file.endswith('.zip'):
+    elif filetype == "zip" or file.endswith(".zip"):
         rm_rf(path)
         with zipfile.ZipFile(file) as z:
             dir = is_single_dir_zip(z)
@@ -290,42 +289,48 @@ def extract(file: str, output_dir: str, output_dirname: str, filetype: Optional[
                     logging.debug(f"mv {path2} {path}")
                     os.replace(path2, path)
     else:
-        raise Exception('file should end with .tar.gz or .zip')
+        raise Exception("file should end with .tar.gz or .zip")
 
 
 def clone_and_checkout(url, version, dir, fetch, fetch_force):
     if fetch_force:
         rm_rf(dir)
 
-    if not os.path.exists(os.path.join(dir, '.git')):
-        cmd(['git', 'clone', url, dir])
+    if not os.path.exists(os.path.join(dir, ".git")):
+        cmd(["git", "clone", url, dir])
         fetch = True
 
     if fetch:
         with cd(dir):
-            cmd(['git', 'fetch'])
-            cmd(['git', 'reset', '--hard'])
-            cmd(['git', 'clean', '-df'])
-            cmd(['git', 'checkout', '-f', version])
+            cmd(["git", "fetch"])
+            cmd(["git", "reset", "--hard"])
+            cmd(["git", "clean", "-df"])
+            cmd(["git", "checkout", "-f", version])
 
 
 def git_clone_shallow(url, hash, dir):
     rm_rf(dir)
     mkdir_p(dir)
     with cd(dir):
-        cmd(['git', 'init'])
-        cmd(['git', 'remote', 'add', 'origin', url])
-        cmd(['git', 'fetch', '--depth=1', 'origin', hash])
-        cmd(['git', 'reset', '--hard', 'FETCH_HEAD'])
+        cmd(["git", "init"])
+        cmd(["git", "remote", "add", "origin", url])
+        cmd(["git", "fetch", "--depth=1", "origin", hash])
+        cmd(["git", "reset", "--hard", "FETCH_HEAD"])
+
+
+def copyfile_if_different(src, dst):
+    if os.path.exists(dst) and filecmp.cmp(src, dst, shallow=False):
+        return
+    shutil.copyfile(src, dst)
 
 
 @versioned
 def install_android_ndk(version, install_dir, source_dir):
     archive = download(
-        f'https://dl.google.com/android/repository/android-ndk-{version}-linux.zip',
-        source_dir)
-    rm_rf(os.path.join(install_dir, 'android-ndk'))
-    extract(archive, output_dir=install_dir, output_dirname='android-ndk')
+        f"https://dl.google.com/android/repository/android-ndk-{version}-linux.zip", source_dir
+    )
+    rm_rf(os.path.join(install_dir, "android-ndk"))
+    extract(archive, output_dir=install_dir, output_dirname="android-ndk")
 
 
 @versioned
@@ -334,106 +339,147 @@ def install_webrtc(version, source_dir, install_dir, platform: str):
     filename = f'webrtc.{platform}.{"zip" if win else "tar.gz"}'
     rm_rf(os.path.join(source_dir, filename))
     archive = download(
-        f'https://github.com/shiguredo-webrtc-build/webrtc-build/releases/download/{version}/{filename}',
-        output_dir=source_dir)
-    rm_rf(os.path.join(install_dir, 'webrtc'))
-    extract(archive, output_dir=install_dir, output_dirname='webrtc')
+        f"https://github.com/shiguredo-webrtc-build/webrtc-build/releases/download/{version}/{filename}",
+        output_dir=source_dir,
+    )
+    rm_rf(os.path.join(install_dir, "webrtc"))
+    extract(archive, output_dir=install_dir, output_dirname="webrtc")
+
+
+def build_webrtc(platform, webrtc_build_dir, webrtc_build_args, debug):
+    with cd(webrtc_build_dir):
+        args = ["--webrtc-nobuild-ios-framework", "--webrtc-nobuild-android-aar"]
+        if debug:
+            args += ["--debug"]
+
+        args += webrtc_build_args
+
+        cmd(["python3", "run.py", "build", platform, *args])
+
+        # インクルードディレクトリを増やしたくないので、
+        # __config_site を libc++ のディレクトリにコピーしておく
+        webrtc_source_dir = os.path.join(webrtc_build_dir, "_source", platform, "webrtc")
+        src_config = os.path.join(
+            webrtc_source_dir, "src", "buildtools", "third_party", "libc++", "__config_site"
+        )
+        dst_config = os.path.join(
+            webrtc_source_dir, "src", "third_party", "libc++", "src", "include", "__config_site"
+        )
+        copyfile_if_different(src_config, dst_config)
 
 
 class WebrtcInfo(NamedTuple):
     version_file: str
+    deps_file: str
     webrtc_include_dir: str
+    webrtc_source_dir: Optional[str]
     webrtc_library_dir: str
     clang_dir: str
     libcxx_dir: str
 
 
-def get_webrtc_info(webrtcbuild: bool, source_dir: str, build_dir: str, install_dir: str) -> WebrtcInfo:
-    webrtc_source_dir = os.path.join(source_dir, 'webrtc')
-    webrtc_build_dir = os.path.join(build_dir, 'webrtc')
-    webrtc_install_dir = os.path.join(install_dir, 'webrtc')
+def get_webrtc_info(
+    platform: str, webrtc_build_dir: Optional[str], install_dir: str, debug: bool
+) -> WebrtcInfo:
+    webrtc_install_dir = os.path.join(install_dir, "webrtc")
 
-    if webrtcbuild:
+    if webrtc_build_dir is None:
         return WebrtcInfo(
-            version_file=os.path.join(source_dir, 'webrtc-build', 'VERSION'),
-            webrtc_include_dir=os.path.join(webrtc_source_dir, 'src'),
-            webrtc_library_dir=os.path.join(webrtc_build_dir, 'obj')
-            if platform.system() == 'Windows' else webrtc_build_dir, clang_dir=os.path.join(
-                webrtc_source_dir, 'src', 'third_party', 'llvm-build', 'Release+Asserts'),
-            libcxx_dir=os.path.join(webrtc_source_dir, 'src', 'third_party', 'libc++', 'src'),)
+            version_file=os.path.join(webrtc_install_dir, "VERSIONS"),
+            deps_file=os.path.join(webrtc_install_dir, "DEPS"),
+            webrtc_include_dir=os.path.join(webrtc_install_dir, "include"),
+            webrtc_source_dir=None,
+            webrtc_library_dir=os.path.join(webrtc_install_dir, "lib"),
+            clang_dir=os.path.join(install_dir, "llvm", "clang"),
+            libcxx_dir=os.path.join(install_dir, "llvm", "libcxx"),
+        )
     else:
+        webrtc_build_source_dir = os.path.join(webrtc_build_dir, "_source", platform, "webrtc")
+        configuration = "debug" if debug else "release"
+        webrtc_build_build_dir = os.path.join(
+            webrtc_build_dir, "_build", platform, configuration, "webrtc"
+        )
+
         return WebrtcInfo(
-            version_file=os.path.join(webrtc_install_dir, 'VERSIONS'),
-            webrtc_include_dir=os.path.join(webrtc_install_dir, 'include'),
-            webrtc_library_dir=os.path.join(install_dir, 'webrtc', 'lib'),
-            clang_dir=os.path.join(install_dir, 'llvm', 'clang'),
-            libcxx_dir=os.path.join(install_dir, 'llvm', 'libcxx'),
+            version_file=os.path.join(webrtc_build_dir, "VERSION"),
+            deps_file=os.path.join(webrtc_build_dir, "DEPS"),
+            webrtc_include_dir=os.path.join(webrtc_build_source_dir, "src"),
+            webrtc_source_dir=os.path.join(webrtc_build_source_dir, "src"),
+            webrtc_library_dir=webrtc_build_build_dir,
+            clang_dir=os.path.join(
+                webrtc_build_source_dir, "src", "third_party", "llvm-build", "Release+Asserts"
+            ),
+            libcxx_dir=os.path.join(webrtc_build_source_dir, "src", "third_party", "libc++", "src"),
         )
 
 
 @versioned
-def install_llvm(version, install_dir,
-                 tools_url, tools_commit,
-                 libcxx_url, libcxx_commit,
-                 buildtools_url, buildtools_commit):
-    llvm_dir = os.path.join(install_dir, 'llvm')
+def install_llvm(
+    version,
+    install_dir,
+    tools_url,
+    tools_commit,
+    libcxx_url,
+    libcxx_commit,
+    buildtools_url,
+    buildtools_commit,
+):
+    llvm_dir = os.path.join(install_dir, "llvm")
     rm_rf(llvm_dir)
     mkdir_p(llvm_dir)
     with cd(llvm_dir):
         # tools の update.py を叩いて特定バージョンの clang バイナリを拾う
-        git_clone_shallow(tools_url, tools_commit, 'tools')
-        with cd('tools'):
-            cmd(['python3',
-                os.path.join('clang', 'scripts', 'update.py'),
-                '--output-dir', os.path.join(llvm_dir, 'clang')])
+        git_clone_shallow(tools_url, tools_commit, "tools")
+        with cd("tools"):
+            cmd(
+                [
+                    "python3",
+                    os.path.join("clang", "scripts", "update.py"),
+                    "--output-dir",
+                    os.path.join(llvm_dir, "clang"),
+                ]
+            )
 
         # 特定バージョンの libcxx を利用する
-        git_clone_shallow(libcxx_url, libcxx_commit, 'libcxx')
+        git_clone_shallow(libcxx_url, libcxx_commit, "libcxx")
 
         # __config_site のために特定バージョンの buildtools を取得する
-        git_clone_shallow(buildtools_url, buildtools_commit, 'buildtools')
-        shutil.copyfile(os.path.join(llvm_dir, 'buildtools', 'third_party', 'libc++', '__config_site'),
-                        os.path.join(llvm_dir, 'libcxx', 'include', '__config_site'))
+        git_clone_shallow(buildtools_url, buildtools_commit, "buildtools")
+        shutil.copyfile(
+            os.path.join(llvm_dir, "buildtools", "third_party", "libc++", "__config_site"),
+            os.path.join(llvm_dir, "libcxx", "include", "__config_site"),
+        )
 
 
 @versioned
 def install_boost(version, source_dir, install_dir, sora_version, platform: str):
     win = platform.startswith("windows_")
-    filename = f'boost-{version}_sora-cpp-sdk-{sora_version}_{platform}.{"zip" if win else "tar.gz"}'
+    filename = (
+        f'boost-{version}_sora-cpp-sdk-{sora_version}_{platform}.{"zip" if win else "tar.gz"}'
+    )
     rm_rf(os.path.join(source_dir, filename))
     archive = download(
-        f'https://github.com/shiguredo/sora-cpp-sdk/releases/download/{sora_version}/{filename}',
-        output_dir=source_dir)
-    rm_rf(os.path.join(install_dir, 'boost'))
-    extract(archive, output_dir=install_dir, output_dirname='boost')
-
-
-@versioned
-def install_lyra(version, source_dir, install_dir, sora_version, platform: str):
-    win = platform.startswith("windows_")
-    filename = f'lyra-{version}_sora-cpp-sdk-{sora_version}_{platform}.{"zip" if win else "tar.gz"}'
-    rm_rf(os.path.join(source_dir, filename))
-    archive = download(
-        f'https://github.com/shiguredo/sora-cpp-sdk/releases/download/{sora_version}/{filename}',
-        output_dir=source_dir)
-    rm_rf(os.path.join(install_dir, 'lyra'))
-    extract(archive, output_dir=install_dir, output_dirname='lyra')
+        f"https://github.com/shiguredo/sora-cpp-sdk/releases/download/{sora_version}/{filename}",
+        output_dir=source_dir,
+    )
+    rm_rf(os.path.join(install_dir, "boost"))
+    extract(archive, output_dir=install_dir, output_dirname="boost")
 
 
 def cmake_path(path: str) -> str:
-    return path.replace('\\', '/')
+    return path.replace("\\", "/")
 
 
 @versioned
 def install_cmake(version, source_dir, install_dir, platform: str, ext):
-    url = f'https://github.com/Kitware/CMake/releases/download/v{version}/cmake-{version}-{platform}.{ext}'
+    url = f"https://github.com/Kitware/CMake/releases/download/v{version}/cmake-{version}-{platform}.{ext}"
     path = download(url, source_dir)
-    extract(path, install_dir, 'cmake')
+    extract(path, install_dir, "cmake")
     # Android で自前の CMake を利用する場合、ninja へのパスが見つけられない問題があるので、同じディレクトリに symlink を貼る
     # https://issuetracker.google.com/issues/206099937
-    if platform.startswith('linux'):
-        with cd(os.path.join(install_dir, 'cmake', 'bin')):
-            cmd(['ln', '-s', '/usr/bin/ninja', 'ninja'])
+    if platform.startswith("linux"):
+        with cd(os.path.join(install_dir, "cmake", "bin")):
+            cmd(["ln", "-s", "/usr/bin/ninja", "ninja"])
 
 
 @versioned
@@ -442,10 +488,66 @@ def install_sora(version, source_dir, install_dir, platform: str):
     filename = f'sora-cpp-sdk-{version}_{platform}.{"zip" if win else "tar.gz"}'
     rm_rf(os.path.join(source_dir, filename))
     archive = download(
-        f'https://github.com/shiguredo/sora-cpp-sdk/releases/download/{version}/{filename}',
-        output_dir=source_dir)
-    rm_rf(os.path.join(install_dir, 'sora'))
-    extract(archive, output_dir=install_dir, output_dirname='sora')
+        f"https://github.com/shiguredo/sora-cpp-sdk/releases/download/{version}/{filename}",
+        output_dir=source_dir,
+    )
+    rm_rf(os.path.join(install_dir, "sora"))
+    extract(archive, output_dir=install_dir, output_dirname="sora")
+
+
+class SoraInfo(NamedTuple):
+    sora_install_dir: str
+    boost_install_dir: str
+
+
+def install_sora_and_deps(platform: str, source_dir: str, install_dir: str):
+    version = read_version_file("VERSION")
+
+    # Boost
+    install_boost_args = {
+        "version": version["BOOST_VERSION"],
+        "version_file": os.path.join(install_dir, "boost.version"),
+        "source_dir": source_dir,
+        "install_dir": install_dir,
+        "sora_version": version["SORA_CPP_SDK_VERSION"],
+        "platform": platform,
+    }
+    install_boost(**install_boost_args)
+
+    # Sora C++ SDK
+    install_sora_args = {
+        "version": version["SORA_CPP_SDK_VERSION"],
+        "version_file": os.path.join(install_dir, "sora.version"),
+        "source_dir": source_dir,
+        "install_dir": install_dir,
+        "platform": platform,
+    }
+    install_sora(**install_sora_args)
+
+
+def build_sora(
+    platform: str, sora_dir: str, sora_args: List[str], debug: bool, webrtc_build_dir: Optional[str]
+):
+    if debug and "--debug" not in sora_args:
+        sora_args = ["--debug", *sora_args]
+    if webrtc_build_dir is not None:
+        sora_args = ["--webrtc-build-dir", webrtc_build_dir, *sora_args]
+
+    with cd(sora_dir):
+        cmd(["python3", "run.py", platform, *sora_args])
+
+
+def get_sora_info(
+    platform: str, sora_dir: Optional[str], install_dir: str, debug: bool
+) -> SoraInfo:
+    if sora_dir is not None:
+        configuration = "debug" if debug else "release"
+        install_dir = os.path.join(sora_dir, "_install", platform, configuration)
+
+    return SoraInfo(
+        sora_install_dir=os.path.join(install_dir, "sora"),
+        boost_install_dir=os.path.join(install_dir, "boost"),
+    )
 
 
 @versioned
@@ -461,13 +563,13 @@ def install_protobuf(version, source_dir, install_dir, platform: str):
     # - osx-x86_64
     # - win32
     # - win64
-    url = f'https://github.com/protocolbuffers/protobuf/releases/download/v{version}/protoc-{version}-{platform}.zip'
+    url = f"https://github.com/protocolbuffers/protobuf/releases/download/v{version}/protoc-{version}-{platform}.zip"
     path = download(url, source_dir)
-    rm_rf(os.path.join(install_dir, 'protobuf'))
-    extract(path, install_dir, 'protobuf')
+    rm_rf(os.path.join(install_dir, "protobuf"))
+    extract(path, install_dir, "protobuf")
     # なぜか実行属性が消えてるので入れてやる
-    for file in os.scandir(os.path.join(install_dir, 'protobuf', 'bin')):
-        if file.is_file:
+    for file in os.scandir(os.path.join(install_dir, "protobuf", "bin")):
+        if file.is_file():
             os.chmod(file.path, file.stat().st_mode | stat.S_IXUSR)
 
 
@@ -478,228 +580,227 @@ def install_protoc_gen_jsonif(version, source_dir, install_dir, platform: str):
     # - darwin-arm64
     # - linux-amd64
     # - windows-amd64
-    url = f'https://github.com/melpon/protoc-gen-jsonif/releases/download/{version}/protoc-gen-jsonif.tar.gz'
-    rm_rf(os.path.join(source_dir, 'protoc-gen-jsonif.tar.gz'))
+    url = f"https://github.com/melpon/protoc-gen-jsonif/releases/download/{version}/protoc-gen-jsonif.tar.gz"
+    rm_rf(os.path.join(source_dir, "protoc-gen-jsonif.tar.gz"))
     path = download(url, source_dir)
-    jsonif_install_dir = os.path.join(install_dir, 'protoc-gen-jsonif')
+    jsonif_install_dir = os.path.join(install_dir, "protoc-gen-jsonif")
     rm_rf(jsonif_install_dir)
-    extract(path, install_dir, 'protoc-gen-jsonif')
+    extract(path, install_dir, "protoc-gen-jsonif")
     # 自分の環境のバイナリを <install-path>/bin に配置する
     shutil.copytree(
-        os.path.join(jsonif_install_dir, *platform.split('-')),
-        os.path.join(jsonif_install_dir, 'bin'))
+        os.path.join(jsonif_install_dir, *platform.split("-")),
+        os.path.join(jsonif_install_dir, "bin"),
+    )
     # なぜか実行属性が消えてるので入れてやる
-    for file in os.scandir(os.path.join(jsonif_install_dir, 'bin')):
-        if file.is_file:
+    for file in os.scandir(os.path.join(jsonif_install_dir, "bin")):
+        if file.is_file():
             os.chmod(file.path, file.stat().st_mode | stat.S_IXUSR)
 
 
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 
 
-def install_deps(platform: str, build_platform: str, source_dir, build_dir, install_dir, debug):
+def install_deps(
+    platform: str,
+    build_platform: str,
+    source_dir,
+    build_dir,
+    install_dir,
+    debug,
+    webrtc_build_dir: Optional[str],
+    webrtc_build_args: List[str],
+    sora_dir: Optional[str],
+    sora_args: List[str],
+):
     with cd(BASE_DIR):
-        version = read_version_file('VERSION')
+        version = read_version_file("VERSION")
 
         # Android NDK
-        if platform == 'android':
+        if platform == "android":
             install_android_ndk_args = {
-                'version': version['ANDROID_NDK_VERSION'],
-                'version_file': os.path.join(install_dir, 'android-ndk.version'),
-                'source_dir': source_dir,
-                'install_dir': install_dir,
+                "version": version["ANDROID_NDK_VERSION"],
+                "version_file": os.path.join(install_dir, "android-ndk.version"),
+                "source_dir": source_dir,
+                "install_dir": install_dir,
             }
             install_android_ndk(**install_android_ndk_args)
 
         # WebRTC
-        install_webrtc_args = {
-            'version': version['WEBRTC_BUILD_VERSION'],
-            'version_file': os.path.join(install_dir, 'webrtc.version'),
-            'source_dir': source_dir,
-            'install_dir': install_dir,
-            'platform': platform,
-        }
+        if webrtc_build_dir is None:
+            install_webrtc_args = {
+                "version": version["WEBRTC_BUILD_VERSION"],
+                "version_file": os.path.join(install_dir, "webrtc.version"),
+                "source_dir": source_dir,
+                "install_dir": install_dir,
+                "platform": platform,
+            }
+            install_webrtc(**install_webrtc_args)
+        else:
+            build_webrtc_args = {
+                "platform": platform,
+                "webrtc_build_dir": webrtc_build_dir,
+                "webrtc_build_args": webrtc_build_args,
+                "debug": debug,
+            }
+            build_webrtc(**build_webrtc_args)
 
-        install_webrtc(**install_webrtc_args)
-
-        webrtc_info = get_webrtc_info(
-            False, source_dir, build_dir, install_dir)
-        webrtc_version = read_version_file(webrtc_info.version_file)
+        webrtc_info = get_webrtc_info(platform, webrtc_build_dir, install_dir, debug)
 
         # Windows は MSVC を使うので不要
         # macOS と iOS は Apple Clang を使うので不要
         # Android は libc++ のために必要
-        if platform not in ('windows_x86_64', 'macos_x86_64', 'macos_arm64', 'ios'):
+        # webrtc-build をソースビルドしてる場合は既にローカルにあるので不要
+        if (
+            platform not in ("windows_x86_64", "macos_x86_64", "macos_arm64", "ios")
+            and webrtc_build_dir is None
+        ):
+            webrtc_version = read_version_file(webrtc_info.version_file)
+
             # LLVM
-            tools_url = webrtc_version['WEBRTC_SRC_TOOLS_URL']
-            tools_commit = webrtc_version['WEBRTC_SRC_TOOLS_COMMIT']
-            libcxx_url = webrtc_version['WEBRTC_SRC_THIRD_PARTY_LIBCXX_SRC_URL']
-            libcxx_commit = webrtc_version['WEBRTC_SRC_THIRD_PARTY_LIBCXX_SRC_COMMIT']
-            buildtools_url = webrtc_version['WEBRTC_SRC_BUILDTOOLS_URL']
-            buildtools_commit = webrtc_version['WEBRTC_SRC_BUILDTOOLS_COMMIT']
+            tools_url = webrtc_version["WEBRTC_SRC_TOOLS_URL"]
+            tools_commit = webrtc_version["WEBRTC_SRC_TOOLS_COMMIT"]
+            libcxx_url = webrtc_version["WEBRTC_SRC_THIRD_PARTY_LIBCXX_SRC_URL"]
+            libcxx_commit = webrtc_version["WEBRTC_SRC_THIRD_PARTY_LIBCXX_SRC_COMMIT"]
+            buildtools_url = webrtc_version["WEBRTC_SRC_BUILDTOOLS_URL"]
+            buildtools_commit = webrtc_version["WEBRTC_SRC_BUILDTOOLS_COMMIT"]
             install_llvm_args = {
-                'version':
-                    f'{tools_url}.{tools_commit}.'
-                    f'{libcxx_url}.{libcxx_commit}.'
-                    f'{buildtools_url}.{buildtools_commit}',
-                'version_file': os.path.join(install_dir, 'llvm.version'),
-                'install_dir': install_dir,
-                'tools_url': tools_url,
-                'tools_commit': tools_commit,
-                'libcxx_url': libcxx_url,
-                'libcxx_commit': libcxx_commit,
-                'buildtools_url': buildtools_url,
-                'buildtools_commit': buildtools_commit,
+                "version": f"{tools_url}.{tools_commit}."
+                f"{libcxx_url}.{libcxx_commit}."
+                f"{buildtools_url}.{buildtools_commit}",
+                "version_file": os.path.join(install_dir, "llvm.version"),
+                "install_dir": install_dir,
+                "tools_url": tools_url,
+                "tools_commit": tools_commit,
+                "libcxx_url": libcxx_url,
+                "libcxx_commit": libcxx_commit,
+                "buildtools_url": buildtools_url,
+                "buildtools_commit": buildtools_commit,
             }
             install_llvm(**install_llvm_args)
 
-        # Boost
-        install_boost_args = {
-            'version': version['BOOST_VERSION'],
-            'version_file': os.path.join(install_dir, 'boost.version'),
-            'source_dir': source_dir,
-            'install_dir': install_dir,
-            'sora_version': version['SORA_CPP_SDK_VERSION'],
-            'platform': platform,
-        }
-        install_boost(**install_boost_args)
-
-        # Lyra
-        install_lyra_args = {
-            'version': version['LYRA_VERSION'],
-            'version_file': os.path.join(install_dir, 'lyra.version'),
-            'source_dir': source_dir,
-            'install_dir': install_dir,
-            'sora_version': version['SORA_CPP_SDK_VERSION'],
-            'platform': platform,
-        }
-        install_lyra(**install_lyra_args)
-
         # CMake
         install_cmake_args = {
-            'version': version['CMAKE_VERSION'],
-            'version_file': os.path.join(install_dir, 'cmake.version'),
-            'source_dir': source_dir,
-            'install_dir': install_dir,
-            'platform': '',
-            'ext': 'tar.gz'
+            "version": version["CMAKE_VERSION"],
+            "version_file": os.path.join(install_dir, "cmake.version"),
+            "source_dir": source_dir,
+            "install_dir": install_dir,
+            "platform": "",
+            "ext": "tar.gz",
         }
-        if build_platform == 'windows_x86_64':
-            install_cmake_args['platform'] = 'windows-x86_64'
-            install_cmake_args['ext'] = 'zip'
-        elif build_platform in ('macos_x86_64', 'macos_arm64'):
-            install_cmake_args['platform'] = 'macos-universal'
-        elif build_platform == 'ubuntu-20.04_x86_64':
-            install_cmake_args['platform'] = 'linux-x86_64'
+        if build_platform == "windows_x86_64":
+            install_cmake_args["platform"] = "windows-x86_64"
+            install_cmake_args["ext"] = "zip"
+        elif build_platform in ("macos_x86_64", "macos_arm64"):
+            install_cmake_args["platform"] = "macos-universal"
+        elif build_platform == "ubuntu-20.04_x86_64":
+            install_cmake_args["platform"] = "linux-x86_64"
         else:
-            raise Exception('Failed to install CMake')
+            raise Exception("Failed to install CMake")
         install_cmake(**install_cmake_args)
 
-        if build_platform in ('macos_x86_64', 'macos_arm64'):
-            add_path(os.path.join(install_dir, 'cmake',
-                     'CMake.app', 'Contents', 'bin'))
+        if build_platform in ("macos_x86_64", "macos_arm64"):
+            add_path(os.path.join(install_dir, "cmake", "CMake.app", "Contents", "bin"))
         else:
-            add_path(os.path.join(install_dir, 'cmake', 'bin'))
+            add_path(os.path.join(install_dir, "cmake", "bin"))
 
         # Sora C++ SDK
-        install_sora_args = {
-            'version': version['SORA_CPP_SDK_VERSION'],
-            'version_file': os.path.join(install_dir, 'sora.version'),
-            'source_dir': source_dir,
-            'install_dir': install_dir,
-            'platform': platform,
-        }
-        install_sora(**install_sora_args)
+        if sora_dir is None:
+            install_sora_and_deps(platform, source_dir, install_dir)
+        else:
+            build_sora(platform, sora_dir, sora_args, debug, webrtc_build_dir)
 
         # protobuf
         install_protobuf_args = {
-            'version': version['PROTOBUF_VERSION'],
-            'version_file': os.path.join(install_dir, 'protobuf.version'),
-            'source_dir': source_dir,
-            'install_dir': install_dir,
-            'platform': '',
+            "version": version["PROTOBUF_VERSION"],
+            "version_file": os.path.join(install_dir, "protobuf.version"),
+            "source_dir": source_dir,
+            "install_dir": install_dir,
+            "platform": "",
         }
-        if build_platform == 'windows_x86_64':
-            install_protobuf_args['platform'] = 'win64'
-        elif build_platform in ('macos_x86_64', 'macos_arm64'):
-            install_protobuf_args['platform'] = 'osx-universal_binary'
-        elif build_platform == 'ubuntu-20.04_x86_64':
-            install_protobuf_args['platform'] = 'linux-x86_64'
+        if build_platform == "windows_x86_64":
+            install_protobuf_args["platform"] = "win64"
+        elif build_platform in ("macos_x86_64", "macos_arm64"):
+            install_protobuf_args["platform"] = "osx-universal_binary"
+        elif build_platform == "ubuntu-20.04_x86_64":
+            install_protobuf_args["platform"] = "linux-x86_64"
         else:
-            raise Exception('Failed to install Protobuf')
+            raise Exception("Failed to install Protobuf")
         install_protobuf(**install_protobuf_args)
 
         # protoc-gen-jsonif
         install_jsonif_args = {
-            'version': version['PROTOC_GEN_JSONIF_VERSION'],
-            'version_file': os.path.join(install_dir, 'protoc-gen-jsonif.version'),
-            'source_dir': source_dir,
-            'install_dir': install_dir,
-            'platform': '',
+            "version": version["PROTOC_GEN_JSONIF_VERSION"],
+            "version_file": os.path.join(install_dir, "protoc-gen-jsonif.version"),
+            "source_dir": source_dir,
+            "install_dir": install_dir,
+            "platform": "",
         }
-        if build_platform == 'windows_x86_64':
-            install_jsonif_args['platform'] = 'windows-amd64'
-        elif build_platform == 'macos_x86_64':
-            install_jsonif_args['platform'] = 'darwin-amd64'
-        elif build_platform == 'macos_arm64':
-            install_jsonif_args['platform'] = 'darwin-arm64'
-        elif build_platform == 'ubuntu-20.04_x86_64':
-            install_jsonif_args['platform'] = 'linux-amd64'
+        if build_platform == "windows_x86_64":
+            install_jsonif_args["platform"] = "windows-amd64"
+        elif build_platform == "macos_x86_64":
+            install_jsonif_args["platform"] = "darwin-amd64"
+        elif build_platform == "macos_arm64":
+            install_jsonif_args["platform"] = "darwin-arm64"
+        elif build_platform == "ubuntu-20.04_x86_64":
+            install_jsonif_args["platform"] = "linux-amd64"
         else:
-            raise Exception('Failed to install protoc-gen-jsonif')
+            raise Exception("Failed to install protoc-gen-jsonif")
         install_protoc_gen_jsonif(**install_jsonif_args)
 
 
 def get_build_platform():
     arch = platform.machine()
-    if arch in ('AMD64', 'x86_64'):
-        arch = 'x86_64'
-    elif arch in ('aarch64', 'arm64'):
-        arch = 'arm64'
+    if arch in ("AMD64", "x86_64"):
+        arch = "x86_64"
+    elif arch in ("aarch64", "arm64"):
+        arch = "arm64"
     else:
-        raise Exception(f'Arch {arch} not supported')
+        raise Exception(f"Arch {arch} not supported")
 
     os = platform.system()
-    if os == 'Windows':
-        if arch == 'x86_64':
-            return 'windows_x86_64'
+    if os == "Windows":
+        if arch == "x86_64":
+            return "windows_x86_64"
         else:
-            raise Exception('Unknown windows arch')
-    elif os == 'Darwin':
-        return f'macos_{arch}'
-    elif os == 'Linux':
-        release = read_version_file('/etc/os-release')
-        os = release['NAME']
-        if os == 'Ubuntu':
-            osver = release['VERSION_ID']
-            if osver == '20.04':
-                if arch == 'x86_64':
-                    return 'ubuntu-20.04_x86_64'
+            raise Exception("Unknown windows arch")
+    elif os == "Darwin":
+        return f"macos_{arch}"
+    elif os == "Linux":
+        release = read_version_file("/etc/os-release")
+        os = release["NAME"]
+        if os == "Ubuntu":
+            osver = release["VERSION_ID"]
+            if osver == "20.04":
+                if arch == "x86_64":
+                    return "ubuntu-20.04_x86_64"
                 else:
-                    raise Exception('Unknown ubuntu arch')
+                    raise Exception("Unknown ubuntu arch")
             else:
-                raise Exception('Unexpected Ubuntu version')
+                raise Exception("Unexpected Ubuntu version")
         else:
-            raise Exception(f'OS {os} not supported')
+            raise Exception(f"OS {os} not supported")
     else:
-        raise Exception(f'OS {os} not supported')
+        raise Exception(f"OS {os} not supported")
 
 
-AVAILABLE_TARGETS = ['windows_x86_64', 'macos_arm64',
-                     'ubuntu-20.04_x86_64', 'ios', 'android']
+AVAILABLE_TARGETS = ["windows_x86_64", "macos_arm64", "ubuntu-20.04_x86_64", "ios", "android"]
 
 BUILD_PLATFORM = {
-    'windows_x86_64': ['windows_x86_64'],
-    'macos_x86_64': ['macos_x86_64', 'macos_arm64', 'ios'],
-    'macos_arm64': ['macos_x86_64', 'macos_arm64', 'ios'],
-    'ubuntu-20.04_x86_64': ['ubuntu-20.04_x86_64', 'android'],
+    "windows_x86_64": ["windows_x86_64"],
+    "macos_x86_64": ["macos_x86_64", "macos_arm64", "ios"],
+    "macos_arm64": ["macos_x86_64", "macos_arm64", "ios"],
+    "ubuntu-20.04_x86_64": ["ubuntu-20.04_x86_64", "android"],
 }
 
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--debug", action='store_true')
-    parser.add_argument("--relwithdebinfo", action='store_true')
+    parser.add_argument("--debug", action="store_true")
+    parser.add_argument("--relwithdebinfo", action="store_true")
+    parser.add_argument("--webrtc-build-dir", type=os.path.abspath)
+    parser.add_argument("--webrtc-build-args", default="", type=shlex.split)
+    parser.add_argument("--sora-dir", type=os.path.abspath)
+    parser.add_argument("--sora-args", default="", type=shlex.split)
     parser.add_argument("target", choices=AVAILABLE_TARGETS)
 
     args = parser.parse_args()
@@ -707,132 +808,174 @@ def main():
     platform = args.target
     build_platform = get_build_platform()
     if build_platform not in BUILD_PLATFORM:
-        raise Exception(f'Build platform {build_platform} is not supported.')
+        raise Exception(f"Build platform {build_platform} is not supported.")
     if platform not in BUILD_PLATFORM[build_platform]:
         raise Exception(
-            f'Target {platform} is not supported on this build platform {build_platform}.')
+            f"Target {platform} is not supported on this build platform {build_platform}."
+        )
 
-    configuration_dir = 'debug' if args.debug else 'release'
-    source_dir = os.path.join(BASE_DIR, '_source', platform, configuration_dir)
-    build_dir = os.path.join(BASE_DIR, '_build', platform, configuration_dir)
-    install_dir = os.path.join(
-        BASE_DIR, '_install', platform, configuration_dir)
+    configuration_dir = "debug" if args.debug else "release"
+    source_dir = os.path.join(BASE_DIR, "_source", platform, configuration_dir)
+    build_dir = os.path.join(BASE_DIR, "_build", platform, configuration_dir)
+    install_dir = os.path.join(BASE_DIR, "_install", platform, configuration_dir)
     mkdir_p(source_dir)
     mkdir_p(build_dir)
     mkdir_p(install_dir)
 
-    install_deps(platform, build_platform, source_dir,
-                 build_dir, install_dir, args.debug)
+    install_deps(
+        platform,
+        build_platform,
+        source_dir,
+        build_dir,
+        install_dir,
+        args.debug,
+        args.webrtc_build_dir,
+        args.webrtc_build_args,
+        args.sora_dir,
+        args.sora_args,
+    )
 
     if args.debug:
-        configuration = 'Debug'
+        configuration = "Debug"
     elif args.relwithdebinfo:
-        configuration = 'RelWithDebInfo'
+        configuration = "RelWithDebInfo"
     else:
-        configuration = 'Release'
+        configuration = "Release"
 
-    unity_build_dir = os.path.join(build_dir, 'sora_unity_sdk')
+    unity_build_dir = os.path.join(build_dir, "sora_unity_sdk")
     mkdir_p(unity_build_dir)
     with cd(unity_build_dir):
-        webrtc_info = get_webrtc_info(
-            False, source_dir, build_dir, install_dir)
+        webrtc_info = get_webrtc_info(platform, args.webrtc_build_dir, install_dir, args.debug)
+        sora_info = get_sora_info(platform, args.sora_dir, install_dir, args.debug)
         webrtc_version = read_version_file(webrtc_info.version_file)
-        webrtc_commit = webrtc_version['WEBRTC_COMMIT']
+        webrtc_commit = webrtc_version["WEBRTC_COMMIT"]
         with cd(BASE_DIR):
-            version = read_version_file('VERSION')
-            sora_unity_sdk_version = version['SORA_UNITY_SDK_VERSION']
-            sora_unity_sdk_commit = cmdcap(['git', 'rev-parse', 'HEAD'])
-            android_native_api_level = version['ANDROID_NATIVE_API_LEVEL']
+            version = read_version_file("VERSION")
+            sora_unity_sdk_version = version["SORA_UNITY_SDK_VERSION"]
+            sora_unity_sdk_commit = cmdcap(["git", "rev-parse", "HEAD"])
+            android_native_api_level = version["ANDROID_NATIVE_API_LEVEL"]
 
         cmake_args = []
-        cmake_args.append(f'-DCMAKE_BUILD_TYPE={configuration}')
-        cmake_args.append(f'-DSORA_UNITY_SDK_PACKAGE={platform}')
-        cmake_args.append(f'-DSORA_UNITY_SDK_VERSION={sora_unity_sdk_version}')
-        cmake_args.append(f'-DSORA_UNITY_SDK_COMMIT={sora_unity_sdk_commit}')
-        cmake_args.append(
-            f"-DBOOST_ROOT={cmake_path(os.path.join(install_dir, 'boost'))}")
-        cmake_args.append(
-            f"-DLYRA_DIR={cmake_path(os.path.join(install_dir, 'lyra'))}")
-        cmake_args.append('-DWEBRTC_LIBRARY_NAME=webrtc')
-        cmake_args.append(
-            f"-DWEBRTC_INCLUDE_DIR={cmake_path(webrtc_info.webrtc_include_dir)}")
-        cmake_args.append(
-            f"-DWEBRTC_LIBRARY_DIR={cmake_path(webrtc_info.webrtc_library_dir)}")
+        cmake_args.append(f"-DCMAKE_BUILD_TYPE={configuration}")
+        cmake_args.append(f"-DSORA_UNITY_SDK_PACKAGE={platform}")
+        cmake_args.append(f"-DSORA_UNITY_SDK_VERSION={sora_unity_sdk_version}")
+        cmake_args.append(f"-DSORA_UNITY_SDK_COMMIT={sora_unity_sdk_commit}")
+        cmake_args.append(f"-DBOOST_ROOT={cmake_path(sora_info.boost_install_dir)}")
+        cmake_args.append("-DWEBRTC_LIBRARY_NAME=webrtc")
+        cmake_args.append(f"-DWEBRTC_INCLUDE_DIR={cmake_path(webrtc_info.webrtc_include_dir)}")
+        cmake_args.append(f"-DWEBRTC_LIBRARY_DIR={cmake_path(webrtc_info.webrtc_library_dir)}")
         cmake_args.append(f"-DWEBRTC_COMMIT={webrtc_commit}")
+        cmake_args.append(f"-DSORA_DIR={cmake_path(sora_info.sora_install_dir)}")
+        cmake_args.append(f"-DPROTOBUF_DIR={cmake_path(os.path.join(install_dir, 'protobuf'))}")
         cmake_args.append(
-            f"-DSORA_DIR={cmake_path(os.path.join(install_dir, 'sora'))}")
-        cmake_args.append(
-            f"-DPROTOBUF_DIR={cmake_path(os.path.join(install_dir, 'protobuf'))}")
-        cmake_args.append(
-            f"-DPROTOC_GEN_JSONIF_DIR={cmake_path(os.path.join(install_dir, 'protoc-gen-jsonif'))}")
-        if platform == 'windows_x86_64':
+            f"-DPROTOC_GEN_JSONIF_DIR={cmake_path(os.path.join(install_dir, 'protoc-gen-jsonif'))}"
+        )
+        if platform == "windows_x86_64":
             pass
-        elif platform in ('macos_x86_64', 'macos_arm64'):
-            sysroot = cmdcap(['xcrun', '--sdk', 'macosx', '--show-sdk-path'])
-            arch = 'x86_64' if platform == 'macos_x86_64' else 'arm64'
-            target = 'x86_64-apple-darwin' if platform == 'macos_x86_64' else 'arm64-apple-darwin'
-            cmake_args.append(f'-DCMAKE_SYSTEM_PROCESSOR={arch}')
-            cmake_args.append(f'-DCMAKE_OSX_ARCHITECTURES={arch}')
-            cmake_args.append(f'-DCMAKE_C_COMPILER_TARGET={target}')
-            cmake_args.append(f'-DCMAKE_CXX_COMPILER_TARGET={target}')
-            cmake_args.append(f'-DCMAKE_OBJCXX_COMPILER_TARGET={target}')
-            cmake_args.append(f'-DCMAKE_SYSROOT={sysroot}')
-        elif platform == 'ios':
-            cmake_args += ['-G', 'Xcode']
-            cmake_args.append('-DCMAKE_SYSTEM_NAME=iOS')
+        elif platform in ("macos_x86_64", "macos_arm64"):
+            sysroot = cmdcap(["xcrun", "--sdk", "macosx", "--show-sdk-path"])
+            arch = "x86_64" if platform == "macos_x86_64" else "arm64"
+            target = "x86_64-apple-darwin" if platform == "macos_x86_64" else "arm64-apple-darwin"
+            cmake_args.append(f"-DCMAKE_SYSTEM_PROCESSOR={arch}")
+            cmake_args.append(f"-DCMAKE_OSX_ARCHITECTURES={arch}")
+            cmake_args.append(f"-DCMAKE_C_COMPILER_TARGET={target}")
+            cmake_args.append(f"-DCMAKE_CXX_COMPILER_TARGET={target}")
+            cmake_args.append(f"-DCMAKE_OBJCXX_COMPILER_TARGET={target}")
+            cmake_args.append(f"-DCMAKE_SYSROOT={sysroot}")
+        elif platform == "ios":
+            cmake_args += ["-G", "Xcode"]
+            cmake_args.append("-DCMAKE_SYSTEM_NAME=iOS")
             cmake_args.append('-DCMAKE_OSX_ARCHITECTURES="x86_64;arm64"')
-            cmake_args.append('-DCMAKE_OSX_DEPLOYMENT_TARGET=13.0')
-            cmake_args.append('-DCMAKE_XCODE_ATTRIBUTE_ONLY_ACTIVE_ARCH=NO')
-        elif platform == 'android':
+            cmake_args.append("-DCMAKE_OSX_DEPLOYMENT_TARGET=13.0")
+            cmake_args.append("-DCMAKE_XCODE_ATTRIBUTE_ONLY_ACTIVE_ARCH=NO")
+        elif platform == "android":
             toolchain_file = os.path.join(
-                install_dir, 'android-ndk', 'build', 'cmake', 'android.toolchain.cmake')
+                install_dir, "android-ndk", "build", "cmake", "android.toolchain.cmake"
+            )
             cmake_args.append(f"-DCMAKE_TOOLCHAIN_FILE={toolchain_file}")
+            cmake_args.append(f"-DANDROID_PLATFORM=android-{android_native_api_level}")
+            cmake_args.append(f"-DANDROID_NATIVE_API_LEVEL={android_native_api_level}")
+            cmake_args.append("-DANDROID_ABI=arm64-v8a")
+            cmake_args.append("-DANDROID_STL=none")
             cmake_args.append(
-                f"-DANDROID_PLATFORM=android-{android_native_api_level}")
-            cmake_args.append(
-                f"-DANDROID_NATIVE_API_LEVEL={android_native_api_level}")
-            cmake_args.append('-DANDROID_ABI=arm64-v8a')
-            cmake_args.append('-DANDROID_STL=none')
-            cmake_args.append(
-                f"-DLIBCXX_INCLUDE_DIR={cmake_path(os.path.join(webrtc_info.libcxx_dir, 'include'))}")
-            cmake_args.append('-DANDROID_CPP_FEATURES=exceptions rtti')
+                f"-DLIBCXX_INCLUDE_DIR={cmake_path(os.path.join(webrtc_info.libcxx_dir, 'include'))}"
+            )
+            cmake_args.append("-DANDROID_CPP_FEATURES=exceptions rtti")
             # r23b には ANDROID_CPP_FEATURES=exceptions でも例外が設定されない問題がある
             # https://github.com/android/ndk/issues/1618
-            cmake_args.append('-DCMAKE_ANDROID_EXCEPTIONS=ON')
-        elif platform == 'ubuntu-20.04_x86_64':
+            cmake_args.append("-DCMAKE_ANDROID_EXCEPTIONS=ON")
+        elif platform == "ubuntu-20.04_x86_64":
             cmake_args.append(
-                f"-DCMAKE_C_COMPILER={os.path.join(webrtc_info.clang_dir, 'bin', 'clang')}")
+                f"-DCMAKE_C_COMPILER={os.path.join(webrtc_info.clang_dir, 'bin', 'clang')}"
+            )
             cmake_args.append(
-                f"-DCMAKE_CXX_COMPILER={os.path.join(webrtc_info.clang_dir, 'bin', 'clang++')}")
+                f"-DCMAKE_CXX_COMPILER={os.path.join(webrtc_info.clang_dir, 'bin', 'clang++')}"
+            )
             cmake_args.append(
-                f"-DLIBCXX_INCLUDE_DIR={cmake_path(os.path.join(webrtc_info.libcxx_dir, 'include'))}")
+                f"-DLIBCXX_INCLUDE_DIR={cmake_path(os.path.join(webrtc_info.libcxx_dir, 'include'))}"
+            )
         else:
-            raise Exception(f'Platform {platform} not supported.')
+            raise Exception(f"Platform {platform} not supported.")
 
-        cmd(['cmake', BASE_DIR, *cmake_args])
+        cmd(["cmake", BASE_DIR, *cmake_args])
 
-        if platform == 'ios':
-            cmd(['cmake', '--build', '.', f'-j{multiprocessing.cpu_count()}',
-                 '--config', configuration,
-                 '--target', 'SoraUnitySdk',
-                 '--',
-                 '-arch', 'x86_64',
-                 '-sdk', 'iphonesimulator'])
-            cmd(['cmake', '--build', '.', f'-j{multiprocessing.cpu_count()}',
-                 '--config', configuration,
-                 '--target', 'SoraUnitySdk',
-                 '--',
-                 '-arch', 'arm64',
-                 '-sdk', 'iphoneos'])
-            cmd(['lipo', '-create',
-                 '-output', os.path.join(unity_build_dir, 'libSoraUnitySdk.a'),
-                 os.path.join(unity_build_dir,
-                              'Release-iphonesimulator', 'libSoraUnitySdk.a'),
-                 os.path.join(unity_build_dir, 'Release-iphoneos', 'libSoraUnitySdk.a')])
+        if platform == "ios":
+            cmd(
+                [
+                    "cmake",
+                    "--build",
+                    ".",
+                    f"-j{multiprocessing.cpu_count()}",
+                    "--config",
+                    configuration,
+                    "--target",
+                    "SoraUnitySdk",
+                    "--",
+                    "-arch",
+                    "x86_64",
+                    "-sdk",
+                    "iphonesimulator",
+                ]
+            )
+            cmd(
+                [
+                    "cmake",
+                    "--build",
+                    ".",
+                    f"-j{multiprocessing.cpu_count()}",
+                    "--config",
+                    configuration,
+                    "--target",
+                    "SoraUnitySdk",
+                    "--",
+                    "-arch",
+                    "arm64",
+                    "-sdk",
+                    "iphoneos",
+                ]
+            )
+            cmd(
+                [
+                    "lipo",
+                    "-create",
+                    "-output",
+                    os.path.join(unity_build_dir, "libSoraUnitySdk.a"),
+                    os.path.join(unity_build_dir, "Release-iphonesimulator", "libSoraUnitySdk.a"),
+                    os.path.join(unity_build_dir, "Release-iphoneos", "libSoraUnitySdk.a"),
+                ]
+            )
         else:
-            cmd(['cmake', '--build', '.',
-                f'-j{multiprocessing.cpu_count()}', '--config', configuration])
+            cmd(
+                [
+                    "cmake",
+                    "--build",
+                    ".",
+                    f"-j{multiprocessing.cpu_count()}",
+                    "--config",
+                    configuration,
+                ]
+            )
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
