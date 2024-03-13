@@ -27,12 +27,12 @@
     - AudioOutputHelper(Action onChangeRoute) から AudioOutputHelperFactory.create(Action onChangeRoute) に変更
     - Sora.AudioOutputHelper は interface となるため Sora.IAudioOutputHelper に変更
   - @tnoho
-- [UPDATE] Sora C++ SDK を `2024.3.1` に上げる
+- [UPDATE] Sora C++ SDK を `2024.4.0` に上げる
   - Sora C++ SDK 2024.3.1 アップデート時に関連するライブラリもアップデート
   - WEBRTC_BUILD_VERSION を `m121.6167.3.0` にアップデート
   - BOOST_VERSION を 1.84.0 にアップデート
   - CMAKE_VERSION を 3.28.1 にアップデート
-  - @melpon @miosakuma
+  - @melpon @miosakuma @torikizi
 - [ADD] Android 向けのハンズフリー機能を追加
   - `Sora.cs` に Android 向けのハンズフリー機能を追加
   - iOS と同様に Android でもハンズフリー機能の利用を可能にする
