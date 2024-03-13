@@ -11,6 +11,8 @@
 
 ## develop
 
+## 2024.2.0 (2024-03-13)
+
 - [CHANGE] Lyra を削除
   - Sora.Config から AudioCodecLyraBitrate を削除
   - Sora.Config から AudioCodecLyraUsedtx を削除
