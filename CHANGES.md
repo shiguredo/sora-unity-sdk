@@ -11,6 +11,13 @@
 
 ## develop
 
+- [CHANGE] Node.js 16 の Deprecated に伴うアップデート
+  - Node.js 16 が Deprecated ことにより Actions でワーニングが出力されていたため各種バージョンをアップデート
+    - actions/cache@v3 から actions/cache@v4 に変更
+    - actions/upload-artifact@v3 から actions/upload-artifact@v4 に変更
+    - actions/download-artifact@v3 から actions/download-artifact@v4 に変更
+  - @torikizi
+
 ## 2024.2.0 (2024-03-13)
 
 - [CHANGE] Lyra を削除
