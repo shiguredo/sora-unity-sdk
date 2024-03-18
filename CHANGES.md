@@ -11,6 +11,13 @@
 
 ## develop
 
+- [UPDATE] Github Actions の actions/cache , actions/upload-artifact , actions/download-artifact をアップデート
+  - Node.js 16 の Deprecated に伴うアップデート
+    - actions/cache@v3 から actions/cache@v4 にアップデート
+    - actions/upload-artifact@v3 から actions/upload-artifact@v4 にアップデート
+    - actions/download-artifact@v3 から actions/download-artifact@v4 にアップデート
+  - @torikizi
+
 ## 2024.2.0 (2024-03-13)
 
 - [CHANGE] Lyra を削除
