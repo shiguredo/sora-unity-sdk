@@ -128,6 +128,10 @@ Please read https://github.com/shiguredo/oss/blob/master/README.en.md before use
   - [KDDI株式会社](https://www.kddi.com/) 様
 - マイクやカメラ等のメディアデバイスをつかまないようにする機能
   - [KDDI株式会社](https://www.kddi.com/) 様
+- Android 向け音声出力先変更機能
+  - [KDDI株式会社](https://www.kddi.com/) 様
+- Android 向け音声デバイス切り替え対応
+  - [KDDI株式会社](https://www.kddi.com/) 様
 
 ## 有償での優先実装が可能な機能一覧
 
@@ -138,6 +142,8 @@ Please read https://github.com/shiguredo/oss/blob/master/README.en.md before use
   - 公開が難しい場合は `企業名非公開` と書かせていただきます
 
 ### 機能
+
+**こちらに掲載していない機能でも対応できる場合がありますのでまずはお問い合わせください**
 
 - サイマルキャスト rid 指定対応
 - iOS, Android 以外の音声出力先変更機能
