@@ -450,6 +450,16 @@ def install_llvm(
             os.path.join(llvm_dir, "libcxx", "include", "__config_site"),
         )
 
+        # __assertion_handler をコピーする
+        # 背景: https://source.chromium.org/chromium/_/chromium/external/github.com/llvm/llvm-project/libcxx.git/+/1e5bda0d1ce8e346955aa4a85eaab258785f11f7
+        shutil.copyfile(
+            # NOTE(enm10k): 最初は default_assertion_handler.in をコピーしていたが、 buildtools 以下に
+            # default_assertion_handler.in から生成されたと思われる __assertion_handler が存在するため、それをコピーする
+            # os.path.join(llvm_dir, "libcxx", "vendor", "llvm", "default_assertion_handler.in"),
+            os.path.join(llvm_dir, "buildtools", "third_party", "libc++", "__assertion_handler"),
+            os.path.join(llvm_dir, "libcxx", "include", "__assertion_handler"),
+        )
+
 
 @versioned
 def install_boost(version, source_dir, install_dir, sora_version, platform: str):
