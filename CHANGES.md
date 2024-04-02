@@ -14,6 +14,8 @@
 - [UPDATE] libwebrtc を `m122.6261.1.0` にあげる
   - Ubuntu のビルドを通すために、 __assertion_handler というファイルをコピーする処理を追加した
   - @miosakuma
+- [UPDATE] run.py に定義されていた関数を buildbase.py に移動する
+  - @melpon
 
 ## 2024.2.0 (2024-03-13)
 
