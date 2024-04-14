@@ -92,7 +92,7 @@ jobs:
         name:
           - android
           - ubuntu-20.04_x86_64
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     steps:
     - uses: actions/checkout@v4
     - name: Cache
@@ -135,7 +135,7 @@ jobs:
         name: ubuntu-20.04_x86_64
         path: ubuntu-20.04_x86_64/
   package:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     needs:
       - build-windows
       - build-macos
