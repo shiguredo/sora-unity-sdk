@@ -1,6 +1,6 @@
 # Sora Unity SDK
 
-[![libwebrtc](https://img.shields.io/badge/libwebrtc-121.6167-blue.svg)](https://chromium.googlesource.com/external/webrtc/+/branch-heads/6167)
+[![libwebrtc](https://img.shields.io/badge/libwebrtc-122.6261-blue.svg)](https://chromium.googlesource.com/external/webrtc/+/branch-heads/6261)
 [![GitHub tag](https://img.shields.io/github/tag/shiguredo/sora-unity-sdk.svg)](https://github.com/shiguredo/sora-unity-sdk)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Actions Status](https://github.com/shiguredo/sora-unity-sdk/workflows/build/badge.svg)](https://github.com/shiguredo/sora-unity-sdk/actions)
@@ -46,6 +46,7 @@ Please read https://github.com/shiguredo/oss/blob/master/README.en.md before use
 - Android 7 以降
 - iOS 13 以降
 - Ubuntu 20.04 x86_64
+- Ubuntu 22.04 x86_64
 
 ## 対応機能
 

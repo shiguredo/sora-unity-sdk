@@ -23,6 +23,9 @@
     - actions/upload-artifact@v3 から actions/upload-artifact@v4 にアップデート
     - actions/download-artifact@v3 から actions/download-artifact@v4 にアップデート
   - @torikizi
+- [UPDATE] 対応プラットフォームに Ubuntu 22.04 x86_64 を追加する
+  - コード変更はなし、Ubuntu 20.04 版の Unity SDK で Ubuntu 22.04 も動作することを確認した
+  - @torikizi
 
 ## 2024.2.0 (2024-03-13)
 
