@@ -11,9 +11,10 @@
 
 ## develop
 
-- [UPDATE] libwebrtc を `m122.6261.1.0` にあげる
-  - Ubuntu のビルドを通すために、 __assertion_handler というファイルをコピーする処理を追加した
-  - @miosakuma
+- [UPDATE] Sora C++ SDK を `2024.6.1` に上げる
+  - WEBRTC_BUILD_VERSION を `m122.6261.1.0` にあげる
+    - Ubuntu のビルドを通すために、 __assertion_handler というファイルをコピーする処理を追加した
+  - @miosakuma @torikizi
 - [UPDATE] run.py に定義されていた関数を buildbase.py に移動する
   - @melpon
 - [UPDATE] Github Actions の actions/cache , actions/upload-artifact , actions/download-artifact をアップデート
