@@ -14,6 +14,7 @@
 ## 2024.3.0 (2024-04-18)
 
 - [UPDATE] Sora C++ SDK を `2024.6.1` に上げる
+  - Intel VPL H.265 対応（ Windows, Ubuntu 22.04 ）
   - WEBRTC_BUILD_VERSION を `m122.6261.1.0` にあげる
     - Ubuntu のビルドを通すために、 __assertion_handler というファイルをコピーする処理を追加した
   - @miosakuma @torikizi
