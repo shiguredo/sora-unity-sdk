@@ -11,6 +11,8 @@
 
 ## develop
 
+## 2024.3.0 (2024-04-18)
+
 - [UPDATE] Sora C++ SDK を `2024.6.1` に上げる
   - WEBRTC_BUILD_VERSION を `m122.6261.1.0` にあげる
     - Ubuntu のビルドを通すために、 __assertion_handler というファイルをコピーする処理を追加した
