@@ -11,6 +11,24 @@
 
 ## develop
 
+## 2024.3.0 (2024-04-18)
+
+- [UPDATE] Sora C++ SDK を `2024.6.1` に上げる
+  - WEBRTC_BUILD_VERSION を `m122.6261.1.0` にあげる
+    - Ubuntu のビルドを通すために、 __assertion_handler というファイルをコピーする処理を追加した
+  - @miosakuma @torikizi
+- [UPDATE] run.py に定義されていた関数を buildbase.py に移動する
+  - @melpon
+- [UPDATE] Github Actions の actions/cache , actions/upload-artifact , actions/download-artifact をアップデート
+  - Node.js 16 の Deprecated に伴うアップデート
+    - actions/cache@v3 から actions/cache@v4 にアップデート
+    - actions/upload-artifact@v3 から actions/upload-artifact@v4 にアップデート
+    - actions/download-artifact@v3 から actions/download-artifact@v4 にアップデート
+  - @torikizi
+- [UPDATE] 対応プラットフォームに Ubuntu 22.04 x86_64 を追加する
+  - コード変更はなし、Ubuntu 20.04 版の Unity SDK で Ubuntu 22.04 も動作することを確認した
+  - @torikizi
+
 ## 2024.2.0 (2024-03-13)
 
 - [CHANGE] Lyra を削除

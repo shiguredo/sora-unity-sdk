@@ -1,6 +1,6 @@
 # Sora Unity SDK
 
-[![libwebrtc](https://img.shields.io/badge/libwebrtc-121.6167-blue.svg)](https://chromium.googlesource.com/external/webrtc/+/branch-heads/6167)
+[![libwebrtc](https://img.shields.io/badge/libwebrtc-122.6261-blue.svg)](https://chromium.googlesource.com/external/webrtc/+/branch-heads/6261)
 [![GitHub tag](https://img.shields.io/github/tag/shiguredo/sora-unity-sdk.svg)](https://github.com/shiguredo/sora-unity-sdk)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Actions Status](https://github.com/shiguredo/sora-unity-sdk/workflows/build/badge.svg)](https://github.com/shiguredo/sora-unity-sdk/actions)
@@ -46,6 +46,7 @@ Please read https://github.com/shiguredo/oss/blob/master/README.en.md before use
 - Android 7 以降
 - iOS 13 以降
 - Ubuntu 20.04 x86_64
+- Ubuntu 22.04 x86_64
 
 ## 対応機能
 
@@ -57,6 +58,7 @@ Please read https://github.com/shiguredo/oss/blob/master/README.en.md before use
 - Android OpenGL ES への対応
 - iOS 対応
 - Ubuntu 20.04 への対応
+- Ubuntu 22.04 への対応
 - SRTP/SRTCP の AES-GCM 対応
 - Unity のカメラ映像を取得し Sora で送信
 - カメラから映像を取得し Sora に送信
@@ -128,6 +130,10 @@ Please read https://github.com/shiguredo/oss/blob/master/README.en.md before use
   - [KDDI株式会社](https://www.kddi.com/) 様
 - マイクやカメラ等のメディアデバイスをつかまないようにする機能
   - [KDDI株式会社](https://www.kddi.com/) 様
+- Android 向け音声出力先変更機能
+  - [KDDI株式会社](https://www.kddi.com/) 様
+- Android 向け音声デバイス切り替え対応
+  - [KDDI株式会社](https://www.kddi.com/) 様
 
 ## 有償での優先実装が可能な機能一覧
 
@@ -138,6 +144,8 @@ Please read https://github.com/shiguredo/oss/blob/master/README.en.md before use
   - 公開が難しい場合は `企業名非公開` と書かせていただきます
 
 ### 機能
+
+**こちらに掲載していない機能でも対応できる場合がありますのでまずはお問い合わせください**
 
 - サイマルキャスト rid 指定対応
 - iOS, Android 以外の音声出力先変更機能
