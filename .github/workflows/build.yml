@@ -15,7 +15,7 @@ jobs:
       matrix:
         name:
           - windows_x86_64
-    runs-on: windows-2019
+    runs-on: windows-2022
     steps:
     - uses: actions/checkout@v4
     - name: Cache
