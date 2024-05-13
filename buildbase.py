@@ -433,19 +433,19 @@ def install_webrtc(version, source_dir, install_dir, platform: str):
     extract(archive, output_dir=install_dir, output_dirname="webrtc")
 
 
-def build_webrtc(platform, webrtc_build_dir, webrtc_build_args, debug):
-    with cd(webrtc_build_dir):
+def build_webrtc(platform, local_webrtc_build_dir, local_webrtc_build_args, debug):
+    with cd(local_webrtc_build_dir):
         args = ["--webrtc-nobuild-ios-framework", "--webrtc-nobuild-android-aar"]
         if debug:
             args += ["--debug"]
 
-        args += webrtc_build_args
+        args += local_webrtc_build_args
 
         cmd(["python3", "run.py", "build", platform, *args])
 
         # インクルードディレクトリを増やしたくないので、
         # __config_site を libc++ のディレクトリにコピーしておく
-        webrtc_source_dir = os.path.join(webrtc_build_dir, "_source", platform, "webrtc")
+        webrtc_source_dir = os.path.join(local_webrtc_build_dir, "_source", platform, "webrtc")
         src_config = os.path.join(
             webrtc_source_dir, "src", "buildtools", "third_party", "libc++", "__config_site"
         )
@@ -486,11 +486,11 @@ class WebrtcInfo(NamedTuple):
 
 
 def get_webrtc_info(
-    platform: str, webrtc_build_dir: Optional[str], install_dir: str, debug: bool
+    platform: str, local_webrtc_build_dir: Optional[str], install_dir: str, debug: bool
 ) -> WebrtcInfo:
     webrtc_install_dir = os.path.join(install_dir, "webrtc")
 
-    if webrtc_build_dir is None:
+    if local_webrtc_build_dir is None:
         return WebrtcInfo(
             version_file=os.path.join(webrtc_install_dir, "VERSIONS"),
             deps_file=os.path.join(webrtc_install_dir, "DEPS"),
@@ -501,15 +501,17 @@ def get_webrtc_info(
             libcxx_dir=os.path.join(install_dir, "llvm", "libcxx"),
         )
     else:
-        webrtc_build_source_dir = os.path.join(webrtc_build_dir, "_source", platform, "webrtc")
+        webrtc_build_source_dir = os.path.join(
+            local_webrtc_build_dir, "_source", platform, "webrtc"
+        )
         configuration = "debug" if debug else "release"
         webrtc_build_build_dir = os.path.join(
-            webrtc_build_dir, "_build", platform, configuration, "webrtc"
+            local_webrtc_build_dir, "_build", platform, configuration, "webrtc"
         )
 
         return WebrtcInfo(
-            version_file=os.path.join(webrtc_build_dir, "VERSION"),
-            deps_file=os.path.join(webrtc_build_dir, "DEPS"),
+            version_file=os.path.join(local_webrtc_build_dir, "VERSION"),
+            deps_file=os.path.join(local_webrtc_build_dir, "DEPS"),
             webrtc_include_dir=os.path.join(webrtc_build_source_dir, "src"),
             webrtc_source_dir=os.path.join(webrtc_build_source_dir, "src"),
             webrtc_library_dir=webrtc_build_build_dir,
@@ -749,15 +751,23 @@ def install_sora_and_deps(platform: str, source_dir: str, install_dir: str):
 
 
 def build_sora(
-    platform: str, sora_dir: str, sora_args: List[str], debug: bool, webrtc_build_dir: Optional[str]
+    platform: str,
+    local_sora_cpp_sdk_dir: str,
+    local_sora_cpp_sdk_args: List[str],
+    debug: bool,
+    local_webrtc_build_dir: Optional[str],
 ):
-    if debug and "--debug" not in sora_args:
-        sora_args = ["--debug", *sora_args]
-    if webrtc_build_dir is not None:
-        sora_args = ["--webrtc-build-dir", webrtc_build_dir, *sora_args]
+    if debug and "--debug" not in local_sora_cpp_sdk_args:
+        local_sora_cpp_sdk_args = ["--debug", *local_sora_cpp_sdk_args]
+    if local_webrtc_build_dir is not None:
+        local_sora_cpp_sdk_args = [
+            "--local-webrtc-build-dir",
+            local_webrtc_build_dir,
+            *local_sora_cpp_sdk_args,
+        ]
 
-    with cd(sora_dir):
-        cmd(["python3", "run.py", platform, *sora_args])
+    with cd(local_sora_cpp_sdk_dir):
+        cmd(["python3", "run.py", platform, *local_sora_cpp_sdk_args])
 
 
 class SoraInfo(NamedTuple):
@@ -766,11 +776,11 @@ class SoraInfo(NamedTuple):
 
 
 def get_sora_info(
-    platform: str, sora_dir: Optional[str], install_dir: str, debug: bool
+    platform: str, local_sora_cpp_sdk_dir: Optional[str], install_dir: str, debug: bool
 ) -> SoraInfo:
-    if sora_dir is not None:
+    if local_sora_cpp_sdk_dir is not None:
         configuration = "debug" if debug else "release"
-        install_dir = os.path.join(sora_dir, "_install", platform, configuration)
+        install_dir = os.path.join(local_sora_cpp_sdk_dir, "_install", platform, configuration)
 
     return SoraInfo(
         sora_install_dir=os.path.join(install_dir, "sora"),
@@ -1497,32 +1507,32 @@ def get_webrtc_platform(platform: Platform) -> str:
 # `--sora-args '--test'` のようにスペースを使うと、ハイフンから始まるオプションが正しく解釈されない
 def add_sora_arguments(parser):
     parser.add_argument(
-        "--sora-dir",
+        "--local-sora-cpp-sdk-dir",
         type=os.path.abspath,
         default=None,
         help="Refer to local Sora C++ SDK. "
         "When this option is specified, Sora C++ SDK will also be built.",
     )
     parser.add_argument(
-        "--sora-args",
+        "--local-sora-cpp-sdk-args",
         type=shlex.split,
         default=[],
-        help="Options for building local Sora C++ SDK when `--sora-dir` is specified.",
+        help="Options for building local Sora C++ SDK when `--local-sora-cpp-sdk-dir` is specified.",
     )
 
 
 # add_sora_arguments と同様の注意点があるので注意すること
 def add_webrtc_build_arguments(parser):
     parser.add_argument(
-        "--webrtc-build-dir",
+        "--local-webrtc-build-dir",
         type=os.path.abspath,
         default=None,
         help="Refer to local webrtc-build. "
         "When this option is specified, webrtc-build will also be built.",
     )
     parser.add_argument(
-        "--webrtc-build-args",
+        "--local-webrtc-build-args",
         type=shlex.split,
         default=[],
-        help="Options for building local webrtc-build when `--webrtc-build-dir` is specified.",
+        help="Options for building local webrtc-build when `--local-webrtc-build-dir` is specified.",
     )
