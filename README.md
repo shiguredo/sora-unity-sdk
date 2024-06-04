@@ -102,7 +102,7 @@ Please read https://github.com/shiguredo/oss/blob/master/README.en.md before use
 - マイクやカメラ等のメディアデバイスをつかまないようにする機能
 - 接続確立後のカメラ切り替え機能
 
-## Sora Unity SDK for MS Hololens2
+## Sora Unity SDK for MS HoloLens 2
 
 - Discord でのお問い合わせはお受けしておりません
 - [support/hololens2](https://github.com/shiguredo/sora-unity-sdk/tree/support/hololens2) ブランチの修正や改善は有償でお受けしています
