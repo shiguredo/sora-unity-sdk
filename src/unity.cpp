@@ -10,7 +10,7 @@
 #include "unity_context.h"
 
 #if defined(SORA_UNITY_SDK_WINDOWS) || defined(SORA_UNITY_SDK_UBUNTU)
-#include <sora/hwenc_nvcodec/nvcodec_h264_encoder.h>
+#include <sora/hwenc_nvcodec/nvcodec_video_encoder.h>
 #include <sora/hwenc_nvcodec/nvcodec_video_decoder.h>
 #endif
 
