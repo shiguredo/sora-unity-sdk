@@ -218,9 +218,9 @@ unity_bool_t sora_device_enum_audio_playout(device_enum_cb_t f,
 unity_bool_t sora_is_h264_supported() {
 #if defined(SORA_UNITY_SDK_WINDOWS) || defined(SORA_UNITY_SDK_UBUNTU)
   auto context = sora::CudaContext::Create();
-  return sora::NvCodecVideoEncoder::IsSupported(context) &&
-         sora::NvCodecVideoDecoder::IsSupported(context,
-                                                sora::CudaVideoCodec::H264);
+  auto codec = sora::CudaVideoCodec::H264;
+  return sora::NvCodecVideoEncoder::IsSupported(context, codec) &&
+         sora::NvCodecVideoDecoder::IsSupported(context, codec);
 #elif defined(SORA_UNITY_SDK_MACOS) || defined(SORA_UNITY_SDK_IOS)
   // macOS, iOS は VideoToolbox が使えるので常に true
   return true;
