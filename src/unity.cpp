@@ -218,7 +218,7 @@ unity_bool_t sora_device_enum_audio_playout(device_enum_cb_t f,
 unity_bool_t sora_is_h264_supported() {
 #if defined(SORA_UNITY_SDK_WINDOWS) || defined(SORA_UNITY_SDK_UBUNTU)
   auto context = sora::CudaContext::Create();
-  return sora::NvCodecH264Encoder::IsSupported(context) &&
+  return sora::NvCodecVideoEncoder::IsSupported(context) &&
          sora::NvCodecVideoDecoder::IsSupported(context,
                                                 sora::CudaVideoCodec::H264);
 #elif defined(SORA_UNITY_SDK_MACOS) || defined(SORA_UNITY_SDK_IOS)
