@@ -209,6 +209,9 @@ elseif (SORA_UNITY_SDK_PACKAGE STREQUAL "ios")
 
 elseif (SORA_UNITY_SDK_PACKAGE STREQUAL "android")
 
+  # ref: https://github.com/shiguredo/sora-cpp-sdk/blob/bfb7ed87f4d4c08212115dce00f4be6629ea65d4/test/android/app/src/main/cpp/CMakeLists.txt#L48-L56
+  set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -B ${CLANG_DIR}/bin")
+
   find_library(ANDROID_LIB_LOG log)
   find_library(ANDROID_LIB_ANDROID android)
   find_library(ANDROID_LIB_OPENSLES OpenSLES)

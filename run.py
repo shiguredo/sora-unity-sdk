@@ -307,6 +307,7 @@ def main():
         cmake_args.append(f"-DWEBRTC_LIBRARY_DIR={cmake_path(webrtc_info.webrtc_library_dir)}")
         cmake_args.append(f"-DWEBRTC_COMMIT={webrtc_commit}")
         cmake_args.append(f"-DSORA_DIR={cmake_path(sora_info.sora_install_dir)}")
+        cmake_args.append(f"-DCLANG_DIR={cmake_path(os.path.join(webrtc_info.clang_dir))}")
         cmake_args.append(f"-DPROTOBUF_DIR={cmake_path(os.path.join(install_dir, 'protobuf'))}")
         cmake_args.append(
             f"-DPROTOC_GEN_JSONIF_DIR={cmake_path(os.path.join(install_dir, 'protoc-gen-jsonif'))}"
