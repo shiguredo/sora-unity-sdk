@@ -484,6 +484,8 @@ void Sora::DoConnect(const sora_conf::internal::ConnectConfig& cc,
         sora_context_->signaling_thread()->BlockingCall([this]() {
           return sora_context_->connection_context()->default_socket_factory();
         });
+    config.user_agent = boost::optional<std::string>(
+        "Mozilla 5.0 (Sora Unity SDK/" SORA_UNITY_SDK_VERSION ")");
 
     signaling_ = sora::SoraSignaling::Create(std::move(config));
     signaling_->Connect();
