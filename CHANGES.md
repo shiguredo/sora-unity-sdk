@@ -15,6 +15,9 @@
   - @melpon
 - [CHANGE] `--webrtc-build-dir`, `--webrtc-build-args` を `--local-webrtc-build-dir` と `--local-webrtc-build-args` に変更する
   - @melpon
+- [ADD] Ubuntu 22.04 でのビルドに対応する
+  - 単にローカルビルド可能にしただけで、リリースには含めていない
+  - @melpon
 
 ## 2024.3.0 (2024-04-18)
 
