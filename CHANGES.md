@@ -15,6 +15,8 @@
   - @melpon
 - [CHANGE] `--webrtc-build-dir`, `--webrtc-build-args` を `--local-webrtc-build-dir` と `--local-webrtc-build-args` に変更する
   - @melpon
+- [CHANGE] Sora C++ SDK の変更に合わせて H.264 専用となっていた `NvCodecH264Encoder` を `NvCodecVideoEncoder` に変更する
+  - @torikizi
 - [UPDATE] Sora C++ SDK を `2024.7.0-canary.8` に上げる
   - WEBRTC_BUILD_VERSION を `m127.6533.1.1` にアップデート
   - BOOST_VERSION を 1.85.0 にアップデート
