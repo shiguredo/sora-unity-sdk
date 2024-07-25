@@ -15,8 +15,17 @@
   - @melpon
 - [CHANGE] `--webrtc-build-dir`, `--webrtc-build-args` を `--local-webrtc-build-dir` と `--local-webrtc-build-args` に変更する
   - @melpon
+- [UPDATE] Sora C++ SDK を `2024.7.0-canary.8` に上げる
+  - WEBRTC_BUILD_VERSION を `m127.6533.1.1` にアップデート
+  - BOOST_VERSION を 1.85.0 にアップデート
+  - CMAKE_VERSION を 3.29.6 にアップデート
+  - @melpon @torikizi
+- [UPDATE] Github Actions で利用する Windows を 2022 にあげる
+  - @torikizi
 - [ADD] Ubuntu 22.04 でのビルドに対応する
   - 単にローカルビルド可能にしただけで、リリースには含めていない
+  - @melpon
+- [ADD] WebSocket での接続時に User-Agent を設定する
   - @melpon
 
 ## 2024.3.0 (2024-04-18)
