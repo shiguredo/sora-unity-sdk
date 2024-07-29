@@ -12,7 +12,6 @@
 #undef JNIEXPORT
 #define JNIEXPORT __attribute__((visibility("default")))
 
-#include "examples/unityplugin/class_reference_holder.h"
 #include "rtc_base/logging.h"
 #include "rtc_base/ssl_adapter.h"
 #include "sdk/android/native_api/jni/class_loader.h"

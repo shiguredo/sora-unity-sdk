@@ -40,10 +40,10 @@ def install_deps(
     build_dir,
     install_dir,
     debug,
-    webrtc_build_dir: Optional[str],
-    webrtc_build_args: List[str],
-    sora_dir: Optional[str],
-    sora_args: List[str],
+    local_webrtc_build_dir: Optional[str],
+    local_webrtc_build_args: List[str],
+    local_sora_cpp_sdk_dir: Optional[str],
+    local_sora_cpp_sdk_args: List[str],
 ):
     with cd(BASE_DIR):
         version = read_version_file("VERSION")
@@ -59,7 +59,7 @@ def install_deps(
             install_android_ndk(**install_android_ndk_args)
 
         # WebRTC
-        if webrtc_build_dir is None:
+        if local_webrtc_build_dir is None:
             install_webrtc_args = {
                 "version": version["WEBRTC_BUILD_VERSION"],
                 "version_file": os.path.join(install_dir, "webrtc.version"),
@@ -71,13 +71,13 @@ def install_deps(
         else:
             build_webrtc_args = {
                 "platform": platform,
-                "webrtc_build_dir": webrtc_build_dir,
-                "webrtc_build_args": webrtc_build_args,
+                "local_webrtc_build_dir": local_webrtc_build_dir,
+                "local_webrtc_build_args": local_webrtc_build_args,
                 "debug": debug,
             }
             build_webrtc(**build_webrtc_args)
 
-        webrtc_info = get_webrtc_info(platform, webrtc_build_dir, install_dir, debug)
+        webrtc_info = get_webrtc_info(platform, local_webrtc_build_dir, install_dir, debug)
 
         # Windows は MSVC を使うので不要
         # macOS と iOS は Apple Clang を使うので不要
@@ -85,7 +85,7 @@ def install_deps(
         # webrtc-build をソースビルドしてる場合は既にローカルにあるので不要
         if (
             platform not in ("windows_x86_64", "macos_x86_64", "macos_arm64", "ios")
-            and webrtc_build_dir is None
+            and local_webrtc_build_dir is None
         ):
             webrtc_version = read_version_file(webrtc_info.version_file)
 
@@ -125,7 +125,7 @@ def install_deps(
             install_cmake_args["ext"] = "zip"
         elif build_platform in ("macos_x86_64", "macos_arm64"):
             install_cmake_args["platform"] = "macos-universal"
-        elif build_platform == "ubuntu-20.04_x86_64":
+        elif build_platform in ("ubuntu-20.04_x86_64", "ubuntu-22.04_x86_64"):
             install_cmake_args["platform"] = "linux-x86_64"
         else:
             raise Exception("Failed to install CMake")
@@ -137,10 +137,16 @@ def install_deps(
             add_path(os.path.join(install_dir, "cmake", "bin"))
 
         # Sora C++ SDK
-        if sora_dir is None:
+        if local_sora_cpp_sdk_dir is None:
             install_sora_and_deps(platform, source_dir, install_dir)
         else:
-            build_sora(platform, sora_dir, sora_args, debug, webrtc_build_dir)
+            build_sora(
+                platform,
+                local_sora_cpp_sdk_dir,
+                local_sora_cpp_sdk_args,
+                debug,
+                local_webrtc_build_dir,
+            )
 
         # protobuf
         install_protobuf_args = {
@@ -154,7 +160,7 @@ def install_deps(
             install_protobuf_args["platform"] = "win64"
         elif build_platform in ("macos_x86_64", "macos_arm64"):
             install_protobuf_args["platform"] = "osx-universal_binary"
-        elif build_platform == "ubuntu-20.04_x86_64":
+        elif build_platform in ("ubuntu-20.04_x86_64", "ubuntu-22.04_x86_64"):
             install_protobuf_args["platform"] = "linux-x86_64"
         else:
             raise Exception("Failed to install Protobuf")
@@ -174,7 +180,7 @@ def install_deps(
             install_jsonif_args["platform"] = "darwin-amd64"
         elif build_platform == "macos_arm64":
             install_jsonif_args["platform"] = "darwin-arm64"
-        elif build_platform == "ubuntu-20.04_x86_64":
+        elif build_platform in ("ubuntu-20.04_x86_64", "ubuntu-22.04_x86_64"):
             install_jsonif_args["platform"] = "linux-amd64"
         else:
             raise Exception("Failed to install protoc-gen-jsonif")
@@ -208,6 +214,11 @@ def get_build_platform():
                     return "ubuntu-20.04_x86_64"
                 else:
                     raise Exception("Unknown ubuntu arch")
+            elif osver == "22.04":
+                if arch == "x86_64":
+                    return "ubuntu-22.04_x86_64"
+                else:
+                    raise Exception("Unknown ubuntu arch")
             else:
                 raise Exception("Unexpected Ubuntu version")
         else:
@@ -216,13 +227,14 @@ def get_build_platform():
         raise Exception(f"OS {os} not supported")
 
 
-AVAILABLE_TARGETS = ["windows_x86_64", "macos_arm64", "ubuntu-20.04_x86_64", "ios", "android"]
+AVAILABLE_TARGETS = ["windows_x86_64", "macos_arm64", "ubuntu-20.04_x86_64", "ubuntu-22.04_x86_64", "ios", "android"]
 
 BUILD_PLATFORM = {
     "windows_x86_64": ["windows_x86_64"],
     "macos_x86_64": ["macos_x86_64", "macos_arm64", "ios"],
     "macos_arm64": ["macos_x86_64", "macos_arm64", "ios"],
     "ubuntu-20.04_x86_64": ["ubuntu-20.04_x86_64", "android"],
+    "ubuntu-22.04_x86_64": ["ubuntu-22.04_x86_64", "android"],
 }
 
 
@@ -230,10 +242,10 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--debug", action="store_true")
     parser.add_argument("--relwithdebinfo", action="store_true")
-    parser.add_argument("--webrtc-build-dir", type=os.path.abspath)
-    parser.add_argument("--webrtc-build-args", default="", type=shlex.split)
-    parser.add_argument("--sora-dir", type=os.path.abspath)
-    parser.add_argument("--sora-args", default="", type=shlex.split)
+    parser.add_argument("--local-webrtc-build-dir", type=os.path.abspath)
+    parser.add_argument("--local-webrtc-build-args", default="", type=shlex.split)
+    parser.add_argument("--local-sora-cpp-sdk-dir", type=os.path.abspath)
+    parser.add_argument("--local-sora-cpp-sdk-args", default="", type=shlex.split)
     parser.add_argument("target", choices=AVAILABLE_TARGETS)
 
     args = parser.parse_args()
@@ -262,10 +274,10 @@ def main():
         build_dir,
         install_dir,
         args.debug,
-        args.webrtc_build_dir,
-        args.webrtc_build_args,
-        args.sora_dir,
-        args.sora_args,
+        args.local_webrtc_build_dir,
+        args.local_webrtc_build_args,
+        args.local_sora_cpp_sdk_dir,
+        args.local_sora_cpp_sdk_args,
     )
 
     if args.debug:
@@ -278,8 +290,10 @@ def main():
     unity_build_dir = os.path.join(build_dir, "sora_unity_sdk")
     mkdir_p(unity_build_dir)
     with cd(unity_build_dir):
-        webrtc_info = get_webrtc_info(platform, args.webrtc_build_dir, install_dir, args.debug)
-        sora_info = get_sora_info(platform, args.sora_dir, install_dir, args.debug)
+        webrtc_info = get_webrtc_info(
+            platform, args.local_webrtc_build_dir, install_dir, args.debug
+        )
+        sora_info = get_sora_info(platform, args.local_sora_cpp_sdk_dir, install_dir, args.debug)
         webrtc_version = read_version_file(webrtc_info.version_file)
         webrtc_commit = webrtc_version["WEBRTC_COMMIT"]
         with cd(BASE_DIR):
@@ -299,6 +313,7 @@ def main():
         cmake_args.append(f"-DWEBRTC_LIBRARY_DIR={cmake_path(webrtc_info.webrtc_library_dir)}")
         cmake_args.append(f"-DWEBRTC_COMMIT={webrtc_commit}")
         cmake_args.append(f"-DSORA_DIR={cmake_path(sora_info.sora_install_dir)}")
+        cmake_args.append(f"-DCLANG_DIR={cmake_path(os.path.join(webrtc_info.clang_dir))}")
         cmake_args.append(f"-DPROTOBUF_DIR={cmake_path(os.path.join(install_dir, 'protobuf'))}")
         cmake_args.append(
             f"-DPROTOC_GEN_JSONIF_DIR={cmake_path(os.path.join(install_dir, 'protoc-gen-jsonif'))}"
@@ -337,7 +352,7 @@ def main():
             # r23b には ANDROID_CPP_FEATURES=exceptions でも例外が設定されない問題がある
             # https://github.com/android/ndk/issues/1618
             cmake_args.append("-DCMAKE_ANDROID_EXCEPTIONS=ON")
-        elif platform == "ubuntu-20.04_x86_64":
+        elif platform in ("ubuntu-20.04_x86_64", "ubuntu-22.04_x86_64"):
             cmake_args.append(
                 f"-DCMAKE_C_COMPILER={os.path.join(webrtc_info.clang_dir, 'bin', 'clang')}"
             )

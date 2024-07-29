@@ -11,9 +11,30 @@
 
 ## develop
 
+## 2024.4.0 (2024-07-29)
+
+- [CHANGE] `--sora-dir`, `--sora-args` を `--local-sora-cpp-sdk-dir` と `--local-sora-cpp-sdk-args` に変更する
+  - @melpon
+- [CHANGE] `--webrtc-build-dir`, `--webrtc-build-args` を `--local-webrtc-build-dir` と `--local-webrtc-build-args` に変更する
+  - @melpon
+- [UPDATE] Sora C++ SDK を `2024.7.0` に上げる
+  - Sora C++ SDK に追従して H.264 専用となっていた `NvCodecH264Encoder` を `NvCodecVideoEncoder` に変更する
+  - WEBRTC_BUILD_VERSION を `m127.6533.1.1` にアップデート
+  - BOOST_VERSION を 1.85.0 にアップデート
+  - CMAKE_VERSION を 3.29.6 にアップデート
+  - @melpon @torikizi
+- [UPDATE] Github Actions で利用する Windows を 2022 にあげる
+  - @torikizi
+- [ADD] Ubuntu 22.04 でのビルドに対応する
+  - 単にローカルビルド可能にしただけで、リリースには含めていない
+  - @melpon
+- [ADD] WebSocket での接続時に User-Agent を設定する
+  - @melpon
+
 ## 2024.3.0 (2024-04-18)
 
 - [UPDATE] Sora C++ SDK を `2024.6.1` に上げる
+  - Intel VPL H.265 対応（ Windows, Ubuntu 22.04 ）
   - WEBRTC_BUILD_VERSION を `m122.6261.1.0` にあげる
     - Ubuntu のビルドを通すために、 __assertion_handler というファイルをコピーする処理を追加した
   - @miosakuma @torikizi

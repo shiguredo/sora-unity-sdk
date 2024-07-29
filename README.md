@@ -1,6 +1,6 @@
 # Sora Unity SDK
 
-[![libwebrtc](https://img.shields.io/badge/libwebrtc-122.6261-blue.svg)](https://chromium.googlesource.com/external/webrtc/+/branch-heads/6261)
+[![libwebrtc](https://img.shields.io/badge/libwebrtc-127.6533-blue.svg)](https://chromium.googlesource.com/external/webrtc/+/branch-heads/6533)
 [![GitHub tag](https://img.shields.io/github/tag/shiguredo/sora-unity-sdk.svg)](https://github.com/shiguredo/sora-unity-sdk)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Actions Status](https://github.com/shiguredo/sora-unity-sdk/workflows/build/badge.svg)](https://github.com/shiguredo/sora-unity-sdk/actions)
@@ -37,7 +37,7 @@ Please read https://github.com/shiguredo/oss/blob/master/README.en.md before use
 
 ## システム条件
 
-- WebRTC SFU Sora 2023.2.0 以降
+- WebRTC SFU Sora 2024.1.0 以降
 
 ## 対応プラットフォーム
 
@@ -102,11 +102,11 @@ Please read https://github.com/shiguredo/oss/blob/master/README.en.md before use
 - マイクやカメラ等のメディアデバイスをつかまないようにする機能
 - 接続確立後のカメラ切り替え機能
 
-## Sora Unity SDK for MS Hololens2
+## Sora Unity SDK for MS HoloLens 2
 
 - Discord でのお問い合わせはお受けしておりません
-- [support/hololens2](https://github.com/shiguredo/sora-unity-sdk/tree/support/hololens2) ブランチの修正や改善は有償でお受けしています
-- 継続的な有償サポートを提供しています
+- [support/hololens2](https://github.com/shiguredo/sora-unity-sdk/tree/support/hololens2) ブランチの修正や改善は優先実装としてお受けしています
+- 継続的なメンテナンスを有償にて提供しています
 
 ## 有償での優先実装
 
