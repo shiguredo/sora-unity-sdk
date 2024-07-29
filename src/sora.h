@@ -76,6 +76,8 @@ class Sora : public std::enable_shared_from_this<Sora>,
   std::string GetSelectedSignalingURL() const;
   std::string GetConnectedSignalingURL() const;
 
+  void GetTracks() const;
+
  private:
   void* GetAndroidApplicationContext(void* env);
   static sora_conf::ErrorCode ToErrorCode(sora::SoraSignalingErrorCode ec);

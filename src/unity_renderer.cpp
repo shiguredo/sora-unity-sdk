@@ -1,5 +1,6 @@
 #include "unity_renderer.h"
 
+#include <cstring>
 #include <thread>
 
 // libwebrtc
@@ -9,7 +10,8 @@ namespace sora_unity_sdk {
 
 // UnityRenderer::Sink
 
-UnityRenderer::Sink::Sink(webrtc::VideoTrackInterface* track) : track_(track) {
+UnityRenderer::Sink::Sink(webrtc::VideoTrackInterface* track)
+    : track_(track), track_id_(track_->id()) {
   RTC_LOG(LS_INFO) << "[" << (void*)this << "] Sink::Sink";
   deleting_ = false;
   updating_ = false;
@@ -25,12 +27,17 @@ UnityRenderer::Sink::~Sink() {
     // RTC_LOG(LS_INFO) << "[" << (void*)this << "] Sink::~Sink waiting...";
     std::this_thread::sleep_for(std::chrono::milliseconds(10));
   }
+
   track_->RemoveSink(this);
   IdPointer::Instance().Unregister(ptrid_);
 }
 ptrid_t UnityRenderer::Sink::GetSinkID() const {
   return ptrid_;
 }
+const std::string& UnityRenderer::Sink::GetTrackId() const {
+  return track_id_;
+}
+
 void UnityRenderer::Sink::SetTrack(webrtc::VideoTrackInterface* track) {
   track_->RemoveSink(this);
   track->AddOrUpdateSink(this, rtc::VideoSinkWants());
