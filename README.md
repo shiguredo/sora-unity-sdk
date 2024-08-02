@@ -149,8 +149,10 @@ Please read https://github.com/shiguredo/oss/blob/master/README.en.md before use
 
 - サイマルキャスト rid 指定対応
 - iOS, Android 以外の音声出力先変更機能
-- ビデオ・トラック ID 取得機能 (統計情報との紐づけによる利用を想定)
-- オーディオ・トラック ID 取得機能 (統計情報との紐づけによる利用を想定)
+- 音声トラックの個別取得機能
+  - 音声トラック ID 取得機能 (統計情報との紐づけによる利用を想定)
+- 映像トラックの個別取得機能
+  - 映像トラック ID 取得機能 (統計情報との紐づけによる利用を想定)
 
 ### NVIDIA VIDEO CODEC SDK
 
