@@ -154,10 +154,6 @@ Please read https://github.com/shiguredo/oss/blob/master/README.en.md before use
 - 映像トラックの個別取得機能
   - 映像トラック ID 取得機能 (統計情報との紐づけによる利用を想定)
 
-### NVIDIA VIDEO CODEC SDK
-
-- AV1 のハードウェアデコードへの対応
-
 ## ライセンス
 
 Apache License 2.0
