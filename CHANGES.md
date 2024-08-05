@@ -11,6 +11,9 @@
 
 ## develop
 
+- [UPDATE] Github Actions の `macos-12` を `macos-14` に変更する
+  - @miosakuma
+
 ## 2024.4.0 (2024-07-29)
 
 - [CHANGE] `--sora-dir`, `--sora-args` を `--local-sora-cpp-sdk-dir` と `--local-sora-cpp-sdk-args` に変更する
