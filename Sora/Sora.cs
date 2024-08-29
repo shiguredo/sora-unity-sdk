@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
+using UnityEngine;
 
 public class Sora : IDisposable
 {
@@ -32,7 +33,6 @@ public class Sora : IDisposable
     public enum AudioCodecType
     {
         OPUS,
-        LYRA,
     }
     // SimulcastRid のためのパラメータ
     public enum SimulcastRidType
@@ -206,10 +206,6 @@ public class Sora : IDisposable
         /// </remarks>
         public string AudioPlayoutDevice = "";
         public AudioCodecType AudioCodecType = AudioCodecType.OPUS;
-        // AudioCodecType.LYRA の場合は必須
-        public int AudioCodecLyraBitrate = 0;
-        public bool? AudioCodecLyraUsedtx;
-        public bool CheckLyraVersion = false;
         public int AudioBitRate = 0;
         public string AudioStreamingLanguageCode = "";
 
@@ -379,15 +375,22 @@ public class Sora : IDisposable
         cc.metadata = config.Metadata;
         cc.signaling_notify_metadata = config.SignalingNotifyMetadata;
         cc.role = role;
-        cc.enable_multistream = config.Multistream != null;
-        cc.multistream = config.Multistream.GetValueOrDefault();
-        cc.enable_spotlight = config.Spotlight != null;
+        if (config.Multistream.HasValue)
+        {
+            cc.SetMultistream(config.Multistream.Value);
+        }
+        if (config.Spotlight.HasValue)
+        {
+            cc.SetSpotlight(config.Spotlight.Value);
+        }
         cc.spotlight = config.Spotlight.GetValueOrDefault();
         cc.spotlight_number = config.SpotlightNumber;
         cc.spotlight_focus_rid = config.SpotlightFocusRid == null ? "" : config.SpotlightFocusRid.Value.ToString().ToLower();
         cc.spotlight_unfocus_rid = config.SpotlightUnfocusRid == null ? "" : config.SpotlightUnfocusRid.Value.ToString().ToLower();
-        cc.enable_simulcast = config.Simulcast != null;
-        cc.simulcast = config.Simulcast.GetValueOrDefault();
+        if (config.Simulcast.HasValue)
+        {
+            cc.SetSimulcast(config.Simulcast.Value);
+        }
         cc.simulcast_rid = config.SimulcastRid == null ? "" : config.SimulcastRid.Value.ToString().ToLower();
         cc.insecure = config.Insecure;
         cc.no_video_device = config.NoVideoDevice;
@@ -410,17 +413,17 @@ public class Sora : IDisposable
         cc.audio_recording_device = config.AudioRecordingDevice;
         cc.audio_playout_device = config.AudioPlayoutDevice;
         cc.audio_codec_type = config.AudioCodecType.ToString();
-        cc.audio_codec_lyra_bitrate = config.AudioCodecLyraBitrate;
-        cc.enable_audio_codec_lyra_usedtx = config.AudioCodecLyraUsedtx != null;
-        cc.audio_codec_lyra_usedtx = config.AudioCodecLyraUsedtx.GetValueOrDefault();
-        cc.check_lyra_version = config.CheckLyraVersion;
         cc.audio_bit_rate = config.AudioBitRate;
         cc.audio_streaming_language_code = config.AudioStreamingLanguageCode;
-        cc.enable_data_channel_signaling = config.EnableDataChannelSignaling;
-        cc.data_channel_signaling = config.DataChannelSignaling;
+        if (config.EnableDataChannelSignaling)
+        {
+            cc.SetDataChannelSignaling(config.DataChannelSignaling);
+        }
         cc.data_channel_signaling_timeout = config.DataChannelSignalingTimeout;
-        cc.enable_ignore_disconnect_websocket = config.EnableIgnoreDisconnectWebsocket;
-        cc.ignore_disconnect_websocket = config.IgnoreDisconnectWebsocket;
+        if (config.EnableIgnoreDisconnectWebsocket)
+        {
+            cc.SetIgnoreDisconnectWebsocket(config.IgnoreDisconnectWebsocket);
+        }
         cc.disconnect_wait_timeout = config.DisconnectWaitTimeout;
         foreach (var m in config.DataChannels)
         {
@@ -434,28 +437,23 @@ public class Sora : IDisposable
             };
             if (m.Ordered != null)
             {
-                c.enable_ordered = true;
-                c.ordered = m.Ordered.Value;
+                c.SetOrdered(m.Ordered.Value);
             }
             if (m.MaxPacketLifeTime != null)
             {
-                c.enable_max_packet_life_time = true;
-                c.max_packet_life_time = m.MaxPacketLifeTime.Value;
+                c.SetMaxPacketLifeTime(m.MaxPacketLifeTime.Value);
             }
             if (m.MaxRetransmits != null)
             {
-                c.enable_max_retransmits = true;
-                c.max_retransmits = m.MaxRetransmits.Value;
+                c.SetMaxRetransmits(m.MaxRetransmits.Value);
             }
             if (m.Protocol != null)
             {
-                c.enable_protocol = true;
-                c.protocol = m.Protocol;
+                c.SetProtocol(m.Protocol);
             }
             if (m.Compress != null)
             {
-                c.enable_compress = true;
-                c.compress = m.Compress.Value;
+                c.SetCompress(m.Compress.Value);
             }
             cc.data_channels.Add(c);
         }
@@ -465,11 +463,10 @@ public class Sora : IDisposable
         cc.proxy_agent = config.ProxyAgent;
         if (config.ForwardingFilter != null)
         {
-            cc.enable_forwarding_filter = true;
+            var ff = new SoraConf.Internal.ForwardingFilter();
             if (config.ForwardingFilter.Action != null)
             {
-                cc.forwarding_filter.enable_action = true;
-                cc.forwarding_filter.action = config.ForwardingFilter.Action;
+                ff.SetAction(config.ForwardingFilter.Action);
             }
             foreach (var rs in config.ForwardingFilter.Rules)
             {
@@ -485,21 +482,22 @@ public class Sora : IDisposable
                     }
                     ccrs.rules.Add(ccr);
                 }
-                cc.forwarding_filter.rules.Add(ccrs);
+                ff.rules.Add(ccrs);
             }
             if (config.ForwardingFilter.Version != null)
             {
-                cc.forwarding_filter.enable_version = true;
-                cc.forwarding_filter.version = config.ForwardingFilter.Version;
+                ff.SetVersion(config.ForwardingFilter.Version);
             }
             if (config.ForwardingFilter.Metadata != null)
             {
-                cc.forwarding_filter.enable_metadata = true;
-                cc.forwarding_filter.metadata = config.ForwardingFilter.Metadata;
+                ff.SetMetadata(config.ForwardingFilter.Metadata);
             }
+            cc.SetForwardingFilter(ff);
         }
-        cc.enable_use_hardware_encoder = config.UseHardwareEncoder != null;
-        cc.use_hardware_encoder = config.UseHardwareEncoder.GetValueOrDefault();
+        if (config.UseHardwareEncoder.HasValue)
+        {
+            cc.SetUseHardwareEncoder(config.UseHardwareEncoder.Value);
+        }
 
         if (config.MrcHologramCompositionEnabled != null)
         {
@@ -1131,7 +1129,71 @@ public class Sora : IDisposable
     [DllImport(DllName)]
     private static extern void sora_get_connected_signaling_url(IntPtr p, [Out] byte[] buf, int size);
 
-    public class AudioOutputHelper : IDisposable
+    public interface IAudioOutputHelper : IDisposable
+    {
+        bool IsHandsfree();
+        void SetHandsfree(bool enabled);
+    }
+
+#if UNITY_ANDROID && !UNITY_EDITOR
+    // Androidの実装
+    public class AndroidAudioOutputHelper : IAudioOutputHelper
+    {
+        private AndroidJavaObject soraAudioManager;
+        private ChangeRouteCallbackProxy callbackProxy;
+
+        private class ChangeRouteCallbackProxy : AndroidJavaProxy
+        {
+            public event Action onChangeRoute;
+
+            public ChangeRouteCallbackProxy() : base("jp.shiguredo.sora.audiomanager.SoraAudioManager$OnChangeRouteObserver")
+            {
+            }
+
+            public void OnChangeRoute()
+            {
+                onChangeRoute?.Invoke();
+            }
+        }
+
+        public AndroidAudioOutputHelper(Action onChangeRoute)
+        {
+            using (var soraAudioManagerFactoryClass = new AndroidJavaClass("jp.shiguredo.sora.audiomanager.SoraAudioManagerFactory"))
+            {
+                AndroidJavaClass unityPlayerClass = new AndroidJavaClass("com.unity3d.player.UnityPlayer");
+                AndroidJavaObject currentActivity = unityPlayerClass.GetStatic<AndroidJavaObject>("currentActivity");
+                soraAudioManager = soraAudioManagerFactoryClass.CallStatic<AndroidJavaObject>("createWithMainThreadWrapper", currentActivity);
+
+                if (onChangeRoute != null)
+                {
+                    callbackProxy = new ChangeRouteCallbackProxy();
+                    callbackProxy.onChangeRoute += onChangeRoute;
+                }
+                soraAudioManager.Call("start", callbackProxy);
+            }
+        }
+
+        public void Dispose()
+        {
+            soraAudioManager.Call("stop");
+            soraAudioManager = null;
+            callbackProxy = null;
+        }
+
+        public bool IsHandsfree()
+        {
+            return soraAudioManager.Call<bool>("isHandsfree");
+        }
+
+        public void SetHandsfree(bool enabled)
+        {
+            soraAudioManager.Call("setHandsfree", enabled);
+        }
+    }
+#endif
+
+    // 他のプラットフォームの実装
+    public class DefaultAudioOutputHelper : IAudioOutputHelper
     {
         private delegate void ChangeRouteCallbackDelegate(IntPtr userdata);
 
@@ -1145,8 +1207,13 @@ public class Sora : IDisposable
         GCHandle onChangeRouteHandle;
         IntPtr p;
 
-        public AudioOutputHelper(Action onChangeRoute)
+        public DefaultAudioOutputHelper(Action onChangeRoute)
         {
+            if (onChangeRoute == null)
+            {
+                onChangeRoute = () => {}; // 空のアクションを割り当てる
+            }
+
             onChangeRouteHandle = GCHandle.Alloc(onChangeRoute);
             p = sora_audio_output_helper_create(ChangeRouteCallback, GCHandle.ToIntPtr(onChangeRouteHandle));
         }
@@ -1187,4 +1254,15 @@ public class Sora : IDisposable
         private static extern void sora_audio_output_helper_set_handsfree(IntPtr p, int enabled);
     }
 
+    public class AudioOutputHelperFactory
+    {
+        public static IAudioOutputHelper Create(Action onChangeRoute)
+        {
+#if UNITY_ANDROID && !UNITY_EDITOR
+            return new AndroidAudioOutputHelper(onChangeRoute);
+#else
+            return new DefaultAudioOutputHelper(onChangeRoute);
+#endif
+        }
+    }
 }

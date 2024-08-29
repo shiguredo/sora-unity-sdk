@@ -20,7 +20,6 @@ set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE NEVER)
 set(CMAKE_FIND_ROOT_PATH_MODE_PACKAGE NEVER)
 
 find_package(Boost REQUIRED COMPONENTS json filesystem)
-# find_package(Lyra REQUIRED)
 find_package(WebRTC REQUIRED)
 find_package(Sora REQUIRED)
 find_package(Threads REQUIRED)
@@ -58,6 +57,10 @@ elseif (SORA_UNITY_SDK_PACKAGE STREQUAL "android")
 
   set(SORA_UNITY_SDK_PLATFORM Android)
 elseif (SORA_UNITY_SDK_PACKAGE STREQUAL "ubuntu-20.04_x86_64")
+  add_library(SoraUnitySdk SHARED)
+
+  set(SORA_UNITY_SDK_PLATFORM Ubuntu)
+elseif (SORA_UNITY_SDK_PACKAGE STREQUAL "ubuntu-22.04_x86_64")
   add_library(SoraUnitySdk SHARED)
 
   set(SORA_UNITY_SDK_PLATFORM Ubuntu)
@@ -240,6 +243,9 @@ elseif (SORA_UNITY_SDK_PACKAGE STREQUAL "ios")
 
 elseif (SORA_UNITY_SDK_PACKAGE STREQUAL "android")
 
+  # ref: https://github.com/shiguredo/sora-cpp-sdk/blob/bfb7ed87f4d4c08212115dce00f4be6629ea65d4/test/android/app/src/main/cpp/CMakeLists.txt#L48-L56
+  set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -B ${CLANG_DIR}/bin")
+
   find_library(ANDROID_LIB_LOG log)
   find_library(ANDROID_LIB_ANDROID android)
   find_library(ANDROID_LIB_OPENSLES OpenSLES)
@@ -278,7 +284,7 @@ elseif (SORA_UNITY_SDK_PACKAGE STREQUAL "android")
       ${_WEBRTC_ANDROID_LDFLAGS}
   )
 
-elseif (SORA_UNITY_SDK_PACKAGE STREQUAL "ubuntu-20.04_x86_64")
+elseif (SORA_UNITY_SDK_PACKAGE STREQUAL "ubuntu-20.04_x86_64" OR SORA_UNITY_SDK_PACKAGE STREQUAL "ubuntu-22.04_x86_64")
 
   target_sources(SoraUnitySdk
     PRIVATE

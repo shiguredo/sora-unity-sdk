@@ -1,6 +1,6 @@
 # Sora Unity SDK
 
-[![libwebrtc](https://img.shields.io/badge/libwebrtc-120.6099-blue.svg)](https://chromium.googlesource.com/external/webrtc/+/branch-heads/6099)
+[![libwebrtc](https://img.shields.io/badge/libwebrtc-127.6533-blue.svg)](https://chromium.googlesource.com/external/webrtc/+/branch-heads/6533)
 [![GitHub tag](https://img.shields.io/github/tag/shiguredo/sora-unity-sdk.svg)](https://github.com/shiguredo/sora-unity-sdk)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Actions Status](https://github.com/shiguredo/sora-unity-sdk/workflows/build/badge.svg)](https://github.com/shiguredo/sora-unity-sdk/actions)
@@ -37,7 +37,7 @@ Please read https://github.com/shiguredo/oss/blob/master/README.en.md before use
 
 ## システム条件
 
-- WebRTC SFU Sora 2023.2.0 以降
+- WebRTC SFU Sora 2024.1.0 以降
 
 ## 対応プラットフォーム
 
@@ -46,6 +46,7 @@ Please read https://github.com/shiguredo/oss/blob/master/README.en.md before use
 - Android 7 以降
 - iOS 13 以降
 - Ubuntu 20.04 x86_64
+- Ubuntu 22.04 x86_64
 
 ## 対応機能
 
@@ -57,6 +58,7 @@ Please read https://github.com/shiguredo/oss/blob/master/README.en.md before use
 - Android OpenGL ES への対応
 - iOS 対応
 - Ubuntu 20.04 への対応
+- Ubuntu 22.04 への対応
 - SRTP/SRTCP の AES-GCM 対応
 - Unity のカメラ映像を取得し Sora で送信
 - カメラから映像を取得し Sora に送信
@@ -96,15 +98,15 @@ Please read https://github.com/shiguredo/oss/blob/master/README.en.md before use
     - VP8 のハードウェアデコードへの対応
     - VP9 のハードウェアデコードへの対応
 - ミュート機能
-- 音声出力先変更機能
+- iOS, Android 向け音声出力先変更機能
 - マイクやカメラ等のメディアデバイスをつかまないようにする機能
 - 接続確立後のカメラ切り替え機能
 
-## Sora Unity SDK for MS Hololens2
+## Sora Unity SDK for MS HoloLens 2
 
 - Discord でのお問い合わせはお受けしておりません
-- [support/hololens2](https://github.com/shiguredo/sora-unity-sdk/tree/support/hololens2) ブランチの修正や改善は有償でお受けしています
-- 継続的な有償サポートを提供しています
+- [support/hololens2](https://github.com/shiguredo/sora-unity-sdk/tree/support/hololens2) ブランチの修正や改善は優先実装としてお受けしています
+- 継続的なメンテナンスを有償にて提供しています
 
 ## 有償での優先実装
 
@@ -128,6 +130,10 @@ Please read https://github.com/shiguredo/oss/blob/master/README.en.md before use
   - [KDDI株式会社](https://www.kddi.com/) 様
 - マイクやカメラ等のメディアデバイスをつかまないようにする機能
   - [KDDI株式会社](https://www.kddi.com/) 様
+- Android 向け音声出力先変更機能
+  - [KDDI株式会社](https://www.kddi.com/) 様
+- Android 向け音声デバイス切り替え対応
+  - [KDDI株式会社](https://www.kddi.com/) 様
 
 ## 有償での優先実装が可能な機能一覧
 
@@ -139,12 +145,14 @@ Please read https://github.com/shiguredo/oss/blob/master/README.en.md before use
 
 ### 機能
 
+**こちらに掲載していない機能でも対応できる場合がありますのでまずはお問い合わせください**
+
 - サイマルキャスト rid 指定対応
-- iOS 以外の音声出力先変更機能
-
-### NVIDIA VIDEO CODEC SDK
-
-- AV1 のハードウェアデコードへの対応
+- iOS, Android 以外の音声出力先変更機能
+- 音声トラックの個別取得機能
+  - 音声トラック ID 取得機能 (統計情報との紐づけによる利用を想定)
+- 映像トラックの個別取得機能
+  - 映像トラック ID 取得機能 (統計情報との紐づけによる利用を想定)
 
 ## ライセンス
 

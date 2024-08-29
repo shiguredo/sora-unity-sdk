@@ -3,30 +3,17 @@ syntax = "proto3";
 package sora_conf.internal;
 
 message DataChannel {
-    // required
     string label = 1;
     string direction = 2;
-
-    // optional
-    bool enable_ordered = 3;
-    bool ordered = 4;
-
-    bool enable_max_packet_life_time = 5;
-    int32 max_packet_life_time = 6;
-
-    bool enable_max_retransmits = 7;
-    int32 max_retransmits = 8;
-
-    bool enable_protocol = 9;
-    string protocol = 10;
-
-    bool enable_compress = 11;
-    bool compress = 12;
+    optional bool ordered = 4;
+    optional int32 max_packet_life_time = 6;
+    optional int32 max_retransmits = 8;
+    optional string protocol = 10;
+    optional bool compress = 12;
 }
 
 message ForwardingFilter {
-    bool enable_action = 1;
-    string action = 2;
+    optional string action = 2;
     message Rule {
         string field = 1;
         string op = 2;
@@ -36,10 +23,8 @@ message ForwardingFilter {
         repeated Rule rules = 1;
     }
     repeated Rules rules = 3;
-    bool enable_version = 4;
-    string version = 5;
-    bool enable_metadata = 6;
-    string metadata = 7;
+    optional string version = 5;
+    optional string metadata = 7;
 }
 
 message CameraConfig {
@@ -58,15 +43,12 @@ message ConnectConfig {
     string client_id = 4;
     string metadata = 5;
     string role = 6;
-    bool enable_multistream = 7;
-    bool multistream = 8;
-    bool enable_spotlight = 9;
-    bool spotlight = 10;
+    optional bool multistream = 8;
+    optional bool spotlight = 10;
     int32 spotlight_number = 11;
     string spotlight_focus_rid = 12;
     string spotlight_unfocus_rid = 13;
-    bool enable_simulcast = 14;
-    bool simulcast = 15;
+    optional bool simulcast = 15;
     string simulcast_rid = 16;
     bool no_video_device = 160;
     bool no_audio_device = 161;
@@ -83,16 +65,10 @@ message ConnectConfig {
     string audio_recording_device = 29;
     string audio_playout_device = 30;
     string audio_codec_type = 31;
-    int32 audio_codec_lyra_bitrate = 32;
-    bool enable_audio_codec_lyra_usedtx = 320;
-    bool audio_codec_lyra_usedtx = 321;
-    bool check_lyra_version = 33;
     int32 audio_bit_rate = 34;
-    bool enable_data_channel_signaling = 35;
-    bool data_channel_signaling = 36;
+    optional bool data_channel_signaling = 36;
     int32 data_channel_signaling_timeout = 37;
-    bool enable_ignore_disconnect_websocket = 38;
-    bool ignore_disconnect_websocket = 39;
+    optional bool ignore_disconnect_websocket = 39;
     int32 disconnect_wait_timeout = 40;
     repeated DataChannel data_channels = 41;
     bool insecure = 42;
@@ -103,11 +79,8 @@ message ConnectConfig {
     string proxy_agent = 47;
     string audio_streaming_language_code = 48;
     string signaling_notify_metadata = 49;
-    bool enable_forwarding_filter = 50;
-    ForwardingFilter forwarding_filter = 51;
-
-    bool enable_use_hardware_encoder = 52;
-    bool use_hardware_encoder = 53;
+    optional ForwardingFilter forwarding_filter = 50;
+    optional bool use_hardware_encoder = 51;
 
     bool enable_mrc_hologram_composition_enabled = 1000;
     bool mrc_hologram_composition_enabled = 1001;

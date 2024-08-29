@@ -10,8 +10,8 @@
 #include "unity_context.h"
 
 #if defined(SORA_UNITY_SDK_WINDOWS) || defined(SORA_UNITY_SDK_UBUNTU)
-#include <sora/hwenc_nvcodec/nvcodec_h264_encoder.h>
 #include <sora/hwenc_nvcodec/nvcodec_video_decoder.h>
+#include <sora/hwenc_nvcodec/nvcodec_video_encoder.h>
 #endif
 
 struct SoraWrapper {
@@ -218,9 +218,9 @@ unity_bool_t sora_device_enum_audio_playout(device_enum_cb_t f,
 unity_bool_t sora_is_h264_supported() {
 #if defined(SORA_UNITY_SDK_WINDOWS) || defined(SORA_UNITY_SDK_UBUNTU)
   auto context = sora::CudaContext::Create();
-  return sora::NvCodecH264Encoder::IsSupported(context) &&
-         sora::NvCodecVideoDecoder::IsSupported(context,
-                                                sora::CudaVideoCodec::H264);
+  auto codec = sora::CudaVideoCodec::H264;
+  return sora::NvCodecVideoEncoder::IsSupported(context, codec) &&
+         sora::NvCodecVideoDecoder::IsSupported(context, codec);
 #elif defined(SORA_UNITY_SDK_HOLOLENS2)
   // HoloLens 2 は Media Foundation を使った HWA があるので常に true
   return true;
