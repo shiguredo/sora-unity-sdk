@@ -14,6 +14,7 @@
 #include <modules/video_capture/video_capture.h>
 #include <modules/video_capture/video_capture_factory.h>
 #include <pc/video_track_source_proxy.h>
+#include <rtc_base/crypto_random.h>
 #include <rtc_base/logging.h>
 #include <rtc_base/ssl_adapter.h>
 
