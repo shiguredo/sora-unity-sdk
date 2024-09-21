@@ -11,8 +11,12 @@
 
 ## develop
 
+### misc
+
 - [UPDATE] Github Actions の `macos-12` を `macos-14` に変更する
   - @miosakuma
+- [CHANGE] PreRelease の設定を追加する
+  - @torikizi
 
 ## 2024.4.0 (2024-07-29)
 
