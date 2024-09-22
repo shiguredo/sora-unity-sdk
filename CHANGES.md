@@ -11,8 +11,13 @@
 
 ## develop
 
+### misc
+
 - [UPDATE] Github Actions の `macos-12` を `macos-14` に変更する
   - @miosakuma
+- [CHANGE] canary リリースの仕組みを導入する
+  - canary リリースの時は prerelease フラグをつけるように変更
+  - @torikizi
 
 ## 2024.4.0 (2024-07-29)
 
