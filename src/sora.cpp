@@ -14,6 +14,7 @@
 #include <modules/video_capture/video_capture.h>
 #include <modules/video_capture/video_capture_factory.h>
 #include <pc/video_track_source_proxy.h>
+#include <rtc_base/crypto_random.h>
 #include <rtc_base/logging.h>
 #include <rtc_base/ssl_adapter.h>
 
@@ -149,7 +150,7 @@ static sora_conf::VideoFrame VideoFrameToConfig(
   f.baseptr = reinterpret_cast<int64_t>(&frame);
   f.id = frame.id();
   f.timestamp_us = frame.timestamp_us();
-  f.timestamp = frame.timestamp();
+  f.timestamp = frame.rtp_timestamp();
   f.ntp_time_ms = frame.ntp_time_ms();
   f.rotation = (int)frame.rotation();
   auto& v = f.video_frame_buffer;

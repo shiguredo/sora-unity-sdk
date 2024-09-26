@@ -11,6 +11,11 @@
 
 ## develop
 
+- [UPDATE] Sora C++ SDK を `2024.8.0` に上げる
+  - `rtc::CreateRandomString` のヘッダを追加
+  - `SetRtpTimestamp` を `frame.timestamp` から `frame.rtp_timestamp` に変更
+  - @torikizi
+
 ### misc
 
 - [UPDATE] Github Actions の `macos-12` を `macos-14` に変更する
