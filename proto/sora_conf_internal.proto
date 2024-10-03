@@ -81,4 +81,7 @@ message ConnectConfig {
     string signaling_notify_metadata = 49;
     optional ForwardingFilter forwarding_filter = 51;
     optional bool use_hardware_encoder = 53;
+    optional string client_cert = 54;
+    optional string client_key = 55;
+    optional string ca_cert = 56;
 }

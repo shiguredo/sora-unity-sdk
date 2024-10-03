@@ -477,6 +477,15 @@ void Sora::DoConnect(const sora_conf::internal::ConnectConfig& cc,
       }
       config.forwarding_filter = ff;
     }
+    if (cc.has_client_cert()) {
+      config.client_cert = cc.client_cert;
+    }
+    if (cc.has_client_key()) {
+      config.client_key = cc.client_key;
+    }
+    if (cc.has_ca_cert()) {
+      config.ca_cert = cc.ca_cert;
+    }
     config.network_manager =
         sora_context_->signaling_thread()->BlockingCall([this]() {
           return sora_context_->connection_context()->default_network_manager();

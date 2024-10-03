@@ -239,6 +239,11 @@ public class Sora : IDisposable
 
         // ハードウェアエンコーダー/デコーダーを利用するかどうか。null の場合は実装依存となる
         public bool? UseHardwareEncoder;
+
+        // 証明書周りの設定
+        public string? ClientCert;
+        public string? ClientKey;
+        public string? CACert;
     }
 
     IntPtr p;
@@ -490,6 +495,18 @@ public class Sora : IDisposable
         if (config.UseHardwareEncoder.HasValue)
         {
             cc.SetUseHardwareEncoder(config.UseHardwareEncoder.Value);
+        }
+        if (config.ClientCert.HasValue)
+        {
+            cc.SetClientCert(config.ClientCert.Value);
+        }
+        if (config.ClientKey.HasValue)
+        {
+            cc.SetClientKey(config.ClientKey.Value);
+        }
+        if (config.CACert.HasValue)
+        {
+            cc.SetCACert(config.CACert.Value);
         }
 
         sora_connect(p, Jsonif.Json.ToJson(cc));
