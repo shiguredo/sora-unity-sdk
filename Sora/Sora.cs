@@ -498,15 +498,15 @@ public class Sora : IDisposable
         }
         if (config.ClientCert != null)
         {
-            cc.SetClientCert(config.ClientCert.Value);
+            cc.SetClientCert(config.ClientCert);
         }
         if (config.ClientKey != null)
         {
-            cc.SetClientKey(config.ClientKey.Value);
+            cc.SetClientKey(config.ClientKey);
         }
         if (config.CACert != null)
         {
-            cc.SetCaCert(config.CACert.Value);
+            cc.SetCaCert(config.CACert);
         }
 
         sora_connect(p, Jsonif.Json.ToJson(cc));
@@ -1194,7 +1194,7 @@ public class Sora : IDisposable
         {
             if (onChangeRoute == null)
             {
-                onChangeRoute = () => {}; // 空のアクションを割り当てる
+                onChangeRoute = () => { }; // 空のアクションを割り当てる
             }
 
             onChangeRouteHandle = GCHandle.Alloc(onChangeRoute);
