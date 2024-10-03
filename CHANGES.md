@@ -15,6 +15,8 @@
   - `rtc::CreateRandomString` のヘッダを追加
   - `SetRtpTimestamp` を `frame.timestamp` から `frame.rtp_timestamp` に変更
   - @torikizi
+- [ADD] `Sora.Config` に `ClientCert`, `ClientKey`, `CACert` を追加
+  - @melpon
 
 ### misc
 
