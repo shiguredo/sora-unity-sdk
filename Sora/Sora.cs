@@ -496,17 +496,17 @@ public class Sora : IDisposable
         {
             cc.SetUseHardwareEncoder(config.UseHardwareEncoder.Value);
         }
-        if (config.ClientCert.HasValue)
+        if (config.ClientCert != null)
         {
             cc.SetClientCert(config.ClientCert.Value);
         }
-        if (config.ClientKey.HasValue)
+        if (config.ClientKey != null)
         {
             cc.SetClientKey(config.ClientKey.Value);
         }
-        if (config.CACert.HasValue)
+        if (config.CACert != null)
         {
-            cc.SetCACert(config.CACert.Value);
+            cc.SetCaCert(config.CACert.Value);
         }
 
         sora_connect(p, Jsonif.Json.ToJson(cc));
