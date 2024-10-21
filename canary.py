@@ -50,14 +50,16 @@ def write_version_file(filename, updated_content, dry_run):
 
 
 def git_operations(new_version, dry_run):
+    commit_message = f"[canary] Update VERSION to {new_version}"
+
     if dry_run:
-        print("Dry run: Would execute git commit -am '[canary] Update VERSION'")
+        print(f"Dry run: Would execute git commit -am '{commit_message}'")
         print(f"Dry run: Would execute git tag {new_version}")
         print("Dry run: Would execute git push")
         print(f"Dry run: Would execute git push origin {new_version}")
     else:
-        print("Executing: git commit -am 'Update VERSION'")
-        subprocess.run(["git", "commit", "-am", "[canary] Update VERSION"], check=True)
+        print(f"Executing: git commit -am '{commit_message}'")
+        subprocess.run(["git", "commit", "-am", commit_message], check=True)
 
         print(f"Executing: git tag {new_version}")
         subprocess.run(["git", "tag", new_version], check=True)
