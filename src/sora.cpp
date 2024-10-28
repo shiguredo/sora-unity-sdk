@@ -419,6 +419,9 @@ void Sora::DoConnect(const sora_conf::internal::ConnectConfig& cc,
       if (dc.has_compress()) {
         d.compress = dc.compress;
       }
+      if (dc.has_header()) {
+        d.header = dc.header;
+      }
       config.data_channels.push_back(std::move(d));
     }
     if (!cc.metadata.empty()) {

@@ -62,6 +62,7 @@ public class Sora : IDisposable
         public int? MaxRetransmits;
         public string? Protocol;
         public bool? Compress;
+        public string? Header;
     }
 
     public const string ActionBlock = "block";
@@ -452,6 +453,10 @@ public class Sora : IDisposable
             if (m.Compress != null)
             {
                 c.SetCompress(m.Compress.Value);
+            }
+            if (m.Header != null)
+            {
+                c.SetHeader(m.Header);
             }
             cc.data_channels.Add(c);
         }
