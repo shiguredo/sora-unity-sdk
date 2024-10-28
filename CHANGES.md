@@ -17,6 +17,8 @@
   - @torikizi
 - [ADD] `Sora.Config` に `ClientCert`, `ClientKey`, `CACert` を追加
   - @melpon
+- [ADD] DataChannels に `Header` を追加
+  - @torikizi
 
 ### misc
 
