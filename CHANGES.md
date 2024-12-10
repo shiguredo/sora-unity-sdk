@@ -15,6 +15,7 @@
   - Sora C++ SDK 2024.8.0 での変更に追従
   - @torikizi
 - [UPDATE] Sora C++ SDK を `2024.8.0` に上げる
+  - WEBRTC_BUILD_VERSION を `m131.6778.3.1` にアップデート
   - `rtc::CreateRandomString` のヘッダを追加
   - `SetRtpTimestamp` を `frame.timestamp` から `frame.rtp_timestamp` に変更
   - `CMAKE_VERSION` を `3.30.5` にアップデート
