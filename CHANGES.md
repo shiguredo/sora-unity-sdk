@@ -14,6 +14,10 @@
 - [CHANGE] `boost::optional` を利用していた部分を `std::optional` に変更
   - Sora C++ SDK 2024.8.0 での変更に追従
   - @torikizi
+- [CHANGE] CI の Ubuntu から libdrm-dev と libva-dev をインストールしないようにする
+  - @torikizi
+- [CHANGE] CMakefile の依存から libva と libdrm を削除する
+  - @torikizi
 - [UPDATE] Sora C++ SDK を `2024.8.0` に上げる
   - WEBRTC_BUILD_VERSION を `m131.6778.3.1` にアップデート
   - `rtc::CreateRandomString` のヘッダを追加
