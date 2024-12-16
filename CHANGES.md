@@ -29,6 +29,8 @@
 
 ### misc
 
+- [CHANGE] GitHub Actions の `ubuntu-latest` を `ubuntu-24.04` に変更する
+  - @voluntas
 - [UPDATE] Github Actions の `macos-12` を `macos-14` に変更する
   - @miosakuma
 - [CHANGE] canary リリースの仕組みを導入する
