@@ -485,37 +485,38 @@ void Sora::DoConnect(const sora_conf::internal::ConnectConfig& cc,
     }
     if (cc.has_forwarding_filters()) {
       std::vector<sora::SoraSignalingConfig::ForwardingFilter> filters;
-      for (const auto& filter : cc.forwarding_filters().filters()) {
+      const auto& ff = cc.forwarding_filters;
+      for (const auto& filter : ff.filters) {
         sora::SoraSignalingConfig::ForwardingFilter ff;
         if (filter.has_action()) {
-          ff.action = filter.action();
+          ff.action = filter.action;
         }
         if (filter.has_name()) {
-          ff.name = filter.name();
+          ff.name = filter.name;
         }
         if (filter.has_priority()) {
-          ff.priority = filter.priority();
+          ff.priority = filter.priority;
         }
-        for (const auto& rs : filter.rules()) {
+        for (const auto& rs : filter.rules) {
           std::vector<sora::SoraSignalingConfig::ForwardingFilter::Rule> ffrs;
-          for (const auto& r : rs.rules()) {
+          for (const auto& r : rs.rules) {
             sora::SoraSignalingConfig::ForwardingFilter::Rule ffr;
-            ffr.field = r.field();
-            ffr.op = r.op();
-            ffr.values = r.values();
+            ffr.field = r.field;
+            ffr.op = r.op;
+            ffr.values = r.values;
             ffrs.push_back(ffr);
           }
           ff.rules.push_back(ffrs);
         }
         if (filter.has_version()) {
-          ff.version = filter.version();
+          ff.version = filter.version;
         }
         if (filter.has_metadata()) {
           boost::system::error_code ec;
-          auto ffmd = boost::json::parse(filter.metadata(), ec);
+          auto ffmd = boost::json::parse(filter.metadata, ec);
           if (ec) {
             RTC_LOG(LS_WARNING) << "Invalid JSON: forwarding_filters metadata="
-                                << filter.metadata();
+                                << filter.metadata;
           } else {
             ff.metadata = ffmd;
           }
