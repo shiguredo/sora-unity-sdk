@@ -90,7 +90,7 @@ public class Sora : IDisposable
 
     public class ForwardingFilters
     {
-        public List<ForwardingFilter> Filters { get; set; } = new List<ForwardingFilter>();
+        private List<ForwardingFilter> filters = new List<ForwardingFilter>();
     }
 
     /// <summary>
