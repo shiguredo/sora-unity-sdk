@@ -12,10 +12,6 @@ message DataChannel {
     optional bool compress = 12;
 }
 
-message ForwardingFilters {
-    repeated ForwardingFilter filters = 1;
-}
-
 message ForwardingFilter {
     optional string action = 2;
     optional string name = 4;
@@ -31,6 +27,10 @@ message ForwardingFilter {
     repeated Rules rules = 3;
     optional string version = 5;
     optional string metadata = 7;
+}
+
+message ForwardingFilters {
+    repeated ForwardingFilter filters = 1;
 }
 
 message CameraConfig {
@@ -86,6 +86,7 @@ message ConnectConfig {
     string audio_streaming_language_code = 48;
     string signaling_notify_metadata = 49;
     optional ForwardingFilter forwarding_filter = 51;
+    optional ForwardingFilters forwarding_filters = 52;
     optional bool use_hardware_encoder = 53;
     optional string client_cert = 54;
     optional string client_key = 55;
