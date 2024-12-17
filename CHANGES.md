@@ -19,7 +19,9 @@
 - [CHANGE] CMakefile の依存から libva と libdrm を削除する
   - @torikizi
 - [UPDATE] Sora C++ SDK を `2024.8.0` に上げる
-  - WEBRTC_BUILD_VERSION を `m131.6778.3.1` にアップデート
+  - WEBRTC_BUILD_VERSION を `m131.6778.4.0` にアップデート
+  - BOOST_VERSION を 1.87.0 にアップデート
+    - boost::system::error_code が削除されたので boost::system::error_code に置き換える
   - `rtc::CreateRandomString` のヘッダを追加
   - `SetRtpTimestamp` を `frame.timestamp` から `frame.rtp_timestamp` に変更
   - `CMAKE_VERSION` を `3.30.5` にアップデート

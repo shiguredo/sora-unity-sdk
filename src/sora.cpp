@@ -360,7 +360,7 @@ void Sora::DoConnect(const sora_conf::internal::ConnectConfig& cc,
     config.audio = cc.audio;
     config.video_codec_type = cc.video_codec_type;
     if (!cc.video_vp9_params.empty()) {
-      boost::json::error_code ec;
+      boost::system::error_code ec;
       auto md = boost::json::parse(cc.video_vp9_params, ec);
       if (ec) {
         RTC_LOG(LS_WARNING)
@@ -370,7 +370,7 @@ void Sora::DoConnect(const sora_conf::internal::ConnectConfig& cc,
       }
     }
     if (!cc.video_av1_params.empty()) {
-      boost::json::error_code ec;
+      boost::system::error_code ec;
       auto md = boost::json::parse(cc.video_av1_params, ec);
       if (ec) {
         RTC_LOG(LS_WARNING)
@@ -380,7 +380,7 @@ void Sora::DoConnect(const sora_conf::internal::ConnectConfig& cc,
       }
     }
     if (!cc.video_h264_params.empty()) {
-      boost::json::error_code ec;
+      boost::system::error_code ec;
       auto md = boost::json::parse(cc.video_h264_params, ec);
       if (ec) {
         RTC_LOG(LS_WARNING)
@@ -422,7 +422,7 @@ void Sora::DoConnect(const sora_conf::internal::ConnectConfig& cc,
       config.data_channels.push_back(std::move(d));
     }
     if (!cc.metadata.empty()) {
-      boost::json::error_code ec;
+      boost::system::error_code ec;
       auto md = boost::json::parse(cc.metadata, ec);
       if (ec) {
         RTC_LOG(LS_WARNING) << "Invalid JSON: metadata=" << cc.metadata;
@@ -431,7 +431,7 @@ void Sora::DoConnect(const sora_conf::internal::ConnectConfig& cc,
       }
     }
     if (!cc.signaling_notify_metadata.empty()) {
-      boost::json::error_code ec;
+      boost::system::error_code ec;
       auto md = boost::json::parse(cc.signaling_notify_metadata, ec);
       if (ec) {
         RTC_LOG(LS_WARNING) << "Invalid JSON: signaling_notify_metadata="
@@ -466,7 +466,7 @@ void Sora::DoConnect(const sora_conf::internal::ConnectConfig& cc,
         ff.version = cc.forwarding_filter.version;
       }
       if (cc.forwarding_filter.has_metadata()) {
-        boost::json::error_code ec;
+        boost::system::error_code ec;
         auto ffmd = boost::json::parse(cc.forwarding_filter.metadata, ec);
         if (ec) {
           RTC_LOG(LS_WARNING) << "Invalid JSON: forwarding_filter metadata="
