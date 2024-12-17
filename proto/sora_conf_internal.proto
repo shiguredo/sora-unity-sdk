@@ -12,8 +12,14 @@ message DataChannel {
     optional bool compress = 12;
 }
 
+message ForwardingFilters {
+    repeated ForwardingFilter filters = 1;
+}
+
 message ForwardingFilter {
     optional string action = 2;
+    optional string name = 4;
+    optional int32 priority = 6;
     message Rule {
         string field = 1;
         string op = 2;

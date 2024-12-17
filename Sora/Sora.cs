@@ -75,6 +75,8 @@ public class Sora : IDisposable
     public class ForwardingFilter
     {
         public string? Action;
+        public string? Name;
+        public int? Priority;
         public class Rule
         {
             public string Field;
@@ -84,6 +86,11 @@ public class Sora : IDisposable
         public List<List<Rule>> Rules = new List<List<Rule>>();
         public string? Version;
         public string? Metadata;
+    }
+
+    public class ForwardingFilters
+    {
+        public List<ForwardingFilter> Filters { get; set; } = new List<ForwardingFilter>();
     }
 
     /// <summary>
@@ -236,6 +243,7 @@ public class Sora : IDisposable
         public string ProxyAgent = "";
 
         public ForwardingFilter ForwardingFilter;
+        public ForwardingFilters? ForwardingFilters;
 
         // ハードウェアエンコーダー/デコーダーを利用するかどうか。null の場合は実装依存となる
         public bool? UseHardwareEncoder;
