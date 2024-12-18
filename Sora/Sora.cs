@@ -112,7 +112,7 @@ public class Sora : IDisposable
 
         public bool enablePriority = false;
         [Tooltip("Filter priority")]
-        public int priority = 0;
+        public int? priority;
 
         [Header("Rules")]
         public ForwardingFiltersRuleSet[] ruleSets = new ForwardingFiltersRuleSet[0];
@@ -309,7 +309,7 @@ public class Sora : IDisposable
         // Proxy サーバーに接続するときの User-Agent。未設定ならデフォルト値が使われる
         public string ProxyAgent = "";
         public ForwardingFilter ForwardingFilter;
-        public SoraConf.Internal.ForwardingFilters? ForwardingFilters;
+        public ForwardingFilters? ForwardingFilters;
 
         // ハードウェアエンコーダー/デコーダーを利用するかどうか。null の場合は実装依存となる
         public bool? UseHardwareEncoder;
@@ -582,29 +582,29 @@ public class Sora : IDisposable
             {
                 var ff = new SoraConf.Internal.ForwardingFilter();
 
-                if (filter.Action != null)
+                if (filter.action != null)
                 {
-                    ff.SetAction(filter.Action);
+                    ff.SetAction(filter.action);
                 }
-                if (filter.Name != null)
+                if (filter.name != null)
                 {
-                    ff.SetName(filter.Name);
+                    ff.SetName(filter.name);
                 }
-                if (filter.Priority.HasValue)
+                if (filter.priority != default(int))
                 {
-                    ff.SetPriority(filter.Priority.Value);
+                    ff.SetPriority(filter.priority);
                 }
 
-                foreach (var rs in filter.Rules)
+                foreach (var rs in filter.rules)
                 {
                     var ccrs = new SoraConf.Internal.ForwardingFilter.Rules();
 
-                    foreach (var r in rs)
+                    foreach (var r in rs.rules)
                     {
                         var ccr = new SoraConf.Internal.ForwardingFilter.Rule();
-                        ccr.field = r.Field;
-                        ccr.op = r.Operator;
-                        foreach (var v in r.Values)
+                        ccr.field = r.field;
+                        ccr.op = r.op;
+                        foreach (var v in r.values)
                         {
                             ccr.values.Add(v);
                         }
@@ -613,17 +613,17 @@ public class Sora : IDisposable
                     ff.rules.Add(ccrs);
                 }
 
-                if (filter.Version != null)
+                if (filter.version != null)
                 {
-                    ff.SetVersion(filter.Version);
+                    ff.SetVersion(filter.version);
                 }
-                if (filter.Metadata != null)
+                if (filter.metadata != null)
                 {
-                    ff.SetMetadata(filter.Metadata);
+                    ff.SetMetadata(filter.metadata);
                 }
 
                 // ForwardingFilters に追加
-                forwardingFilters.Add(ff);
+                forwardingFilters.AddFilter(ff);
             }
 
             // forwarding_filters に設定
