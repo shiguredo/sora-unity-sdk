@@ -474,6 +474,14 @@ public class Sora : IDisposable
             {
                 ff.SetAction(config.ForwardingFilter.Action);
             }
+            if (config.ForwardingFilter.Name != null)
+            {
+                ff.SetName(config.ForwardingFilter.Name);
+            }
+            if (config.ForwardingFilter.Priority.HasValue)
+            {
+                ff.SetPriority(config.ForwardingFilter.Priority.Value);
+            }
             foreach (var rs in config.ForwardingFilter.Rules)
             {
                 var ccrs = new SoraConf.Internal.ForwardingFilter.Rules();
