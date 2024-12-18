@@ -486,6 +486,7 @@ void Sora::DoConnect(const sora_conf::internal::ConnectConfig& cc,
     if (cc.has_forwarding_filters()) {
       std::vector<sora::SoraSignalingConfig::ForwardingFilter> filters;
       const auto& ff = cc.forwarding_filters;
+      // filters プロパティから直接フィルターを取得するように修正
       for (const auto& filter : ff.filters) {
         sora::SoraSignalingConfig::ForwardingFilter ff;
         if (filter.has_action()) {

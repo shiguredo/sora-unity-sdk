@@ -71,7 +71,6 @@ public class Sora : IDisposable
     public const string FieldKind = "kind";
     public const string OperatorIsIn = "is_in";
     public const string OperatorIsNotIn = "is_not_in";
-
     public class ForwardingFilter
     {
         public string? Action;
@@ -87,12 +86,80 @@ public class Sora : IDisposable
         public string? Version;
         public string? Metadata;
     }
-
-    public class ForwardingFilters
+    public class ForwardingFiltersRule
     {
-        private List<ForwardingFilter> filters = new List<ForwardingFilter>();
+        public string field = "";
+        public string op = "";
+        public string[] values = new string[0];
     }
 
+    public class ForwardingFiltersRuleSet
+    {
+        public ForwardingFiltersRule[] rules = new ForwardingFiltersRule[0];
+    }
+
+    [Serializable]
+    public class ForwardingFiltersConfig
+    {
+        [Header("Filter Settings")]
+        public bool enableAction = false;
+        [Tooltip("Action to take (block/allow)")]
+        public string action = "";
+
+        public bool enableName = false;
+        [Tooltip("Filter name")]
+        public string name = "";
+
+        public bool enablePriority = false;
+        [Tooltip("Filter priority")]
+        public int priority = 0;
+
+        [Header("Rules")]
+        public ForwardingFiltersRuleSet[] ruleSets = new ForwardingFiltersRuleSet[0];
+
+        public bool enableVersion = false;
+        [Tooltip("Filter version")]
+        public string version = "";
+
+        public bool enableMetadata = false;
+        [Tooltip("Filter metadata")]
+        public string metadata = "";
+    }
+    public class ForwardingFilters
+    {
+        // 内部のfiltersリスト
+        public List<SoraConf.Internal.ForwardingFilter> filters { get; set; }
+
+        // 読み取り専用のFiltersプロパティ
+        public IReadOnlyList<SoraConf.Internal.ForwardingFilter> Filters => filters;
+
+        public ForwardingFilters()
+        {
+            filters = new List<SoraConf.Internal.ForwardingFilter>();
+        }
+
+        public void Add(SoraConf.Internal.ForwardingFilter filter)
+        {
+            if (filters == null)
+            {
+                filters = new List<SoraConf.Internal.ForwardingFilter>();
+            }
+            filters.Add(filter);
+        }
+
+        // ForwardingFiltersインスタンスを追加するメソッド
+        public void Add(SoraConf.Internal.ForwardingFilters otherFilters)
+        {
+            if (otherFilters?.filters != null)
+            {
+                if (filters == null)
+                {
+                    filters = new List<SoraConf.Internal.ForwardingFilter>();
+                }
+                filters.AddRange(otherFilters.filters);
+            }
+        }
+    }
     /// <summary>
     /// カメラの設定
     /// </summary>
@@ -241,9 +308,8 @@ public class Sora : IDisposable
         public string ProxyPassword = "";
         // Proxy サーバーに接続するときの User-Agent。未設定ならデフォルト値が使われる
         public string ProxyAgent = "";
-
         public ForwardingFilter ForwardingFilter;
-        public ForwardingFilters? ForwardingFilters;
+        public SoraConf.Internal.ForwardingFilters? ForwardingFilters;
 
         // ハードウェアエンコーダー/デコーダーを利用するかどうか。null の場合は実装依存となる
         public bool? UseHardwareEncoder;
@@ -507,6 +573,61 @@ public class Sora : IDisposable
                 ff.SetMetadata(config.ForwardingFilter.Metadata);
             }
             cc.SetForwardingFilter(ff);
+        }
+        if (config.ForwardingFilters != null && config.ForwardingFilters.Filters.Count > 0)
+        {
+            var forwardingFilters = new SoraConf.Internal.ForwardingFilters();
+
+            foreach (var filter in config.ForwardingFilters.Filters)
+            {
+                var ff = new SoraConf.Internal.ForwardingFilter();
+
+                if (filter.Action != null)
+                {
+                    ff.SetAction(filter.Action);
+                }
+                if (filter.Name != null)
+                {
+                    ff.SetName(filter.Name);
+                }
+                if (filter.Priority.HasValue)
+                {
+                    ff.SetPriority(filter.Priority.Value);
+                }
+
+                foreach (var rs in filter.Rules)
+                {
+                    var ccrs = new SoraConf.Internal.ForwardingFilter.Rules();
+
+                    foreach (var r in rs)
+                    {
+                        var ccr = new SoraConf.Internal.ForwardingFilter.Rule();
+                        ccr.field = r.Field;
+                        ccr.op = r.Operator;
+                        foreach (var v in r.Values)
+                        {
+                            ccr.values.Add(v);
+                        }
+                        ccrs.rules.Add(ccr);
+                    }
+                    ff.rules.Add(ccrs);
+                }
+
+                if (filter.Version != null)
+                {
+                    ff.SetVersion(filter.Version);
+                }
+                if (filter.Metadata != null)
+                {
+                    ff.SetMetadata(filter.Metadata);
+                }
+
+                // ForwardingFilters に追加
+                forwardingFilters.Add(ff);
+            }
+
+            // forwarding_filters に設定
+            cc.forwarding_filters = forwardingFilters;
         }
         if (config.UseHardwareEncoder.HasValue)
         {
