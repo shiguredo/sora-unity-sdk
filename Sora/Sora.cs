@@ -623,7 +623,7 @@ public class Sora : IDisposable
                 }
 
                 // ForwardingFilters に追加
-                forwardingFilters.AddFilter(ff);
+                forwardingFilters.Add(ff);
             }
 
             // forwarding_filters に設定
