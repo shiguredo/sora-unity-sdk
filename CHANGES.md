@@ -28,6 +28,10 @@
   - @torikizi
 - [ADD] `Sora.Config` に `ClientCert`, `ClientKey`, `CACert` を追加
   - @melpon
+- [ADD] ForwardingFilter に name と priority を追加
+  - @torikizi
+- [ADD] ForwardingFilters 機能を使えるようにする
+  - @torikizi
 
 ### misc
 
