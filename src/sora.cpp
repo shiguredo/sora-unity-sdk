@@ -485,9 +485,7 @@ void Sora::DoConnect(const sora_conf::internal::ConnectConfig& cc,
     }
     if (cc.has_forwarding_filters()) {
       std::vector<sora::SoraSignalingConfig::ForwardingFilter> filters;
-      const auto& ff = cc.forwarding_filters;
-      // filters プロパティから直接フィルターを取得するように修正
-      for (const auto& filter : ff.filters) {
+      for (const auto& filter : cc.forwarding_filters.filters) {
         sora::SoraSignalingConfig::ForwardingFilter ff;
         if (filter.has_action()) {
           ff.action = filter.action;
@@ -516,7 +514,7 @@ void Sora::DoConnect(const sora_conf::internal::ConnectConfig& cc,
           boost::system::error_code ec;
           auto ffmd = boost::json::parse(filter.metadata, ec);
           if (ec) {
-            RTC_LOG(LS_WARNING) << "Invalid JSON: forwarding_filters metadata="
+            RTC_LOG(LS_WARNING) << "Invalid JSON: forwarding_filter metadata="
                                 << filter.metadata;
           } else {
             ff.metadata = ffmd;

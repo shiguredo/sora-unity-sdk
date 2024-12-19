@@ -86,79 +86,9 @@ public class Sora : IDisposable
         public string? Version;
         public string? Metadata;
     }
-    public class ForwardingFiltersRule
-    {
-        public string field = "";
-        public string op = "";
-        public string[] values = new string[0];
-    }
-
-    public class ForwardingFiltersRuleSet
-    {
-        public ForwardingFiltersRule[] rules = new ForwardingFiltersRule[0];
-    }
-
-    [Serializable]
-    public class ForwardingFiltersConfig
-    {
-        [Header("Filter Settings")]
-        public bool enableAction = false;
-        [Tooltip("Action to take (block/allow)")]
-        public string action = "";
-
-        public bool enableName = false;
-        [Tooltip("Filter name")]
-        public string name = "";
-
-        public bool enablePriority = false;
-        [Tooltip("Filter priority")]
-        public int? priority;
-
-        [Header("Rules")]
-        public ForwardingFiltersRuleSet[] ruleSets = new ForwardingFiltersRuleSet[0];
-
-        public bool enableVersion = false;
-        [Tooltip("Filter version")]
-        public string version = "";
-
-        public bool enableMetadata = false;
-        [Tooltip("Filter metadata")]
-        public string metadata = "";
-    }
     public class ForwardingFilters
     {
-        // 内部のfiltersリスト
-        public List<ForwardingFilter> filters { get; set; }
-
-        // 読み取り専用のFiltersプロパティ
-        public IReadOnlyList<ForwardingFilter> Filters => filters;
-
-        public ForwardingFilters()
-        {
-            filters = new List<ForwardingFilter>();
-        }
-
-        public void Add(ForwardingFilter filter)
-        {
-            if (filters == null)
-            {
-                filters = new List<ForwardingFilter>();
-            }
-            filters.Add(filter);
-        }
-
-        // ForwardingFiltersインスタンスを追加するメソッド
-        public void Add(ForwardingFilters otherFilters)
-        {
-            if (otherFilters?.filters != null)
-            {
-                if (filters == null)
-                {
-                    filters = new List<ForwardingFilter>();
-                }
-                filters.AddRange(otherFilters.filters);
-            }
-        }
+        public List<ForwardingFilter> Filters = new List<ForwardingFilter>();
     }
     /// <summary>
     /// カメラの設定
@@ -576,12 +506,10 @@ public class Sora : IDisposable
         }
         if (config.ForwardingFilters != null && config.ForwardingFilters.Filters.Count > 0)
         {
-            var forwardingFilters = new SoraConf.Internal.ForwardingFilters();
-
+            var ffs = new SoraConf.Internal.ForwardingFilters();
             foreach (var filter in config.ForwardingFilters.Filters)
             {
                 var ff = new SoraConf.Internal.ForwardingFilter();
-
                 if (filter.Action != null)
                 {
                     ff.SetAction(filter.Action);
@@ -594,11 +522,9 @@ public class Sora : IDisposable
                 {
                     ff.SetPriority(filter.Priority.Value);
                 }
-
                 foreach (var rs in filter.Rules)
                 {
                     var ccrs = new SoraConf.Internal.ForwardingFilter.Rules();
-
                     foreach (var r in rs)
                     {
                         var ccr = new SoraConf.Internal.ForwardingFilter.Rule();
@@ -612,7 +538,6 @@ public class Sora : IDisposable
                     }
                     ff.rules.Add(ccrs);
                 }
-
                 if (filter.Version != null)
                 {
                     ff.SetVersion(filter.Version);
@@ -621,13 +546,9 @@ public class Sora : IDisposable
                 {
                     ff.SetMetadata(filter.Metadata);
                 }
-
-                // ForwardingFilters に追加
-                forwardingFilters.Add(ff);
+                ffs.filters.Add(ff);
             }
-
-            // forwarding_filters に設定
-            cc.forwarding_filters = forwardingFilters;
+            cc.SetForwardingFilters(ffs);
         }
         if (config.UseHardwareEncoder.HasValue)
         {
