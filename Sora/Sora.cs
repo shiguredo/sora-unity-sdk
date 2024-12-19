@@ -128,33 +128,33 @@ public class Sora : IDisposable
     public class ForwardingFilters
     {
         // 内部のfiltersリスト
-        public List<SoraConf.Internal.ForwardingFilter> filters { get; set; }
+        public List<ForwardingFilter> filters { get; set; }
 
         // 読み取り専用のFiltersプロパティ
-        public IReadOnlyList<SoraConf.Internal.ForwardingFilter> Filters => filters;
+        public IReadOnlyList<ForwardingFilter> Filters => filters;
 
         public ForwardingFilters()
         {
-            filters = new List<SoraConf.Internal.ForwardingFilter>();
+            filters = new List<ForwardingFilter>();
         }
 
-        public void Add(SoraConf.Internal.ForwardingFilter filter)
+        public void Add(ForwardingFilter filter)
         {
             if (filters == null)
             {
-                filters = new List<SoraConf.Internal.ForwardingFilter>();
+                filters = new List<ForwardingFilter>();
             }
             filters.Add(filter);
         }
 
         // ForwardingFiltersインスタンスを追加するメソッド
-        public void Add(SoraConf.Internal.ForwardingFilters otherFilters)
+        public void Add(ForwardingFilters otherFilters)
         {
             if (otherFilters?.filters != null)
             {
                 if (filters == null)
                 {
-                    filters = new List<SoraConf.Internal.ForwardingFilter>();
+                    filters = new List<ForwardingFilter>();
                 }
                 filters.AddRange(otherFilters.filters);
             }
@@ -582,29 +582,29 @@ public class Sora : IDisposable
             {
                 var ff = new SoraConf.Internal.ForwardingFilter();
 
-                if (filter.action != null)
+                if (filter.Action != null)
                 {
-                    ff.SetAction(filter.action);
+                    ff.SetAction(filter.Action);
                 }
-                if (filter.name != null)
+                if (filter.Name != null)
                 {
-                    ff.SetName(filter.name);
+                    ff.SetName(filter.Name);
                 }
-                if (filter.priority != default(int))
+                if (filter.Priority.HasValue)
                 {
-                    ff.SetPriority(filter.priority);
+                    ff.SetPriority(filter.Priority.Value);
                 }
 
-                foreach (var rs in filter.rules)
+                foreach (var rs in filter.Rules)
                 {
                     var ccrs = new SoraConf.Internal.ForwardingFilter.Rules();
 
-                    foreach (var r in rs.rules)
+                    foreach (var r in rs)
                     {
                         var ccr = new SoraConf.Internal.ForwardingFilter.Rule();
-                        ccr.field = r.field;
-                        ccr.op = r.op;
-                        foreach (var v in r.values)
+                        ccr.field = r.Field;
+                        ccr.op = r.Operator;
+                        foreach (var v in r.Values)
                         {
                             ccr.values.Add(v);
                         }
@@ -613,13 +613,13 @@ public class Sora : IDisposable
                     ff.rules.Add(ccrs);
                 }
 
-                if (filter.version != null)
+                if (filter.Version != null)
                 {
-                    ff.SetVersion(filter.version);
+                    ff.SetVersion(filter.Version);
                 }
-                if (filter.metadata != null)
+                if (filter.Metadata != null)
                 {
-                    ff.SetMetadata(filter.metadata);
+                    ff.SetMetadata(filter.Metadata);
                 }
 
                 // ForwardingFilters に追加
