@@ -447,12 +447,13 @@ void Sora::DoConnect(const sora_conf::internal::ConnectConfig& cc,
     config.proxy_agent = cc.proxy_agent;
     config.audio_streaming_language_code = cc.audio_streaming_language_code;
     if (cc.has_forwarding_filter()) {
-      config.forwarding_filter = convertForwardingFilter(cc.forwarding_filter);
+      config.forwarding_filter =
+          ConvertToForwardingFilter(cc.forwarding_filter);
     }
     if (cc.has_forwarding_filters()) {
       std::vector<sora::SoraSignalingConfig::ForwardingFilter> filters;
       for (const auto& filter : cc.forwarding_filters.filters) {
-        filters.push_back(convertForwardingFilter(filter));
+        filters.push_back(ConvertToForwardingFilter(filter));
       }
       config.forwarding_filters = filters;
     }
@@ -740,7 +741,7 @@ bool Sora::InitADM(rtc::scoped_refptr<webrtc::AudioDeviceModule> adm,
   return true;
 }
 
-sora::SoraSignalingConfig::ForwardingFilter Sora::convertForwardingFilter(
+sora::SoraSignalingConfig::ForwardingFilter Sora::ConvertToForwardingFilter(
     const sora_conf::internal::ForwardingFilter& filter) {
   sora::SoraSignalingConfig::ForwardingFilter ff;
 

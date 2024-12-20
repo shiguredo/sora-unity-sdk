@@ -86,10 +86,7 @@ public class Sora : IDisposable
         public string? Version;
         public string? Metadata;
     }
-    public class ForwardingFilters
-    {
-        public List<ForwardingFilter> Filters = new List<ForwardingFilter>();
-    }
+    public List<ForwardingFilter> Filters = new List<ForwardingFilter>();
     /// <summary>
     /// カメラの設定
     /// </summary>
@@ -465,15 +462,15 @@ public class Sora : IDisposable
         cc.proxy_agent = config.ProxyAgent;
         if (config.ForwardingFilter != null)
         {
-            cc.SetForwardingFilter(ConvertToInternalFilter(config.ForwardingFilter));
+            cc.SetForwardingFilter(ConvertToInternalForwardingFilter(config.ForwardingFilter));
         }
 
-        if (config.ForwardingFilters != null && config.ForwardingFilters.Count > 0)
+        if (config.ForwardingFilters != null)
         {
             var ffs = new SoraConf.Internal.ForwardingFilters();
             foreach (var filter in config.ForwardingFilters)
             {
-                ffs.filters.Add(ConvertToInternalFilter(filter));
+                ffs.filters.Add(ConvertToInternalForwardingFilter(filter));
             }
             cc.SetForwardingFilters(ffs);
         }
@@ -507,7 +504,7 @@ public class Sora : IDisposable
         sora_disconnect(p);
     }
 
-    private SoraConf.Internal.ForwardingFilter ConvertToInternalFilter(ForwardingFilter filter)
+    static SoraConf.Internal.ForwardingFilter ConvertToInternalForwardingFilter(ForwardingFilter filter)
     {
         var ff = new SoraConf.Internal.ForwardingFilter();
         if (filter.Action != null)
