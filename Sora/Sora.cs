@@ -86,7 +86,6 @@ public class Sora : IDisposable
         public string? Version;
         public string? Metadata;
     }
-    public List<ForwardingFilter> Filters = new List<ForwardingFilter>();
     /// <summary>
     /// カメラの設定
     /// </summary>
