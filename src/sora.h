@@ -80,6 +80,9 @@ class Sora : public std::enable_shared_from_this<Sora>,
   void* GetAndroidApplicationContext(void* env);
   static sora_conf::ErrorCode ToErrorCode(sora::SoraSignalingErrorCode ec);
 
+  static sora::SoraSignalingConfig::ForwardingFilter ConvertToForwardingFilter(
+      const sora_conf::internal::ForwardingFilter& filter);
+
   // SoraSignalingObserver の実装
   void OnSetOffer(std::string offer) override;
   void OnDisconnect(sora::SoraSignalingErrorCode ec,

@@ -18,6 +18,9 @@
   - @torikizi
 - [CHANGE] CMakefile の依存から libva と libdrm を削除する
   - @torikizi
+- [CHANGE] ForwardingFilter は非推奨であるため Obsolete を追加
+  - 今後は ForwardingFilters を利用するように促すメッセージを追加
+  - @torikizi
 - [UPDATE] Sora C++ SDK を `2024.8.0` に上げる
   - WEBRTC_BUILD_VERSION を `m131.6778.4.0` にアップデート
   - BOOST_VERSION を 1.87.0 にアップデート
@@ -28,6 +31,10 @@
   - @torikizi
 - [ADD] `Sora.Config` に `ClientCert`, `ClientKey`, `CACert` を追加
   - @melpon
+- [ADD] ForwardingFilter に name と priority を追加
+  - @torikizi
+- [ADD] ForwardingFilters 機能を使えるようにする
+  - @torikizi
 
 ### misc
 
