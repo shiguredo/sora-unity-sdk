@@ -234,6 +234,7 @@ public class Sora : IDisposable
         public string ProxyPassword = "";
         // Proxy サーバーに接続するときの User-Agent。未設定ならデフォルト値が使われる
         public string ProxyAgent = "";
+        [System.Obsolete("forwardingFilter は非推奨です。代わりに forwardingFilters を使用してください。")]
         public ForwardingFilter ForwardingFilter;
         public List<ForwardingFilter> ForwardingFilters;
 
