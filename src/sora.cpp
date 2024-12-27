@@ -420,11 +420,9 @@ void Sora::DoConnect(const sora_conf::internal::ConnectConfig& cc,
         d.compress = dc.compress;
       }
       if (dc.has_header()) {
-        boost::json::value parsed_value = boost::json::parse(dc.header);
-        if (parsed_value.is_array()) {
-          const auto& ar = parsed_value.as_array();
-          d.header.emplace(ar.begin(), ar.end());
-        }
+        const auto& header_content = dc.header.content;
+        d.header->insert(d.header->end(), header_content.begin(),
+                         header_content.end());
       }
       config.data_channels.push_back(std::move(d));
     }
