@@ -421,12 +421,11 @@ void Sora::DoConnect(const sora_conf::internal::ConnectConfig& cc,
       }
       if (dc.has_header()) {
         d.header = std::vector<boost::json::value>();
-        d.header->reserve(dc.header.content.size());
         for (const auto& json_str : dc.header.content) {
           boost::system::error_code ec;
           auto parsed = boost::json::parse(json_str, ec);
           if (ec) {
-            RTC_LOG(LS_WARNING) << "Invalid JSON in header: " << json_str;
+            RTC_LOG(LS_WARNING) << "Invalid JSON: header=" << json_str;
           } else {
             d.header->push_back(std::move(parsed));
           }

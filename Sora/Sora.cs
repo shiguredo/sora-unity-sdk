@@ -456,9 +456,7 @@ public class Sora : IDisposable
             }
             if (m.Header != null)
             {
-                var header = new SoraConf.Internal.DataChannel.Header();
-                header.content.AddRange(m.Header);
-                c.SetHeader(header);
+                c.SetHeader(new SoraConf.Internal.DataChannel.Header { content = new List<string>(m.Header) });
             }
             cc.data_channels.Add(c);
         }
