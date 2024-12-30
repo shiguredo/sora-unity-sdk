@@ -420,6 +420,7 @@ void Sora::DoConnect(const sora_conf::internal::ConnectConfig& cc,
         d.compress = dc.compress;
       }
       if (dc.has_header()) {
+        d.header = std::vector<boost::json::value>();
         d.header->reserve(dc.header.content.size());
         for (const auto& json_str : dc.header.content) {
           boost::system::error_code ec;
