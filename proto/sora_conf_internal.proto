@@ -10,6 +10,10 @@ message DataChannel {
     optional int32 max_retransmits = 8;
     optional string protocol = 10;
     optional bool compress = 12;
+    message Header {
+        repeated string content = 1;
+    }
+    optional Header header = 14;
 }
 
 message ForwardingFilter {

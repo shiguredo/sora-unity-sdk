@@ -50,7 +50,6 @@ public class Sora : IDisposable
         R1,
         R2,
     }
-
     public class DataChannel
     {
         // 以下は設定必須
@@ -62,6 +61,7 @@ public class Sora : IDisposable
         public int? MaxRetransmits;
         public string? Protocol;
         public bool? Compress;
+        public List<string>? Header;
     }
 
     public const string ActionBlock = "block";
@@ -453,6 +453,10 @@ public class Sora : IDisposable
             if (m.Compress != null)
             {
                 c.SetCompress(m.Compress.Value);
+            }
+            if (m.Header != null)
+            {
+                c.SetHeader(new SoraConf.Internal.DataChannel.Header { content = m.Header });
             }
             cc.data_channels.Add(c);
         }
