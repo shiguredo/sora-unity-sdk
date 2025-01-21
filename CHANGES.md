@@ -22,7 +22,7 @@
   - 今後は ForwardingFilters を利用するように促すメッセージを追加
   - @torikizi
 - [UPDATE] Sora C++ SDK を `2025.1.0` に上げる
-  - WEBRTC_BUILD_VERSION を `m132.6834.4.0` にアップデート
+  - WEBRTC_BUILD_VERSION を `m132.6834.5.0` にアップデート
   - BOOST_VERSION を 1.87.0 にアップデート
     - boost::system::error_code が削除されたので boost::system::error_code に置き換える
   - `rtc::CreateRandomString` のヘッダを追加
