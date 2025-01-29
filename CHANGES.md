@@ -11,6 +11,47 @@
 
 ## develop
 
+## 2025.1.0
+
+**リリース日**: 2025-01-29
+
+- [CHANGE] `boost::optional` を利用していた部分を `std::optional` に変更
+  - Sora C++ SDK 2024.8.0 での変更に追従
+  - @torikizi
+- [CHANGE] CI の Ubuntu から libdrm-dev と libva-dev をインストールしないようにする
+  - @torikizi
+- [CHANGE] CMakefile の依存から libva と libdrm を削除する
+  - @torikizi
+- [CHANGE] ForwardingFilter は非推奨であるため Obsolete を追加
+  - 今後は ForwardingFilters を利用するように促すメッセージを追加
+  - @torikizi
+- [UPDATE] Sora C++ SDK を `2025.1.0` に上げる
+  - WEBRTC_BUILD_VERSION を `m132.6834.5.2` にアップデート
+  - BOOST_VERSION を 1.87.0 にアップデート
+    - boost::system::error_code が削除されたので boost::system::error_code に置き換える
+  - `rtc::CreateRandomString` のヘッダを追加
+  - `SetRtpTimestamp` を `frame.timestamp` から `frame.rtp_timestamp` に変更
+  - `CMAKE_VERSION` を `3.30.5` にアップデート
+  - @torikizi
+- [ADD] `Sora.Config` に `ClientCert`, `ClientKey`, `CACert` を追加
+  - @melpon
+- [ADD] DataChannels に `Header` を追加
+  - @torikizi
+- [ADD] ForwardingFilter に name と priority を追加
+  - @torikizi
+- [ADD] ForwardingFilters 機能を使えるようにする
+  - @torikizi
+
+### misc
+
+- [CHANGE] GitHub Actions の `ubuntu-latest` を `ubuntu-24.04` に変更する
+  - @voluntas
+- [UPDATE] Github Actions の `macos-12` を `macos-14` に変更する
+  - @miosakuma
+- [CHANGE] canary リリースの仕組みを導入する
+  - canary リリースの時は prerelease フラグをつけるように変更
+  - @torikizi
+
 ## 2024.4.0 (2024-07-29)
 
 - [CHANGE] `--sora-dir`, `--sora-args` を `--local-sora-cpp-sdk-dir` と `--local-sora-cpp-sdk-args` に変更する

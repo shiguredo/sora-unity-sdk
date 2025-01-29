@@ -50,7 +50,6 @@ public class Sora : IDisposable
         R1,
         R2,
     }
-
     public class DataChannel
     {
         // 以下は設定必須
@@ -62,6 +61,7 @@ public class Sora : IDisposable
         public int? MaxRetransmits;
         public string? Protocol;
         public bool? Compress;
+        public List<string>? Header;
     }
 
     public const string ActionBlock = "block";
@@ -71,10 +71,11 @@ public class Sora : IDisposable
     public const string FieldKind = "kind";
     public const string OperatorIsIn = "is_in";
     public const string OperatorIsNotIn = "is_not_in";
-
     public class ForwardingFilter
     {
         public string? Action;
+        public string? Name;
+        public int? Priority;
         public class Rule
         {
             public string Field;
@@ -85,7 +86,6 @@ public class Sora : IDisposable
         public string? Version;
         public string? Metadata;
     }
-
     /// <summary>
     /// カメラの設定
     /// </summary>
@@ -234,11 +234,17 @@ public class Sora : IDisposable
         public string ProxyPassword = "";
         // Proxy サーバーに接続するときの User-Agent。未設定ならデフォルト値が使われる
         public string ProxyAgent = "";
-
+        [System.Obsolete("forwardingFilter は非推奨です。代わりに forwardingFilters を使用してください。")]
         public ForwardingFilter ForwardingFilter;
+        public List<ForwardingFilter> ForwardingFilters;
 
         // ハードウェアエンコーダー/デコーダーを利用するかどうか。null の場合は実装依存となる
         public bool? UseHardwareEncoder;
+
+        // 証明書周りの設定
+        public string? ClientCert;
+        public string? ClientKey;
+        public string? CACert;
     }
 
     IntPtr p;
@@ -448,6 +454,10 @@ public class Sora : IDisposable
             {
                 c.SetCompress(m.Compress.Value);
             }
+            if (m.Header != null)
+            {
+                c.SetHeader(new SoraConf.Internal.DataChannel.Header { content = m.Header });
+            }
             cc.data_channels.Add(c);
         }
         cc.proxy_url = config.ProxyUrl;
@@ -456,40 +466,33 @@ public class Sora : IDisposable
         cc.proxy_agent = config.ProxyAgent;
         if (config.ForwardingFilter != null)
         {
-            var ff = new SoraConf.Internal.ForwardingFilter();
-            if (config.ForwardingFilter.Action != null)
+            cc.SetForwardingFilter(ConvertToInternalForwardingFilter(config.ForwardingFilter));
+        }
+
+        if (config.ForwardingFilters != null)
+        {
+            var ffs = new SoraConf.Internal.ForwardingFilters();
+            foreach (var filter in config.ForwardingFilters)
             {
-                ff.SetAction(config.ForwardingFilter.Action);
+                ffs.filters.Add(ConvertToInternalForwardingFilter(filter));
             }
-            foreach (var rs in config.ForwardingFilter.Rules)
-            {
-                var ccrs = new SoraConf.Internal.ForwardingFilter.Rules();
-                foreach (var r in rs)
-                {
-                    var ccr = new SoraConf.Internal.ForwardingFilter.Rule();
-                    ccr.field = r.Field;
-                    ccr.op = r.Operator;
-                    foreach (var v in r.Values)
-                    {
-                        ccr.values.Add(v);
-                    }
-                    ccrs.rules.Add(ccr);
-                }
-                ff.rules.Add(ccrs);
-            }
-            if (config.ForwardingFilter.Version != null)
-            {
-                ff.SetVersion(config.ForwardingFilter.Version);
-            }
-            if (config.ForwardingFilter.Metadata != null)
-            {
-                ff.SetMetadata(config.ForwardingFilter.Metadata);
-            }
-            cc.SetForwardingFilter(ff);
+            cc.SetForwardingFilters(ffs);
         }
         if (config.UseHardwareEncoder.HasValue)
         {
             cc.SetUseHardwareEncoder(config.UseHardwareEncoder.Value);
+        }
+        if (config.ClientCert != null)
+        {
+            cc.SetClientCert(config.ClientCert);
+        }
+        if (config.ClientKey != null)
+        {
+            cc.SetClientKey(config.ClientKey);
+        }
+        if (config.CACert != null)
+        {
+            cc.SetCaCert(config.CACert);
         }
 
         sora_connect(p, Jsonif.Json.ToJson(cc));
@@ -503,6 +506,48 @@ public class Sora : IDisposable
     public void Disconnect()
     {
         sora_disconnect(p);
+    }
+
+    static SoraConf.Internal.ForwardingFilter ConvertToInternalForwardingFilter(ForwardingFilter filter)
+    {
+        var ff = new SoraConf.Internal.ForwardingFilter();
+        if (filter.Action != null)
+        {
+            ff.SetAction(filter.Action);
+        }
+        if (filter.Name != null)
+        {
+            ff.SetName(filter.Name);
+        }
+        if (filter.Priority.HasValue)
+        {
+            ff.SetPriority(filter.Priority.Value);
+        }
+        foreach (var rs in filter.Rules)
+        {
+            var ccrs = new SoraConf.Internal.ForwardingFilter.Rules();
+            foreach (var r in rs)
+            {
+                var ccr = new SoraConf.Internal.ForwardingFilter.Rule();
+                ccr.field = r.Field;
+                ccr.op = r.Operator;
+                foreach (var v in r.Values)
+                {
+                    ccr.values.Add(v);
+                }
+                ccrs.rules.Add(ccr);
+            }
+            ff.rules.Add(ccrs);
+        }
+        if (filter.Version != null)
+        {
+            ff.SetVersion(filter.Version);
+        }
+        if (filter.Metadata != null)
+        {
+            ff.SetMetadata(filter.Metadata);
+        }
+        return ff;
     }
 
     /// <summary>
@@ -1177,7 +1222,7 @@ public class Sora : IDisposable
         {
             if (onChangeRoute == null)
             {
-                onChangeRoute = () => {}; // 空のアクションを割り当てる
+                onChangeRoute = () => { }; // 空のアクションを割り当てる
             }
 
             onChangeRouteHandle = GCHandle.Alloc(onChangeRoute);
