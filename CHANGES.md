@@ -11,6 +11,10 @@
 
 ## develop
 
+## 2025.1.0
+
+**リリース日**: 2025-01-29
+
 - [CHANGE] `boost::optional` を利用していた部分を `std::optional` に変更
   - Sora C++ SDK 2024.8.0 での変更に追従
   - @torikizi
