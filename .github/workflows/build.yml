@@ -91,8 +91,8 @@ jobs:
       matrix:
         name:
           - android
-          - ubuntu-20.04_x86_64
-    runs-on: ubuntu-20.04
+          - ubuntu-24.04_x86_64
+    runs-on: ubuntu-24.04
     steps:
     - uses: actions/checkout@v4
     - name: Cache
@@ -104,7 +104,7 @@ jobs:
         restore-keys: |
           ${{ matrix.name }}-v1-
     - name: Prepare Ubuntu x86_64
-      if: matrix.name == 'ubuntu-20.04_x86_64'
+      if: matrix.name == 'ubuntu-24.04_x86_64'
       run: |
         sudo apt install libgl-dev
     - run: python3 run.py ${{ matrix.name }}
@@ -124,18 +124,18 @@ jobs:
         path: android/
     # Ubuntu 用
     - name: Copy Ubuntu x86_64 files
-      if: matrix.name == 'ubuntu-20.04_x86_64'
+      if: matrix.name == 'ubuntu-24.04_x86_64'
       run: |
-        mkdir ubuntu-20.04_x86_64/
-        cp _build/ubuntu-20.04_x86_64/release/sora_unity_sdk/libSoraUnitySdk.so ubuntu-20.04_x86_64/
+        mkdir ubuntu-24.04_x86_64/
+        cp _build/ubuntu-24.04_x86_64/release/sora_unity_sdk/libSoraUnitySdk.so ubuntu-24.04_x86_64/
     - name: Upload Ubuntu x86_64 Artifact
-      if: matrix.name == 'ubuntu-20.04_x86_64'
+      if: matrix.name == 'ubuntu-24.04_x86_64'
       uses: actions/upload-artifact@v4
       with:
-        name: ubuntu-20.04_x86_64
-        path: ubuntu-20.04_x86_64/
+        name: ubuntu-24.04_x86_64
+        path: ubuntu-24.04_x86_64/
   package:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-24.04
     needs:
       - build-windows
       - build-macos
@@ -164,7 +164,7 @@ jobs:
         cp ios/libboost_json.a SoraUnitySdk/Plugins/SoraUnitySdk/ios/
         cp ios/libsora.a SoraUnitySdk/Plugins/SoraUnitySdk/ios/
         cp ios/libboost_filesystem.a SoraUnitySdk/Plugins/SoraUnitySdk/ios/
-        cp ubuntu-20.04_x86_64/libSoraUnitySdk.so SoraUnitySdk/Plugins/SoraUnitySdk/linux/x86_64/
+        cp ubuntu-24.04_x86_64/libSoraUnitySdk.so SoraUnitySdk/Plugins/SoraUnitySdk/linux/x86_64/
 
         cp LICENSE SoraUnitySdk/SoraUnitySdk/
         cp NOTICE.md SoraUnitySdk/SoraUnitySdk/
