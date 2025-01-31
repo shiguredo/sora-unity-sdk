@@ -11,8 +11,8 @@
 
 ## develop
 
-- [UPDATE] Sora C++ SDK を `2025.2.0` に上げる
-  - `CMAKE_VERSION` を `3.31.4` にアップデート
+- [CHANGE] Linux x86_64 版のビルドを `ubuntu-20.04` から `ubuntu-22.04` にあげる
+  - @miosakuma
 
 ## 2025.1.0
 
