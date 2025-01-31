@@ -135,7 +135,7 @@ jobs:
         name: ubuntu-22.04_x86_64
         path: ubuntu-22.04_x86_64/
   package:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-24.04
     needs:
       - build-windows
       - build-macos

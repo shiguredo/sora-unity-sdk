@@ -14,6 +14,11 @@
 - [CHANGE] Linux x86_64 版のビルドを `ubuntu-20.04` から `ubuntu-22.04` にあげる
   - @miosakuma
 
+### misc
+
+- [CHANGE] GitHub Actions の package タスクを実行する環境を `ubuntu-20.04` から `ubuntu-22.04` にあげる
+  - @miosakuma
+
 ## 2025.1.0
 
 **リリース日**: 2025-01-29
