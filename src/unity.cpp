@@ -8,6 +8,7 @@
 #include "sora_conf.json.h"
 #include "sora_conf_internal.json.h"
 #include "unity_context.h"
+#include "unity_renderer.h"
 
 #if defined(SORA_UNITY_SDK_WINDOWS) || defined(SORA_UNITY_SDK_UBUNTU)
 #include <sora/hwenc_nvcodec/nvcodec_video_encoder.h>
@@ -183,6 +184,8 @@ void sora_set_on_handle_audio(void* p, handle_audio_cb_t f, void* userdata) {
 
 void sora_get_stats(void* p, stats_cb_t f, void* userdata) {
   auto wsora = (SoraWrapper*)p;
+
+  wsora->sora->GetTracks();  // DEBUG
   wsora->sora->GetStats(
       [f, userdata](std::string json) { f(json.c_str(), userdata); });
 }
@@ -307,6 +310,13 @@ unity_bool_t sora_audio_output_helper_is_handsfree(void* p) {
 void sora_audio_output_helper_set_handsfree(void* p, unity_bool_t enabled) {
   auto helper = (AudioOutputHelperImpl*)p;
   helper->SetHandsfree(enabled != 0);
+}
+
+UNITY_INTERFACE_EXPORT const char* get_track_id(ptrid_t track_id) {
+  void* p = sora_unity_sdk::IdPointer::Instance().Lookup(track_id);
+  return p != nullptr
+             ? ((sora_unity_sdk::UnityRenderer::Sink*)p)->GetTrackId().c_str()
+             : nullptr;
 }
 
 // iOS の場合は static link で名前が被る可能性があるので、別の名前にしておく
