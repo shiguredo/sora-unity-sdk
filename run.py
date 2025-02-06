@@ -330,7 +330,7 @@ def main():
         if platform in ("windows_x86_64", "windows_hololens2"):
             if platform == "windows_hololens2":
                 cmake_args.append("-DCMAKE_SYSTEM_NAME=WindowsStore")
-                cmake_args.append("-DCMAKE_SYSTEM_VERSION=10.0")
+                cmake_args.append("-DCMAKE_SYSTEM_VERSION=10.0.22621.0")
                 cmake_args += ["-A", "ARM64"]
         elif platform in ("macos_x86_64", "macos_arm64"):
             sysroot = cmdcap(["xcrun", "--sdk", "macosx", "--show-sdk-path"])
