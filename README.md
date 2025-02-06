@@ -1,6 +1,6 @@
 # Sora Unity SDK
 
-[![libwebrtc](https://img.shields.io/badge/libwebrtc-127.6533-blue.svg)](https://chromium.googlesource.com/external/webrtc/+/branch-heads/6533)
+[![libwebrtc](https://img.shields.io/badge/libwebrtc-132.6834-blue.svg)](https://chromium.googlesource.com/external/webrtc/+/branch-heads/6834)
 [![GitHub tag](https://img.shields.io/github/tag/shiguredo/sora-unity-sdk.svg)](https://github.com/shiguredo/sora-unity-sdk)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Actions Status](https://github.com/shiguredo/sora-unity-sdk/workflows/build/badge.svg)](https://github.com/shiguredo/sora-unity-sdk/actions)
@@ -37,7 +37,7 @@ Please read https://github.com/shiguredo/oss/blob/master/README.en.md before use
 
 ## システム条件
 
-- WebRTC SFU Sora 2024.1.0 以降
+- WebRTC SFU Sora 2024.2.0 以降
 
 ## 対応プラットフォーム
 
@@ -89,14 +89,24 @@ Please read https://github.com/shiguredo/oss/blob/master/README.en.md before use
 - Sora データチャネルメッセージングへの対応
   - 実験的機能
 - Apple VideoToolbox
+  - H.265 ハードウェアエンコードへの対応
+  - H.265 ハードウェアデコードへの対応
   - H.264 ハードウェアエンコードへの対応
   - H.264 ハードウェアデコードへの対応
 - NVIDIA VIDEO CODEC SDK
-  - Windows 版
-    - H.264 のハードウェアエンコードへの対応
-    - H.264 のハードウェアデコードへの対応
-    - VP8 のハードウェアデコードへの対応
-    - VP9 のハードウェアデコードへの対応
+  - H.265 のハードウェアエンコードへの対応
+  - H.265 のハードウェアデコードへの対応
+  - H.264 のハードウェアエンコードへの対応
+  - H.264 のハードウェアデコードへの対応
+  - VP8 のハードウェアデコードへの対応
+  - VP9 のハードウェアデコードへの対応
+- Intel VPL
+  - H.265 ハードウェアエンコードへの対応
+  - H.265 ハードウェアデコードへの対応
+  - H.264 のハードウェアエンコードへの対応
+  - H.264 のハードウェアデコードへの対応
+  - AV1 のハードウェアエンコードへの対応
+  - AV1 のハードウェアデコードへの対応
 - ミュート機能
 - iOS, Android 向け音声出力先変更機能
 - マイクやカメラ等のメディアデバイスをつかまないようにする機能

@@ -291,8 +291,6 @@ elseif (SORA_UNITY_SDK_PACKAGE STREQUAL "ubuntu-20.04_x86_64" OR SORA_UNITY_SDK_
       src/unity_camera_capturer_opengl.cpp
   )
 
-  find_package(Libva REQUIRED)
-  find_package(Libdrm REQUIRED)
   target_compile_definitions(SoraUnitySdk PRIVATE SORA_UNITY_SDK_UBUNTU)
   target_compile_options(SoraUnitySdk PRIVATE "-nostdinc++")
   target_include_directories(SoraUnitySdk PRIVATE ${LIBCXX_INCLUDE_DIR})

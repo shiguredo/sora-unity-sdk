@@ -14,6 +14,7 @@
 #include <modules/video_capture/video_capture.h>
 #include <modules/video_capture/video_capture_factory.h>
 #include <pc/video_track_source_proxy.h>
+#include <rtc_base/crypto_random.h>
 #include <rtc_base/logging.h>
 #include <rtc_base/ssl_adapter.h>
 
@@ -149,7 +150,7 @@ static sora_conf::VideoFrame VideoFrameToConfig(
   f.baseptr = reinterpret_cast<int64_t>(&frame);
   f.id = frame.id();
   f.timestamp_us = frame.timestamp_us();
-  f.timestamp = frame.timestamp();
+  f.timestamp = frame.rtp_timestamp();
   f.ntp_time_ms = frame.ntp_time_ms();
   f.rotation = (int)frame.rotation();
   auto& v = f.video_frame_buffer;
@@ -366,7 +367,7 @@ void Sora::DoConnect(const sora_conf::internal::ConnectConfig& cc,
     config.audio = cc.audio;
     config.video_codec_type = cc.video_codec_type;
     if (!cc.video_vp9_params.empty()) {
-      boost::json::error_code ec;
+      boost::system::error_code ec;
       auto md = boost::json::parse(cc.video_vp9_params, ec);
       if (ec) {
         RTC_LOG(LS_WARNING)
@@ -376,7 +377,7 @@ void Sora::DoConnect(const sora_conf::internal::ConnectConfig& cc,
       }
     }
     if (!cc.video_av1_params.empty()) {
-      boost::json::error_code ec;
+      boost::system::error_code ec;
       auto md = boost::json::parse(cc.video_av1_params, ec);
       if (ec) {
         RTC_LOG(LS_WARNING)
@@ -386,7 +387,7 @@ void Sora::DoConnect(const sora_conf::internal::ConnectConfig& cc,
       }
     }
     if (!cc.video_h264_params.empty()) {
-      boost::json::error_code ec;
+      boost::system::error_code ec;
       auto md = boost::json::parse(cc.video_h264_params, ec);
       if (ec) {
         RTC_LOG(LS_WARNING)
@@ -425,10 +426,22 @@ void Sora::DoConnect(const sora_conf::internal::ConnectConfig& cc,
       if (dc.has_compress()) {
         d.compress = dc.compress;
       }
+      if (dc.has_header()) {
+        d.header = std::vector<boost::json::value>();
+        for (const auto& json_str : dc.header.content) {
+          boost::system::error_code ec;
+          auto parsed = boost::json::parse(json_str, ec);
+          if (ec) {
+            RTC_LOG(LS_WARNING) << "Invalid JSON: header=" << json_str;
+          } else {
+            d.header->push_back(std::move(parsed));
+          }
+        }
+      }
       config.data_channels.push_back(std::move(d));
     }
     if (!cc.metadata.empty()) {
-      boost::json::error_code ec;
+      boost::system::error_code ec;
       auto md = boost::json::parse(cc.metadata, ec);
       if (ec) {
         RTC_LOG(LS_WARNING) << "Invalid JSON: metadata=" << cc.metadata;
@@ -437,7 +450,7 @@ void Sora::DoConnect(const sora_conf::internal::ConnectConfig& cc,
       }
     }
     if (!cc.signaling_notify_metadata.empty()) {
-      boost::json::error_code ec;
+      boost::system::error_code ec;
       auto md = boost::json::parse(cc.signaling_notify_metadata, ec);
       if (ec) {
         RTC_LOG(LS_WARNING) << "Invalid JSON: signaling_notify_metadata="
@@ -453,35 +466,24 @@ void Sora::DoConnect(const sora_conf::internal::ConnectConfig& cc,
     config.proxy_agent = cc.proxy_agent;
     config.audio_streaming_language_code = cc.audio_streaming_language_code;
     if (cc.has_forwarding_filter()) {
-      sora::SoraSignalingConfig::ForwardingFilter ff;
-      if (cc.forwarding_filter.has_action()) {
-        ff.action = cc.forwarding_filter.action;
+      config.forwarding_filter =
+          ConvertToForwardingFilter(cc.forwarding_filter);
+    }
+    if (cc.has_forwarding_filters()) {
+      std::vector<sora::SoraSignalingConfig::ForwardingFilter> filters;
+      for (const auto& filter : cc.forwarding_filters.filters) {
+        filters.push_back(ConvertToForwardingFilter(filter));
       }
-      for (const auto& rs : cc.forwarding_filter.rules) {
-        std::vector<sora::SoraSignalingConfig::ForwardingFilter::Rule> ffrs;
-        for (const auto& r : rs.rules) {
-          sora::SoraSignalingConfig::ForwardingFilter::Rule ffr;
-          ffr.field = r.field;
-          ffr.op = r.op;
-          ffr.values = r.values;
-          ffrs.push_back(ffr);
-        }
-        ff.rules.push_back(ffrs);
-      }
-      if (cc.forwarding_filter.has_version()) {
-        ff.version = cc.forwarding_filter.version;
-      }
-      if (cc.forwarding_filter.has_metadata()) {
-        boost::json::error_code ec;
-        auto ffmd = boost::json::parse(cc.forwarding_filter.metadata, ec);
-        if (ec) {
-          RTC_LOG(LS_WARNING) << "Invalid JSON: forwarding_filter metadata="
-                              << cc.forwarding_filter.metadata;
-        } else {
-          ff.metadata = ffmd;
-        }
-      }
-      config.forwarding_filter = ff;
+      config.forwarding_filters = filters;
+    }
+    if (cc.has_client_cert()) {
+      config.client_cert = cc.client_cert;
+    }
+    if (cc.has_client_key()) {
+      config.client_key = cc.client_key;
+    }
+    if (cc.has_ca_cert()) {
+      config.ca_cert = cc.ca_cert;
     }
     config.network_manager =
         sora_context_->signaling_thread()->BlockingCall([this]() {
@@ -491,7 +493,7 @@ void Sora::DoConnect(const sora_conf::internal::ConnectConfig& cc,
         sora_context_->signaling_thread()->BlockingCall([this]() {
           return sora_context_->connection_context()->default_socket_factory();
         });
-    config.user_agent = boost::optional<std::string>(
+    config.user_agent = std::optional<std::string>(
         "Mozilla/5.0 (Sora Unity SDK/" SORA_UNITY_SDK_VERSION ")");
 
     signaling_ = sora::SoraSignaling::Create(std::move(config));
@@ -761,6 +763,48 @@ bool Sora::InitADM(rtc::scoped_refptr<webrtc::AudioDeviceModule> adm,
   }
 
   return true;
+}
+
+sora::SoraSignalingConfig::ForwardingFilter Sora::ConvertToForwardingFilter(
+    const sora_conf::internal::ForwardingFilter& filter) {
+  sora::SoraSignalingConfig::ForwardingFilter ff;
+
+  if (filter.has_action()) {
+    ff.action = filter.action;
+  }
+  if (filter.has_name()) {
+    ff.name = filter.name;
+  }
+  if (filter.has_priority()) {
+    ff.priority = filter.priority;
+  }
+  for (const auto& rs : filter.rules) {
+    std::vector<sora::SoraSignalingConfig::ForwardingFilter::Rule> ffrs;
+    for (const auto& r : rs.rules) {
+      sora::SoraSignalingConfig::ForwardingFilter::Rule ffr;
+      ffr.field = r.field;
+      ffr.op = r.op;
+      ffr.values = r.values;
+      ffrs.push_back(ffr);
+    }
+    ff.rules.push_back(ffrs);
+  }
+
+  if (filter.has_version()) {
+    ff.version = filter.version;
+  }
+  if (filter.has_metadata()) {
+    boost::system::error_code ec;
+    auto ffmd = boost::json::parse(filter.metadata, ec);
+    if (ec) {
+      RTC_LOG(LS_WARNING) << "Invalid JSON: forwarding_filter metadata="
+                          << filter.metadata;
+    } else {
+      ff.metadata = ffmd;
+    }
+  }
+
+  return ff;
 }
 
 rtc::scoped_refptr<webrtc::VideoTrackSourceInterface> Sora::CreateVideoCapturer(
