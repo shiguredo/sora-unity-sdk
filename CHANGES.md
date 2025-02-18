@@ -11,7 +11,7 @@
 
 ## develop
 
-- [CHANGE] VideoCodecType のデフォルト値を `VP9` から未指定に変更する
+- [CHANGE] Sora.Config.VideoCodecType を Nullable 型に変更し、デフォルト値を `VP9` から未指定に変更する
   - 未指定の場合、シグナリング "type": "connect" でビデオコーデック指定を行わない
   - ビデオコーデック指定を行わない場合は Sora のデフォルト値 `VP9` が利用されるため機能影響はない
   - @miosakuma
