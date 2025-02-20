@@ -11,8 +11,17 @@
 
 ## develop
 
+- [CHANGE] Sora.Config.VideoCodecType を Nullable 型に変更し、デフォルト値を `VP9` から未指定に変更する
+  - 未指定の場合、シグナリング "type": "connect" でビデオコーデック指定を行わない
+  - ビデオコーデック指定を行わない場合は Sora のデフォルト値 `VP9` が利用される
+  - @miosakuma
+- [CHANGE] Sora.Config.AudioCodecType を Nullable 型に変更し、デフォルト値を `OPUS` から未指定に変更する
+  - 未指定の場合、シグナリング "type": "connect" でオーディオコーデック指定を行わない
+  - オーディオコーデック指定を行わない場合は Sora のデフォルト値 `OPUS` が利用される
+  - @miosakuma
 - [UPDATE] Sora C++ SDK を `2025.2.0` に上げる
   - `CMAKE_VERSION` を `3.31.4` にアップデート
+  - @torikizi
 
 ## 2025.1.0
 
