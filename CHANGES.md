@@ -11,7 +11,7 @@
 
 ## develop
 
-- [CHANGE] Linux x86_64 版のビルドを `ubuntu-20.04_x86_64` から `ubuntu-22.04_x86_64` にあげる
+- [CHANGE] Linux x86_64 版のビルドを `ubuntu-20.04_x86_64` から `ubuntu-24.04_x86_64` にあげる
   - @miosakuma
 - [CHANGE] 対応プラットフォームから `Ubuntu 20.04` を削除し、 `Ubuntu 24.04` を追加する
 - [CHANGE] Sora.Config.VideoCodecType を Nullable 型に変更し、デフォルト値を `VP9` から未指定に変更する
@@ -25,6 +25,8 @@
 - [UPDATE] Sora C++ SDK を `2025.2.0` に上げる
   - `CMAKE_VERSION` を `3.31.4` にアップデート
   - @torikizi
+- [ADD] Ubuntu 22.04 でのビルドに対応する
+  - @miosakuma
 
 ### misc
 
