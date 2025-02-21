@@ -178,7 +178,7 @@ public class Sora : IDisposable
         public CameraConfig CameraConfig = new CameraConfig();
         public bool Video = true;
         public bool Audio = true;
-        public VideoCodecType VideoCodecType = VideoCodecType.VP9;
+        public VideoCodecType? VideoCodecType;
         public string VideoVp9Params = "";
         public string VideoAv1Params = "";
         public string VideoH264Params = "";
@@ -205,7 +205,7 @@ public class Sora : IDisposable
         /// 指定したデバイスのスピーカーを利用することが出来ます。
         /// </remarks>
         public string AudioPlayoutDevice = "";
-        public AudioCodecType AudioCodecType = AudioCodecType.OPUS;
+        public AudioCodecType? AudioCodecType;
         public int AudioBitRate = 0;
         public string AudioStreamingLanguageCode = "";
 
@@ -402,7 +402,7 @@ public class Sora : IDisposable
         cc.camera_config.video_width = config.CameraConfig.VideoWidth;
         cc.camera_config.video_height = config.CameraConfig.VideoHeight;
         cc.camera_config.video_fps = config.CameraConfig.VideoFps;
-        cc.video_codec_type = config.VideoCodecType.ToString();
+        cc.video_codec_type = config.VideoCodecType == null ? "" :  config.VideoCodecType.ToString();
         cc.video_vp9_params = config.VideoVp9Params;
         cc.video_av1_params = config.VideoAv1Params;
         cc.video_h264_params = config.VideoH264Params;
@@ -411,7 +411,7 @@ public class Sora : IDisposable
         cc.unity_audio_output = config.UnityAudioOutput;
         cc.audio_recording_device = config.AudioRecordingDevice;
         cc.audio_playout_device = config.AudioPlayoutDevice;
-        cc.audio_codec_type = config.AudioCodecType.ToString();
+        cc.audio_codec_type = config.AudioCodecType == null ? "" : config.AudioCodecType.ToString();
         cc.audio_bit_rate = config.AudioBitRate;
         cc.audio_streaming_language_code = config.AudioStreamingLanguageCode;
         if (config.EnableDataChannelSignaling)
