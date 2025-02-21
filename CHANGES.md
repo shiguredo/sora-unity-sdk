@@ -31,6 +31,8 @@
   - @miosakuma
 - [CHANGE] GitHub Actions の package タスクを実行する環境を `ubuntu-20.04` から `ubuntu-22.04` にあげる
   - @miosakuma
+- [CHANGE] 対応プラットフォームから `Ubuntu 20.04` を削除、 `Ubuntu 22.04` を追加
+  - @miosakuma
 
 ## 2025.1.0
 
