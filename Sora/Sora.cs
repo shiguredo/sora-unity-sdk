@@ -30,6 +30,42 @@ public class Sora : IDisposable
         AV1,
         H265,
     }
+    static string VideoCodecTypeToString(VideoCodecType type)
+    {
+        switch (type)
+        {
+            case VideoCodecType.VP9:
+                return "VP9";
+            case VideoCodecType.VP8:
+                return "VP8";
+            case VideoCodecType.H264:
+                return "H264";
+            case VideoCodecType.AV1:
+                return "AV1";
+            case VideoCodecType.H265:
+                return "H265";
+            default:
+                return "";
+        }
+    }
+    static VideoCodecType VideoCodecTypeFromString(string value)
+    {
+        switch (value)
+        {
+            case "VP9":
+                return VideoCodecType.VP9;
+            case "VP8":
+                return VideoCodecType.VP8;
+            case "H264":
+                return VideoCodecType.H264;
+            case "AV1":
+                return VideoCodecType.AV1;
+            case "H265":
+                return VideoCodecType.H265;
+            default:
+                return VideoCodecType.VP9;
+        }
+    }
     public enum AudioCodecType
     {
         OPUS,
@@ -132,6 +168,155 @@ public class Sora : IDisposable
                 VideoHeight = videoHeight,
                 VideoFps = videoFps,
             };
+        }
+    }
+
+    public enum VideoCodecImplementation
+    {
+        Internal,
+        CiscoOpenH264,
+        IntelVpl,
+        NvidiaVideoCodecSdk,
+    }
+    static string VideoCodecImplementationToString(VideoCodecImplementation implementation)
+    {
+        switch (implementation)
+        {
+            case VideoCodecImplementation.Internal:
+                return "internal";
+            case VideoCodecImplementation.CiscoOpenH264:
+                return "cisco_openh264";
+            case VideoCodecImplementation.IntelVpl:
+                return "intel_vpl";
+            case VideoCodecImplementation.NvidiaVideoCodecSdk:
+                return "nvidia_video_codec_sdk";
+            default:
+                return "";
+        }
+    }
+    static VideoCodecImplementation VideoCodecImplementationFromString(string value)
+    {
+        switch (value)
+        {
+            case "internal":
+                return VideoCodecImplementation.Internal;
+            case "cisco_openh264":
+                return VideoCodecImplementation.CiscoOpenH264;
+            case "intel_vpl":
+                return VideoCodecImplementation.IntelVpl;
+            case "nvidia_video_codec_sdk":
+                return VideoCodecImplementation.NvidiaVideoCodecSdk;
+            default:
+                return VideoCodecImplementation.Internal;
+        }
+    }
+
+    public struct VideoCodecCapabilityConfig
+    {
+        public string? OpenH264Path;
+    }
+    public class VideoCodecCapability
+    {
+        public struct Codec
+        {
+            public VideoCodecType Type;
+            public bool Encoder;
+            public bool Decoder;
+            public string Parameters;
+        }
+        public struct Engine
+        {
+            public VideoCodecImplementation Name;
+            public Codec[] Codecs;
+            public string Parameters;
+        }
+        public Engine[] Engines = new Engine[0];
+    }
+
+    public class VideoCodecPreference
+    {
+        public struct Codec
+        {
+            public VideoCodecType Type;
+            public VideoCodecImplementation? Encoder;
+            public VideoCodecImplementation? Decoder;
+            public string? Parameters;
+        }
+        public Codec[] Codecs = new Codec[0];
+
+        public bool HasImplementation(VideoCodecImplementation implementation)
+        {
+            foreach (var codec in Codecs)
+            {
+                if ((codec.Encoder != null && codec.Encoder == implementation) ||
+                    (codec.Decoder != null && codec.Decoder == implementation))
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+        public void Merge(VideoCodecPreference preference)
+        {
+            foreach (var codec in preference.Codecs)
+            {
+                int index = Array.FindIndex(Codecs, (c) => codec.Type == c.Type);
+                if (index != -1)
+                {
+                    var c = Codecs[index];
+                    if (codec.Encoder != null)
+                    {
+                        c.Encoder = codec.Encoder;
+                    }
+                    if (codec.Decoder != null)
+                    {
+                        c.Decoder = codec.Decoder;
+                    }
+                    if (codec.Encoder != null || codec.Decoder != null)
+                    {
+                        c.Parameters = codec.Parameters;
+                    }
+                    Codecs[index] = c;
+                }
+                else
+                {
+                    Codecs = new List<Codec>(Codecs) { codec }.ToArray();
+                }
+            }
+        }
+        public static VideoCodecPreference CreateFromImplementation(VideoCodecCapability capability, VideoCodecImplementation implementation)
+        {
+            var preference = new VideoCodecPreference();
+            int index = Array.FindIndex(capability.Engines, (engine) => engine.Name == implementation);
+            if (index == -1)
+            {
+                return preference;
+            }
+            var codecs = new List<Codec>();
+            foreach (var codec in capability.Engines[index].Codecs)
+            {
+                var preference_codec = new Codec();
+                preference_codec.Type = codec.Type;
+                if (codec.Encoder)
+                {
+                    preference_codec.Encoder = implementation;
+                }
+                if (codec.Decoder)
+                {
+                    preference_codec.Decoder = implementation;
+                }
+                codecs.Add(preference_codec);
+            }
+            preference.Codecs = codecs.ToArray();
+            return preference;
+        }
+        public static VideoCodecPreference GetHardwareEncoderPreference(VideoCodecCapability capability)
+        {
+            var preference = new VideoCodecPreference();
+            preference.Merge(CreateFromImplementation(capability, VideoCodecImplementation.Internal));
+            preference.Merge(CreateFromImplementation(capability, VideoCodecImplementation.NvidiaVideoCodecSdk));
+            preference.Merge(CreateFromImplementation(capability, VideoCodecImplementation.IntelVpl));
+            return preference;
         }
     }
 
@@ -238,8 +423,8 @@ public class Sora : IDisposable
         public ForwardingFilter ForwardingFilter;
         public List<ForwardingFilter> ForwardingFilters;
 
-        // ハードウェアエンコーダー/デコーダーを利用するかどうか。null の場合は実装依存となる
-        public bool? UseHardwareEncoder;
+        // 利用するエンコーダーの種類
+        public VideoCodecPreference? VideoCodecPreference;
 
         // 証明書周りの設定
         public string? ClientCert;
@@ -402,7 +587,7 @@ public class Sora : IDisposable
         cc.camera_config.video_width = config.CameraConfig.VideoWidth;
         cc.camera_config.video_height = config.CameraConfig.VideoHeight;
         cc.camera_config.video_fps = config.CameraConfig.VideoFps;
-        cc.video_codec_type = config.VideoCodecType == null ? "" :  config.VideoCodecType.ToString();
+        cc.video_codec_type = config.VideoCodecType == null ? "" : config.VideoCodecType.ToString();
         cc.video_vp9_params = config.VideoVp9Params;
         cc.video_av1_params = config.VideoAv1Params;
         cc.video_h264_params = config.VideoH264Params;
@@ -478,9 +663,9 @@ public class Sora : IDisposable
             }
             cc.SetForwardingFilters(ffs);
         }
-        if (config.UseHardwareEncoder.HasValue)
+        if (config.VideoCodecPreference != null)
         {
-            cc.SetUseHardwareEncoder(config.UseHardwareEncoder.Value);
+            cc.SetVideoCodecPreference(ConvertToInternalVideoCodecPreference(config.VideoCodecPreference));
         }
         if (config.ClientCert != null)
         {
@@ -548,6 +733,63 @@ public class Sora : IDisposable
             ff.SetMetadata(filter.Metadata);
         }
         return ff;
+    }
+
+    static SoraConf.Internal.VideoCodecCapabilityConfig ConvertToInternalVideoCodecCapabilityConfig(VideoCodecCapabilityConfig config)
+    {
+        var vccc = new SoraConf.Internal.VideoCodecCapabilityConfig();
+        if (config.OpenH264Path != null)
+        {
+            vccc.openh264_path = config.OpenH264Path;
+        }
+        return vccc;
+    }
+
+    static VideoCodecCapability ConvertToVideoCodecCapability(SoraConf.Internal.VideoCodecCapability capability)
+    {
+        var vcc = new VideoCodecCapability();
+        var vcces = new List<VideoCodecCapability.Engine>();
+        foreach (var engine in capability.engines)
+        {
+            var e = new VideoCodecCapability.Engine();
+            e.Name = VideoCodecImplementationFromString(engine.name);
+            var ecs = new List<Sora.VideoCodecCapability.Codec>();
+            foreach (var codec in engine.codecs)
+            {
+                var c = new VideoCodecCapability.Codec();
+                c.Type = VideoCodecTypeFromString(codec.type);
+                c.Encoder = codec.encoder;
+                c.Decoder = codec.decoder;
+                c.Parameters = codec.parameters;
+                ecs.Add(c);
+            }
+            e.Codecs = ecs.ToArray();
+            e.Parameters = engine.parameters;
+            vcces.Add(e);
+        }
+        vcc.Engines = vcces.ToArray();
+        return vcc;
+    }
+
+    static SoraConf.Internal.VideoCodecPreference ConvertToInternalVideoCodecPreference(VideoCodecPreference preference)
+    {
+        var vcp = new SoraConf.Internal.VideoCodecPreference();
+        foreach (var codec in preference.Codecs)
+        {
+            var c = new SoraConf.Internal.VideoCodecPreference.Codec();
+            c.type = VideoCodecTypeToString(codec.Type);
+            if (codec.Encoder != null)
+            {
+                c.SetEncoder(VideoCodecImplementationToString(codec.Encoder.Value));
+            }
+            if (codec.Decoder != null)
+            {
+                c.SetDecoder(VideoCodecImplementationToString(codec.Decoder.Value));
+            }
+            c.parameters = codec.Parameters == null ? "{}" : codec.Parameters;
+            vcp.codecs.Add(c);
+        }
+        return vcp;
     }
 
     /// <summary>
@@ -1063,6 +1305,17 @@ public class Sora : IDisposable
         }
     }
 
+    public static VideoCodecCapability GetVideoCodecCapability(VideoCodecCapabilityConfig config)
+    {
+        var c = ConvertToInternalVideoCodecCapabilityConfig(config);
+        var cjson = Jsonif.Json.ToJson(c);
+        int size = sora_get_video_codec_capability_size(cjson);
+        byte[] buf = new byte[size];
+        sora_get_video_codec_capability(cjson, buf, size);
+        var vcc = Jsonif.Json.FromJson<SoraConf.Internal.VideoCodecCapability>(System.Text.Encoding.UTF8.GetString(buf));
+        return ConvertToVideoCodecCapability(vcc);
+    }
+
 #if UNITY_IOS && !UNITY_EDITOR
     private const string DllName = "__Internal";
 #else
@@ -1139,6 +1392,10 @@ public class Sora : IDisposable
     private static extern void sora_get_selected_signaling_url(IntPtr p, [Out] byte[] buf, int size);
     [DllImport(DllName)]
     private static extern void sora_get_connected_signaling_url(IntPtr p, [Out] byte[] buf, int size);
+    [DllImport(DllName)]
+    private static extern int sora_get_video_codec_capability_size(string config);
+    [DllImport(DllName)]
+    private static extern void sora_get_video_codec_capability(string config, [Out] byte[] buf, int size);
 
     public interface IAudioOutputHelper : IDisposable
     {

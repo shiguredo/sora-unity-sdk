@@ -2,7 +2,9 @@
 
 // Sora
 #include <sora/audio_output_helper.h>
+#include <sora/sora_video_codec.h>
 
+#include "converter.h"
 #include "device_list.h"
 #include "sora.h"
 #include "sora_conf.json.h"
@@ -10,8 +12,8 @@
 #include "unity_context.h"
 
 #if defined(SORA_UNITY_SDK_WINDOWS) || defined(SORA_UNITY_SDK_UBUNTU)
-#include <sora/hwenc_nvcodec/nvcodec_video_encoder.h>
 #include <sora/hwenc_nvcodec/nvcodec_video_decoder.h>
+#include <sora/hwenc_nvcodec/nvcodec_video_encoder.h>
 #endif
 
 struct SoraWrapper {
@@ -276,6 +278,38 @@ void sora_get_connected_signaling_url(void* p, void* buf, int size) {
   auto wsora = (SoraWrapper*)p;
   std::string str = wsora->sora->GetConnectedSignalingURL();
   std::memcpy(buf, str.c_str(), std::min(size, (int)str.size()));
+}
+static std::optional<sora::VideoCodecCapability> g_video_codec_capability;
+int sora_get_video_codec_capability_size(const char* config) {
+  auto c = jsonif::from_json<sora_conf::internal::VideoCodecCapabilityConfig>(
+      config);
+  auto cc = sora_unity_sdk::ConvertToVideoCodecCapabilityConfigWithSession(c);
+  auto capability = sora::GetVideoCodecCapability(cc);
+  auto vcc = sora_unity_sdk::ConvertToInternalVideoCodecCapability(capability);
+  auto result = jsonif::to_json(vcc);
+  g_video_codec_capability = capability;
+  return (int)result.size();
+}
+void sora_get_video_codec_capability(const char* config, void* buf, int size) {
+  sora::VideoCodecCapability capability;
+  // 今の実装は sora_get_video_codec_capability_size → sora_get_video_codec_capability の順で呼ぶのは確定しているので、
+  // sora_get_video_codec_capability_size で取得した capability を流用する
+  if (g_video_codec_capability) {
+    capability = *g_video_codec_capability;
+    g_video_codec_capability.reset();
+  } else {
+    // 普通に調べる
+    auto c = jsonif::from_json<sora_conf::internal::VideoCodecCapabilityConfig>(
+        config);
+    auto cc = sora_unity_sdk::ConvertToVideoCodecCapabilityConfigWithSession(c);
+    capability = sora::GetVideoCodecCapability(cc);
+  }
+  auto vcc = sora_unity_sdk::ConvertToInternalVideoCodecCapability(capability);
+  auto result = jsonif::to_json(vcc);
+  if (size < (int)result.size()) {
+    return;
+  }
+  std::memcpy(buf, result.c_str(), result.size());
 }
 
 struct AudioOutputHelperImpl : public sora::AudioChangeRouteObserver {

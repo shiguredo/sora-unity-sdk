@@ -115,6 +115,11 @@ UNITY_INTERFACE_EXPORT void sora_get_selected_signaling_url(void* p,
 UNITY_INTERFACE_EXPORT void sora_get_connected_signaling_url(void* p,
                                                              void* buf,
                                                              int size);
+UNITY_INTERFACE_EXPORT int sora_get_video_codec_capability_size(
+    const char* config);
+UNITY_INTERFACE_EXPORT void sora_get_video_codec_capability(const char* config,
+                                                            void* buf,
+                                                            int size);
 
 typedef void (*change_route_cb_t)(void* userdata);
 UNITY_INTERFACE_EXPORT void* sora_audio_output_helper_create(

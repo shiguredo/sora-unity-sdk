@@ -65,6 +65,7 @@ set_target_properties(SoraUnitySdk PROPERTIES CXX_STANDARD 20 C_STANDARD 99)
 
 target_sources(SoraUnitySdk
   PRIVATE
+    src/converter.cpp
     src/device_list.cpp
     src/id_pointer.cpp
     src/sora.cpp
