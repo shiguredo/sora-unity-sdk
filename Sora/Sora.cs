@@ -173,6 +173,8 @@ public class Sora : IDisposable
 
     public enum VideoCodecImplementation
     {
+        // Internal は libwebrtc の内部で実装されているエンコーダー/デコーダーを利用する
+        // 通常はソフトウェア実装だが、macOS, iOS, Android 等のプラットフォーム向けに一部ハードウェア実装も存在する
         Internal,
         CiscoOpenH264,
         IntelVpl,
@@ -286,8 +288,12 @@ public class Sora : IDisposable
             var vcpr = Jsonif.Json.FromJson<SoraConf.Internal.VideoCodecPreference>(System.Text.Encoding.UTF8.GetString(buf));
             return ConvertToVideoCodecPreference(vcpr);
         }
+
+        // 可能な限り HWA を利用する VideoCodecPreference を返す
+        // 優先度的には Intel VPL > Nvidia Video Codec SDK > Internal となる
         public static VideoCodecPreference GetHardwareEncoderPreference(VideoCodecCapability capability)
         {
+            // Merge は同じコーデックを上書きするので、優先度が高いのを後でマージすることで正しい優先度になる
             var preference = new VideoCodecPreference();
             preference.Merge(CreateFromImplementation(capability, VideoCodecImplementation.Internal));
             preference.Merge(CreateFromImplementation(capability, VideoCodecImplementation.NvidiaVideoCodecSdk));
