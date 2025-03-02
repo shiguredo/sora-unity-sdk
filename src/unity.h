@@ -141,6 +141,14 @@ sora_create_video_codec_preference_from_implementation(
     const char* implementation,
     void* buf,
     int size);
+UNITY_INTERFACE_EXPORT int sora_video_codec_capability_to_json_size(
+    const char* self);
+UNITY_INTERFACE_EXPORT void
+sora_video_codec_capability_to_json(const char* self, void* buf, int size);
+UNITY_INTERFACE_EXPORT int sora_video_codec_preference_to_json_size(
+    const char* self);
+UNITY_INTERFACE_EXPORT void
+sora_video_codec_preference_to_json(const char* self, void* buf, int size);
 
 typedef void (*change_route_cb_t)(void* userdata);
 UNITY_INTERFACE_EXPORT void* sora_audio_output_helper_create(

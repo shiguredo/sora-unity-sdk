@@ -231,6 +231,15 @@ public class Sora : IDisposable
             public string Parameters;
         }
         public Engine[] Engines = new Engine[0];
+
+        public string ToJson()
+        {
+            var vcc = ConvertToInternalVideoCodecCapability(this);
+            var size = sora_video_codec_capability_to_json_size(Jsonif.Json.ToJson(vcc));
+            var buf = new byte[size];
+            sora_video_codec_capability_to_json(Jsonif.Json.ToJson(vcc), buf, size);
+            return System.Text.Encoding.UTF8.GetString(buf);
+        }
     }
 
     public class VideoCodecPreference
@@ -244,6 +253,14 @@ public class Sora : IDisposable
         }
         public Codec[] Codecs = new Codec[0];
 
+        public string ToJson()
+        {
+            var vcp = ConvertToInternalVideoCodecPreference(this);
+            var size = sora_video_codec_preference_to_json_size(Jsonif.Json.ToJson(vcp));
+            var buf = new byte[size];
+            sora_video_codec_preference_to_json(Jsonif.Json.ToJson(vcp), buf, size);
+            return System.Text.Encoding.UTF8.GetString(buf);
+        }
         public bool HasImplementation(VideoCodecImplementation implementation)
         {
             var vcp = ConvertToInternalVideoCodecPreference(this);
@@ -1408,6 +1425,14 @@ public class Sora : IDisposable
     private static extern int sora_create_video_codec_preference_from_implementation_size(string capability, string implementation);
     [DllImport(DllName)]
     private static extern void sora_create_video_codec_preference_from_implementation(string capability, string implementation, [Out] byte[] buf, int size);
+    [DllImport(DllName)]
+    private static extern int sora_video_codec_capability_to_json_size(string self);
+    [DllImport(DllName)]
+    private static extern void sora_video_codec_capability_to_json(string self, [Out] byte[] buf, int size);
+    [DllImport(DllName)]
+    private static extern int sora_video_codec_preference_to_json_size(string self);
+    [DllImport(DllName)]
+    private static extern void sora_video_codec_preference_to_json(string self, [Out] byte[] buf, int size);
 
 
     public interface IAudioOutputHelper : IDisposable

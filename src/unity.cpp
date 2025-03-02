@@ -378,6 +378,40 @@ void sora_create_video_codec_preference_from_implementation(
   }
   std::memcpy(buf, json.c_str(), json.size());
 }
+int sora_video_codec_capability_to_json_size(const char* self) {
+  auto capability = sora_unity_sdk::ConvertToVideoCodecCapability(
+      jsonif::from_json<sora_conf::internal::VideoCodecCapability>(self));
+  auto json = boost::json::serialize(boost::json::value_from(capability));
+  return (int)json.size();
+}
+void sora_video_codec_capability_to_json(const char* self,
+                                         void* buf,
+                                         int size) {
+  auto capability = sora_unity_sdk::ConvertToVideoCodecCapability(
+      jsonif::from_json<sora_conf::internal::VideoCodecCapability>(self));
+  auto json = boost::json::serialize(boost::json::value_from(capability));
+  if (size < (int)json.size()) {
+    return;
+  }
+  std::memcpy(buf, json.c_str(), json.size());
+}
+int sora_video_codec_preference_to_json_size(const char* self) {
+  auto preference = sora_unity_sdk::ConvertToVideoCodecPreference(
+      jsonif::from_json<sora_conf::internal::VideoCodecPreference>(self));
+  auto json = boost::json::serialize(boost::json::value_from(preference));
+  return (int)json.size();
+}
+void sora_video_codec_preference_to_json(const char* self,
+                                         void* buf,
+                                         int size) {
+  auto preference = sora_unity_sdk::ConvertToVideoCodecPreference(
+      jsonif::from_json<sora_conf::internal::VideoCodecPreference>(self));
+  auto json = boost::json::serialize(boost::json::value_from(preference));
+  if (size < (int)json.size()) {
+    return;
+  }
+  std::memcpy(buf, json.c_str(), json.size());
+}
 
 struct AudioOutputHelperImpl : public sora::AudioChangeRouteObserver {
   AudioOutputHelperImpl(change_route_cb_t cb, void* userdata)
