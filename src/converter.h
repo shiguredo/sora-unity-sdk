@@ -12,9 +12,13 @@ sora::VideoCodecCapabilityConfig ConvertToVideoCodecCapabilityConfig(
     const sora_conf::internal::VideoCodecCapabilityConfig& config);
 sora::VideoCodecCapabilityConfig ConvertToVideoCodecCapabilityConfigWithSession(
     const sora_conf::internal::VideoCodecCapabilityConfig& config);
+sora::VideoCodecCapability ConvertToVideoCodecCapability(
+    const sora_conf::internal::VideoCodecCapability& capability);
 sora_conf::internal::VideoCodecCapability ConvertToInternalVideoCodecCapability(
     const sora::VideoCodecCapability& capability);
 sora::VideoCodecPreference ConvertToVideoCodecPreference(
     const sora_conf::internal::VideoCodecPreference& preference);
+sora_conf::internal::VideoCodecPreference ConvertToInternalVideoCodecPreference(
+    const sora::VideoCodecPreference& preference);
 
 }  // namespace sora_unity_sdk

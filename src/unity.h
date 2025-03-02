@@ -120,6 +120,27 @@ UNITY_INTERFACE_EXPORT int sora_get_video_codec_capability_size(
 UNITY_INTERFACE_EXPORT void sora_get_video_codec_capability(const char* config,
                                                             void* buf,
                                                             int size);
+UNITY_INTERFACE_EXPORT bool sora_video_codec_preference_has_implementation(
+    const char* self,
+    const char* implementation);
+UNITY_INTERFACE_EXPORT int sora_video_codec_preference_merge_size(
+    const char* self,
+    const char* preference);
+UNITY_INTERFACE_EXPORT void sora_video_codec_preference_merge(
+    const char* self,
+    const char* preference,
+    void* buf,
+    int size);
+UNITY_INTERFACE_EXPORT int
+sora_create_video_codec_preference_from_implementation_size(
+    const char* capability,
+    const char* implementation);
+UNITY_INTERFACE_EXPORT void
+sora_create_video_codec_preference_from_implementation(
+    const char* capability,
+    const char* implementation,
+    void* buf,
+    int size);
 
 typedef void (*change_route_cb_t)(void* userdata);
 UNITY_INTERFACE_EXPORT void* sora_audio_output_helper_create(

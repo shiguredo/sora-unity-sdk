@@ -70,6 +70,30 @@ sora::VideoCodecCapabilityConfig ConvertToVideoCodecCapabilityConfigWithSession(
   return vccc;
 }
 
+sora::VideoCodecCapability ConvertToVideoCodecCapability(
+    const sora_conf::internal::VideoCodecCapability& capability) {
+  sora::VideoCodecCapability vcc;
+  for (const auto& engine : capability.engines) {
+    sora::VideoCodecCapability::Engine e(
+        boost::json::value_to<sora::VideoCodecImplementation>(
+            boost::json::value(engine.name)));
+    for (const auto& codec : engine.codecs) {
+      sora::VideoCodecCapability::Codec c(
+          boost::json::value_to<webrtc::VideoCodecType>(
+              boost::json::value(codec.type)),
+          codec.encoder, codec.decoder);
+      c.parameters =
+          boost::json::value_to<sora::VideoCodecCapability::Parameters>(
+              boost::json::parse(codec.parameters));
+      e.codecs.push_back(c);
+    }
+    e.parameters =
+        boost::json::value_to<sora::VideoCodecCapability::Parameters>(
+            boost::json::parse(engine.parameters));
+    vcc.engines.push_back(e);
+  }
+  return vcc;
+}
 sora_conf::internal::VideoCodecCapability ConvertToInternalVideoCodecCapability(
     const sora::VideoCodecCapability& capability) {
   sora_conf::internal::VideoCodecCapability vcc;
@@ -110,6 +134,27 @@ sora::VideoCodecPreference ConvertToVideoCodecPreference(
     c.parameters =
         boost::json::value_to<sora::VideoCodecPreference::Parameters>(
             boost::json::parse(codec.parameters));
+    vcp.codecs.push_back(c);
+  }
+  return vcp;
+}
+
+sora_conf::internal::VideoCodecPreference ConvertToInternalVideoCodecPreference(
+    const sora::VideoCodecPreference& preference) {
+  sora_conf::internal::VideoCodecPreference vcp;
+  for (const auto& codec : preference.codecs) {
+    sora_conf::internal::VideoCodecPreference::Codec c;
+    c.type = boost::json::value_from(codec.type).as_string().c_str();
+    if (codec.encoder.has_value()) {
+      c.set_encoder(
+          boost::json::value_from(codec.encoder.value()).as_string().c_str());
+    }
+    if (codec.decoder.has_value()) {
+      c.set_decoder(
+          boost::json::value_from(codec.decoder.value()).as_string().c_str());
+    }
+    c.parameters =
+        boost::json::serialize(boost::json::value_from(codec.parameters));
     vcp.codecs.push_back(c);
   }
   return vcp;

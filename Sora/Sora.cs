@@ -246,69 +246,28 @@ public class Sora : IDisposable
 
         public bool HasImplementation(VideoCodecImplementation implementation)
         {
-            foreach (var codec in Codecs)
-            {
-                if ((codec.Encoder != null && codec.Encoder == implementation) ||
-                    (codec.Decoder != null && codec.Decoder == implementation))
-                {
-                    return true;
-                }
-            }
-            return false;
+            var vcp = ConvertToInternalVideoCodecPreference(this);
+            return sora_video_codec_preference_has_implementation(Jsonif.Json.ToJson(vcp), VideoCodecImplementationToString(implementation));
         }
         public void Merge(VideoCodecPreference preference)
         {
-            foreach (var codec in preference.Codecs)
-            {
-                int index = Array.FindIndex(Codecs, (c) => codec.Type == c.Type);
-                if (index != -1)
-                {
-                    var c = Codecs[index];
-                    if (codec.Encoder != null)
-                    {
-                        c.Encoder = codec.Encoder;
-                    }
-                    if (codec.Decoder != null)
-                    {
-                        c.Decoder = codec.Decoder;
-                    }
-                    if (codec.Encoder != null || codec.Decoder != null)
-                    {
-                        c.Parameters = codec.Parameters;
-                    }
-                    Codecs[index] = c;
-                }
-                else
-                {
-                    Codecs = new List<Codec>(Codecs) { codec }.ToArray();
-                }
-            }
+            var vcp = ConvertToInternalVideoCodecPreference(this);
+            var vcp2 = ConvertToInternalVideoCodecPreference(preference);
+            var size = sora_video_codec_preference_merge_size(Jsonif.Json.ToJson(vcp), Jsonif.Json.ToJson(vcp2));
+            var buf = new byte[size];
+            sora_video_codec_preference_merge(Jsonif.Json.ToJson(vcp), Jsonif.Json.ToJson(vcp2), buf, size);
+            var vcpr = Jsonif.Json.FromJson<SoraConf.Internal.VideoCodecPreference>(System.Text.Encoding.UTF8.GetString(buf));
+            var result = ConvertToVideoCodecPreference(vcpr);
+            this.Codecs = result.Codecs;
         }
         public static VideoCodecPreference CreateFromImplementation(VideoCodecCapability capability, VideoCodecImplementation implementation)
         {
-            var preference = new VideoCodecPreference();
-            int index = Array.FindIndex(capability.Engines, (engine) => engine.Name == implementation);
-            if (index == -1)
-            {
-                return preference;
-            }
-            var codecs = new List<Codec>();
-            foreach (var codec in capability.Engines[index].Codecs)
-            {
-                var preference_codec = new Codec();
-                preference_codec.Type = codec.Type;
-                if (codec.Encoder)
-                {
-                    preference_codec.Encoder = implementation;
-                }
-                if (codec.Decoder)
-                {
-                    preference_codec.Decoder = implementation;
-                }
-                codecs.Add(preference_codec);
-            }
-            preference.Codecs = codecs.ToArray();
-            return preference;
+            var vcc = ConvertToInternalVideoCodecCapability(capability);
+            var size = sora_create_video_codec_preference_from_implementation_size(Jsonif.Json.ToJson(vcc), VideoCodecImplementationToString(implementation));
+            var buf = new byte[size];
+            sora_create_video_codec_preference_from_implementation(Jsonif.Json.ToJson(vcc), VideoCodecImplementationToString(implementation), buf, size);
+            var vcpr = Jsonif.Json.FromJson<SoraConf.Internal.VideoCodecPreference>(System.Text.Encoding.UTF8.GetString(buf));
+            return ConvertToVideoCodecPreference(vcpr);
         }
         public static VideoCodecPreference GetHardwareEncoderPreference(VideoCodecCapability capability)
         {
@@ -770,7 +729,50 @@ public class Sora : IDisposable
         vcc.Engines = vcces.ToArray();
         return vcc;
     }
+    static SoraConf.Internal.VideoCodecCapability ConvertToInternalVideoCodecCapability(VideoCodecCapability capability)
+    {
+        var vcc = new SoraConf.Internal.VideoCodecCapability();
+        foreach (var engine in capability.Engines)
+        {
+            var e = new SoraConf.Internal.VideoCodecCapability.Engine();
+            e.name = VideoCodecImplementationToString(engine.Name);
+            foreach (var codec in engine.Codecs)
+            {
+                var c = new SoraConf.Internal.VideoCodecCapability.Codec();
+                c.type = VideoCodecTypeToString(codec.Type);
+                c.encoder = codec.Encoder;
+                c.decoder = codec.Decoder;
+                c.parameters = codec.Parameters;
+                e.codecs.Add(c);
+            }
+            e.parameters = engine.Parameters;
+            vcc.engines.Add(e);
+        }
+        return vcc;
+    }
 
+    static VideoCodecPreference ConvertToVideoCodecPreference(SoraConf.Internal.VideoCodecPreference preference)
+    {
+        var vcp = new VideoCodecPreference();
+        var vcpcs = new List<VideoCodecPreference.Codec>();
+        foreach (var codec in preference.codecs)
+        {
+            var c = new VideoCodecPreference.Codec();
+            c.Type = VideoCodecTypeFromString(codec.type);
+            if (codec.HasEncoder())
+            {
+                c.Encoder = VideoCodecImplementationFromString(codec.encoder);
+            }
+            if (codec.HasDecoder())
+            {
+                c.Decoder = VideoCodecImplementationFromString(codec.decoder);
+            }
+            c.Parameters = codec.parameters;
+            vcpcs.Add(c);
+        }
+        vcp.Codecs = vcpcs.ToArray();
+        return vcp;
+    }
     static SoraConf.Internal.VideoCodecPreference ConvertToInternalVideoCodecPreference(VideoCodecPreference preference)
     {
         var vcp = new SoraConf.Internal.VideoCodecPreference();
@@ -1396,6 +1398,17 @@ public class Sora : IDisposable
     private static extern int sora_get_video_codec_capability_size(string config);
     [DllImport(DllName)]
     private static extern void sora_get_video_codec_capability(string config, [Out] byte[] buf, int size);
+    [DllImport(DllName)]
+    private static extern bool sora_video_codec_preference_has_implementation(string self, string implementation);
+    [DllImport(DllName)]
+    private static extern int sora_video_codec_preference_merge_size(string self, string preference);
+    [DllImport(DllName)]
+    private static extern void sora_video_codec_preference_merge(string self, string preference, [Out] byte[] buf, int size);
+    [DllImport(DllName)]
+    private static extern int sora_create_video_codec_preference_from_implementation_size(string capability, string implementation);
+    [DllImport(DllName)]
+    private static extern void sora_create_video_codec_preference_from_implementation(string capability, string implementation, [Out] byte[] buf, int size);
+
 
     public interface IAudioOutputHelper : IDisposable
     {
