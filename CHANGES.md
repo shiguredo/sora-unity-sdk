@@ -11,6 +11,12 @@
 
 ## develop
 
+- [CHANGE] Sora.Config.UseHardwareEncoder フラグを削除
+  - 代わりに `Sora.Config.VideoCodecPreference` を利用して下さい
+  - @melpon
+- [CHANGE] Sora.IsH264Supported() 関数を削除
+  - 代わりに `Sora.GetVideoCodecCapability()` 関数を利用して下さい
+  - @melpon
 - [CHANGE] Sora.Config.VideoCodecType を Nullable 型に変更し、デフォルト値を `VP9` から未指定に変更する
   - 未指定の場合、シグナリング "type": "connect" でビデオコーデック指定を行わない
   - ビデオコーデック指定を行わない場合は Sora のデフォルト値 `VP9` が利用される
@@ -19,6 +25,13 @@
   - 未指定の場合、シグナリング "type": "connect" でオーディオコーデック指定を行わない
   - オーディオコーデック指定を行わない場合は Sora のデフォルト値 `OPUS` が利用される
   - @miosakuma
+- [ADD] 利用するビデオコーデックを詳細に指定するための enum やクラス、関数などを追加
+  - `Sora.VideoCodecImplementation` 列挙型
+  - `Sora.VideoCodecCapabilityConfig` クラス
+  - `Sora.VideoCodecCapability` クラス
+  - `Sora.VideoCodecPreference` クラス
+  - `Sora.GetVideoCodecPreference()` 関数
+  - `Sora.Config.VideoCodecPreference` フィールド
 - [UPDATE] Sora C++ SDK を `2025.2.0` に上げる
   - `CMAKE_VERSION` を `3.31.4` にアップデート
   - @torikizi

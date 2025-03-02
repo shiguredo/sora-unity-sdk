@@ -97,7 +97,6 @@ UNITY_INTERFACE_EXPORT unity_bool_t
 sora_device_enum_audio_recording(device_enum_cb_t f, void* userdata);
 UNITY_INTERFACE_EXPORT unity_bool_t
 sora_device_enum_audio_playout(device_enum_cb_t f, void* userdata);
-UNITY_INTERFACE_EXPORT unity_bool_t sora_is_h264_supported();
 UNITY_INTERFACE_EXPORT void sora_setenv(const char* name, const char* value);
 
 UNITY_INTERFACE_EXPORT unity_bool_t sora_get_audio_enabled(void* p);
@@ -115,6 +114,40 @@ UNITY_INTERFACE_EXPORT void sora_get_selected_signaling_url(void* p,
 UNITY_INTERFACE_EXPORT void sora_get_connected_signaling_url(void* p,
                                                              void* buf,
                                                              int size);
+UNITY_INTERFACE_EXPORT int sora_get_video_codec_capability_size(
+    const char* config);
+UNITY_INTERFACE_EXPORT void sora_get_video_codec_capability(const char* config,
+                                                            void* buf,
+                                                            int size);
+UNITY_INTERFACE_EXPORT unity_bool_t
+sora_video_codec_preference_has_implementation(const char* self,
+                                               const char* implementation);
+UNITY_INTERFACE_EXPORT int sora_video_codec_preference_merge_size(
+    const char* self,
+    const char* preference);
+UNITY_INTERFACE_EXPORT void sora_video_codec_preference_merge(
+    const char* self,
+    const char* preference,
+    void* buf,
+    int size);
+UNITY_INTERFACE_EXPORT int
+sora_create_video_codec_preference_from_implementation_size(
+    const char* capability,
+    const char* implementation);
+UNITY_INTERFACE_EXPORT void
+sora_create_video_codec_preference_from_implementation(
+    const char* capability,
+    const char* implementation,
+    void* buf,
+    int size);
+UNITY_INTERFACE_EXPORT int sora_video_codec_capability_to_json_size(
+    const char* self);
+UNITY_INTERFACE_EXPORT void
+sora_video_codec_capability_to_json(const char* self, void* buf, int size);
+UNITY_INTERFACE_EXPORT int sora_video_codec_preference_to_json_size(
+    const char* self);
+UNITY_INTERFACE_EXPORT void
+sora_video_codec_preference_to_json(const char* self, void* buf, int size);
 
 typedef void (*change_route_cb_t)(void* userdata);
 UNITY_INTERFACE_EXPORT void* sora_audio_output_helper_create(
