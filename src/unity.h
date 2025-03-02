@@ -97,7 +97,6 @@ UNITY_INTERFACE_EXPORT unity_bool_t
 sora_device_enum_audio_recording(device_enum_cb_t f, void* userdata);
 UNITY_INTERFACE_EXPORT unity_bool_t
 sora_device_enum_audio_playout(device_enum_cb_t f, void* userdata);
-UNITY_INTERFACE_EXPORT unity_bool_t sora_is_h264_supported();
 UNITY_INTERFACE_EXPORT void sora_setenv(const char* name, const char* value);
 
 UNITY_INTERFACE_EXPORT unity_bool_t sora_get_audio_enabled(void* p);
@@ -120,9 +119,9 @@ UNITY_INTERFACE_EXPORT int sora_get_video_codec_capability_size(
 UNITY_INTERFACE_EXPORT void sora_get_video_codec_capability(const char* config,
                                                             void* buf,
                                                             int size);
-UNITY_INTERFACE_EXPORT bool sora_video_codec_preference_has_implementation(
-    const char* self,
-    const char* implementation);
+UNITY_INTERFACE_EXPORT unity_bool_t
+sora_video_codec_preference_has_implementation(const char* self,
+                                               const char* implementation);
 UNITY_INTERFACE_EXPORT int sora_video_codec_preference_merge_size(
     const char* self,
     const char* preference);

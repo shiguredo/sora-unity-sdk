@@ -219,17 +219,25 @@ public class Sora : IDisposable
     }
     public class VideoCodecCapability
     {
+        // Parameters 系は JSON 文字列で表現する
+        // Unity に統一された汎用的な JSON ライブラリが無いので仕方がない
+
         public struct Codec
         {
+            // このビデオコーデックの...
             public VideoCodecType Type;
+            // ...エンコーダーが利用可能かどうか
             public bool Encoder;
+            // ...デコーダーが利用可能かどうか
             public bool Decoder;
+            // コーデック固有のパラメータ
             public string Parameters;
         }
         public struct Engine
         {
             public VideoCodecImplementation Name;
             public Codec[] Codecs;
+            // 実装固有のパラメータ
             public string Parameters;
         }
         public Engine[] Engines = new Engine[0];
@@ -251,6 +259,8 @@ public class Sora : IDisposable
             public VideoCodecType Type;
             public VideoCodecImplementation? Encoder;
             public VideoCodecImplementation? Decoder;
+            // C++ SDK 的には必須なんだけど、struct では初期値を持てないので null 許容にしている
+            // SoraConf.Internal 系の値に変換する時に null を "{}" に変えてやる
             public string? Parameters;
         }
         public Codec[] Codecs = new Codec[0];
@@ -263,11 +273,13 @@ public class Sora : IDisposable
             sora_video_codec_preference_to_json(Jsonif.Json.ToJson(vcp), buf, size);
             return System.Text.Encoding.UTF8.GetString(buf);
         }
+        // この VideoCodecPreference が、どれかのコーデックでこの implementation を使うように要求しているかどうか
         public bool HasImplementation(VideoCodecImplementation implementation)
         {
             var vcp = ConvertToInternalVideoCodecPreference(this);
-            return sora_video_codec_preference_has_implementation(Jsonif.Json.ToJson(vcp), VideoCodecImplementationToString(implementation));
+            return sora_video_codec_preference_has_implementation(Jsonif.Json.ToJson(vcp), VideoCodecImplementationToString(implementation)) != 0;
         }
+        // 自身のコーデックを、preference の同じコーデックで上書きする
         public void Merge(VideoCodecPreference preference)
         {
             var vcp = ConvertToInternalVideoCodecPreference(this);
@@ -279,6 +291,7 @@ public class Sora : IDisposable
             var result = ConvertToVideoCodecPreference(vcpr);
             this.Codecs = result.Codecs;
         }
+        // 指定した capability から implementation の実装だけを利用する VideoCodecPreference を生成する
         public static VideoCodecPreference CreateFromImplementation(VideoCodecCapability capability, VideoCodecImplementation implementation)
         {
             var vcc = ConvertToInternalVideoCodecCapability(capability);
@@ -405,7 +418,8 @@ public class Sora : IDisposable
         public ForwardingFilter ForwardingFilter;
         public List<ForwardingFilter> ForwardingFilters;
 
-        // 利用するエンコーダーの種類
+        // 利用するエンコーダー/デコーダーの指定
+        // null の場合は VideoCodecImplementation.Internal な実装のみ利用する
         public VideoCodecPreference? VideoCodecPreference;
 
         // 証明書周りの設定
@@ -1271,11 +1285,6 @@ public class Sora : IDisposable
         return list.ToArray();
     }
 
-    public static bool IsH264Supported()
-    {
-        return sora_is_h264_supported() != 0;
-    }
-
     public static void Setenv(string name, string value)
     {
         sora_setenv(name, value);
@@ -1398,8 +1407,6 @@ public class Sora : IDisposable
     [DllImport(DllName)]
     private static extern int sora_device_enum_audio_playout(DeviceEnumCallbackDelegate f, IntPtr userdata);
     [DllImport(DllName)]
-    private static extern int sora_is_h264_supported();
-    [DllImport(DllName)]
     private static extern void sora_setenv(string name, string value);
     [DllImport(DllName)]
     private static extern int sora_get_audio_enabled(IntPtr p);
@@ -1422,7 +1429,7 @@ public class Sora : IDisposable
     [DllImport(DllName)]
     private static extern void sora_get_video_codec_capability(string config, [Out] byte[] buf, int size);
     [DllImport(DllName)]
-    private static extern bool sora_video_codec_preference_has_implementation(string self, string implementation);
+    private static extern int sora_video_codec_preference_has_implementation(string self, string implementation);
     [DllImport(DllName)]
     private static extern int sora_video_codec_preference_merge_size(string self, string preference);
     [DllImport(DllName)]

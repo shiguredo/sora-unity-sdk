@@ -217,23 +217,6 @@ unity_bool_t sora_device_enum_audio_playout(device_enum_cb_t f,
       });
 }
 
-unity_bool_t sora_is_h264_supported() {
-#if defined(SORA_UNITY_SDK_WINDOWS) || defined(SORA_UNITY_SDK_UBUNTU)
-  auto context = sora::CudaContext::Create();
-  auto codec = sora::CudaVideoCodec::H264;
-  return sora::NvCodecVideoEncoder::IsSupported(context, codec) &&
-         sora::NvCodecVideoDecoder::IsSupported(context, codec);
-#elif defined(SORA_UNITY_SDK_MACOS) || defined(SORA_UNITY_SDK_IOS)
-  // macOS, iOS は VideoToolbox が使えるので常に true
-  return true;
-#elif defined(SORA_UNITY_SDK_ANDROID)
-  // Android は多分大体動くので true
-  return true;
-#else
-#error "Unknown SDK Type"
-#endif
-}
-
 void sora_setenv(const char* name, const char* value) {
 #if defined(SORA_UNITY_SDK_WINDOWS)
   _putenv_s(name, value);
@@ -311,14 +294,16 @@ void sora_get_video_codec_capability(const char* config, void* buf, int size) {
   }
   std::memcpy(buf, result.c_str(), result.size());
 }
-bool sora_video_codec_preference_has_implementation(
+unity_bool_t sora_video_codec_preference_has_implementation(
     const char* self,
     const char* implementation) {
   auto preference = sora_unity_sdk::ConvertToVideoCodecPreference(
       jsonif::from_json<sora_conf::internal::VideoCodecPreference>(self));
   return preference.HasImplementation(
-      boost::json::value_to<sora::VideoCodecImplementation>(
-          boost::json::value(implementation)));
+             boost::json::value_to<sora::VideoCodecImplementation>(
+                 boost::json::value(implementation)))
+             ? 1
+             : 0;
 }
 int sora_video_codec_preference_merge_size(const char* self,
                                            const char* preference) {
