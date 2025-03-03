@@ -32,6 +32,7 @@
   - `Sora.VideoCodecPreference` クラス
   - `Sora.GetVideoCodecPreference()` 関数
   - `Sora.Config.VideoCodecPreference` フィールド
+  - @melpon
 - [UPDATE] Sora C++ SDK を `2025.2.0` に上げる
   - `CMAKE_VERSION` を `3.31.4` にアップデート
   - @torikizi
