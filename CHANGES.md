@@ -34,7 +34,8 @@
   - `Sora.Config.VideoCodecPreference` フィールド
   - @melpon
 - [UPDATE] Sora C++ SDK を `2025.2.0` に上げる
-  - `CMAKE_VERSION` を `3.31.4` にアップデート
+  - `CMAKE_VERSION` を `3.31.6` にアップデート
+  - `WEBRTC_BUILD_VERSION` を `m132.6834.5.8` にアップデート
   - @torikizi
 
 ## 2025.1.0
