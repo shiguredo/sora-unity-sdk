@@ -11,6 +11,8 @@
 
 ## develop
 
+- [CHANGE] Linux x86_64 版のビルドを `ubuntu-20.04_x86_64` から `ubuntu-22.04_x86_64` にあげる
+  - @miosakuma
 - [CHANGE] Sora.Config.UseHardwareEncoder フラグを削除
   - 代わりに `Sora.Config.VideoCodecPreference` を利用して下さい
   - @melpon
@@ -36,6 +38,15 @@
 - [UPDATE] Sora C++ SDK を `2025.2.0` に上げる
   - `CMAKE_VERSION` を `3.31.4` にアップデート
   - @torikizi
+
+### misc
+
+- [CHANGE] Linux x86_64 と Android のビルド環境を `ubuntu-20.04` から `ubuntu-22.04` にあげる
+  - @miosakuma
+- [CHANGE] GitHub Actions の package タスクを実行する環境を `ubuntu-20.04` から `ubuntu-22.04` にあげる
+  - @miosakuma
+- [CHANGE] 対応プラットフォームから `Ubuntu 20.04` を削除、 `Ubuntu 22.04` を追加
+  - @miosakuma
 
 ## 2025.1.0
 
