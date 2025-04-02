@@ -28,7 +28,9 @@
   - 未指定の場合、シグナリング "type": "connect" でオーディオコーデック指定を行わない
   - オーディオコーデック指定を行わない場合は Sora のデフォルト値 `OPUS` が利用される
   - @miosakuma
-- [CHANGE] 対応プラットフォームから `Ubuntu 20.04` を削除、 `Ubuntu 22.04` を追加
+- [CHANGE] `Ubuntu 22.04` をリリースに含める
+  - @miosakuma
+- [CHANGE] 対応プラットフォームから `Ubuntu 20.04` を削除
   - @miosakuma
 - [ADD] 利用するビデオコーデックを詳細に指定するための enum やクラス、関数などを追加
   - `Sora.VideoCodecImplementation` 列挙型
