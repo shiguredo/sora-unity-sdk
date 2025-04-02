@@ -160,7 +160,7 @@ def install_deps(
             install_protobuf_args["platform"] = "win64"
         elif build_platform in ("macos_x86_64", "macos_arm64"):
             install_protobuf_args["platform"] = "osx-universal_binary"
-        elif build_platform in ("ubuntu-22.04_x86_64"):
+        elif build_platform == "ubuntu-22.04_x86_64":
             install_protobuf_args["platform"] = "linux-x86_64"
         else:
             raise Exception("Failed to install Protobuf")
