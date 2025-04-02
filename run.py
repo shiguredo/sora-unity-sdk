@@ -180,7 +180,7 @@ def install_deps(
             install_jsonif_args["platform"] = "darwin-amd64"
         elif build_platform == "macos_arm64":
             install_jsonif_args["platform"] = "darwin-arm64"
-        elif build_platform in ("ubuntu-22.04_x86_64"):
+        elif build_platform == "ubuntu-22.04_x86_64":
             install_jsonif_args["platform"] = "linux-amd64"
         else:
             raise Exception("Failed to install protoc-gen-jsonif")
