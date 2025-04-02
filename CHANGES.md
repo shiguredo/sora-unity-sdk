@@ -12,6 +12,7 @@
 ## develop
 
 - [CHANGE] Linux x86_64 版のビルドを `ubuntu-20.04_x86_64` から `ubuntu-22.04_x86_64` にあげる
+  - ビルドに関して `ubuntu-20.04_x86_64` を指定していた部分を `ubuntu-22.04_x86_64` だけに変更
   - @miosakuma
 - [CHANGE] Sora.Config.UseHardwareEncoder フラグを削除
   - 代わりに `Sora.Config.VideoCodecPreference` を利用して下さい
