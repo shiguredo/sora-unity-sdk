@@ -12,6 +12,7 @@
 ## develop
 
 - [CHANGE] Linux x86_64 版のビルドを `ubuntu-20.04_x86_64` から `ubuntu-22.04_x86_64` にあげる
+  - ビルドに関して `ubuntu-20.04_x86_64` を指定していた部分を `ubuntu-22.04_x86_64` だけに変更
   - @miosakuma
 - [CHANGE] Sora.Config.UseHardwareEncoder フラグを削除
   - 代わりに `Sora.Config.VideoCodecPreference` を利用して下さい
@@ -26,6 +27,10 @@
 - [CHANGE] Sora.Config.AudioCodecType を Nullable 型に変更し、デフォルト値を `OPUS` から未指定に変更する
   - 未指定の場合、シグナリング "type": "connect" でオーディオコーデック指定を行わない
   - オーディオコーデック指定を行わない場合は Sora のデフォルト値 `OPUS` が利用される
+  - @miosakuma
+- [CHANGE] `Ubuntu 22.04` をリリースに含める
+  - @miosakuma
+- [CHANGE] 対応プラットフォームから `Ubuntu 20.04` を削除
   - @miosakuma
 - [ADD] 利用するビデオコーデックを詳細に指定するための enum やクラス、関数などを追加
   - `Sora.VideoCodecImplementation` 列挙型
@@ -45,8 +50,6 @@
 - [CHANGE] Linux x86_64 と Android のビルド環境を `ubuntu-20.04` から `ubuntu-22.04` にあげる
   - @miosakuma
 - [CHANGE] GitHub Actions の package タスクを実行する環境を `ubuntu-20.04` から `ubuntu-22.04` にあげる
-  - @miosakuma
-- [CHANGE] 対応プラットフォームから `Ubuntu 20.04` を削除、 `Ubuntu 22.04` を追加
   - @miosakuma
 
 ## 2025.1.0
