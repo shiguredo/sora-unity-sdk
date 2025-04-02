@@ -80,18 +80,18 @@
             "intelliSenseMode": "clang-x64"
         },
         {
-            "name": "ubuntu-20.04_x86_64 Release",
+            "name": "ubuntu-22.04_x86_64 Release",
             "includePath": [
                 "${workspaceFolder}/src",
-                "${workspaceFolder}/_install/ubuntu-20.04_x86_64/release/sora/include",
-                "${workspaceFolder}/_install/ubuntu-20.04_x86_64/release/boost/include",
-                "${workspaceFolder}/_install/ubuntu-20.04_x86_64/release/webrtc/include",
-                "${workspaceFolder}/_install/ubuntu-20.04_x86_64/release/webrtc/include/third_party/zlib",
-                "${workspaceFolder}/_install/ubuntu-20.04_x86_64/release/webrtc/include/third_party/abseil-cpp",
-                "${workspaceFolder}/_install/ubuntu-20.04_x86_64/release/webrtc/include/third_party/boringssl/src/include",
-                "${workspaceFolder}/_install/ubuntu-20.04_x86_64/release/webrtc/include/third_party/libyuv/include",
-                "${workspaceFolder}/_build/ubuntu-20.04_x86_64/release/sora_unity_sdk",
-                "${workspaceFolder}/_build/ubuntu-20.04_x86_64/release/sora_unity_sdk/proto/cpp"
+                "${workspaceFolder}/_install/ubuntu-22.04_x86_64/release/sora/include",
+                "${workspaceFolder}/_install/ubuntu-22.04_x86_64/release/boost/include",
+                "${workspaceFolder}/_install/ubuntu-22.04_x86_64/release/webrtc/include",
+                "${workspaceFolder}/_install/ubuntu-22.04_x86_64/release/webrtc/include/third_party/zlib",
+                "${workspaceFolder}/_install/ubuntu-22.04_x86_64/release/webrtc/include/third_party/abseil-cpp",
+                "${workspaceFolder}/_install/ubuntu-22.04_x86_64/release/webrtc/include/third_party/boringssl/src/include",
+                "${workspaceFolder}/_install/ubuntu-22.04_x86_64/release/webrtc/include/third_party/libyuv/include",
+                "${workspaceFolder}/_build/ubuntu-22.04_x86_64/release/sora_unity_sdk",
+                "${workspaceFolder}/_build/ubuntu-22.04_x86_64/release/sora_unity_sdk/proto/cpp"
             ],
             "defines": [
                 "WEBRTC_POSIX",

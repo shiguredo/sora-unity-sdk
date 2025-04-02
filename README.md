@@ -57,7 +57,6 @@ Please read https://github.com/shiguredo/oss/blob/master/README.en.md before use
 - Android への対応
 - Android OpenGL ES への対応
 - iOS 対応
-- Ubuntu 20.04 への対応
 - Ubuntu 22.04 への対応
 - SRTP/SRTCP の AES-GCM 対応
 - Unity のカメラ映像を取得し Sora で送信
