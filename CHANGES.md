@@ -40,6 +40,12 @@
   - `Sora.GetVideoCodecPreference()` 関数
   - `Sora.Config.VideoCodecPreference` フィールド
   - @melpon
+- [ADD] `Sora.cs` に `AMD AMF` を追加
+  - `VideoCodecImplementation` 列挙型に `AMD AMF` を追加する
+  - `VideoCodecImplementationToString()` と `VideoCodecImplementationFromString()` に `AMD AMF` を追加する
+  - `GetHardwareEncoderPreference()` に `AMD AMF` を追加する
+    - `Intel VPL` -> `AMD AMF` -> `NVIDIA Video Codec SDK` -> `Internal` の優先順位で選択されるように追加する
+  - @torikizi
 - [UPDATE] Sora C++ SDK を `2025.2.0` に上げる
   - `CMAKE_VERSION` を `3.31.6` にアップデート
   - `WEBRTC_BUILD_VERSION` を `m132.6834.5.8` にアップデート
