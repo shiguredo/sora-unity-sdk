@@ -45,6 +45,7 @@
   - `VideoCodecImplementationToString()` と `VideoCodecImplementationFromString()` に `AMD AMF` を追加する
   - `GetHardwareEncoderPreference()` に `AMD AMF` を追加する
     - `Intel VPL` -> `AMD AMF` -> `NVIDIA Video Codec SDK` -> `Internal` の優先順位で選択されるように追加する
+      - `preference.Merge()` は後から呼び出した実装で上書きされるため、優先度の低い順に設定しています
   - @torikizi
 - [UPDATE] Sora C++ SDK を `2025.2.0` に上げる
   - `CMAKE_VERSION` を `3.31.6` にアップデート
