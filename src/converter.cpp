@@ -66,6 +66,9 @@ sora::VideoCodecCapabilityConfig ConvertToVideoCodecCapabilityConfigWithSession(
   if (sora::CudaContext::CanCreate()) {
     vccc.cuda_context = sora::CudaContext::Create();
   }
+  if (sora::AMFContext::CanCreate()) {
+    vccc.amf_context = sora::AMFContext::Create();
+  }
   vccc.jni_env = sora::GetJNIEnv();
   return vccc;
 }
