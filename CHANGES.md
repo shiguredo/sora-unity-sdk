@@ -40,7 +40,7 @@
   - `Sora.GetVideoCodecPreference()` 関数
   - `Sora.Config.VideoCodecPreference` フィールド
   - @melpon
-- [ADD] `AMD AMF` のサポートを追加
+- [ADD] AMD AMF のサポートを追加
 　- `Sora.cs` に AMD AMF のサポートを追加する
     - `VideoCodecImplementation` 列挙型に `AMD AMF` を追加する
     - `VideoCodecImplementationToString()` と `VideoCodecImplementationFromString()` に `AMD AMF` を追加する
