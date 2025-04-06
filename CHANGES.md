@@ -41,14 +41,18 @@
   - `Sora.Config.VideoCodecPreference` フィールド
   - @melpon
 - [ADD] AMD AMF のサポートを追加
-　- `Sora.cs` に AMD AMF のサポートを追加する
-    - `VideoCodecImplementation` 列挙型に `AMD AMF` を追加する
-    - `VideoCodecImplementationToString()` と `VideoCodecImplementationFromString()` に `AMD AMF` を追加する
-    - `GetHardwareEncoderPreference()` に `AMD AMF` を追加する
-      - `Intel VPL` -> `AMD AMF` -> `NVIDIA Video Codec SDK` -> `Internal` の優先順位で選択されるように追加する
-      - `preference.Merge()` は後から呼び出した実装で上書きされるため、優先度の低い順に設定しています
-  - `converter.cpp` に `AMFContext` の初期化を追加
-    - `sora::VideoCodecCapabilityConfig` に `amf` を追加することで利用可能にする
+　- Sora.cs に AMD AMF のサポートを追加する
+    - `VideoCodecImplementation` 列挙型に `AmdAmf` を追加する
+    - `VideoCodecImplementationToString()` と `VideoCodecImplementationFromString()` に `AmdAmf` 用の case を追加する
+    - `GetHardwareEncoderPreference()` に AMD AMF 用の `VideoCodecPreference` を追加する
+      - 次の順序で優先されるように追加する
+        1. Intel VPL
+        2. AMD AMF
+        3. NVIDIA Video Codec SDK
+        4. Internal
+      - `preference.Merge()` は同じコーデックが既に存在する場合、引数に渡した `VideoCodecPreference` で上書きされるため、コード上では優先度の低い順に並べている
+  - converter.cpp に `AMFContext` の初期化を追加する
+    - `sora::VideoCodecCapabilityConfig` の `amf_context` に `AMFContext` の値を設定することで AMD AMF を利用可能にする
   - @torikizi
 - [UPDATE] Sora C++ SDK を `2025.2.0` に上げる
   - `CMAKE_VERSION` を `3.31.6` にアップデート
