@@ -45,11 +45,11 @@
     - `VideoCodecImplementation` 列挙型に `AmdAmf` を追加する
     - `VideoCodecImplementationToString()` と `VideoCodecImplementationFromString()` に `AmdAmf` 用の case を追加する
     - `GetHardwareEncoderPreference()` に AMD AMF 用の `VideoCodecPreference` を追加する
-      - 次の順序で優先されるように追加する
-        1. Intel VPL
-        2. AMD AMF
-        3. NVIDIA Video Codec SDK
-        4. Internal
+      - 次の順序で優先されるように追加する(上から優先する)
+        - Intel VPL
+        - AMD AMF
+        - NVIDIA Video Codec SDK
+        - Internal
       - `preference.Merge()` は同じコーデックが既に存在する場合、引数に渡した `VideoCodecPreference` で上書きされるため、コード上では優先度の低い順に並べている
   - converter.cpp に `AMFContext` の初期化を追加する
     - `sora::VideoCodecCapabilityConfig` の `amf_context` に `AMFContext` の値を設定することで AMD AMF を利用可能にする
