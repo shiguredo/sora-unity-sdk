@@ -11,11 +11,11 @@ Sora Unity SDK は [WebRTC SFU Sora](https://sora.shiguredo.jp/) の Unity ク�
 
 We will not respond to PRs or issues that have not been discussed on Discord. Also, Discord is only available in Japanese.
 
-Please read https://github.com/shiguredo/oss/blob/master/README.en.md before use.
+Please read <https://github.com/shiguredo/oss/blob/master/README.en.md> before use.
 
 ## 時雨堂のオープンソースソフトウェアについて
 
-利用前に https://github.com/shiguredo/oss をお読みください。
+利用前に <https://github.com/shiguredo/oss> をお読みください。
 
 ## ドキュメント
 
@@ -57,7 +57,6 @@ Please read https://github.com/shiguredo/oss/blob/master/README.en.md before use
 - Android への対応
 - Android OpenGL ES への対応
 - iOS 対応
-- Ubuntu 20.04 への対応
 - Ubuntu 22.04 への対応
 - SRTP/SRTCP の AES-GCM 対応
 - Unity のカメラ映像を取得し Sora で送信
@@ -112,12 +111,6 @@ Please read https://github.com/shiguredo/oss/blob/master/README.en.md before use
 - マイクやカメラ等のメディアデバイスをつかまないようにする機能
 - 接続確立後のカメラ切り替え機能
 
-## Sora Unity SDK for MS HoloLens 2
-
-- Discord でのお問い合わせはお受けしておりません
-- [support/hololens2](https://github.com/shiguredo/sora-unity-sdk/tree/support/hololens2) ブランチの修正や改善は優先実装としてお受けしています
-- 継続的なメンテナンスを有償にて提供しています
-
 ## 有償での優先実装
 
 - Windows 版 NVIDIA VIDEO CODEC SDK による H.264 エンコーダ対応
@@ -169,8 +162,8 @@ Please read https://github.com/shiguredo/oss/blob/master/README.en.md before use
 Apache License 2.0
 
 ```
-Copyright 2019-2023, Wandbox LLC (Original Author)
-Copyright 2019-2023, Shiguredo Inc.
+Copyright 2019-2025, Wandbox LLC (Original Author)
+Copyright 2019-2025, Shiguredo Inc.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -184,3 +177,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 ```
+
+## Sora Unity SDK for MS HoloLens 2
+
+継続的なメンテナンスを終了し、サポートも終了しました。

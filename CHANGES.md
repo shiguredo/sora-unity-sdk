@@ -14,6 +14,16 @@
 - [CHANGE] Linux x86_64 版のビルドを `ubuntu-20.04_x86_64` から `ubuntu-24.04_x86_64` にあげる
   - @miosakuma
 - [CHANGE] 対応プラットフォームから `Ubuntu 20.04` を削除し、 `Ubuntu 24.04` を追加する
+  - @miosakuma
+- [CHANGE] Linux x86_64 版のビルドを `ubuntu-20.04_x86_64` から `ubuntu-22.04_x86_64` にあげる
+  - ビルドに関して `ubuntu-20.04_x86_64` を指定していた部分を `ubuntu-22.04_x86_64` だけに変更
+  - @miosakuma
+- [CHANGE] Sora.Config.UseHardwareEncoder フラグを削除
+  - 代わりに `Sora.Config.VideoCodecPreference` を利用して下さい
+  - @melpon
+- [CHANGE] Sora.IsH264Supported() 関数を削除
+  - 代わりに `Sora.GetVideoCodecCapability()` 関数を利用して下さい
+  - @melpon
 - [CHANGE] Sora.Config.VideoCodecType を Nullable 型に変更し、デフォルト値を `VP9` から未指定に変更する
   - 未指定の場合、シグナリング "type": "connect" でビデオコーデック指定を行わない
   - ビデオコーデック指定を行わない場合は Sora のデフォルト値 `VP9` が利用される
@@ -22,8 +32,35 @@
   - 未指定の場合、シグナリング "type": "connect" でオーディオコーデック指定を行わない
   - オーディオコーデック指定を行わない場合は Sora のデフォルト値 `OPUS` が利用される
   - @miosakuma
+- [CHANGE] `Ubuntu 22.04` をリリースに含める
+  - @miosakuma
+- [CHANGE] 対応プラットフォームから `Ubuntu 20.04` を削除
+  - @miosakuma
+- [ADD] 利用するビデオコーデックを詳細に指定するための enum やクラス、関数などを追加
+  - `Sora.VideoCodecImplementation` 列挙型
+  - `Sora.VideoCodecCapabilityConfig` クラス
+  - `Sora.VideoCodecCapability` クラス
+  - `Sora.VideoCodecPreference` クラス
+  - `Sora.GetVideoCodecPreference()` 関数
+  - `Sora.Config.VideoCodecPreference` フィールド
+  - @melpon
+- [ADD] AMD AMF のサポートを追加
+  - Sora.cs に AMD AMF のサポートを追加する
+    - `VideoCodecImplementation` 列挙型に `AmdAmf` を追加する
+    - `VideoCodecImplementationToString()` と `VideoCodecImplementationFromString()` に `AmdAmf` 用の case を追加する
+    - `GetHardwareEncoderPreference()` に AMD AMF 用の `VideoCodecPreference` を追加する
+      - 次の順序で優先されるように追加する(上から優先する)
+        - Intel VPL
+        - AMD AMF
+        - NVIDIA Video Codec SDK
+        - Internal
+      - `preference.Merge()` は同じコーデックが既に存在する場合、引数に渡した `VideoCodecPreference` で上書きされるため、コード上では優先度の低い順に並べている
+  - converter.cpp に `AMFContext` の初期化を追加する
+    - `sora::VideoCodecCapabilityConfig` の `amf_context` に `AMFContext` の値を設定することで AMD AMF を利用可能にする
+  - @torikizi
 - [UPDATE] Sora C++ SDK を `2025.2.0` に上げる
-  - `CMAKE_VERSION` を `3.31.4` にアップデート
+  - `CMAKE_VERSION` を `3.31.6` にアップデート
+  - `WEBRTC_BUILD_VERSION` を `m132.6834.5.8` にアップデート
   - @torikizi
 - [ADD] Ubuntu 22.04 でのビルドに対応する
   - @miosakuma
@@ -33,6 +70,13 @@
 - [CHANGE] Linux x86_64 と Android のビルド環境を `ubuntu-20.04` から `ubuntu-24.04` にあげる
   - @miosakuma
 - [CHANGE] GitHub Actions の package タスクを実行する環境を `ubuntu-20.04` から `ubuntu-24.04` にあげる
+  - @miosakuma
+
+### misc
+
+- [CHANGE] Linux x86_64 と Android のビルド環境を `ubuntu-20.04` から `ubuntu-22.04` にあげる
+  - @miosakuma
+- [CHANGE] GitHub Actions の package タスクを実行する環境を `ubuntu-20.04` から `ubuntu-22.04` にあげる
   - @miosakuma
 
 ## 2025.1.0

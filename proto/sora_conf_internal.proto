@@ -37,6 +37,35 @@ message ForwardingFilters {
     repeated ForwardingFilter filters = 1;
 }
 
+message VideoCodecCapability {
+    message Codec {
+        string type = 1;
+        bool encoder = 2;
+        bool decoder = 3;
+        string parameters = 4;
+    }
+    message Engine {
+        string name = 1;
+        repeated Codec codecs = 2;
+        string parameters = 3;
+    }
+    repeated Engine engines = 1;
+}
+
+message VideoCodecCapabilityConfig {
+    optional string openh264_path = 1;
+}
+
+message VideoCodecPreference {
+    message Codec {
+        string type = 1;
+        optional string encoder = 2;
+        optional string decoder = 3;
+        string parameters = 4;
+    }
+    repeated Codec codecs = 1;
+}
+
 message CameraConfig {
     int32 capturer_type = 17;
     int64 unity_camera_texture = 18;
@@ -91,7 +120,8 @@ message ConnectConfig {
     string signaling_notify_metadata = 49;
     optional ForwardingFilter forwarding_filter = 51;
     optional ForwardingFilters forwarding_filters = 52;
-    optional bool use_hardware_encoder = 53;
+    VideoCodecCapabilityConfig video_codec_capability_config = 530;
+    optional VideoCodecPreference video_codec_preference = 531;
     optional string client_cert = 54;
     optional string client_key = 55;
     optional string ca_cert = 56;

@@ -51,10 +51,6 @@ elseif (SORA_UNITY_SDK_PACKAGE STREQUAL "android")
   add_library(SoraUnitySdk SHARED)
 
   set(SORA_UNITY_SDK_PLATFORM Android)
-elseif (SORA_UNITY_SDK_PACKAGE STREQUAL "ubuntu-20.04_x86_64")
-  add_library(SoraUnitySdk SHARED)
-
-  set(SORA_UNITY_SDK_PLATFORM Ubuntu)
 elseif (SORA_UNITY_SDK_PACKAGE STREQUAL "ubuntu-22.04_x86_64")
   add_library(SoraUnitySdk SHARED)
 
@@ -69,6 +65,7 @@ set_target_properties(SoraUnitySdk PROPERTIES CXX_STANDARD 20 C_STANDARD 99)
 
 target_sources(SoraUnitySdk
   PRIVATE
+    src/converter.cpp
     src/device_list.cpp
     src/id_pointer.cpp
     src/sora.cpp
@@ -258,7 +255,7 @@ elseif (SORA_UNITY_SDK_PACKAGE STREQUAL "android")
       ${_WEBRTC_ANDROID_LDFLAGS}
   )
 
-elseif (SORA_UNITY_SDK_PACKAGE STREQUAL "ubuntu-20.04_x86_64" OR SORA_UNITY_SDK_PACKAGE STREQUAL "ubuntu-22.04_x86_64" OR SORA_UNITY_SDK_PACKAGE STREQUAL "ubuntu-24.04_x86_64")
+elseif (SORA_UNITY_SDK_PACKAGE STREQUAL "ubuntu-22.04_x86_64" OR SORA_UNITY_SDK_PACKAGE STREQUAL "ubuntu-24.04_x86_64")
 
   target_sources(SoraUnitySdk
     PRIVATE

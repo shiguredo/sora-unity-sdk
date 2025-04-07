@@ -125,7 +125,7 @@ def install_deps(
             install_cmake_args["ext"] = "zip"
         elif build_platform in ("macos_x86_64", "macos_arm64"):
             install_cmake_args["platform"] = "macos-universal"
-        elif build_platform in ("ubuntu-20.04_x86_64", "ubuntu-22.04_x86_64", "ubuntu-24.04_x86_64"):
+        elif build_platform in ("ubuntu-22.04_x86_64", "ubuntu-24.04_x86_64"):
             install_cmake_args["platform"] = "linux-x86_64"
         else:
             raise Exception("Failed to install CMake")
@@ -160,7 +160,7 @@ def install_deps(
             install_protobuf_args["platform"] = "win64"
         elif build_platform in ("macos_x86_64", "macos_arm64"):
             install_protobuf_args["platform"] = "osx-universal_binary"
-        elif build_platform in ("ubuntu-20.04_x86_64", "ubuntu-22.04_x86_64", "ubuntu-24.04_x86_64"):
+        elif build_platform in ("ubuntu-22.04_x86_64", "ubuntu-24.04_x86_64"):
             install_protobuf_args["platform"] = "linux-x86_64"
         else:
             raise Exception("Failed to install Protobuf")
@@ -180,7 +180,7 @@ def install_deps(
             install_jsonif_args["platform"] = "darwin-amd64"
         elif build_platform == "macos_arm64":
             install_jsonif_args["platform"] = "darwin-arm64"
-        elif build_platform in ("ubuntu-20.04_x86_64", "ubuntu-22.04_x86_64", "ubuntu-24.04_x86_64"):
+        elif build_platform in ("ubuntu-22.04_x86_64", "ubuntu-24.04_x86_64"):
             install_jsonif_args["platform"] = "linux-amd64"
         else:
             raise Exception("Failed to install protoc-gen-jsonif")
@@ -209,12 +209,7 @@ def get_build_platform():
         os = release["NAME"]
         if os == "Ubuntu":
             osver = release["VERSION_ID"]
-            if osver == "20.04":
-                if arch == "x86_64":
-                    return "ubuntu-20.04_x86_64"
-                else:
-                    raise Exception("Unknown ubuntu arch")
-            elif osver == "22.04":
+            if osver == "22.04":
                 if arch == "x86_64":
                     return "ubuntu-22.04_x86_64"
                 else:
@@ -232,13 +227,19 @@ def get_build_platform():
         raise Exception(f"OS {os} not supported")
 
 
-AVAILABLE_TARGETS = ["windows_x86_64", "macos_arm64", "ubuntu-20.04_x86_64", "ubuntu-22.04_x86_64", "ubuntu-24.04_x86_64", "ios", "android"]
+AVAILABLE_TARGETS = [
+    "windows_x86_64",
+    "macos_arm64",
+    "ubuntu-22.04_x86_64",
+    "ubuntu-24.04_x86_64",
+    "ios",
+    "android",
+]
 
 BUILD_PLATFORM = {
     "windows_x86_64": ["windows_x86_64"],
     "macos_x86_64": ["macos_x86_64", "macos_arm64", "ios"],
     "macos_arm64": ["macos_x86_64", "macos_arm64", "ios"],
-    "ubuntu-20.04_x86_64": ["ubuntu-20.04_x86_64", "android"],
     "ubuntu-22.04_x86_64": ["ubuntu-22.04_x86_64", "android"],
     "ubuntu-24.04_x86_64": ["ubuntu-24.04_x86_64", "android"],
 }
@@ -358,7 +359,7 @@ def main():
             # r23b には ANDROID_CPP_FEATURES=exceptions でも例外が設定されない問題がある
             # https://github.com/android/ndk/issues/1618
             cmake_args.append("-DCMAKE_ANDROID_EXCEPTIONS=ON")
-        elif platform in ("ubuntu-20.04_x86_64", "ubuntu-22.04_x86_64", "ubuntu-24.04_x86_64"):
+        elif platform in ("ubuntu-22.04_x86_64", "ubuntu-24.04_x86_64"):
             cmake_args.append(
                 f"-DCMAKE_C_COMPILER={os.path.join(webrtc_info.clang_dir, 'bin', 'clang')}"
             )

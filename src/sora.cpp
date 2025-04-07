@@ -27,6 +27,8 @@
 #include <sora/sora_video_decoder_factory.h>
 #include <sora/sora_video_encoder_factory.h>
 
+#include "converter.h"
+
 #ifdef SORA_UNITY_SDK_ANDROID
 #include <sora/android/android_capturer.h>
 #include "android_helper/android_context.h"
@@ -238,8 +240,12 @@ void Sora::DoConnect(const sora_conf::internal::ConnectConfig& cc,
 
   sora::SoraClientContextConfig client_config;
   client_config.use_audio_device = false;
-  if (cc.has_use_hardware_encoder()) {
-    client_config.use_hardware_encoder = cc.use_hardware_encoder;
+  client_config.video_codec_factory_config.capability_config =
+      ConvertToVideoCodecCapabilityConfigWithSession(
+          cc.video_codec_capability_config);
+  if (cc.has_video_codec_preference()) {
+    client_config.video_codec_factory_config.preference =
+        ConvertToVideoCodecPreference(cc.video_codec_preference);
   }
   client_config.configure_dependencies =
       [&, this](webrtc::PeerConnectionFactoryDependencies& dependencies) {
@@ -751,48 +757,6 @@ bool Sora::InitADM(rtc::scoped_refptr<webrtc::AudioDeviceModule> adm,
   }
 
   return true;
-}
-
-sora::SoraSignalingConfig::ForwardingFilter Sora::ConvertToForwardingFilter(
-    const sora_conf::internal::ForwardingFilter& filter) {
-  sora::SoraSignalingConfig::ForwardingFilter ff;
-
-  if (filter.has_action()) {
-    ff.action = filter.action;
-  }
-  if (filter.has_name()) {
-    ff.name = filter.name;
-  }
-  if (filter.has_priority()) {
-    ff.priority = filter.priority;
-  }
-  for (const auto& rs : filter.rules) {
-    std::vector<sora::SoraSignalingConfig::ForwardingFilter::Rule> ffrs;
-    for (const auto& r : rs.rules) {
-      sora::SoraSignalingConfig::ForwardingFilter::Rule ffr;
-      ffr.field = r.field;
-      ffr.op = r.op;
-      ffr.values = r.values;
-      ffrs.push_back(ffr);
-    }
-    ff.rules.push_back(ffrs);
-  }
-
-  if (filter.has_version()) {
-    ff.version = filter.version;
-  }
-  if (filter.has_metadata()) {
-    boost::system::error_code ec;
-    auto ffmd = boost::json::parse(filter.metadata, ec);
-    if (ec) {
-      RTC_LOG(LS_WARNING) << "Invalid JSON: forwarding_filter metadata="
-                          << filter.metadata;
-    } else {
-      ff.metadata = ffmd;
-    }
-  }
-
-  return ff;
 }
 
 rtc::scoped_refptr<webrtc::VideoTrackSourceInterface> Sora::CreateVideoCapturer(
