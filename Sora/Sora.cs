@@ -309,7 +309,7 @@ public class Sora : IDisposable
 
         // 可能な限り HWA を利用する VideoCodecPreference を返す
         // 優先度的には Intel VPL > Nvidia Video Codec SDK > Internal となる
-        public static VideoCodecPreference GetHardwareEncoderPreference(VideoCodecCapability capability)
+        public static VideoCodecPreference GetHardwareAcceleratorPreference(VideoCodecCapability capability)
         {
             // Merge は同じコーデックを上書きするので、優先度が高いのを後でマージすることで正しい優先度になる
             var preference = new VideoCodecPreference();

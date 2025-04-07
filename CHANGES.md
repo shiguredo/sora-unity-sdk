@@ -44,7 +44,7 @@
   - Sora.cs に AMD AMF のサポートを追加する
     - `VideoCodecImplementation` 列挙型に `AmdAmf` を追加する
     - `VideoCodecImplementationToString()` と `VideoCodecImplementationFromString()` に `AmdAmf` 用の case を追加する
-    - `GetHardwareEncoderPreference()` に AMD AMF 用の `VideoCodecPreference` を追加する
+    - `VideoCodecPreference.GetHardwareAcceleratorPreference()` に AMD AMF 用の `VideoCodecPreference` を追加する
       - 次の順序で優先されるように追加する(上から優先する)
         - Intel VPL
         - AMD AMF
