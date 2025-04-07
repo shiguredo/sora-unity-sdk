@@ -11,12 +11,11 @@
 
 ## develop
 
-- [CHANGE] Linux x86_64 版のビルドを `ubuntu-20.04_x86_64` から `ubuntu-24.04_x86_64` にあげる
-  - @miosakuma
 - [CHANGE] 対応プラットフォームから `Ubuntu 20.04` を削除し、 `Ubuntu 24.04` を追加する
   - @miosakuma
-- [CHANGE] Linux x86_64 版のビルドを `ubuntu-20.04_x86_64` から `ubuntu-22.04_x86_64` にあげる
-  - ビルドに関して `ubuntu-20.04_x86_64` を指定していた部分を `ubuntu-22.04_x86_64` だけに変更
+- [CHANGE] Linux x86_64 版のビルドを ubuntu-20.04_x86_64 を削除
+  - ビルドに関して ubuntu-20.04_x86_64 を指定していた部分を ubuntu-22.04_x86_64 に変更する
+  - ubuntu-24.04_x86_64 を追加する
   - @miosakuma
 - [CHANGE] Sora.Config.UseHardwareEncoder フラグを削除
   - 代わりに `Sora.Config.VideoCodecPreference` を利用して下さい
