@@ -179,6 +179,7 @@ public class Sora : IDisposable
         CiscoOpenH264,
         IntelVpl,
         NvidiaVideoCodecSdk,
+        AmdAmf,
     }
     static string VideoCodecImplementationToString(VideoCodecImplementation implementation)
     {
@@ -192,6 +193,8 @@ public class Sora : IDisposable
                 return "intel_vpl";
             case VideoCodecImplementation.NvidiaVideoCodecSdk:
                 return "nvidia_video_codec_sdk";
+            case VideoCodecImplementation.AmdAmf:
+                return "amd_amf";
             default:
                 return "";
         }
@@ -208,6 +211,8 @@ public class Sora : IDisposable
                 return VideoCodecImplementation.IntelVpl;
             case "nvidia_video_codec_sdk":
                 return VideoCodecImplementation.NvidiaVideoCodecSdk;
+            case "amd_amf":
+                return VideoCodecImplementation.AmdAmf;
             default:
                 return VideoCodecImplementation.Internal;
         }
@@ -310,6 +315,7 @@ public class Sora : IDisposable
             var preference = new VideoCodecPreference();
             preference.Merge(CreateFromImplementation(capability, VideoCodecImplementation.Internal));
             preference.Merge(CreateFromImplementation(capability, VideoCodecImplementation.NvidiaVideoCodecSdk));
+            preference.Merge(CreateFromImplementation(capability, VideoCodecImplementation.AmdAmf));
             preference.Merge(CreateFromImplementation(capability, VideoCodecImplementation.IntelVpl));
             return preference;
         }
