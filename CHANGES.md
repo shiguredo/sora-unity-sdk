@@ -12,7 +12,8 @@
 ## develop
 
 - [CHANGE] 対応プラットフォームから Ubuntu 20.04 を削除する
-  - ビルドに関して ubuntu-20.04_x86_64 を指定していた部分を ubuntu-22.04_x86_64 に変更し、Ubuntu 20.04 のビルドを削除
+  - ビルドに関して ubuntu-20.04_x86_64 を指定していた部分を ubuntu-22.04_x86_64 に変更し、Ubuntu 20.04 のビルドを削除する
+  - package タスクを実行する環境を `ubuntu-20.04` から `ubuntu-22.04` に変更し、Ubuntu 20.04 を削除する
   - @miosakuma
 - [CHANGE] Plugins/SoraUnitySdk/linux ディレクトリを Plugins/SoraUnitySdk/ubuntu-22.04 と Plugins/SoraUnitySdk/ubuntu-24.04 に分ける
   - Ubuntu 22.04 のビルドとは別に Ubuntu 24.04 のビルドを行うようにする
@@ -30,10 +31,6 @@
 - [CHANGE] Sora.Config.AudioCodecType を Nullable 型に変更し、デフォルト値を `OPUS` から未指定に変更する
   - 未指定の場合、シグナリング "type": "connect" でオーディオコーデック指定を行わない
   - オーディオコーデック指定を行わない場合は Sora のデフォルト値 `OPUS` が利用される
-  - @miosakuma
-- [CHANGE] `Ubuntu 22.04` をリリースに含める
-  - @miosakuma
-- [CHANGE] 対応プラットフォームから `Ubuntu 20.04` を削除
   - @miosakuma
 - [UPDATE] Sora C++ SDK を `2025.2.0` に上げる
   - `CMAKE_VERSION` を `3.31.6` にアップデート
@@ -62,16 +59,12 @@
     - `sora::VideoCodecCapabilityConfig` の `amf_context` に `AMFContext` の値を設定することで AMD AMF を利用可能にする
   - @torikizi
 - [ADD] Ubuntu 22.04 でのビルドに対応する
+  - Ubuntu 20.04 を Ubuntu 22.04 に変更し、Ubuntu 22.04 用のビルドを追加する
   - @miosakuma
 - [ADD] 対応プラットフォームに Ubuntu 24.04 を追加する
-  - @miosakuma
-
-### misc
-
-- [CHANGE] Linux x86_64 と Android のビルド環境を `ubuntu-20.04` から `ubuntu-22.04` にあげる
-  - @miosakuma
-- [CHANGE] GitHub Actions の package タスクを実行する環境を `ubuntu-20.04` から `ubuntu-22.04` にあげる
-  - @miosakuma
+  - Ubuntu 24.04 用のビルドを追加する
+  - Ubuntu 24.04 用のリリースバイナリを追加する
+  - @miosakuma @torikizi
 
 ## 2025.1.0
 
