@@ -12,6 +12,8 @@
 ## develop
 
 - [CHANGE] 対応プラットフォームから `Ubuntu 20.04` を削除し、 `Ubuntu 24.04` を追加する
+  - Plugins/linux ディレクトリを ubuntu-22.04 と ubuntu-24.04 に分けて用意する
+  - Ubuntu-22.04 のビルドとは別に Ubuntu-24.04 のビルドを行うようにする
   - @miosakuma
 - [CHANGE] Linux x86_64 版のビルドを ubuntu-20.04_x86_64 を削除
   - ビルドに関して ubuntu-20.04_x86_64 を指定していた部分を ubuntu-22.04_x86_64 に変更する
