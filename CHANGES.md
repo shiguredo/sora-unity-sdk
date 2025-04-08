@@ -13,7 +13,6 @@
 
 - [CHANGE] 対応プラットフォームから Ubuntu 20.04 を削除する
   - ビルドに関して ubuntu-20.04_x86_64 を指定していた部分を ubuntu-22.04_x86_64 に変更し、Ubuntu 20.04 のビルドを削除する
-  - package タスクを実行する環境を `ubuntu-20.04` から `ubuntu-22.04` に変更し、Ubuntu 20.04 を削除する
   - @miosakuma
 - [CHANGE] Plugins/SoraUnitySdk/linux ディレクトリを Plugins/SoraUnitySdk/ubuntu-22.04 と Plugins/SoraUnitySdk/ubuntu-24.04 に分ける
   - Ubuntu 22.04 のビルドとは別に Ubuntu 24.04 のビルドを行うようにする
@@ -65,6 +64,11 @@
   - Ubuntu 24.04 用のビルドを追加する
   - Ubuntu 24.04 用のリリースバイナリを追加する
   - @miosakuma @torikizi
+
+### misc
+
+- [CHANGE] package タスクを実行する環境を `ubuntu-20.04` から `ubuntu-24.04` に変更する
+  - @miosakuma
 
 ## 2025.1.0
 
