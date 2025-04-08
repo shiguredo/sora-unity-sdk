@@ -241,7 +241,7 @@ BUILD_PLATFORM = {
     "macos_x86_64": ["macos_x86_64", "macos_arm64", "ios"],
     "macos_arm64": ["macos_x86_64", "macos_arm64", "ios"],
     "ubuntu-22.04_x86_64": ["ubuntu-22.04_x86_64", "android"],
-    "ubuntu-24.04_x86_64": ["ubuntu-24.04_x86_64"],
+    "ubuntu-24.04_x86_64": ["ubuntu-24.04_x86_64", "android"],
 }
 
 
