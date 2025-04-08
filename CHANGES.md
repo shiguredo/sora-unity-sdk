@@ -11,9 +11,8 @@
 
 ## develop
 
-- [CHANGE] 対応プラットフォームから Ubuntu 20.04 を削除し Ubuntu 24.04 を追加する
-  - ビルドに関して ubuntu-20.04_x86_64 を指定していた部分を ubuntu-22.04_x86_64 に変更する
-  - ubuntu-24.04_x86_64 を追加する
+- [CHANGE] 対応プラットフォームから Ubuntu 20.04 を削除する
+  - ビルドに関して ubuntu-20.04_x86_64 を指定していた部分を ubuntu-22.04_x86_64 に変更し、Ubuntu 20.04 のビルドを削除
   - @miosakuma
 - [CHANGE] Plugins/SoraUnitySdk/linux ディレクトリを Plugins/SoraUnitySdk/ubuntu-22.04 と Plugins/SoraUnitySdk/ubuntu-24.04 に分ける
   - Ubuntu 22.04 のビルドとは別に Ubuntu 24.04 のビルドを行うようにする
@@ -36,6 +35,10 @@
   - @miosakuma
 - [CHANGE] 対応プラットフォームから `Ubuntu 20.04` を削除
   - @miosakuma
+- [UPDATE] Sora C++ SDK を `2025.2.0` に上げる
+  - `CMAKE_VERSION` を `3.31.6` にアップデート
+  - `WEBRTC_BUILD_VERSION` を `m132.6834.5.8` にアップデート
+  - @torikizi
 - [ADD] 利用するビデオコーデックを詳細に指定するための enum やクラス、関数などを追加
   - `Sora.VideoCodecImplementation` 列挙型
   - `Sora.VideoCodecCapabilityConfig` クラス
@@ -58,18 +61,9 @@
   - converter.cpp に `AMFContext` の初期化を追加する
     - `sora::VideoCodecCapabilityConfig` の `amf_context` に `AMFContext` の値を設定することで AMD AMF を利用可能にする
   - @torikizi
-- [UPDATE] Sora C++ SDK を `2025.2.0` に上げる
-  - `CMAKE_VERSION` を `3.31.6` にアップデート
-  - `WEBRTC_BUILD_VERSION` を `m132.6834.5.8` にアップデート
-  - @torikizi
 - [ADD] Ubuntu 22.04 でのビルドに対応する
   - @miosakuma
-
-### misc
-
-- [CHANGE] Linux x86_64 と Android のビルド環境を `ubuntu-20.04` から `ubuntu-24.04` にあげる
-  - @miosakuma
-- [CHANGE] GitHub Actions の package タスクを実行する環境を `ubuntu-20.04` から `ubuntu-24.04` にあげる
+- [ADD] 対応プラットフォームに Ubuntu 24.04 を追加する
   - @miosakuma
 
 ### misc
