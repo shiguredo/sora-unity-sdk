@@ -46,6 +46,7 @@ Please read <https://github.com/shiguredo/oss/blob/master/README.en.md> before u
 - Android 7 以降
 - iOS 13 以降
 - Ubuntu 22.04 x86_64
+- Ubuntu 24.04 x86_64
 
 ## 対応機能
 
