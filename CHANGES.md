@@ -15,7 +15,7 @@
   - Plugins/SoraUnitySdk/linux ディレクトリを Plugins/SoraUnitySdk/ubuntu-22.04 と Plugins/SoraUnitySdk/ubuntu-24.04 に分ける
   - Ubuntu 22.04 のビルドとは別に Ubuntu 24.04 のビルドを行うようにする
   - @miosakuma @torikizi
-- [CHANGE] Linux x86_64 版のビルドを ubuntu-20.04_x86_64 を削除
+- [CHANGE] Linux x86_64 版のビルドから ubuntu-20.04_x86_64 を削除
   - ビルドに関して ubuntu-20.04_x86_64 を指定していた部分を ubuntu-22.04_x86_64 に変更する
   - ubuntu-24.04_x86_64 を追加する
   - @miosakuma
