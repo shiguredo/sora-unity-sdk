@@ -11,14 +11,13 @@
 
 ## develop
 
-- [CHANGE] 対応プラットフォームから `Ubuntu 20.04` を削除し、 `Ubuntu 24.04` を追加する
-  - Plugins/SoraUnitySdk/linux ディレクトリを Plugins/SoraUnitySdk/ubuntu-22.04 と Plugins/SoraUnitySdk/ubuntu-24.04 に分ける
-  - Ubuntu 22.04 のビルドとは別に Ubuntu 24.04 のビルドを行うようにする
-  - @miosakuma @torikizi
-- [CHANGE] Linux x86_64 版のビルドから ubuntu-20.04_x86_64 を削除
+- [CHANGE] 対応プラットフォームから Ubuntu 20.04 を削除し Ubuntu 24.04 を追加する
   - ビルドに関して ubuntu-20.04_x86_64 を指定していた部分を ubuntu-22.04_x86_64 に変更する
   - ubuntu-24.04_x86_64 を追加する
   - @miosakuma
+- [CHANGE] Plugins/SoraUnitySdk/linux ディレクトリを Plugins/SoraUnitySdk/ubuntu-22.04 と Plugins/SoraUnitySdk/ubuntu-24.04 に分ける
+  - Ubuntu 22.04 のビルドとは別に Ubuntu 24.04 のビルドを行うようにする
+  - @torikizi
 - [CHANGE] Sora.Config.UseHardwareEncoder フラグを削除
   - 代わりに `Sora.Config.VideoCodecPreference` を利用して下さい
   - @melpon
