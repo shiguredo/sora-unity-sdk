@@ -108,7 +108,7 @@ jobs:
         restore-keys: |
           ${{ matrix.name }}-v1-
     - name: Prepare Ubuntu x86_64
-      if: matrix.name == 'ubuntu-22.04_x86_64'
+      if: matrix.name == 'ubuntu-22.04_x86_64' || matrix.name == 'ubuntu-24.04_x86_64'
       run: |
         sudo apt install libgl-dev
     - run: python3 run.py ${{ matrix.name }}
