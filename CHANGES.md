@@ -32,7 +32,6 @@
   - オーディオコーデック指定を行わない場合は Sora のデフォルト値 `OPUS` が利用される
   - @miosakuma
 - [UPDATE] Sora C++ SDK を `2025.3.0-canary.8` に上げる
-  - `CMAKE_VERSION` を `4.0.1` にアップデート
   - `WEBRTC_BUILD_VERSION` を `m136.7103.0.0` にアップデート
   - `BOOST_VERSION` を `1.88.0` にアップデート
   - `CMAKE_VERSION` を `4.0.1` にアップデート
