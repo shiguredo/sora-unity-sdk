@@ -70,6 +70,8 @@
 
 - [CHANGE] package タスクを実行する環境を `ubuntu-20.04` から `ubuntu-24.04` に変更する
   - @miosakuma
+- [UPDATE] 対応 Unity のバージョンを `6000.0` に更新する
+  - @torikizi
 
 ## 2025.1.0
 
