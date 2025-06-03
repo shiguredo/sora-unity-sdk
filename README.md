@@ -33,6 +33,7 @@ Please read <https://github.com/shiguredo/oss/blob/master/README.en.md> before u
 
 ## 対応 Unity バージョン
 
+- Unity 6000.0 (LTS)
 - Unity 2022.3 (LTS)
 
 ## システム条件
