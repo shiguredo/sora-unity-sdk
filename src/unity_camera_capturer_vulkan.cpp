@@ -114,7 +114,7 @@ bool UnityCameraCapturer::VulkanImpl::Init(UnityContext* context,
   return true;
 }
 
-rtc::scoped_refptr<webrtc::I420Buffer>
+webrtc::scoped_refptr<webrtc::I420Buffer>
 UnityCameraCapturer::VulkanImpl::Capture() {
   IUnityGraphicsVulkan* graphics =
       context_->GetInterfaces()->Get<IUnityGraphicsVulkan>();
@@ -353,7 +353,7 @@ UnityCameraCapturer::VulkanImpl::Capture() {
 
   vkUnmapMemory(device, memory_);
 
-  rtc::scoped_refptr<webrtc::I420Buffer> i420_buffer =
+  webrtc::scoped_refptr<webrtc::I420Buffer> i420_buffer =
       webrtc::I420Buffer::Create(width_, height_);
   libyuv::ARGBToI420(buf.get(), pitch, i420_buffer->MutableDataY(),
                      i420_buffer->StrideY(), i420_buffer->MutableDataU(),

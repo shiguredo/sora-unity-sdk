@@ -37,6 +37,10 @@
   - `CMAKE_VERSION` を `4.0.2` にアップデート
   - `ANDROID_NDK_VERSION` を `r28b` にアップデート
   - @torikizi
+- [UPDATE] m137.7151.3.0 へのアップデートに伴い、`rtc::` を `webrtc::` に変更する
+  - @torikizi
+- [UPDATE] m137.7151.3.0 へのアップデートに伴い、`cricket::AudioOptions` を `webrtc::AudioOptions` に変更する
+  - @torikizi
 - [ADD] 利用するビデオコーデックを詳細に指定するための enum やクラス、関数などを追加
   - `Sora.VideoCodecImplementation` 列挙型
   - `Sora.VideoCodecCapabilityConfig` クラス

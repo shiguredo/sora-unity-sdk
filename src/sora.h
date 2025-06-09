@@ -88,9 +88,9 @@ class Sora : public std::enable_shared_from_this<Sora>,
   void OnPush(std::string text) override;
   void OnMessage(std::string label, std::string data) override;
   void OnTrack(
-      rtc::scoped_refptr<webrtc::RtpTransceiverInterface> transceiver) override;
+      webrtc::scoped_refptr<webrtc::RtpTransceiverInterface> transceiver) override;
   void OnRemoveTrack(
-      rtc::scoped_refptr<webrtc::RtpReceiverInterface> receiver) override;
+      webrtc::scoped_refptr<webrtc::RtpReceiverInterface> receiver) override;
   void OnDataChannel(std::string label) override;
 
  private:
@@ -98,9 +98,9 @@ class Sora : public std::enable_shared_from_this<Sora>,
                  std::function<void(int, std::string)> on_disconnect);
   void DoSwitchCamera(
       const sora_conf::internal::CameraConfig& cc,
-      rtc::scoped_refptr<webrtc::VideoTrackInterface> video_track);
+      webrtc::scoped_refptr<webrtc::VideoTrackInterface> video_track);
 
-  static rtc::scoped_refptr<UnityAudioDevice> CreateADM(
+  static webrtc::scoped_refptr<UnityAudioDevice> CreateADM(
       webrtc::TaskQueueFactory* task_queue_factory,
       bool dummy_audio,
       bool unity_audio_input,
@@ -108,14 +108,14 @@ class Sora : public std::enable_shared_from_this<Sora>,
       std::function<void(const int16_t*, int, int)> on_handle_audio,
       std::string audio_recording_device,
       std::string audio_playout_device,
-      rtc::Thread* worker_thread,
+      webrtc::Thread* worker_thread,
       void* jni_env,
       void* android_context);
-  static bool InitADM(rtc::scoped_refptr<webrtc::AudioDeviceModule> adm,
+  static bool InitADM(webrtc::scoped_refptr<webrtc::AudioDeviceModule> adm,
                       std::string audio_recording_device,
                       std::string audio_playout_device);
 
-  static rtc::scoped_refptr<webrtc::VideoTrackSourceInterface>
+  static webrtc::scoped_refptr<webrtc::VideoTrackSourceInterface>
   CreateVideoCapturer(
       int capturer_type,
       void* unity_camera_texture,
@@ -125,21 +125,21 @@ class Sora : public std::enable_shared_from_this<Sora>,
       int video_height,
       int video_fps,
       std::function<void(const webrtc::VideoFrame& frame)> on_frame,
-      rtc::Thread* signaling_thread,
+      webrtc::Thread* signaling_thread,
       void* jni_env,
       void* android_context,
       UnityContext* unity_context);
 
   void PushEvent(std::function<void()> f);
 
-  struct CapturerSink : rtc::VideoSinkInterface<webrtc::VideoFrame> {
-    CapturerSink(rtc::scoped_refptr<webrtc::VideoTrackSourceInterface> capturer,
+  struct CapturerSink : webrtc::VideoSinkInterface<webrtc::VideoFrame> {
+    CapturerSink(webrtc::scoped_refptr<webrtc::VideoTrackSourceInterface> capturer,
                  std::function<void(std::string)> on_frame);
     ~CapturerSink() override;
     void OnFrame(const webrtc::VideoFrame& frame) override;
 
    private:
-    rtc::scoped_refptr<webrtc::VideoTrackSourceInterface> capturer_;
+    webrtc::scoped_refptr<webrtc::VideoTrackSourceInterface> capturer_;
     std::function<void(std::string)> on_frame_;
   };
 
@@ -148,9 +148,9 @@ class Sora : public std::enable_shared_from_this<Sora>,
   std::shared_ptr<sora::SoraSignaling> signaling_;
   UnityContext* unity_context_;
   std::unique_ptr<UnityRenderer> renderer_;
-  rtc::scoped_refptr<webrtc::AudioTrackInterface> audio_track_;
-  rtc::scoped_refptr<webrtc::VideoTrackInterface> video_track_;
-  rtc::scoped_refptr<webrtc::RtpSenderInterface> video_sender_;
+  webrtc::scoped_refptr<webrtc::AudioTrackInterface> audio_track_;
+  webrtc::scoped_refptr<webrtc::VideoTrackInterface> video_track_;
+  webrtc::scoped_refptr<webrtc::RtpSenderInterface> video_sender_;
   std::function<void(ptrid_t, std::string)> on_add_track_;
   std::function<void(ptrid_t, std::string)> on_remove_track_;
   std::function<void(std::string)> on_set_offer_;
@@ -163,7 +163,7 @@ class Sora : public std::enable_shared_from_this<Sora>,
   std::function<void(std::string)> on_capturer_frame_;
 
   std::shared_ptr<sora::SoraClientContext> sora_context_;
-  std::unique_ptr<rtc::Thread> io_thread_;
+  std::unique_ptr<webrtc::Thread> io_thread_;
 
   std::mutex event_mutex_;
   std::deque<std::function<void()>> event_queue_;
@@ -174,11 +174,11 @@ class Sora : public std::enable_shared_from_this<Sora>,
 
   std::string stream_id_;
 
-  rtc::scoped_refptr<webrtc::VideoTrackSourceInterface> capturer_;
+  webrtc::scoped_refptr<webrtc::VideoTrackSourceInterface> capturer_;
   int capturer_type_ = 0;
   std::shared_ptr<CapturerSink> capturer_sink_;
 
-  rtc::scoped_refptr<UnityAudioDevice> unity_adm_;
+  webrtc::scoped_refptr<UnityAudioDevice> unity_adm_;
   webrtc::TaskQueueFactory* task_queue_factory_;
 #if defined(SORA_UNITY_SDK_ANDROID)
   webrtc::ScopedJavaGlobalRef<jobject> android_context_;

@@ -6,10 +6,10 @@ UnityCameraCapturer::UnityCameraCapturer(
     const UnityCameraCapturerConfig& config)
     : sora::ScalableVideoTrackSource(config) {}
 
-rtc::scoped_refptr<UnityCameraCapturer> UnityCameraCapturer::Create(
+webrtc::scoped_refptr<UnityCameraCapturer> UnityCameraCapturer::Create(
     const UnityCameraCapturerConfig& config) {
-  rtc::scoped_refptr<UnityCameraCapturer> p =
-      rtc::make_ref_counted<UnityCameraCapturer>(config);
+  webrtc::scoped_refptr<UnityCameraCapturer> p =
+      webrtc::make_ref_counted<UnityCameraCapturer>(config);
   if (!p->Init(config.context, config.unity_camera_texture, config.width,
                config.height)) {
     return nullptr;

@@ -14,7 +14,7 @@ UnityRenderer::Sink::Sink(webrtc::VideoTrackInterface* track) : track_(track) {
   deleting_ = false;
   updating_ = false;
   ptrid_ = IdPointer::Instance().Register(this);
-  track_->AddOrUpdateSink(this, rtc::VideoSinkWants());
+  track_->AddOrUpdateSink(this, webrtc::VideoSinkWants());
 }
 UnityRenderer::Sink::~Sink() {
   RTC_LOG(LS_INFO) << "[" << (void*)this << "] Sink::~Sink";
@@ -33,23 +33,23 @@ ptrid_t UnityRenderer::Sink::GetSinkID() const {
 }
 void UnityRenderer::Sink::SetTrack(webrtc::VideoTrackInterface* track) {
   track_->RemoveSink(this);
-  track->AddOrUpdateSink(this, rtc::VideoSinkWants());
+  track->AddOrUpdateSink(this, webrtc::VideoSinkWants());
   track_ = track;
 }
 
-rtc::scoped_refptr<webrtc::VideoFrameBuffer>
+webrtc::scoped_refptr<webrtc::VideoFrameBuffer>
 UnityRenderer::Sink::GetFrameBuffer() {
   std::lock_guard<std::mutex> guard(mutex_);
   return frame_buffer_;
 }
 void UnityRenderer::Sink::SetFrameBuffer(
-    rtc::scoped_refptr<webrtc::VideoFrameBuffer> v) {
+    webrtc::scoped_refptr<webrtc::VideoFrameBuffer> v) {
   std::lock_guard<std::mutex> guard(mutex_);
   frame_buffer_ = v;
 }
 
 void UnityRenderer::Sink::OnFrame(const webrtc::VideoFrame& frame) {
-  rtc::scoped_refptr<webrtc::VideoFrameBuffer> frame_buffer =
+  webrtc::scoped_refptr<webrtc::VideoFrameBuffer> frame_buffer =
       frame.video_frame_buffer();
 
   // kNative の場合は別スレッドで変換が出来ない可能性が高いため、
@@ -91,7 +91,7 @@ void UnityRenderer::Sink::TextureUpdateCallback(int eventID, void* data) {
     }
 
     // UpdateTextureBegin: Generate and return texture image data.
-    rtc::scoped_refptr<webrtc::I420Buffer> i420_buffer =
+    webrtc::scoped_refptr<webrtc::I420Buffer> i420_buffer =
         webrtc::I420Buffer::Create(params->width, params->height);
     i420_buffer->ScaleFrom(*video_frame_buffer->ToI420());
     delete[] p->temp_buf_;

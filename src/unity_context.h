@@ -17,7 +17,7 @@ namespace sora_unity_sdk {
 
 class UnityContext {
   std::mutex mutex_;
-  std::unique_ptr<rtc::FileRotatingLogSink> log_sink_;
+  std::unique_ptr<webrtc::FileRotatingLogSink> log_sink_;
   IUnityInterfaces* ifs_ = nullptr;
   IUnityGraphics* graphics_ = nullptr;
 

@@ -16,11 +16,11 @@ namespace sora_unity_sdk {
 
 class UnityRenderer {
  public:
-  class Sink : public rtc::VideoSinkInterface<webrtc::VideoFrame> {
-    rtc::scoped_refptr<webrtc::VideoTrackInterface> track_;
+  class Sink : public webrtc::VideoSinkInterface<webrtc::VideoFrame> {
+    webrtc::scoped_refptr<webrtc::VideoTrackInterface> track_;
     ptrid_t ptrid_;
     std::mutex mutex_;
-    rtc::scoped_refptr<webrtc::VideoFrameBuffer> frame_buffer_;
+    webrtc::scoped_refptr<webrtc::VideoFrameBuffer> frame_buffer_;
     uint8_t* temp_buf_ = nullptr;
     std::atomic<bool> deleting_;
     std::atomic<bool> updating_;
@@ -32,8 +32,8 @@ class UnityRenderer {
     void SetTrack(webrtc::VideoTrackInterface* track);
 
    private:
-    rtc::scoped_refptr<webrtc::VideoFrameBuffer> GetFrameBuffer();
-    void SetFrameBuffer(rtc::scoped_refptr<webrtc::VideoFrameBuffer> v);
+    webrtc::scoped_refptr<webrtc::VideoFrameBuffer> GetFrameBuffer();
+    void SetFrameBuffer(webrtc::scoped_refptr<webrtc::VideoFrameBuffer> v);
 
    public:
     void OnFrame(const webrtc::VideoFrame& frame) override;
