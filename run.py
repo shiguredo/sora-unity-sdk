@@ -14,6 +14,8 @@ from buildbase import (
     cmake_path,
     cmd,
     cmdcap,
+    fix_clang_version,
+    get_clang_version,
     get_sora_info,
     get_webrtc_info,
     install_android_ndk,
@@ -138,7 +140,13 @@ def install_deps(
 
         # Sora C++ SDK
         if local_sora_cpp_sdk_dir is None:
-            install_sora_and_deps(platform, source_dir, install_dir)
+            install_sora_and_deps(
+                version["SORA_CPP_SDK_VERSION"],
+                version["BOOST_VERSION"],
+                platform,
+                source_dir,
+                install_dir,
+            )
         else:
             build_sora(
                 platform,
@@ -345,9 +353,27 @@ def main():
             cmake_args.append("-DCMAKE_XCODE_ATTRIBUTE_ONLY_ACTIVE_ARCH=NO")
         elif platform == "android":
             toolchain_file = os.path.join(
-                install_dir, "android-ndk", "build", "cmake", "android.toolchain.cmake"
+                sora_info.sora_install_dir, "share", "cmake", "android.toolchain.cmake"
             )
-            cmake_args.append(f"-DCMAKE_TOOLCHAIN_FILE={toolchain_file}")
+            android_ndk = os.path.join(install_dir, "android-ndk")
+            override_toolchain_file = os.path.join(
+                android_ndk, "build", "cmake", "android.toolchain.cmake"
+            )
+            override_c_compiler = os.path.join(webrtc_info.clang_dir, "bin", "clang")
+            override_cxx_compiler = os.path.join(webrtc_info.clang_dir, "bin", "clang++")
+            android_clang_dir = os.path.join(
+                android_ndk, "toolchains", "llvm", "prebuilt", "linux-x86_64"
+            )
+            sysroot = os.path.join(android_clang_dir, "sysroot")
+            cmake_args.append(
+                f"-DANDROID_OVERRIDE_TOOLCHAIN_FILE={cmake_path(override_toolchain_file)}"
+            )
+            cmake_args.append(f"-DANDROID_OVERRIDE_C_COMPILER={cmake_path(override_c_compiler)}")
+            cmake_args.append(
+                f"-DANDROID_OVERRIDE_CXX_COMPILER={cmake_path(override_cxx_compiler)}"
+            )
+            cmake_args.append(f"-DCMAKE_SYSROOT={cmake_path(sysroot)}")
+            cmake_args.append(f"-DCMAKE_TOOLCHAIN_FILE={cmake_path(toolchain_file)}")
             cmake_args.append(f"-DANDROID_PLATFORM=android-{android_native_api_level}")
             cmake_args.append(f"-DANDROID_NATIVE_API_LEVEL={android_native_api_level}")
             cmake_args.append("-DANDROID_ABI=arm64-v8a")
@@ -359,6 +385,15 @@ def main():
             # r23b には ANDROID_CPP_FEATURES=exceptions でも例外が設定されない問題がある
             # https://github.com/android/ndk/issues/1618
             cmake_args.append("-DCMAKE_ANDROID_EXCEPTIONS=ON")
+            clang_version = fix_clang_version(
+                android_clang_dir,
+                get_clang_version(os.path.join(android_clang_dir, "bin", "clang++")),
+            )
+            ldflags = [
+                f"-L{cmake_path(os.path.join(android_clang_dir, 'lib', 'clang', clang_version, 'lib', 'linux', 'aarch64'))}"
+            ]
+            cmake_args.append(f"-DCMAKE_EXE_LINKER_FLAGS={' '.join(ldflags)}")
+            cmake_args.append(f"-DCMAKE_SHARED_LINKER_FLAGS={' '.join(ldflags)}")
         elif platform in ("ubuntu-22.04_x86_64", "ubuntu-24.04_x86_64"):
             cmake_args.append(
                 f"-DCMAKE_C_COMPILER={os.path.join(webrtc_info.clang_dir, 'bin', 'clang')}"
