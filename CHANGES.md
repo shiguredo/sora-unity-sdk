@@ -31,11 +31,17 @@
   - 未指定の場合、シグナリング "type": "connect" でオーディオコーデック指定を行わない
   - オーディオコーデック指定を行わない場合は Sora のデフォルト値 `OPUS` が利用される
   - @miosakuma
-- [UPDATE] Sora C++ SDK を `2025.3.1` に上げる
-  - `WEBRTC_BUILD_VERSION` を `m136.7103.0.0` にアップデート
+- [UPDATE] Sora C++ SDK を `2025.4.0-canary.5` に上げる
+  - `WEBRTC_BUILD_VERSION` を `m137.7151.3.0` にアップデート
   - `BOOST_VERSION` を `1.88.0` にアップデート
-  - `CMAKE_VERSION` を `4.0.1` にアップデート
+  - `CMAKE_VERSION` を `4.0.2` にアップデート
+  - `ANDROID_NDK_VERSION` を `r28b` にアップデート
   - @torikizi
+- [UPDATE] libwebrtc を `m137.7151.3.0` に上げる
+  - `rtc::` を `webrtc::` に変更する
+  - `cricket::AudioOptions` を `webrtc::AudioOptions` に変更する
+  - Android が利用するコンパイラを libwebrtc の clang にする
+  - @torikizi @melpon
 - [ADD] 利用するビデオコーデックを詳細に指定するための enum やクラス、関数などを追加
   - `Sora.VideoCodecImplementation` 列挙型
   - `Sora.VideoCodecCapabilityConfig` クラス

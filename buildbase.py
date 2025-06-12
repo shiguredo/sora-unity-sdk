@@ -172,7 +172,7 @@ def download(url: str, output_dir: Optional[str] = None, filename: Optional[str]
 def read_version_file(path: str) -> Dict[str, str]:
     versions = {}
 
-    lines = open(path).readlines()
+    lines = open(path, encoding="utf-8").readlines()
     for line in lines:
         line = line.strip()
 
@@ -205,13 +205,13 @@ def versioned(func):
             del kwargs["ignore_version"]
 
         if os.path.exists(version_file):
-            ver = open(version_file).read()
+            ver = open(version_file, encoding="utf-8").read()
             if ver.strip() == version.strip():
                 return
 
         r = func(version=version, *args, **kwargs)
 
-        with open(version_file, "w") as f:
+        with open(version_file, "w", encoding="utf-8") as f:
             f.write(version)
 
         return r
@@ -266,7 +266,7 @@ def _extractzip(z: zipfile.ZipFile, path: str):
         mod = info.external_attr >> 16
         if (mod & 0o120000) == 0o120000:
             # シンボリックリンク
-            with open(filepath, "r") as f:
+            with open(filepath, "r", encoding="utf-8") as f:
                 src = f.read()
             os.remove(filepath)
             with cd(os.path.dirname(filepath)):
@@ -354,7 +354,7 @@ def clone_and_checkout(url, version, dir, fetch, fetch_force):
             cmd(["git", "checkout", "-f", version])
 
 
-def git_clone_shallow(url, hash, dir):
+def git_clone_shallow(url, hash, dir, submodule=False):
     rm_rf(dir)
     mkdir_p(dir)
     with cd(dir):
@@ -362,9 +362,23 @@ def git_clone_shallow(url, hash, dir):
         cmd(["git", "remote", "add", "origin", url])
         cmd(["git", "fetch", "--depth=1", "origin", hash])
         cmd(["git", "reset", "--hard", "FETCH_HEAD"])
+        if submodule:
+            cmd(
+                [
+                    "git",
+                    "submodule",
+                    "update",
+                    "--init",
+                    "--recursive",
+                    "--recommend-shallow",
+                    "--depth",
+                    "1",
+                ]
+            )
 
 
 def apply_patch(patch, dir, depth):
+    patch = os.path.abspath(patch)
     with cd(dir):
         logging.info(f"patch -p{depth} < {patch}")
         if platform.system() == "Windows":
@@ -376,12 +390,38 @@ def apply_patch(patch, dir, depth):
                     "--ignore-space-change",
                     "--ignore-whitespace",
                     "--whitespace=nowarn",
+                    "--reject",
                     patch,
                 ]
             )
         else:
-            with open(patch) as stdin:
+            with open(patch, encoding="utf-8") as stdin:
                 cmd(["patch", f"-p{depth}"], stdin=stdin)
+
+
+def apply_patch_text(patch_text, dir, depth):
+    with cd(dir):
+        logging.info(f"echo '{patch_text[:100]}...' | patch -p{depth} -")
+        directory = cmdcap(["git", "rev-parse", "--show-prefix"])
+        if platform.system() == "Windows":
+            cmd(
+                [
+                    "git",
+                    "apply",
+                    f"-p{depth}",
+                    "--ignore-space-change",
+                    "--ignore-whitespace",
+                    "--whitespace=nowarn",
+                    "--reject",
+                    f"--directory={directory}",
+                    "-",
+                ],
+                input=patch_text,
+                text=True,
+                encoding="utf-8",
+            )
+        else:
+            cmd(["patch", f"-p{depth}"], input=patch_text, text=True, encoding="utf-8")
 
 
 def copyfile_if_different(src, dst):
@@ -423,7 +463,7 @@ def replace_vcproj_static_runtime(project_file: str):
 @versioned
 def install_webrtc(version, source_dir, install_dir, platform: str):
     win = platform.startswith("windows_")
-    filename = f'webrtc.{platform}.{"zip" if win else "tar.gz"}'
+    filename = f"webrtc.{platform}.{'zip' if win else 'tar.gz'}"
     rm_rf(os.path.join(source_dir, filename))
     archive = download(
         f"https://github.com/shiguredo-webrtc-build/webrtc-build/releases/download/{version}/{filename}",
@@ -483,6 +523,7 @@ class WebrtcInfo(NamedTuple):
     webrtc_library_dir: str
     clang_dir: str
     libcxx_dir: str
+    libcxxabi_dir: str
 
 
 def get_webrtc_info(
@@ -499,6 +540,9 @@ def get_webrtc_info(
             webrtc_library_dir=os.path.join(webrtc_install_dir, "lib"),
             clang_dir=os.path.join(install_dir, "llvm", "clang"),
             libcxx_dir=os.path.join(install_dir, "llvm", "libcxx"),
+            libcxxabi_dir=os.path.join(
+                webrtc_install_dir, "include", "third_party", "libc++abi", "src"
+            ),
         )
     else:
         webrtc_build_source_dir = os.path.join(
@@ -519,6 +563,9 @@ def get_webrtc_info(
                 webrtc_build_source_dir, "src", "third_party", "llvm-build", "Release+Asserts"
             ),
             libcxx_dir=os.path.join(webrtc_build_source_dir, "src", "third_party", "libc++", "src"),
+            libcxxabi_dir=os.path.join(
+                webrtc_build_source_dir, "src", "third_party", "libc++abi", "src"
+            ),
         )
 
 
@@ -526,7 +573,7 @@ def get_webrtc_info(
 def install_boost(version, source_dir, install_dir, sora_version, platform: str):
     win = platform.startswith("windows_")
     filename = (
-        f'boost-{version}_sora-cpp-sdk-{sora_version}_{platform}.{"zip" if win else "tar.gz"}'
+        f"boost-{version}_sora-cpp-sdk-{sora_version}_{platform}.{'zip' if win else 'tar.gz'}"
     )
     rm_rf(os.path.join(source_dir, filename))
     archive = download(
@@ -535,6 +582,101 @@ def install_boost(version, source_dir, install_dir, sora_version, platform: str)
     )
     rm_rf(os.path.join(install_dir, "boost"))
     extract(archive, output_dir=install_dir, output_dirname="boost")
+
+
+# 以下の問題を解決するためのパッチ
+#
+# No support for msvc-toolset 14.4x (VS 2022, 17.10.x): https://github.com/boostorg/boost/issues/914
+BOOST_PATCH_SUPPORT_14_4 = r"""
+diff --git a/tools/build/src/engine/config_toolset.bat b/tools/build/src/engine/config_toolset.bat
+index 4ba577cac..3e3f6a3a1 100644
+--- a/tools/build/src/engine/config_toolset.bat
++++ b/tools/build/src/engine/config_toolset.bat
+@@ -157,7 +157,7 @@ pushd %CD%
+ if "_%VSINSTALLDIR%_" == "__" call :Call_If_Exists "%B2_TOOLSET_ROOT%Auxiliary\Build\vcvarsall.bat" %B2_BUILD_ARGS%
+ popd
+ @REM set "B2_CXX="%CXX%" /nologo /MP /MT /TP /Feb2 /wd4996 /O2 /GL /EHsc"
+-set "B2_CXX="%CXX%" /nologo -TP /wd4996 /wd4675 /EHs /GR /Zc:throwingNew /O2 /Ob2 /W3 /MD /Zc:forScope /Zc:wchar_t /Zc:inline /Gw /favor:blend /Feb2"
++set "B2_CXX="%CXX%" /nologo -TP /wd4996 /wd4675 /EHs /GR /Zc:throwingNew /O2 /Ob2 /W3 /MT /Zc:forScope /Zc:wchar_t /Zc:inline /Gw /favor:blend /Feb2"
+ set "B2_CXX_LINK=/link kernel32.lib advapi32.lib user32.lib"
+ set "_known_=1"
+ goto :Embed_Minafest_Via_Link
+diff --git a/tools/build/src/tools/msvc.jam b/tools/build/src/tools/msvc.jam
+index 54a6ced32..4bb3810b3 100644
+--- a/tools/build/src/tools/msvc.jam
++++ b/tools/build/src/tools/msvc.jam
+@@ -1137,7 +1137,15 @@ local rule generate-setup-cmd ( version : command : parent : options * : cpu : g
+         }
+         else
+         {
+-            if [ MATCH "(14.3)" : $(version) ]
++            if [ MATCH "(14.4)" : $(version) ]
++            {
++                if $(.debug-configuration)
++                {
++                    ECHO "notice: [generate-setup-cmd] $(version) is 14.4" ;
++                }
++                parent = [ path.native [ path.join  $(parent) "..\\..\\..\\..\\..\\Auxiliary\\Build" ] ] ;
++            }
++            else if [ MATCH "(14.3)" : $(version) ]
+             {
+                 if $(.debug-configuration)
+                 {
+@@ -1316,7 +1324,11 @@ local rule configure-really ( version ? : options * )
+             # version from the path.
+             # FIXME: We currently detect both Microsoft Visual Studio 9.0 and
+             # 9.0express as 9.0 here.
+-            if [ MATCH "(MSVC\\\\14.3)" : $(command) ]
++            if [ MATCH "(MSVC\\\\14.4)" : $(command) ]
++            {
++                version = 14.4 ;
++            }
++            else if [ MATCH "(MSVC\\\\14.3)" : $(command) ]
+             {
+                 version = 14.3 ;
+             }
+@@ -1745,13 +1757,17 @@ local rule default-path ( version )
+         # And fortunately, forward slashes do also work in native Windows.
+         local vswhere = "$(root)/Microsoft Visual Studio/Installer/vswhere.exe" ;
+         # The check for $(root) is to avoid a segmentation fault if not found.
+-        if $(version) in 14.1 14.2 14.3 default && $(root) && [ path.exists $(vswhere) ]
++        if $(version) in 14.1 14.2 14.3 14.4 default && $(root) && [ path.exists $(vswhere) ]
+         {
+             local req = "-requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64" ;
+             local prop = "-property installationPath" ;
+             local limit ;
+ 
+-            if $(version) = 14.3
++            if $(version) = 14.4
++            {
++                limit = "-version \"[17.0,18.0)\" -prerelease" ;
++            }
++            else if $(version) = 14.3
+             {
+                 limit = "-version \"[17.0,18.0)\" -prerelease" ;
+             }
+@@ -2174,7 +2190,7 @@ for local arch in [ MATCH "^\\.cpus-on-(.*)" : [ VARNAMES $(__name__) ] ]
+                      armv7 armv7s ;
+ 
+ # Known toolset versions, in order of preference.
+-.known-versions = 14.3 14.2 14.1 14.0 12.0 11.0 10.0 10.0express 9.0 9.0express 8.0 8.0express 7.1
++.known-versions = 14.4 14.3 14.2 14.1 14.0 12.0 11.0 10.0 10.0express 9.0 9.0express 8.0 8.0express 7.1
+     7.1toolkit 7.0 6.0 ;
+ 
+ # Version aliases.
+@@ -2226,6 +2242,11 @@ for local arch in [ MATCH "^\\.cpus-on-(.*)" : [ VARNAMES $(__name__) ] ]
+     "Microsoft Visual Studio/2022/*/VC/Tools/MSVC/*/bin/Host*/*"
+     ;
+ .version-14.3-env = VS170COMNTOOLS ProgramFiles ProgramFiles(x86) ;
++.version-14.4-path =
++    "../../VC/Tools/MSVC/*/bin/Host*/*"
++    "Microsoft Visual Studio/2022/*/VC/Tools/MSVC/*/bin/Host*/*"
++    ;
++.version-14.4-env = VS170COMNTOOLS ProgramFiles ProgramFiles(x86) ;
+ 
+ # Auto-detect all the available msvc installations on the system.
+ auto-detect-toolset-versions ;
+"""
 
 
 @versioned
@@ -554,17 +696,37 @@ def build_and_install_boost(
     architecture,
     android_ndk,
     native_api_level,
+    address_model="64",
+    runtime_link=None,
+    android_build_platform="linux-x86_64",
 ):
     version_underscore = version.replace(".", "_")
     archive = download(
-        f"https://boostorg.jfrog.io/artifactory/main/release/{version}/source/boost_{version_underscore}.tar.gz",
+        # 公式サイトに負荷をかけないための時雨堂によるミラー
+        f"https://oss-mirrors.shiguredo.jp/boost_{version_underscore}.tar.gz",
+        # Boost 公式のミラー
+        # f"https://archives.boost.io/release/{version}/source/boost_{version_underscore}.tar.gz",
         source_dir,
     )
     extract(archive, output_dir=build_dir, output_dirname="boost")
     with cd(os.path.join(build_dir, "boost")):
-        bootstrap = ".\\bootstrap.bat" if target_os == "windows" else "./bootstrap.sh"
-        b2 = "b2" if target_os == "windows" else "./b2"
-        runtime_link = "static" if target_os == "windows" else "shared"
+        if target_os == "windows":
+            bootstrap = ".\\bootstrap.bat"
+            b2 = "b2"
+        elif target_os == "android" and android_build_platform == "windows-x86_64":
+            # Android を Windows でビルドする場合
+            bootstrap = ".\\bootstrap.bat"
+            b2 = "b2"
+        else:
+            bootstrap = "./bootstrap.sh"
+            b2 = "./b2"
+
+        if runtime_link is None:
+            runtime_link = "static" if target_os == "windows" else "shared"
+
+        # Windows かつ Boost 1.85.0 の場合はパッチを当てる
+        if target_os == "windows" and version == "1.85.0":
+            apply_patch_text(BOOST_PATCH_SUPPORT_14_4, os.path.join(build_dir, "boost"), 1)
 
         cmd([bootstrap])
 
@@ -574,7 +736,7 @@ def build_and_install_boost(
                 clangpp = cmdcap(["xcodebuild", "-find", "clang++"])
                 sysroot = cmdcap(["xcrun", "--sdk", sdk, "--show-sdk-path"])
                 boost_arch = "x86" if arch == "x86_64" else "arm"
-                with open("project-config.jam", "w") as f:
+                with open("project-config.jam", "w", encoding="utf-8") as f:
                     f.write(
                         f"using clang \
                         : iphone \
@@ -591,20 +753,20 @@ def build_and_install_boost(
                         b2,
                         "install",
                         "-d+0",
-                        f'--build-dir={os.path.join(build_dir, "boost", f"build-{arch}-{sdk}")}',
-                        f'--prefix={os.path.join(build_dir, "boost", f"install-{arch}-{sdk}")}',
+                        f"--build-dir={os.path.join(build_dir, 'boost', f'build-{arch}-{sdk}')}",
+                        f"--prefix={os.path.join(build_dir, 'boost', f'install-{arch}-{sdk}')}",
                         "--with-json",
                         "--with-filesystem",
                         "--layout=system",
                         "--ignore-site-config",
-                        f'variant={"debug" if debug else "release"}',
-                        f'cflags={" ".join(cflags)}',
-                        f'cxxflags={" ".join(cxxflags)}',
-                        f'linkflags={" ".join(linkflags)}',
+                        f"variant={'debug' if debug else 'release'}",
+                        f"cflags={' '.join(cflags)}",
+                        f"cxxflags={' '.join(cxxflags)}",
+                        f"linkflags={' '.join(linkflags)}",
                         f"toolset={toolset}",
                         f"visibility={visibility}",
                         f"target-os={target_os}",
-                        "address-model=64",
+                        f"address-model={address_model}",
                         "link=static",
                         f"runtime-link={runtime_link}",
                         "threading=multi",
@@ -639,21 +801,26 @@ def build_and_install_boost(
                     )
         elif target_os == "android":
             # Android の場合、android-ndk を使ってビルドする
-            with open("project-config.jam", "w") as f:
+            # ただし cxx が指定されてた場合はそちらを優先する
+            with open("project-config.jam", "w", encoding="utf-8") as f:
                 bin = os.path.join(
-                    android_ndk, "toolchains", "llvm", "prebuilt", "linux-x86_64", "bin"
+                    android_ndk, "toolchains", "llvm", "prebuilt", android_build_platform, "bin"
                 )
                 sysroot = os.path.join(
-                    android_ndk, "toolchains", "llvm", "prebuilt", "linux-x86_64", "sysroot"
+                    android_ndk, "toolchains", "llvm", "prebuilt", android_build_platform, "sysroot"
                 )
+
+                def escape(s):
+                    return s.replace("\\", "/").replace(":", "\\:")
+
                 f.write(
                     f"using clang \
                     : android \
-                    : {os.path.join(bin, 'clang++')} \
+                    : {escape(cxx if len(cxx) != 0 else os.path.join(bin, 'clang++'))} \
                       --target=aarch64-none-linux-android{native_api_level} \
-                      --sysroot={sysroot} \
-                    : <archiver>{os.path.join(bin, 'llvm-ar')} \
-                      <ranlib>{os.path.join(bin, 'llvm-ranlib')} \
+                      --sysroot={escape(sysroot)} \
+                    : <archiver>{escape(os.path.join(bin, 'llvm-ar'))} \
+                      <ranlib>{escape(os.path.join(bin, 'llvm-ranlib'))} \
                     ; \
                     "
                 )
@@ -662,20 +829,20 @@ def build_and_install_boost(
                     b2,
                     "install",
                     "-d+0",
-                    f'--prefix={os.path.join(install_dir, "boost")}',
+                    f"--prefix={os.path.join(install_dir, 'boost')}",
                     "--with-json",
                     "--with-filesystem",
                     "--layout=system",
                     "--ignore-site-config",
-                    f'variant={"debug" if debug else "release"}',
+                    f"variant={'debug' if debug else 'release'}",
                     f"compileflags=--sysroot={sysroot}",
-                    f'cflags={" ".join(cflags)}',
-                    f'cxxflags={" ".join(cxxflags)}',
-                    f'linkflags={" ".join(linkflags)}',
+                    f"cflags={' '.join(cflags)}",
+                    f"cxxflags={' '.join(cxxflags)}",
+                    f"linkflags={' '.join(linkflags)}",
                     f"toolset={toolset}",
                     f"visibility={visibility}",
                     f"target-os={target_os}",
-                    "address-model=64",
+                    f"address-model={address_model}",
                     "link=static",
                     f"runtime-link={runtime_link}",
                     "threading=multi",
@@ -684,26 +851,26 @@ def build_and_install_boost(
             )
         else:
             if len(cxx) != 0:
-                with open("project-config.jam", "w") as f:
+                with open("project-config.jam", "w", encoding="utf-8") as f:
                     f.write(f"using {toolset} : : {cxx} : ;")
             cmd(
                 [
                     b2,
                     "install",
                     "-d+0",
-                    f'--prefix={os.path.join(install_dir, "boost")}',
+                    f"--prefix={os.path.join(install_dir, 'boost')}",
                     "--with-json",
                     "--with-filesystem",
                     "--layout=system",
                     "--ignore-site-config",
-                    f'variant={"debug" if debug else "release"}',
-                    f'cflags={" ".join(cflags)}',
-                    f'cxxflags={" ".join(cxxflags)}',
-                    f'linkflags={" ".join(linkflags)}',
+                    f"variant={'debug' if debug else 'release'}",
+                    f"cflags={' '.join(cflags)}",
+                    f"cxxflags={' '.join(cxxflags)}",
+                    f"linkflags={' '.join(linkflags)}",
                     f"toolset={toolset}",
                     f"visibility={visibility}",
                     f"target-os={target_os}",
-                    "address-model=64",
+                    f"address-model={address_model}",
                     "link=static",
                     f"runtime-link={runtime_link}",
                     "threading=multi",
@@ -715,7 +882,7 @@ def build_and_install_boost(
 @versioned
 def install_sora(version, source_dir, install_dir, platform: str):
     win = platform.startswith("windows_")
-    filename = f'sora-cpp-sdk-{version}_{platform}.{"zip" if win else "tar.gz"}'
+    filename = f"sora-cpp-sdk-{version}_{platform}.{'zip' if win else 'tar.gz'}"
     rm_rf(os.path.join(source_dir, filename))
     archive = download(
         f"https://github.com/shiguredo/sora-cpp-sdk/releases/download/{version}/{filename}",
@@ -725,23 +892,23 @@ def install_sora(version, source_dir, install_dir, platform: str):
     extract(archive, output_dir=install_dir, output_dirname="sora")
 
 
-def install_sora_and_deps(platform: str, source_dir: str, install_dir: str):
-    version = read_version_file("VERSION")
-
+def install_sora_and_deps(
+    sora_version: str, boost_version: str, platform: str, source_dir: str, install_dir: str
+):
     # Boost
     install_boost_args = {
-        "version": version["BOOST_VERSION"],
+        "version": boost_version,
         "version_file": os.path.join(install_dir, "boost.version"),
         "source_dir": source_dir,
         "install_dir": install_dir,
-        "sora_version": version["SORA_CPP_SDK_VERSION"],
+        "sora_version": sora_version,
         "platform": platform,
     }
     install_boost(**install_boost_args)
 
     # Sora C++ SDK
     install_sora_args = {
-        "version": version["SORA_CPP_SDK_VERSION"],
+        "version": sora_version,
         "version_file": os.path.join(install_dir, "sora.version"),
         "source_dir": source_dir,
         "install_dir": install_dir,
@@ -789,10 +956,10 @@ def get_sora_info(
 
 
 @versioned
-def install_rootfs(version, install_dir, conf):
+def install_rootfs(version, install_dir, conf, arch="arm64"):
     rootfs_dir = os.path.join(install_dir, "rootfs")
     rm_rf(rootfs_dir)
-    cmd(["multistrap", "--no-auth", "-a", "arm64", "-d", rootfs_dir, "-f", conf])
+    cmd(["multistrap", "--no-auth", "-a", arch, "-d", rootfs_dir, "-f", conf])
     # 絶対パスのシンボリックリンクを相対パスに置き換えていく
     for dir, _, filenames in os.walk(rootfs_dir):
         for filename in filenames:
@@ -812,7 +979,7 @@ def install_rootfs(version, install_dir, conf):
                 continue
             # 相対パスに置き換える
             relpath = os.path.relpath(targetpath, dir)
-            logging.debug(f"{linkpath[len(rootfs_dir):]} targets {target} to {relpath}")
+            logging.debug(f"{linkpath[len(rootfs_dir) :]} targets {target} to {relpath}")
             os.remove(linkpath)
             os.symlink(relpath, linkpath)
 
@@ -824,14 +991,51 @@ def install_rootfs(version, install_dir, conf):
     if os.path.exists(file) and not os.path.exists(link):
         os.symlink(os.path.basename(file), link)
 
+    # JetPack 6 から tegra → nvidia になった
+    link = os.path.join(
+        rootfs_dir, "usr", "lib", "aarch64-linux-gnu", "nvidia", "libnvbuf_fdmap.so"
+    )
+    file = os.path.join(
+        rootfs_dir, "usr", "lib", "aarch64-linux-gnu", "nvidia", "libnvbuf_fdmap.so.1.0.0"
+    )
+    if os.path.exists(file) and not os.path.exists(link):
+        os.symlink(os.path.basename(file), link)
+
 
 @versioned
-def install_android_ndk(version, install_dir, source_dir):
-    archive = download(
-        f"https://dl.google.com/android/repository/android-ndk-{version}-linux.zip", source_dir
-    )
+def install_android_ndk(version, install_dir, source_dir, platform="linux"):
+    if platform not in ("windows", "darwin", "linux"):
+        raise Exception(f"Not supported platform: {platform}")
+
+    if platform == "windows":
+        url = f"https://dl.google.com/android/repository/android-ndk-{version}-{platform}.zip"
+    elif platform == "darwin":
+        url = f"https://dl.google.com/android/repository/android-ndk-{version}-{platform}.dmg"
+    else:
+        url = f"https://dl.google.com/android/repository/android-ndk-{version}-{platform}.zip"
+    archive = download(url, source_dir)
     rm_rf(os.path.join(install_dir, "android-ndk"))
-    extract(archive, output_dir=install_dir, output_dirname="android-ndk")
+    if platform == "darwin":
+        cap = cmdcap(["hdiutil", "attach", archive])
+        # 以下のような結果が得られるはずなので、ここから /Volumes/Android NDK r26 のところだけ取り出す
+        # /dev/disk4              GUID_partition_scheme
+        # /dev/disk4s1            EFI
+        # /dev/disk4s2            Apple_HFS                       /Volumes/Android NDK r26
+        volume = cap.split("\n")[-1].split("\t")[-1]
+        # AndroidNDK10792818.app みたいな感じの app があるはず
+        app = glob.glob("AndroidNDK*.app", root_dir=volume)[0]
+        # NDK ディレクトリをコピー
+        cmd(
+            [
+                "cp",
+                "-r",
+                os.path.join(volume, app, "Contents", "NDK"),
+                os.path.join(install_dir, "android-ndk"),
+            ]
+        )
+        cmdcap(["hdiutil", "detach", volume])
+    else:
+        extract(archive, output_dir=install_dir, output_dirname="android-ndk")
 
 
 @versioned
@@ -918,7 +1122,10 @@ def install_cmake(version, source_dir, install_dir, platform: str, ext):
 def install_sdl2(
     version, source_dir, build_dir, install_dir, debug: bool, platform: str, cmake_args: List[str]
 ):
-    url = f"http://www.libsdl.org/release/SDL2-{version}.zip"
+    url = (
+        f"https://github.com/libsdl-org/SDL/releases/download/release-{version}/SDL2-{version}.zip"
+    )
+    # url = f"http://www.libsdl.org/release/SDL2-{version}.zip"
     path = download(url, source_dir)
     sdl2_source_dir = os.path.join(source_dir, "sdl2")
     sdl2_build_dir = os.path.join(build_dir, "sdl2")
@@ -940,8 +1147,6 @@ def install_sdl2(
         ]
         if platform == "windows":
             cmake_args += [
-                "-G",
-                "Visual Studio 16 2019",
                 "-DSDL_FORCE_STATIC_VCRT=ON",
                 "-DHAVE_LIBC=ON",
             ]
@@ -1200,7 +1405,7 @@ def install_openh264(version, source_dir, install_dir, is_windows):
                         file, os.path.join(install_dir, "openh264", "include", "wels", file)
                     )
         else:
-            cmd(["make", f'PREFIX={os.path.join(install_dir, "openh264")}', "install-headers"])
+            cmd(["make", f"PREFIX={os.path.join(install_dir, 'openh264')}", "install-headers"])
 
 
 @versioned
@@ -1310,11 +1515,460 @@ def install_protoc_gen_jsonif(version, source_dir, install_dir, platform: str):
             os.chmod(file.path, file.stat().st_mode | stat.S_IXUSR)
 
 
+# iOS, Android などのクロスコンパイル環境で実行可能ファイルを生成しようとしてエラーになるのを防止するパッチ
+#
+# v1.64.1 をベースにパッチを当てている
+#
+# MEMO: gRPC の、submodule を含めて全ての diff を取得するコマンド
+#   git --no-pager diff --ignore-submodules && git submodule foreach --recursive 'git --no-pager diff --ignore-submodules --src-prefix a/$path/ --dst-prefix b/$path/' | grep -v '^Entering'
+GRPC_PATCH_NO_EXECUTABLE = r"""
+diff --git a/third_party/boringssl-with-bazel/CMakeLists.txt b/third_party/boringssl-with-bazel/CMakeLists.txt
+index 6464e200f..c7bc417a1 100644
+--- a/third_party/boringssl-with-bazel/CMakeLists.txt
++++ b/third_party/boringssl-with-bazel/CMakeLists.txt
+@@ -543,30 +543,6 @@ add_library(
+ 
+ target_link_libraries(ssl crypto)
+ 
+-add_executable(
+-  bssl
+-
+-  src/tool/args.cc
+-  src/tool/ciphers.cc
+-  src/tool/client.cc
+-  src/tool/const.cc
+-  src/tool/digest.cc
+-  src/tool/fd.cc
+-  src/tool/file.cc
+-  src/tool/generate_ech.cc
+-  src/tool/generate_ed25519.cc
+-  src/tool/genrsa.cc
+-  src/tool/pkcs12.cc
+-  src/tool/rand.cc
+-  src/tool/server.cc
+-  src/tool/sign.cc
+-  src/tool/speed.cc
+-  src/tool/tool.cc
+-  src/tool/transport_common.cc
+-)
+-
+-target_link_libraries(bssl ssl crypto)
+-
+ if(NOT CMAKE_SYSTEM_NAME STREQUAL "Android")
+   find_package(Threads REQUIRED)
+   target_link_libraries(crypto Threads::Threads)
+diff --git a/third_party/zlib/CMakeLists.txt b/third_party/zlib/CMakeLists.txt
+index 7f1b69f..bcf5577 100644
+--- a/third_party/zlib/CMakeLists.txt
++++ b/third_party/zlib/CMakeLists.txt
+@@ -147,10 +147,7 @@ if(MINGW)
+     set(ZLIB_DLL_SRCS ${CMAKE_CURRENT_BINARY_DIR}/zlib1rc.obj)
+ endif(MINGW)
+ 
+-add_library(zlib SHARED ${ZLIB_SRCS} ${ZLIB_DLL_SRCS} ${ZLIB_PUBLIC_HDRS} ${ZLIB_PRIVATE_HDRS})
+ add_library(zlibstatic STATIC ${ZLIB_SRCS} ${ZLIB_PUBLIC_HDRS} ${ZLIB_PRIVATE_HDRS})
+-set_target_properties(zlib PROPERTIES DEFINE_SYMBOL ZLIB_DLL)
+-set_target_properties(zlib PROPERTIES SOVERSION 1)
+ 
+ if(NOT CYGWIN)
+     # This property causes shared libraries on Linux to have the full version
+@@ -160,22 +157,16 @@ if(NOT CYGWIN)
+     #
+     # This has no effect with MSVC, on that platform the version info for
+     # the DLL comes from the resource file win32/zlib1.rc
+-    set_target_properties(zlib PROPERTIES VERSION ${ZLIB_FULL_VERSION})
+ endif()
+ 
+ if(UNIX)
+     # On unix-like platforms the library is almost always called libz
+-   set_target_properties(zlib zlibstatic PROPERTIES OUTPUT_NAME z)
+-   if(NOT APPLE)
+-     set_target_properties(zlib PROPERTIES LINK_FLAGS "-Wl,--version-script,\"${CMAKE_CURRENT_SOURCE_DIR}/zlib.map\"")
+-   endif()
+ elseif(BUILD_SHARED_LIBS AND WIN32)
+     # Creates zlib1.dll when building shared library version
+-    set_target_properties(zlib PROPERTIES SUFFIX "1.dll")
+ endif()
+ 
+ if(NOT SKIP_INSTALL_LIBRARIES AND NOT SKIP_INSTALL_ALL )
+-    install(TARGETS zlib zlibstatic
++    install(TARGETS zlibstatic
+         RUNTIME DESTINATION "${INSTALL_BIN_DIR}"
+         ARCHIVE DESTINATION "${INSTALL_LIB_DIR}"
+         LIBRARY DESTINATION "${INSTALL_LIB_DIR}" )
+@@ -193,21 +184,3 @@ endif()
+ #============================================================================
+ # Example binaries
+ #============================================================================
+-
+-add_executable(example test/example.c)
+-target_link_libraries(example zlib)
+-add_test(example example)
+-
+-add_executable(minigzip test/minigzip.c)
+-target_link_libraries(minigzip zlib)
+-
+-if(HAVE_OFF64_T)
+-    add_executable(example64 test/example.c)
+-    target_link_libraries(example64 zlib)
+-    set_target_properties(example64 PROPERTIES COMPILE_FLAGS "-D_FILE_OFFSET_BITS=64")
+-    add_test(example64 example64)
+-
+-    add_executable(minigzip64 test/minigzip.c)
+-    target_link_libraries(minigzip64 zlib)
+-    set_target_properties(minigzip64 PROPERTIES COMPILE_FLAGS "-D_FILE_OFFSET_BITS=64")
+-endif()
+"""
+
+
+@versioned
+def install_grpc(
+    version,
+    source_dir,
+    build_dir,
+    install_dir,
+    debug: bool,
+    cmake_args: List[str],
+    cmake_build_args: List[str] = [],
+):
+    grpc_source_dir = os.path.join(source_dir, "grpc")
+    grpc_build_dir = os.path.join(build_dir, "grpc")
+    grpc_install_dir = os.path.join(install_dir, "grpc")
+    rm_rf(grpc_source_dir)
+    rm_rf(grpc_build_dir)
+    rm_rf(grpc_install_dir)
+    git_clone_shallow("https://github.com/grpc/grpc.git", version, grpc_source_dir, submodule=True)
+    apply_patch_text(GRPC_PATCH_NO_EXECUTABLE, grpc_source_dir, 1)
+    mkdir_p(grpc_build_dir)
+    with cd(grpc_build_dir):
+        configuration = "Debug" if debug else "Release"
+        cmd(
+            [
+                "cmake",
+                grpc_source_dir,
+                f"-DCMAKE_INSTALL_PREFIX={cmake_path(grpc_install_dir)}",
+                f"-DCMAKE_BUILD_TYPE={configuration}",
+                *cmake_args,
+            ]
+        )
+        cmd(
+            [
+                "cmake",
+                "--build",
+                ".",
+                f"-j{multiprocessing.cpu_count()}",
+                "--config",
+                configuration,
+                *cmake_build_args,
+            ]
+        )
+        cmd(["cmake", "--install", ".", "--config", configuration])
+
+
+@versioned
+def install_ggrpc(version, install_dir):
+    ggrpc_install_dir = os.path.join(install_dir, "ggrpc")
+    rm_rf(ggrpc_install_dir)
+    git_clone_shallow("https://github.com/melpon/ggrpc.git", version, ggrpc_install_dir)
+
+
+@versioned
+def install_spdlog(version, install_dir):
+    spdlog_install_dir = os.path.join(install_dir, "spdlog")
+    rm_rf(spdlog_install_dir)
+    git_clone_shallow("https://github.com/gabime/spdlog.git", version, spdlog_install_dir)
+
+
+BORINGSSL_PATCH_NO_BSSL = r"""
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 38d63db..b97b175 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -795,7 +795,7 @@ endif()
+ 
+ if(INSTALL_ENABLED)
+   install(TARGETS crypto ssl EXPORT OpenSSLTargets)
+-  install(TARGETS bssl)
++  # install(TARGETS bssl)
+   install(DIRECTORY include/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+   install(EXPORT OpenSSLTargets
+           FILE OpenSSLTargets.cmake
+"""
+
+
+@versioned
+def install_boringssl(
+    version,
+    source_dir: str,
+    build_dir: str,
+    install_dir: str,
+    configuration: str,
+    cmake_args: List[str],
+):
+    boringssl_source_dir = os.path.join(source_dir, "boringssl")
+    boringssl_build_dir = os.path.join(build_dir, "boringssl")
+    boringssl_install_dir = os.path.join(install_dir, "boringssl")
+    rm_rf(boringssl_source_dir)
+    rm_rf(boringssl_build_dir)
+    rm_rf(boringssl_install_dir)
+    git_clone_shallow("https://boringssl.googlesource.com/boringssl", version, boringssl_source_dir)
+    apply_patch_text(BORINGSSL_PATCH_NO_BSSL, boringssl_source_dir, 1)
+    mkdir_p(boringssl_build_dir)
+    with cd(boringssl_build_dir):
+        cmd(
+            [
+                "cmake",
+                f"-DCMAKE_INSTALL_PREFIX={cmake_path(boringssl_install_dir)}",
+                f"-DCMAKE_BUILD_TYPE={configuration}",
+                "-DBUILD_SHARED_LIBS=OFF",
+                boringssl_source_dir,
+                *cmake_args,
+            ]
+        )
+        cmd(
+            ["cmake", "--build", ".", f"-j{multiprocessing.cpu_count()}", "--config", configuration]
+        )
+        cmd(["cmake", "--install", ".", "--config", configuration])
+
+
+@versioned
+def install_opus(
+    version, source_dir, build_dir, install_dir, configuration: str, cmake_args: List[str]
+):
+    opus_source_dir = os.path.join(source_dir, "opus")
+    opus_build_dir = os.path.join(build_dir, "opus")
+    opus_install_dir = os.path.join(install_dir, "opus")
+    rm_rf(opus_source_dir)
+    rm_rf(opus_build_dir)
+    rm_rf(opus_install_dir)
+    git_clone_shallow("https://gitlab.xiph.org/xiph/opus", version, opus_source_dir)
+    mkdir_p(opus_build_dir)
+    with cd(opus_build_dir):
+        cmd(
+            [
+                "cmake",
+                f"-DCMAKE_INSTALL_PREFIX={cmake_path(opus_install_dir)}",
+                f"-DCMAKE_BUILD_TYPE={configuration}",
+                "-DCMAKE_POSITION_INDEPENDENT_CODE=ON",
+                "-DOPUS_BUILD_SHARED_LIBRARY=OFF",
+                "-DOPUS_BUILD_TESTING=OFF",
+                "-DOPUS_BUILD_PROGRAMS=OFF",
+                "-DOPUS_STATIC_RUNTIME=ON",
+                opus_source_dir,
+                *cmake_args,
+            ]
+        )
+        cmd(
+            ["cmake", "--build", ".", f"-j{multiprocessing.cpu_count()}", "--config", configuration]
+        )
+        cmd(["cmake", "--install", ".", "--config", configuration])
+
+
+@versioned
+def install_nasm(version, source_dir, install_dir, platform: str):
+    if platform not in ("macosx", "win32", "win64"):
+        raise Exception(f"Unsupported platform: {platform}")
+    url = f"https://www.nasm.us/pub/nasm/releasebuilds/{version}/{platform}/nasm-{version}-{platform}.zip"
+    path = download(url, source_dir)
+    nasm_install_dir = os.path.join(install_dir, "nasm")
+    rm_rf(nasm_install_dir)
+    extract(path, install_dir, "nasm")
+
+
+@versioned
+def install_ninja(version, source_dir, install_dir, platform):
+    if platform not in ("win", "winarm64", "linux-aarch64", "linux", "mac"):
+        raise Exception(f"Unsupported platform: {platform}")
+    url = f"https://github.com/ninja-build/ninja/releases/download/{version}/ninja-{platform}.zip"
+    path = download(url, source_dir)
+    ninja_install_dir = os.path.join(install_dir, "ninja")
+    rm_rf(ninja_install_dir)
+    extract(path, install_dir, "ninja")
+
+
+@versioned
+def install_vswhere(version, install_dir):
+    url = f"https://github.com/microsoft/vswhere/releases/download/{version}/vswhere.exe"
+    vswhere_install_dir = os.path.join(install_dir, "vswhere")
+    rm_rf(vswhere_install_dir)
+    mkdir_p(vswhere_install_dir)
+    download(url, vswhere_install_dir)
+
+
+@versioned
+def install_amf(version, install_dir):
+    # AMF はライブラリというよりは便利関数＋サンプルコードという感じなので
+    # ここではソースだけダウンロードをして、必要に応じて利用者側でファイルを参照してインクルード/コンパイルする
+    amf_install_dir = os.path.join(install_dir, "amf")
+    rm_rf(amf_install_dir)
+    git_clone_shallow(
+        "https://github.com/GPUOpen-LibrariesAndSDKs/AMF.git", version, amf_install_dir
+    )
+
+
+@versioned
+def install_mbedtls(version, source_dir, build_dir, install_dir, debug, cmake_args):
+    rm_rf(os.path.join(source_dir, "mbedtls"))
+    rm_rf(os.path.join(build_dir, "mbedtls"))
+    rm_rf(os.path.join(install_dir, "mbedtls"))
+    git_clone_shallow(
+        "https://github.com/Mbed-TLS/mbedtls.git",
+        version,
+        os.path.join(source_dir, "mbedtls"),
+    )
+    with cd(os.path.join(source_dir, "mbedtls")):
+        configuration = "Debug" if debug else "Release"
+        cmd(["python3", "scripts/config.py", "set", "MBEDTLS_SSL_DTLS_SRTP"])
+        cmd(
+            [
+                "cmake",
+                f"-DCMAKE_INSTALL_PREFIX={cmake_path(os.path.join(install_dir, 'mbedtls'))}",
+                f"-DCMAKE_BUILD_TYPE={configuration}",
+                "-DCMAKE_POSITION_INDEPENDENT_CODE=ON",
+                "-B",
+                os.path.join(build_dir, "mbedtls"),
+            ]
+            + cmake_args
+        )
+        cmd(
+            [
+                "cmake",
+                "--build",
+                os.path.join(build_dir, "mbedtls"),
+                f"-j{multiprocessing.cpu_count()}",
+                "--config",
+                "Release",
+            ]
+        )
+        cmd(["cmake", "--install", os.path.join(build_dir, "mbedtls")])
+
+
+@versioned
+def install_libjpeg_turbo(version, source_dir, build_dir, install_dir, configuration, cmake_args):
+    libjpeg_source_dir = os.path.join(source_dir, "libjpeg-turbo")
+    libjpeg_build_dir = os.path.join(build_dir, "libjpeg-turbo")
+    libjpeg_install_dir = os.path.join(install_dir, "libjpeg-turbo")
+    rm_rf(libjpeg_source_dir)
+    rm_rf(libjpeg_build_dir)
+    rm_rf(libjpeg_install_dir)
+    git_clone_shallow(
+        "https://github.com/libjpeg-turbo/libjpeg-turbo.git",
+        version,
+        libjpeg_source_dir,
+    )
+    mkdir_p(libjpeg_build_dir)
+    with cd(libjpeg_build_dir):
+        cmd(
+            [
+                "cmake",
+                libjpeg_source_dir,
+                f"-DCMAKE_INSTALL_PREFIX={libjpeg_install_dir}",
+                f"-DCMAKE_BUILD_TYPE={configuration}",
+                "-DENABLE_SHARED=FALSE",
+                "-DENABLE_STATIC=TRUE",
+                "-DCMAKE_BUILD_TYPE=Release",
+                "-DCMAKE_POSITION_INDEPENDENT_CODE=ON",
+            ]
+            + cmake_args
+        )
+        cmd(
+            [
+                "cmake",
+                "--build",
+                libjpeg_build_dir,
+                f"-j{multiprocessing.cpu_count()}",
+                "--config",
+                "Release",
+            ]
+        )
+        cmd(["cmake", "--install", libjpeg_build_dir])
+
+
+@versioned
+def install_libyuv(
+    version, source_dir, build_dir, install_dir, libjpeg_turbo_dir, configuration, cmake_args
+):
+    libyuv_source_dir = os.path.join(source_dir, "libyuv")
+    libyuv_build_dir = os.path.join(build_dir, "libyuv")
+    libyuv_install_dir = os.path.join(install_dir, "libyuv")
+    rm_rf(libyuv_source_dir)
+    rm_rf(libyuv_build_dir)
+    rm_rf(libyuv_install_dir)
+    git_clone_shallow(
+        "https://chromium.googlesource.com/libyuv/libyuv",
+        version,
+        libyuv_source_dir,
+    )
+    mkdir_p(libyuv_build_dir)
+    with cd(libyuv_build_dir):
+        cmd(
+            [
+                "cmake",
+                libyuv_source_dir,
+                f"-DCMAKE_INSTALL_PREFIX={cmake_path(libyuv_install_dir)}",
+                f"-DCMAKE_BUILD_TYPE={configuration}",
+                f"-DCMAKE_PREFIX_PATH={cmake_path(libjpeg_turbo_dir)}",
+                *cmake_args,
+            ]
+        )
+        cmd(
+            [
+                "cmake",
+                "--build",
+                libyuv_build_dir,
+                f"-j{multiprocessing.cpu_count()}",
+                "--config",
+                "Release",
+            ]
+        )
+        cmd(["cmake", "--install", libyuv_build_dir])
+
+
+@versioned
+def install_aom(version, source_dir, build_dir, install_dir, configuration, cmake_args):
+    aom_source_dir = os.path.join(source_dir, "aom")
+    aom_build_dir = os.path.join(build_dir, "aom")
+    aom_install_dir = os.path.join(install_dir, "aom")
+    rm_rf(aom_source_dir)
+    rm_rf(aom_build_dir)
+    rm_rf(aom_install_dir)
+    git_clone_shallow(
+        "https://aomedia.googlesource.com/aom",
+        version,
+        aom_source_dir,
+    )
+    with cd(aom_source_dir):
+        cmd(
+            [
+                "cmake",
+                "-B",
+                aom_build_dir,
+                f"-DCMAKE_INSTALL_PREFIX={cmake_path(aom_install_dir)}",
+                f"-DCMAKE_BUILD_TYPE={configuration}",
+                "-DENABLE_DOCS=OFF",
+                "-DENABLE_TESTS=OFF",
+                *cmake_args,
+            ]
+        )
+        cmd(
+            [
+                "cmake",
+                "--build",
+                aom_build_dir,
+                f"-j{multiprocessing.cpu_count()}",
+                "--config",
+                "Release",
+            ]
+        )
+        cmd(["cmake", "--install", aom_build_dir])
+
+
 class PlatformTarget(object):
-    def __init__(self, os, osver, arch):
+    def __init__(self, os, osver, arch, extra=None):
         self.os = os
         self.osver = osver
         self.arch = arch
+        self.extra = extra
 
     @property
     def package_name(self):
@@ -1331,7 +1985,13 @@ class PlatformTarget(object):
         if self.os == "raspberry-pi-os":
             return f"raspberry-pi-os_{self.arch}"
         if self.os == "jetson":
-            return "ubuntu-20.04_armv8_jetson"
+            if self.extra is None:
+                ubuntu_version = "ubuntu-20.04"
+            else:
+                ubuntu_version = self.extra
+            if self.osver is None:
+                return f"{ubuntu_version}_armv8_jetson"
+            return f"{ubuntu_version}_armv8_jetson_{self.osver}"
         raise Exception("error")
 
 
@@ -1373,7 +2033,10 @@ def get_build_platform() -> PlatformTarget:
     if arch in ("AMD64", "x86_64"):
         arch = "x86_64"
     elif arch in ("aarch64", "arm64"):
-        arch = "arm64"
+        if os == "ubuntu":
+            arch = "armv8"
+        else:
+            arch = "arm64"
     else:
         raise Exception(f"Arch {arch} not supported")
 
@@ -1442,18 +2105,20 @@ class Platform(object):
             self._check(p.arch == "armv8")
         elif p.os in ("ios", "android"):
             self._check(p.arch is None)
+        elif p.os == "ubuntu":
+            self._check(p.arch in ("x86_64", "armv8"))
         else:
-            self._check(p.arch in ("x86_64", "arm64"))
+            self._check(p.arch in ("x86_64", "arm64", "hololens2"))
 
-    def __init__(self, target_os, target_osver, target_arch):
+    def __init__(self, target_os, target_osver, target_arch, target_extra=None):
         build = get_build_platform()
-        target = PlatformTarget(target_os, target_osver, target_arch)
+        target = PlatformTarget(target_os, target_osver, target_arch, target_extra)
 
         self._check_platform_target(build)
         self._check_platform_target(target)
 
         if target.os == "windows":
-            self._check(target.arch == "x86_64")
+            self._check(target.arch in ("x86_64", "arm64", "hololens2"))
             self._check(build.os == "windows")
             self._check(build.arch == "x86_64")
         if target.os == "macos":
@@ -1463,12 +2128,16 @@ class Platform(object):
             self._check(build.os == "macos")
             self._check(build.arch in ("x86_64", "arm64"))
         if target.os == "android":
-            self._check(build.os == "ubuntu")
-            self._check(build.arch == "x86_64")
+            self._check(build.os in ("ubuntu", "macos"))
+            if build.os == "ubuntu":
+                self._check(build.arch == "x86_64")
+            elif build.os == "macos":
+                self._check(build.arch in ("x86_64", "arm64"))
         if target.os == "ubuntu":
             self._check(build.os == "ubuntu")
-            self._check(build.arch == "x86_64")
-            self._check(build.osver == target.osver)
+            self._check(build.arch in ("x86_64", "armv8"))
+            if build.arch == target.arch:
+                self._check(build.osver == target.osver)
         if target.os == "raspberry-pi-os":
             self._check(build.os == "ubuntu")
             self._check(build.arch == "x86_64")
@@ -1495,7 +2164,10 @@ def get_webrtc_platform(platform: Platform) -> str:
     elif platform.target.os == "raspberry-pi-os":
         return f"raspberry-pi-os_{platform.target.arch}"
     elif platform.target.os == "jetson":
-        return "ubuntu-20.04_armv8"
+        if platform.target.extra is None:
+            return "ubuntu-20.04_armv8"
+        else:
+            return f"{platform.target.extra}_armv8"
     else:
         raise Exception(f"Unknown platform {platform.target.os}")
 

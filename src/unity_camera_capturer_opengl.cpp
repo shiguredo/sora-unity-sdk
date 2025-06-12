@@ -39,7 +39,7 @@ bool UnityCameraCapturer::OpenglImpl::Init(UnityContext* context,
 #undef GL_ERRCHECK
 #define GL_ERRCHECK(name) GL_ERRCHECK_(name, nullptr)
 
-rtc::scoped_refptr<webrtc::I420Buffer>
+webrtc::scoped_refptr<webrtc::I420Buffer>
 UnityCameraCapturer::OpenglImpl::Capture() {
   // Init 関数とは別のスレッドから呼ばれることがあるので、
   // ここに初期化処理を入れる
@@ -72,7 +72,7 @@ UnityCameraCapturer::OpenglImpl::Capture() {
                 buf.get() + width_ * 4 * (height_ - i - 1), width_ * 4);
   }
 
-  rtc::scoped_refptr<webrtc::I420Buffer> i420_buffer =
+  webrtc::scoped_refptr<webrtc::I420Buffer> i420_buffer =
       webrtc::I420Buffer::Create(width_, height_);
   libyuv::ABGRToI420(buf2.get(), width_ * 4, i420_buffer->MutableDataY(),
                      i420_buffer->StrideY(), i420_buffer->MutableDataU(),

@@ -17,7 +17,7 @@ namespace sora_unity_sdk {
 class UnityAudioDevice : public webrtc::AudioDeviceModule {
  public:
   UnityAudioDevice(
-      rtc::scoped_refptr<webrtc::AudioDeviceModule> adm,
+      webrtc::scoped_refptr<webrtc::AudioDeviceModule> adm,
       bool adm_recording,
       bool adm_playout,
       std::function<void(const int16_t* p, int samples, int channels)>
@@ -34,14 +34,14 @@ class UnityAudioDevice : public webrtc::AudioDeviceModule {
     Terminate();
   }
 
-  static rtc::scoped_refptr<UnityAudioDevice> Create(
-      rtc::scoped_refptr<webrtc::AudioDeviceModule> adm,
+  static webrtc::scoped_refptr<UnityAudioDevice> Create(
+      webrtc::scoped_refptr<webrtc::AudioDeviceModule> adm,
       bool adm_recording,
       bool adm_playout,
       std::function<void(const int16_t* p, int samples, int channels)>
           on_handle_audio,
       webrtc::TaskQueueFactory* task_queue_factory) {
-    return rtc::make_ref_counted<UnityAudioDevice>(
+    return webrtc::make_ref_counted<UnityAudioDevice>(
         adm, adm_recording, adm_playout, on_handle_audio, task_queue_factory);
   }
 
@@ -429,7 +429,7 @@ class UnityAudioDevice : public webrtc::AudioDeviceModule {
 #endif  // WEBRTC_IOS
 
  private:
-  rtc::scoped_refptr<webrtc::AudioDeviceModule> adm_;
+  webrtc::scoped_refptr<webrtc::AudioDeviceModule> adm_;
   bool adm_recording_;
   bool adm_playout_;
   webrtc::TaskQueueFactory* task_queue_factory_;

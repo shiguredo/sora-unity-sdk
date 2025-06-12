@@ -38,7 +38,7 @@ bool UnityCameraCapturer::D3D11Impl::Init(UnityContext* context,
   return true;
 }
 
-rtc::scoped_refptr<webrtc::I420Buffer>
+webrtc::scoped_refptr<webrtc::I420Buffer>
 UnityCameraCapturer::D3D11Impl::Capture() {
   D3D11_MAPPED_SUBRESOURCE resource;
 
@@ -74,7 +74,7 @@ UnityCameraCapturer::D3D11Impl::Capture() {
   //RTC_LOG(LS_INFO) << "GOT FRAME: pData=0x" << resource.pData
   //                 << " RowPitch=" << resource.RowPitch
   //                 << " DepthPitch=" << resource.DepthPitch;
-  rtc::scoped_refptr<webrtc::I420Buffer> i420_buffer =
+  webrtc::scoped_refptr<webrtc::I420Buffer> i420_buffer =
       webrtc::I420Buffer::Create(width_, height_);
   //libyuv::ARGBToI420((const uint8_t*)resource.pData, resource.RowPitch,
   //                   i420_buffer->MutableDataY(), i420_buffer->StrideY(),
