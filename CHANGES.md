@@ -78,6 +78,8 @@
   - @miosakuma
 - [UPDATE] 対応 Unity のバージョンに `6000.0` を追加する
   - @torikizi
+- [ADD] .github ディレクトリに copilot-instructions.md を追加
+  - @torikizi
 
 ## 2025.1.0
 
