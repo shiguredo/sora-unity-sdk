@@ -42,6 +42,7 @@
   - Android が利用するコンパイラを libwebrtc の clang にする
   - `sora::AudioDeviceModuleConfig` から `task_queue_factory` を削除して `env` を追加する
   - `webrtc::CreateOpenSLESAudioDeviceModule` を `webrtc::CreateJavaAudioDeviceModule` に変更する
+  - `webrtc::CreateWindowsCoreAudioAudioDeviceModule` と `webrtc::AudioDeviceModule::Create` を `sora::CreateAudioDeviceModule` に統一する
   - @torikizi @melpon
 - [ADD] 利用するビデオコーデックを詳細に指定するための enum やクラス、関数などを追加
   - `Sora.VideoCodecImplementation` 列挙型
