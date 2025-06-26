@@ -660,15 +660,16 @@ webrtc::scoped_refptr<UnityAudioDevice> Sora::CreateADM(
     adm = worker_thread->BlockingCall([&] {
       sora::AudioDeviceModuleConfig config;
       config.audio_layer = webrtc::AudioDeviceModule::kDummyAudio;
-      config.jni_env = jni_env;
-      config.application_context = android_context;
+      // dummy_audioの場合、jni_envとapplication_contextは不要
       return sora::CreateAudioDeviceModule(config);
     });
   } else {
     sora::AudioDeviceModuleConfig config;
     config.audio_layer = webrtc::AudioDeviceModule::kPlatformDefaultAudio;
+#if defined(SORA_UNITY_SDK_ANDROID)
     config.jni_env = jni_env;
     config.application_context = android_context;
+#endif
     adm = worker_thread->BlockingCall(
         [&] { return sora::CreateAudioDeviceModule(config); });
   }
