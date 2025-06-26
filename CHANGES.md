@@ -40,6 +40,8 @@
   - `rtc::` を `webrtc::` に変更する
   - `cricket::AudioOptions` を `webrtc::AudioOptions` に変更する
   - Android が利用するコンパイラを libwebrtc の clang にする
+  - `sora::AudioDeviceModuleConfig` から `task_queue_factory` を削除して `env` を追加する
+  - `webrtc::CreateOpenSLESAudioDeviceModule` を `webrtc::CreateJavaAudioDeviceModule` に変更する
   - @torikizi @melpon
 - [ADD] 利用するビデオコーデックを詳細に指定するための enum やクラス、関数などを追加
   - `Sora.VideoCodecImplementation` 列挙型

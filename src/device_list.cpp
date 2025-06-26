@@ -1,5 +1,8 @@
 #include "device_list.h"
 
+// Sora
+#include <sora/audio_device_module.h>
+
 // webrtc
 #include "api/task_queue/default_task_queue_factory.h"
 #include "modules/audio_device/include/audio_device.h"
@@ -73,12 +76,12 @@ bool DeviceList::EnumAudioRecording(
 #else
 
 #if defined(SORA_UNITY_SDK_WINDOWS)
-  auto adm =
-      webrtc::CreateWindowsCoreAudioAudioDeviceModule(task_queue_factory.get());
+  sora::AudioDeviceModuleConfig config;
+  auto adm = sora::CreateAudioDeviceModule(config);
 #else
-  auto adm = webrtc::AudioDeviceModule::Create(
-      webrtc::AudioDeviceModule::kPlatformDefaultAudio,
-      task_queue_factory.get());
+  sora::AudioDeviceModuleConfig config;
+  config.audio_layer = webrtc::AudioDeviceModule::kPlatformDefaultAudio;
+  auto adm = sora::CreateAudioDeviceModule(config);
 #endif
   if (adm->Init() != 0) {
     RTC_LOG(LS_WARNING) << "Failed to ADM Init";
@@ -126,12 +129,12 @@ bool DeviceList::EnumAudioPlayout(
 #else
 
 #if defined(SORA_UNITY_SDK_WINDOWS)
-  auto adm =
-      webrtc::CreateWindowsCoreAudioAudioDeviceModule(task_queue_factory.get());
+  sora::AudioDeviceModuleConfig config;
+  auto adm = sora::CreateAudioDeviceModule(config);
 #else
-  auto adm = webrtc::AudioDeviceModule::Create(
-      webrtc::AudioDeviceModule::kPlatformDefaultAudio,
-      task_queue_factory.get());
+  sora::AudioDeviceModuleConfig config;
+  config.audio_layer = webrtc::AudioDeviceModule::kPlatformDefaultAudio;
+  auto adm = sora::CreateAudioDeviceModule(config);
 #endif
   if (adm->Init() != 0) {
     RTC_LOG(LS_WARNING) << "Failed to ADM Init";

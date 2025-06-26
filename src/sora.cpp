@@ -658,13 +658,15 @@ webrtc::scoped_refptr<UnityAudioDevice> Sora::CreateADM(
 
   if (dummy_audio) {
     adm = worker_thread->BlockingCall([&] {
-      return webrtc::AudioDeviceModule::Create(
-          webrtc::AudioDeviceModule::kDummyAudio, task_queue_factory);
+      sora::AudioDeviceModuleConfig config;
+      config.audio_layer = webrtc::AudioDeviceModule::kDummyAudio;
+      config.jni_env = jni_env;
+      config.application_context = android_context;
+      return sora::CreateAudioDeviceModule(config);
     });
   } else {
     sora::AudioDeviceModuleConfig config;
     config.audio_layer = webrtc::AudioDeviceModule::kPlatformDefaultAudio;
-    config.task_queue_factory = task_queue_factory;
     config.jni_env = jni_env;
     config.application_context = android_context;
     adm = worker_thread->BlockingCall(
@@ -759,7 +761,8 @@ bool Sora::InitADM(webrtc::scoped_refptr<webrtc::AudioDeviceModule> adm,
   return true;
 }
 
-webrtc::scoped_refptr<webrtc::VideoTrackSourceInterface> Sora::CreateVideoCapturer(
+webrtc::scoped_refptr<webrtc::VideoTrackSourceInterface>
+Sora::CreateVideoCapturer(
     int capturer_type,
     void* unity_camera_texture,
     bool no_video_device,
@@ -812,17 +815,18 @@ void Sora::GetStats(std::function<void(std::string)> on_get_stats) {
       return;
     }
 
-    pc->GetStats(sora::RTCStatsCallback::Create(
-                     [self, on_get_stats = std::move(on_get_stats)](
-                         const webrtc::scoped_refptr<const webrtc::RTCStatsReport>&
-                             report) {
-                       std::string json = report->ToJson();
-                       self->PushEvent([on_get_stats = std::move(on_get_stats),
-                                        json = std::move(json)]() {
-                         on_get_stats(std::move(json));
-                       });
-                     })
-                     .get());
+    pc->GetStats(
+        sora::RTCStatsCallback::Create(
+            [self, on_get_stats = std::move(on_get_stats)](
+                const webrtc::scoped_refptr<const webrtc::RTCStatsReport>&
+                    report) {
+              std::string json = report->ToJson();
+              self->PushEvent([on_get_stats = std::move(on_get_stats),
+                               json = std::move(json)]() {
+                on_get_stats(std::move(json));
+              });
+            })
+            .get());
   });
 }
 
