@@ -48,6 +48,8 @@
   - devicelist.cpp に以下のヘッダーを追加する
     - api/audio/create_audio_device_module.h
     - api/environment/environment_factory.h
+  - unity_audio_device.h に以下のヘッダーを追加する
+    - api/environment/environment.h
   - @torikizi @melpon
 - [ADD] 利用するビデオコーデックを詳細に指定するための enum やクラス、関数などを追加
   - `Sora.VideoCodecImplementation` 列挙型
