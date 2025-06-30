@@ -18,17 +18,17 @@ namespace sora_unity_sdk {
 class UnityAudioDevice : public webrtc::AudioDeviceModule {
  public:
   UnityAudioDevice(
+      const webrtc::Environment& env,
       webrtc::scoped_refptr<webrtc::AudioDeviceModule> adm,
       bool adm_recording,
       bool adm_playout,
       std::function<void(const int16_t* p, int samples, int channels)>
-          on_handle_audio,
-      const webrtc::Environment& env)
-      : adm_(adm),
+          on_handle_audio)
+      : env_(env),
+        adm_(adm),
         adm_recording_(adm_recording),
         adm_playout_(adm_playout),
-        on_handle_audio_(on_handle_audio),
-        env_(env) {}
+        on_handle_audio_(on_handle_audio) {}
 
   ~UnityAudioDevice() override {
     RTC_LOG(LS_INFO) << "~UnityAudioDevice";
@@ -43,7 +43,7 @@ class UnityAudioDevice : public webrtc::AudioDeviceModule {
           on_handle_audio,
       webrtc::Environment environment) {
     return webrtc::make_ref_counted<UnityAudioDevice>(
-        adm, adm_recording, adm_playout, on_handle_audio, environment);
+        environment, adm, adm_recording, adm_playout, on_handle_audio);
   }
 
   void ProcessAudioData(const float* data, int32_t size) {
@@ -418,10 +418,10 @@ class UnityAudioDevice : public webrtc::AudioDeviceModule {
 #endif  // WEBRTC_IOS
 
  private:
+  webrtc::Environment env_;
   webrtc::scoped_refptr<webrtc::AudioDeviceModule> adm_;
   bool adm_recording_;
   bool adm_playout_;
-  webrtc::Environment env_;
   std::function<void(const int16_t* p, int samples, int channels)>
       on_handle_audio_;
   std::unique_ptr<std::thread> handle_audio_thread_;

@@ -45,6 +45,9 @@
   - `sora::AudioDeviceModuleConfig` から `task_queue_factory` を削除して `env` を追加する
   - `CreateADM` 関数のシグネチャを `webrtc::TaskQueueFactory*` から `webrtc::Environment` に変更する
   - `AudioDeviceModule` の新たな引数に対応するため `webrtc::CreateEnvironment()` を追加する
+  - UnityAudioDevice のコンストラクタと Create 関数のシグネチャを変更
+    -  WebRTC の推奨事項に従うため、コンストラクタで `webrtc::Environment` を先頭引数に変更する
+      - [WebRTC の推奨事項が書いてあるコメントリンク](https://source.chromium.org/chromium/chromium/src/+/main:third_party/webrtc/api/environment/environment.h;l=38-41;drc=ee5ab349f3307fb53405b5b502a203539b431c2d)
   - devicelist.cpp に以下のヘッダーを追加する
     - api/audio/create_audio_device_module.h
     - api/environment/environment_factory.h
