@@ -13,6 +13,7 @@
 #include <boost/asio/io_context.hpp>
 
 // WebRTC
+#include <api/environment/environment_factory.h>
 #include <api/scoped_refptr.h>
 #include <api/task_queue/task_queue_factory.h>
 #include <media/engine/webrtc_media_engine.h>
@@ -87,8 +88,8 @@ class Sora : public std::enable_shared_from_this<Sora>,
   void OnNotify(std::string text) override;
   void OnPush(std::string text) override;
   void OnMessage(std::string label, std::string data) override;
-  void OnTrack(
-      webrtc::scoped_refptr<webrtc::RtpTransceiverInterface> transceiver) override;
+  void OnTrack(webrtc::scoped_refptr<webrtc::RtpTransceiverInterface>
+                   transceiver) override;
   void OnRemoveTrack(
       webrtc::scoped_refptr<webrtc::RtpReceiverInterface> receiver) override;
   void OnDataChannel(std::string label) override;
@@ -101,7 +102,7 @@ class Sora : public std::enable_shared_from_this<Sora>,
       webrtc::scoped_refptr<webrtc::VideoTrackInterface> video_track);
 
   static webrtc::scoped_refptr<UnityAudioDevice> CreateADM(
-      webrtc::TaskQueueFactory* task_queue_factory,
+      webrtc::Environment env,
       bool dummy_audio,
       bool unity_audio_input,
       bool unity_audio_output,
@@ -133,8 +134,9 @@ class Sora : public std::enable_shared_from_this<Sora>,
   void PushEvent(std::function<void()> f);
 
   struct CapturerSink : webrtc::VideoSinkInterface<webrtc::VideoFrame> {
-    CapturerSink(webrtc::scoped_refptr<webrtc::VideoTrackSourceInterface> capturer,
-                 std::function<void(std::string)> on_frame);
+    CapturerSink(
+        webrtc::scoped_refptr<webrtc::VideoTrackSourceInterface> capturer,
+        std::function<void(std::string)> on_frame);
     ~CapturerSink() override;
     void OnFrame(const webrtc::VideoFrame& frame) override;
 

@@ -31,16 +31,28 @@
   - 未指定の場合、シグナリング "type": "connect" でオーディオコーデック指定を行わない
   - オーディオコーデック指定を行わない場合は Sora のデフォルト値 `OPUS` が利用される
   - @miosakuma
-- [UPDATE] Sora C++ SDK を `2025.4.0-canary.5` に上げる
-  - `WEBRTC_BUILD_VERSION` を `m137.7151.3.0` にアップデート
+- [UPDATE] Sora C++ SDK を `2025.4.0-canary.8` に上げる
   - `BOOST_VERSION` を `1.88.0` にアップデート
-  - `CMAKE_VERSION` を `4.0.2` にアップデート
+  - `CMAKE_VERSION` を `4.0.3` にアップデート
   - `ANDROID_NDK_VERSION` を `r28b` にアップデート
   - @torikizi
-- [UPDATE] libwebrtc を `m137.7151.3.0` に上げる
+- [UPDATE] libwebrtc を `m138.7204.0.0` に上げる
   - `rtc::` を `webrtc::` に変更する
   - `cricket::AudioOptions` を `webrtc::AudioOptions` に変更する
   - Android が利用するコンパイラを libwebrtc の clang にする
+  - `webrtc::AudioDeviceModule::Create` から `webrtc::CreateAudioDeviceModule` に変更する
+  - `webrtc::CreateWindowsCoreAudioAudioDeviceModule` の引数を `task_queue_factory.get()` から `&env.task_queue_factory()` に変更する
+  - `sora::AudioDeviceModuleConfig` から `task_queue_factory` を削除して `env` を追加する
+  - `CreateADM` 関数のシグネチャを `webrtc::TaskQueueFactory*` から `webrtc::Environment` に変更する
+  - `AudioDeviceModule` の新たな引数に対応するため `webrtc::CreateEnvironment()` を追加する
+  - UnityAudioDevice のコンストラクタと Create 関数のシグネチャを変更
+    -  WebRTC の推奨事項に従うため、コンストラクタで `webrtc::Environment` を先頭引数に変更する
+      - [WebRTC の推奨事項が書いてあるコメントリンク](https://source.chromium.org/chromium/chromium/src/+/main:third_party/webrtc/api/environment/environment.h;l=38-41;drc=ee5ab349f3307fb53405b5b502a203539b431c2d)
+  - devicelist.cpp に以下のヘッダーを追加する
+    - api/audio/create_audio_device_module.h
+    - api/environment/environment_factory.h
+  - unity_audio_device.h に以下のヘッダーを追加する
+    - api/environment/environment.h
   - @torikizi @melpon
 - [ADD] 利用するビデオコーデックを詳細に指定するための enum やクラス、関数などを追加
   - `Sora.VideoCodecImplementation` 列挙型

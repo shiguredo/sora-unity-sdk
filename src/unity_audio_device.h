@@ -7,6 +7,7 @@
 #include <vector>
 
 // webrtc
+#include "api/environment/environment.h"
 #include "modules/audio_device/audio_device_buffer.h"
 #include "modules/audio_device/include/audio_device.h"
 #include "rtc_base/ref_counted_object.h"
@@ -17,17 +18,17 @@ namespace sora_unity_sdk {
 class UnityAudioDevice : public webrtc::AudioDeviceModule {
  public:
   UnityAudioDevice(
+      const webrtc::Environment& env,
       webrtc::scoped_refptr<webrtc::AudioDeviceModule> adm,
       bool adm_recording,
       bool adm_playout,
       std::function<void(const int16_t* p, int samples, int channels)>
-          on_handle_audio,
-      webrtc::TaskQueueFactory* task_queue_factory)
-      : adm_(adm),
+          on_handle_audio)
+      : env_(env),
+        adm_(adm),
         adm_recording_(adm_recording),
         adm_playout_(adm_playout),
-        on_handle_audio_(on_handle_audio),
-        task_queue_factory_(task_queue_factory) {}
+        on_handle_audio_(on_handle_audio) {}
 
   ~UnityAudioDevice() override {
     RTC_LOG(LS_INFO) << "~UnityAudioDevice";
@@ -40,9 +41,9 @@ class UnityAudioDevice : public webrtc::AudioDeviceModule {
       bool adm_playout,
       std::function<void(const int16_t* p, int samples, int channels)>
           on_handle_audio,
-      webrtc::TaskQueueFactory* task_queue_factory) {
+      webrtc::Environment environment) {
     return webrtc::make_ref_counted<UnityAudioDevice>(
-        adm, adm_recording, adm_playout, on_handle_audio, task_queue_factory);
+        environment, adm, adm_recording, adm_playout, on_handle_audio);
   }
 
   void ProcessAudioData(const float* data, int32_t size) {
@@ -85,7 +86,7 @@ class UnityAudioDevice : public webrtc::AudioDeviceModule {
   virtual int32_t Init() override {
     RTC_LOG(LS_INFO) << "Init";
     device_buffer_ =
-        std::make_unique<webrtc::AudioDeviceBuffer>(task_queue_factory_);
+        std::make_unique<webrtc::AudioDeviceBuffer>(&env_.task_queue_factory());
     initialized_ = true;
     return adm_->Init();
   }
@@ -395,26 +396,14 @@ class UnityAudioDevice : public webrtc::AudioDeviceModule {
   }
 
   // Only supported on Android.
-  virtual bool BuiltInAECIsAvailable() const override {
-    return false;
-  }
-  virtual bool BuiltInAGCIsAvailable() const override {
-    return false;
-  }
-  virtual bool BuiltInNSIsAvailable() const override {
-    return false;
-  }
+  virtual bool BuiltInAECIsAvailable() const override { return false; }
+  virtual bool BuiltInAGCIsAvailable() const override { return false; }
+  virtual bool BuiltInNSIsAvailable() const override { return false; }
 
   // Enables the built-in audio effects. Only supported on Android.
-  virtual int32_t EnableBuiltInAEC(bool enable) override {
-    return 0;
-  }
-  virtual int32_t EnableBuiltInAGC(bool enable) override {
-    return 0;
-  }
-  virtual int32_t EnableBuiltInNS(bool enable) override {
-    return 0;
-  }
+  virtual int32_t EnableBuiltInAEC(bool enable) override { return 0; }
+  virtual int32_t EnableBuiltInAGC(bool enable) override { return 0; }
+  virtual int32_t EnableBuiltInNS(bool enable) override { return 0; }
 
 // Only supported on iOS.
 #if defined(WEBRTC_IOS)
@@ -429,10 +418,10 @@ class UnityAudioDevice : public webrtc::AudioDeviceModule {
 #endif  // WEBRTC_IOS
 
  private:
+  webrtc::Environment env_;
   webrtc::scoped_refptr<webrtc::AudioDeviceModule> adm_;
   bool adm_recording_;
   bool adm_playout_;
-  webrtc::TaskQueueFactory* task_queue_factory_;
   std::function<void(const int16_t* p, int samples, int channels)>
       on_handle_audio_;
   std::unique_ptr<std::thread> handle_audio_thread_;

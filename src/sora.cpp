@@ -2,11 +2,13 @@
 #include "sora_version.h"
 
 // WebRTC
+#include <api/audio/create_audio_device_module.h>
 #include <api/audio_codecs/builtin_audio_decoder_factory.h>
 #include <api/audio_codecs/builtin_audio_encoder_factory.h>
 #include <api/create_peerconnection_factory.h>
+#include <api/environment/environment.h>
+#include <api/environment/environment_factory.h>
 #include <api/rtc_event_log/rtc_event_log_factory.h>
-#include <api/task_queue/default_task_queue_factory.h>
 #include <media/engine/webrtc_media_engine.h>
 #include <modules/audio_device/include/audio_device.h>
 #include <modules/audio_device/include/audio_device_factory.h>
@@ -249,6 +251,7 @@ void Sora::DoConnect(const sora_conf::internal::ConnectConfig& cc,
   }
   client_config.configure_dependencies =
       [&, this](webrtc::PeerConnectionFactoryDependencies& dependencies) {
+        auto webrtc_env = webrtc::CreateEnvironment();
         // worker 上の env
         auto worker_env = dependencies.worker_thread->BlockingCall(
             [] { return sora::GetJNIEnv(); });
@@ -264,11 +267,11 @@ void Sora::DoConnect(const sora_conf::internal::ConnectConfig& cc,
         void* worker_context = nullptr;
 #endif
 
-        unity_adm_ = CreateADM(
-            dependencies.task_queue_factory.get(), cc.no_audio_device,
-            cc.unity_audio_input, cc.unity_audio_output, on_handle_audio_,
-            cc.audio_recording_device, cc.audio_playout_device,
-            dependencies.worker_thread, worker_env, worker_context);
+        unity_adm_ =
+            CreateADM(webrtc_env, cc.no_audio_device, cc.unity_audio_input,
+                      cc.unity_audio_output, on_handle_audio_,
+                      cc.audio_recording_device, cc.audio_playout_device,
+                      dependencies.worker_thread, worker_env, worker_context);
         dependencies.worker_thread->BlockingCall(
             [&] { dependencies.adm = unity_adm_; });
 
@@ -644,7 +647,7 @@ void Sora::SetOnHandleAudio(std::function<void(const int16_t*, int, int)> f) {
 }
 
 webrtc::scoped_refptr<UnityAudioDevice> Sora::CreateADM(
-    webrtc::TaskQueueFactory* task_queue_factory,
+    webrtc::Environment env,
     bool dummy_audio,
     bool unity_audio_input,
     bool unity_audio_output,
@@ -658,13 +661,13 @@ webrtc::scoped_refptr<UnityAudioDevice> Sora::CreateADM(
 
   if (dummy_audio) {
     adm = worker_thread->BlockingCall([&] {
-      return webrtc::AudioDeviceModule::Create(
-          webrtc::AudioDeviceModule::kDummyAudio, task_queue_factory);
+      return webrtc::CreateAudioDeviceModule(
+          env, webrtc::AudioDeviceModule::kDummyAudio);
     });
   } else {
     sora::AudioDeviceModuleConfig config;
     config.audio_layer = webrtc::AudioDeviceModule::kPlatformDefaultAudio;
-    config.task_queue_factory = task_queue_factory;
+    config.env = env;
     config.jni_env = jni_env;
     config.application_context = android_context;
     adm = worker_thread->BlockingCall(
@@ -673,8 +676,7 @@ webrtc::scoped_refptr<UnityAudioDevice> Sora::CreateADM(
 
   return worker_thread->BlockingCall([&] {
     return UnityAudioDevice::Create(adm, !unity_audio_input,
-                                    !unity_audio_output, on_handle_audio,
-                                    task_queue_factory);
+                                    !unity_audio_output, on_handle_audio, env);
   });
 }
 
@@ -759,7 +761,8 @@ bool Sora::InitADM(webrtc::scoped_refptr<webrtc::AudioDeviceModule> adm,
   return true;
 }
 
-webrtc::scoped_refptr<webrtc::VideoTrackSourceInterface> Sora::CreateVideoCapturer(
+webrtc::scoped_refptr<webrtc::VideoTrackSourceInterface>
+Sora::CreateVideoCapturer(
     int capturer_type,
     void* unity_camera_texture,
     bool no_video_device,
@@ -812,17 +815,18 @@ void Sora::GetStats(std::function<void(std::string)> on_get_stats) {
       return;
     }
 
-    pc->GetStats(sora::RTCStatsCallback::Create(
-                     [self, on_get_stats = std::move(on_get_stats)](
-                         const webrtc::scoped_refptr<const webrtc::RTCStatsReport>&
-                             report) {
-                       std::string json = report->ToJson();
-                       self->PushEvent([on_get_stats = std::move(on_get_stats),
-                                        json = std::move(json)]() {
-                         on_get_stats(std::move(json));
-                       });
-                     })
-                     .get());
+    pc->GetStats(
+        sora::RTCStatsCallback::Create(
+            [self, on_get_stats = std::move(on_get_stats)](
+                const webrtc::scoped_refptr<const webrtc::RTCStatsReport>&
+                    report) {
+              std::string json = report->ToJson();
+              self->PushEvent([on_get_stats = std::move(on_get_stats),
+                               json = std::move(json)]() {
+                on_get_stats(std::move(json));
+              });
+            })
+            .get());
   });
 }
 
