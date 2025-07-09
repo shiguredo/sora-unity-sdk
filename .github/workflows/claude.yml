@@ -1,0 +1,22 @@
+name: Claude Assistant
+
+on:
+  pull_request_review_comment:
+    types: [created]
+  issue_comment:
+    types: [created]
+
+jobs:
+  claude-response:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    if: contains(fromJSON('["zztkm", "torikizi", "miosakuma"]'), github.event.comment.user.login)
+    steps:
+      - uses: actions/checkout@v4
+      - uses: anthropics/claude-code-action@beta
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY_SORA_OSS_SONNET }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          model: "claude-sonnet-4-20250514"
+          trigger_phrase: "!sonnet"
+          timeout_minutes: 15
