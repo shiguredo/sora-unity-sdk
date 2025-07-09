@@ -10,7 +10,7 @@ jobs:
   claude-response:
     runs-on: ubuntu-24.04
     timeout-minutes: 20
-    if: contains(fromJSON('["zztkm", "torikizi", "miosakuma"]'), github.event.comment.user.login)
+    if: contains(fromJSON('["melpon", "zztkm", "torikizi", "miosakuma"]'), github.event.comment.user.login)
     steps:
       - uses: actions/checkout@v4
       - uses: anthropics/claude-code-action@beta
