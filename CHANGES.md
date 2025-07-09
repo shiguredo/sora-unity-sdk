@@ -31,7 +31,7 @@
   - 未指定の場合、シグナリング "type": "connect" でオーディオコーデック指定を行わない
   - オーディオコーデック指定を行わない場合は Sora のデフォルト値 `OPUS` が利用される
   - @miosakuma
-- [UPDATE] Sora C++ SDK を `2025.4.0-canary.9` に上げる
+- [UPDATE] Sora C++ SDK を `2025.4.0` に上げる
   - `BOOST_VERSION` を `1.88.0` にアップデート
   - `CMAKE_VERSION` を `4.0.3` にアップデート
   - `ANDROID_NDK_VERSION` を `r28b` にアップデート
