@@ -41,6 +41,10 @@
 #include "mac_helper/ios_audio_init.h"
 #endif
 
+#ifdef SORA_UNITY_SDK_VISIONOS
+#include "mac_helper/ios_audio_init.h"
+#endif
+
 #ifdef SORA_UNITY_SDK_MACOS
 #include <sora/mac/mac_capturer.h>
 #endif
@@ -67,7 +71,7 @@ Sora::~Sora() {
     static_cast<sora::AndroidCapturer*>(capturer_.get())->Stop();
   }
 #endif
-#if defined(SORA_UNITY_SDK_IOS) || defined(SORA_UNITY_SDK_MACOS)
+#if defined(SORA_UNITY_SDK_IOS) || defined(SORA_UNITY_SDK_MACOS) || !defined(SORA_UNITY_SDK_VISIONOS)
   if (capturer_ != nullptr && capturer_type_ == 0) {
     static_cast<sora::MacCapturer*>(capturer_.get())->Stop();
   }
@@ -191,8 +195,8 @@ void Sora::Connect(const sora_conf::internal::ConnectConfig& cc) {
     });
   };
 
-#if defined(SORA_UNITY_SDK_IOS)
-  // iOS でマイクを使用する場合、マイクの初期化の設定をしてから DoConnect する。
+#if defined(SORA_UNITY_SDK_IOS) || defined(SORA_UNITY_SDK_VISIONOS)
+  // iOS / visionOS でマイクを使用する場合、マイクの初期化の設定をしてから DoConnect する。
 
   if (cc.role == "recvonly" || cc.unity_audio_input) {
     // この場合マイクを利用しないのですぐに DoConnect
@@ -557,7 +561,7 @@ void Sora::SwitchCamera(const sora_conf::internal::CameraConfig& cc) {
     static_cast<sora::AndroidCapturer*>(capturer_.get())->Stop();
   }
 #endif
-#if defined(SORA_UNITY_SDK_IOS) || defined(SORA_UNITY_SDK_MACOS)
+#if defined(SORA_UNITY_SDK_IOS) || defined(SORA_UNITY_SDK_MACOS) || !defined(SORA_UNITY_SDK_VISIONOS)
   if (capturer_ != nullptr && capturer_type_ == 0) {
     static_cast<sora::MacCapturer*>(capturer_.get())->Stop();
   }

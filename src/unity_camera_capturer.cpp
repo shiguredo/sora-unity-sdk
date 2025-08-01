@@ -66,7 +66,7 @@ bool UnityCameraCapturer::Init(UnityContext* context,
 #endif
       break;
     case kUnityGfxRendererMetal:
-#if defined(SORA_UNITY_SDK_MACOS) || defined(SORA_UNITY_SDK_IOS)
+#if defined(SORA_UNITY_SDK_MACOS) || defined(SORA_UNITY_SDK_IOS) || defined(SORA_UNITY_SDK_VISIONOS)
       RTC_LOG(LS_INFO) << "Init UnityCameraCapturer with MetalImpl";
       capturer_.reset(new MetalImpl());
 #endif

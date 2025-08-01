@@ -83,6 +83,12 @@
   - Ubuntu 24.04 用のビルドを追加する
   - Ubuntu 24.04 用のリリースバイナリを追加する
   - @miosakuma @torikizi
+- [UPDATE] visionOS に対応する
+  - visionOS のビルドを追加する
+  - 現時点では受信のみ対応で、映像の送信は未対応です
+  - `SORA_UNITY_SDK_VISIONOS` を使用して iOS / macOS とのビルドを分岐する
+  - 実機とシミュレータの両方に対応する
+  - @torikizi
 
 ### misc
 
