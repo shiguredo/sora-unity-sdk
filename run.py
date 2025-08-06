@@ -71,6 +71,7 @@ def install_deps(
             }
             install_webrtc(**install_webrtc_args)
         else:
+            webrtc_platform = platform if platform != "visionos-simulator" else "visionos"
             build_webrtc_args = {
                 "platform": platform,
                 "local_webrtc_build_dir": local_webrtc_build_dir,
@@ -79,14 +80,23 @@ def install_deps(
             }
             build_webrtc(**build_webrtc_args)
 
+        webrtc_platform = platform if platform != "visionos-simulator" else "visionos"
         webrtc_info = get_webrtc_info(platform, local_webrtc_build_dir, install_dir, debug)
 
         # Windows は MSVC を使うので不要
-        # macOS と iOS は Apple Clang を使うので不要
+        # macOS と iOS と visionOS は Apple Clang を使うので不要
         # Android は libc++ のために必要
         # webrtc-build をソースビルドしてる場合は既にローカルにあるので不要
         if (
-            platform not in ("windows_x86_64", "macos_x86_64", "macos_arm64", "ios")
+            platform
+            not in (
+                "windows_x86_64",
+                "macos_x86_64",
+                "macos_arm64",
+                "ios",
+                "visionos",
+                "visionos-simulator",
+            )
             and local_webrtc_build_dir is None
         ):
             webrtc_version = read_version_file(webrtc_info.version_file)
@@ -140,6 +150,7 @@ def install_deps(
 
         # Sora C++ SDK
         if local_sora_cpp_sdk_dir is None:
+            sora_platform = platform if platform != "visionos-simulator" else "visionos"
             install_sora_and_deps(
                 version["SORA_CPP_SDK_VERSION"],
                 version["BOOST_VERSION"],
@@ -148,6 +159,7 @@ def install_deps(
                 install_dir,
             )
         else:
+            sora_platform = platform if platform != "visionos-simulator" else "visionos"
             build_sora(
                 platform,
                 local_sora_cpp_sdk_dir,
@@ -241,13 +253,15 @@ AVAILABLE_TARGETS = [
     "ubuntu-22.04_x86_64",
     "ubuntu-24.04_x86_64",
     "ios",
+    "visionos",
+    "visionos-simulator",
     "android",
 ]
 
 BUILD_PLATFORM = {
     "windows_x86_64": ["windows_x86_64"],
-    "macos_x86_64": ["macos_x86_64", "macos_arm64", "ios"],
-    "macos_arm64": ["macos_x86_64", "macos_arm64", "ios"],
+    "macos_x86_64": ["macos_x86_64", "macos_arm64", "ios", "visionos", "visionos-simulator"],
+    "macos_arm64": ["macos_x86_64", "macos_arm64", "ios", "visionos", "visionos-simulator"],
     "ubuntu-22.04_x86_64": ["ubuntu-22.04_x86_64", "android"],
     "ubuntu-24.04_x86_64": ["ubuntu-24.04_x86_64", "android"],
 }
@@ -305,6 +319,8 @@ def main():
     unity_build_dir = os.path.join(build_dir, "sora_unity_sdk")
     mkdir_p(unity_build_dir)
     with cd(unity_build_dir):
+        webrtc_platform = platform if platform != "visionos-simulator" else "visionos"
+        sora_platform = platform if platform != "visionos-simulator" else "visionos"
         webrtc_info = get_webrtc_info(
             platform, args.local_webrtc_build_dir, install_dir, args.debug
         )
@@ -350,6 +366,18 @@ def main():
             cmake_args.append("-DCMAKE_SYSTEM_NAME=iOS")
             cmake_args.append('-DCMAKE_OSX_ARCHITECTURES="x86_64;arm64"')
             cmake_args.append("-DCMAKE_OSX_DEPLOYMENT_TARGET=13.0")
+            cmake_args.append("-DCMAKE_XCODE_ATTRIBUTE_ONLY_ACTIVE_ARCH=NO")
+        elif platform == "visionos":
+            cmake_args += ["-G", "Xcode"]
+            cmake_args.append("-DCMAKE_SYSTEM_NAME=visionOS")
+            cmake_args.append('-DCMAKE_OSX_ARCHITECTURES="arm64"')
+            cmake_args.append("-DCMAKE_OSX_DEPLOYMENT_TARGET=2.0")
+            cmake_args.append("-DCMAKE_XCODE_ATTRIBUTE_ONLY_ACTIVE_ARCH=NO")
+        elif platform == "visionos-simulator":
+            cmake_args += ["-G", "Xcode"]
+            cmake_args.append("-DCMAKE_SYSTEM_NAME=visionOS")
+            cmake_args.append('-DCMAKE_OSX_ARCHITECTURES="arm64"')
+            cmake_args.append("-DCMAKE_OSX_DEPLOYMENT_TARGET=2.0")
             cmake_args.append("-DCMAKE_XCODE_ATTRIBUTE_ONLY_ACTIVE_ARCH=NO")
         elif platform == "android":
             toolchain_file = os.path.join(
@@ -454,6 +482,62 @@ def main():
                     os.path.join(unity_build_dir, "Release-iphoneos", "libSoraUnitySdk.a"),
                 ]
             )
+        elif platform == "visionos":
+            # visionOS 実機向けビルド
+            cmd(
+                [
+                    "cmake",
+                    "--build",
+                    ".",
+                    f"-j{multiprocessing.cpu_count()}",
+                    "--config",
+                    configuration,
+                    "--target",
+                    "SoraUnitySdk",
+                    "--",
+                    "-arch",
+                    "arm64",
+                    "-sdk",
+                    "xros",
+                ]
+            )
+            # 実機用ライブラリをコピー
+            source_lib = os.path.join(unity_build_dir, "Release-xros", "libSoraUnitySdk.a")
+            dest_lib = os.path.join(unity_build_dir, "libSoraUnitySdk.a")
+            os.system(f"cp '{source_lib}' '{dest_lib}'")
+            # Unity プラグインディレクトリにもコピー
+            unity_plugin_lib = os.path.join(
+                BASE_DIR, "Sora", "Plugins", "visionOS", "libSoraUnitySdk.a"
+            )
+            os.system(f"cp '{source_lib}' '{unity_plugin_lib}'")
+        elif platform == "visionos-simulator":
+            # visionOS シミュレータ向けビルド
+            cmd(
+                [
+                    "cmake",
+                    "--build",
+                    ".",
+                    f"-j{multiprocessing.cpu_count()}",
+                    "--config",
+                    configuration,
+                    "--target",
+                    "SoraUnitySdk",
+                    "--",
+                    "-arch",
+                    "arm64",
+                    "-sdk",
+                    "xrsimulator",
+                ]
+            )
+            # シミュレータ用ライブラリをコピー
+            source_lib = os.path.join(unity_build_dir, "Release-xrsimulator", "libSoraUnitySdk.a")
+            dest_lib = os.path.join(unity_build_dir, "libSoraUnitySdk.a")
+            os.system(f"cp '{source_lib}' '{dest_lib}'")
+            # Unity プラグインディレクトリにもコピー
+            unity_plugin_lib = os.path.join(
+                BASE_DIR, "Sora", "Plugins", "visionOS-simulator", "libSoraUnitySdk.a"
+            )
+            os.system(f"cp '{source_lib}' '{unity_plugin_lib}'")
         else:
             cmd(
                 [

@@ -1,5 +1,7 @@
 #include "unity_camera_capturer.h"
 
+#if defined(SORA_UNITY_SDK_MACOS) || defined(SORA_UNITY_SDK_IOS) || defined(SORA_UNITY_SDK_VISIONOS)
+
 #import <MetalKit/MetalKit.h>
 
 // .mm ファイルからじゃないと IUnityGraphicsMetal.h を読み込めないので、ここで import する
@@ -112,3 +114,5 @@ UnityCameraCapturer::MetalImpl::Capture() {
   return i420_buffer;
 }
 }
+
+#endif  // defined(SORA_UNITY_SDK_MACOS) || defined(SORA_UNITY_SDK_IOS) || defined(SORA_UNITY_SDK_VISIONOS)

@@ -85,7 +85,7 @@ bool UnityContext::IsInitialized() {
   return ifs_ != nullptr && device_ != nullptr;
 #endif
 
-#if defined(SORA_UNITY_SDK_MACOS) || defined(SORA_UNITY_SDK_IOS)
+#if defined(SORA_UNITY_SDK_MACOS) || defined(SORA_UNITY_SDK_IOS) || defined(SORA_UNITY_SDK_VISIONOS)
   if (ifs_ == nullptr || graphics_ == nullptr) {
     return false;
   }
@@ -125,7 +125,7 @@ void UnityContext::Init(IUnityInterfaces* ifs) {
   RTC_LOG(LS_INFO) << "Log initialized";
 #endif
 
-#if defined(SORA_UNITY_SDK_ANDROID) || defined(SORA_UNITY_SDK_IOS)
+#if defined(SORA_UNITY_SDK_ANDROID) || defined(SORA_UNITY_SDK_IOS) || defined(SORA_UNITY_SDK_VISIONOS)
   webrtc::LogMessage::LogToDebug((webrtc::LoggingSeverity)webrtc::LS_INFO);
   webrtc::LogMessage::LogTimestamps();
   webrtc::LogMessage::LogThreads();

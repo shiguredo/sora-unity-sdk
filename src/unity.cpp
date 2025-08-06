@@ -21,7 +21,7 @@ struct SoraWrapper {
 };
 
 extern "C" {
-#if defined(SORA_UNITY_SDK_IOS)
+#if defined(SORA_UNITY_SDK_IOS) || defined(SORA_UNITY_SDK_VISIONOS)
 // PlaybackEngines/iOSSupport/Trampoline/Classes/Unity/UnityInterface.h から必要な定義だけ拾ってきた
 typedef void (*UnityPluginLoadFunc)(IUnityInterfaces* unityInterfaces);
 typedef void (*UnityPluginUnloadFunc)();
@@ -35,7 +35,7 @@ void UNITY_INTERFACE_API SoraUnitySdk_UnityPluginUnload();
 #endif
 
 void* sora_create() {
-#if defined(SORA_UNITY_SDK_IOS)
+#if defined(SORA_UNITY_SDK_IOS) || defined(SORA_UNITY_SDK_VISIONOS)
   if (!g_ios_plugin_registered) {
     UnityRegisterRenderingPluginV5(&SoraUnitySdk_UnityPluginLoad,
                                    &SoraUnitySdk_UnityPluginUnload);
@@ -429,9 +429,9 @@ void sora_audio_output_helper_set_handsfree(void* p, unity_bool_t enabled) {
   helper->SetHandsfree(enabled != 0);
 }
 
-// iOS の場合は static link で名前が被る可能性があるので、別の名前にしておく
+// iOS / visionOS の場合は static link で名前が被る可能性があるので、別の名前にしておく
 void UNITY_INTERFACE_EXPORT UNITY_INTERFACE_API
-#if defined(SORA_UNITY_SDK_IOS)
+#if defined(SORA_UNITY_SDK_IOS) || defined(SORA_UNITY_SDK_VISIONOS)
 SoraUnitySdk_UnityPluginLoad(IUnityInterfaces* ifs)
 #else
 UnityPluginLoad(IUnityInterfaces* ifs)
@@ -441,7 +441,7 @@ UnityPluginLoad(IUnityInterfaces* ifs)
 }
 
 void UNITY_INTERFACE_EXPORT UNITY_INTERFACE_API
-#if defined(SORA_UNITY_SDK_IOS)
+#if defined(SORA_UNITY_SDK_IOS) || defined(SORA_UNITY_SDK_VISIONOS)
 SoraUnitySdk_UnityPluginUnload()
 #else
 UnityPluginUnload()

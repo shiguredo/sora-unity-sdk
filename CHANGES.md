@@ -9,6 +9,15 @@
 - FIX
   - バグ修正
 
+## 2025.4.0-apple-vision-pro.0
+
+- [ADD] visionOS に対応する
+  - visionOS のビルドを追加する
+  - 現時点では受信のみ対応で、映像の送信は未対応です
+  - `SORA_UNITY_SDK_VISIONOS` を使用して iOS / macOS とのビルドを分岐する
+  - 実機とシミュレータの両方に対応する
+  - @torikizi
+
 ## develop
 
 - [CHANGE] 対応プラットフォームから Ubuntu 20.04 を削除する

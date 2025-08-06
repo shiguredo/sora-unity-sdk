@@ -47,6 +47,18 @@ elseif (SORA_UNITY_SDK_PACKAGE STREQUAL "ios")
   target_link_options(SoraUnitySdk PRIVATE -ObjC)
 
   set(SORA_UNITY_SDK_PLATFORM iOS)
+elseif (SORA_UNITY_SDK_PACKAGE STREQUAL "visionos")
+  add_library(SoraUnitySdk)
+  set_target_properties(SoraUnitySdk PROPERTIES CXX_VISIBILITY_PRESET hidden)
+  target_link_options(SoraUnitySdk PRIVATE -ObjC)
+
+  set(SORA_UNITY_SDK_PLATFORM visionOS)
+elseif (SORA_UNITY_SDK_PACKAGE STREQUAL "visionos-simulator")
+  add_library(SoraUnitySdk)
+  set_target_properties(SoraUnitySdk PROPERTIES CXX_VISIBILITY_PRESET hidden)
+  target_link_options(SoraUnitySdk PRIVATE -ObjC)
+
+  set(SORA_UNITY_SDK_PLATFORM visionOS)
 elseif (SORA_UNITY_SDK_PACKAGE STREQUAL "android")
   add_library(SoraUnitySdk SHARED)
 
@@ -210,6 +222,47 @@ elseif (SORA_UNITY_SDK_PACKAGE STREQUAL "ios")
     PRIVATE
       SORA_UNITY_SDK_IOS
   )
+  install(TARGETS SoraUnitySdk DESTINATION lib)
+
+elseif (SORA_UNITY_SDK_PACKAGE STREQUAL "visionos")
+  enable_language(OBJCXX)
+
+  target_sources(SoraUnitySdk
+    PRIVATE
+      src/unity_camera_capturer_metal.mm
+      src/mac_helper/ios_audio_init.mm
+  )
+
+  target_compile_definitions(SoraUnitySdk
+    PRIVATE
+      SORA_UNITY_SDK_VISIONOS
+  )
+  
+  # visionOSシミュレータの判別
+  if(CMAKE_OSX_SYSROOT MATCHES "XRSimulator")
+    target_compile_definitions(SoraUnitySdk
+      PRIVATE
+        SORA_UNITY_SDK_VISIONOS_SIMULATOR
+    )
+  endif()
+  
+  install(TARGETS SoraUnitySdk DESTINATION lib)
+
+elseif (SORA_UNITY_SDK_PACKAGE STREQUAL "visionos-simulator")
+  enable_language(OBJCXX)
+
+  target_sources(SoraUnitySdk
+    PRIVATE
+      src/unity_camera_capturer_metal.mm
+      src/mac_helper/ios_audio_init.mm
+  )
+
+  target_compile_definitions(SoraUnitySdk
+    PRIVATE
+      SORA_UNITY_SDK_VISIONOS
+      SORA_UNITY_SDK_VISIONOS_SIMULATOR
+  )
+  
   install(TARGETS SoraUnitySdk DESTINATION lib)
 
 elseif (SORA_UNITY_SDK_PACKAGE STREQUAL "android")

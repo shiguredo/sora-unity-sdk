@@ -45,6 +45,7 @@ jobs:
         name:
           - macos_arm64
           - ios
+          - visionos
     runs-on: macos-14
     steps:
     - uses: actions/checkout@v4
@@ -85,6 +86,22 @@ jobs:
       with:
         name: ios
         path: ios/
+    # visionOS 用
+    - name: Copy visionOS files
+      if: matrix.name == 'visionos'
+      run: |
+        mkdir visionos/
+        cp _install/visionos/release/webrtc/lib/libwebrtc.a visionos/
+        cp _install/visionos/release/boost/lib/libboost_json.a visionos/
+        cp _install/visionos/release/boost/lib/libboost_filesystem.a visionos/
+        cp _install/visionos/release/sora/lib/libsora.a visionos/
+        cp _build/visionos/release/sora_unity_sdk/libSoraUnitySdk.a visionos/
+    - name: Upload visionOS Artifact
+      if: matrix.name == 'visionos'
+      uses: actions/upload-artifact@v4
+      with:
+        name: visionos
+        path: visionos/
   build-ubuntu:
     strategy:
       fail-fast: false
@@ -165,6 +182,7 @@ jobs:
         mkdir -p SoraUnitySdk/Plugins/SoraUnitySdk/windows/x86_64
         mkdir -p SoraUnitySdk/Plugins/SoraUnitySdk/macos/arm64
         mkdir -p SoraUnitySdk/Plugins/SoraUnitySdk/ios
+        mkdir -p SoraUnitySdk/Plugins/SoraUnitySdk/visionos
         mkdir -p SoraUnitySdk/Plugins/SoraUnitySdk/android/arm64-v8a
         mkdir -p SoraUnitySdk/Plugins/SoraUnitySdk/ubuntu-22.04/x86_64
         mkdir -p SoraUnitySdk/Plugins/SoraUnitySdk/ubuntu-24.04/x86_64
@@ -180,6 +198,11 @@ jobs:
         cp ios/libboost_json.a SoraUnitySdk/Plugins/SoraUnitySdk/ios/
         cp ios/libsora.a SoraUnitySdk/Plugins/SoraUnitySdk/ios/
         cp ios/libboost_filesystem.a SoraUnitySdk/Plugins/SoraUnitySdk/ios/
+        cp visionos/libSoraUnitySdk.a SoraUnitySdk/Plugins/SoraUnitySdk/visionos/
+        cp visionos/libwebrtc.a SoraUnitySdk/Plugins/SoraUnitySdk/visionos/
+        cp visionos/libboost_json.a SoraUnitySdk/Plugins/SoraUnitySdk/visionos/
+        cp visionos/libsora.a SoraUnitySdk/Plugins/SoraUnitySdk/visionos/
+        cp visionos/libboost_filesystem.a SoraUnitySdk/Plugins/SoraUnitySdk/visionos/
         cp ubuntu-22.04_x86_64/libSoraUnitySdk.so SoraUnitySdk/Plugins/SoraUnitySdk/ubuntu-22.04/x86_64/
         cp ubuntu-24.04_x86_64/libSoraUnitySdk.so SoraUnitySdk/Plugins/SoraUnitySdk/ubuntu-24.04/x86_64/
         cp LICENSE SoraUnitySdk/SoraUnitySdk/
