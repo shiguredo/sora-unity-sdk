@@ -1356,7 +1356,7 @@ public class Sora : IDisposable
         return ConvertToVideoCodecCapability(vcc);
     }
 
-#if (UNITY_IOS || UNITY_VISIONOS) &&  !UNITY_EDITOR
+#if (UNITY_IOS || UNITY_VISIONOS) && !UNITY_EDITOR
     private const string DllName = "__Internal";
 #else
     private const string DllName = "SoraUnitySdk";
@@ -1563,7 +1563,7 @@ public class Sora : IDisposable
             sora_audio_output_helper_set_handsfree(p, enabled ? 1 : 0);
         }
 
-#if (UNITY_IOS || UNITY_VISIONOS && !UNITY_EDITOR
+#if (UNITY_IOS || UNITY_VISIONOS) && !UNITY_EDITOR
         private const string DllName = "__Internal";
 #else
         private const string DllName = "SoraUnitySdk";
