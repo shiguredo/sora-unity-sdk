@@ -71,7 +71,7 @@ Sora::~Sora() {
     static_cast<sora::AndroidCapturer*>(capturer_.get())->Stop();
   }
 #endif
-#if defined(SORA_UNITY_SDK_IOS) || defined(SORA_UNITY_SDK_MACOS) || !defined(SORA_UNITY_SDK_VISIONOS)
+#if defined(SORA_UNITY_SDK_IOS) || defined(SORA_UNITY_SDK_MACOS)
   if (capturer_ != nullptr && capturer_type_ == 0) {
     static_cast<sora::MacCapturer*>(capturer_.get())->Stop();
   }
@@ -561,7 +561,7 @@ void Sora::SwitchCamera(const sora_conf::internal::CameraConfig& cc) {
     static_cast<sora::AndroidCapturer*>(capturer_.get())->Stop();
   }
 #endif
-#if defined(SORA_UNITY_SDK_IOS) || defined(SORA_UNITY_SDK_MACOS) || !defined(SORA_UNITY_SDK_VISIONOS)
+#if defined(SORA_UNITY_SDK_IOS) || defined(SORA_UNITY_SDK_MACOS)
   if (capturer_ != nullptr && capturer_type_ == 0) {
     static_cast<sora::MacCapturer*>(capturer_.get())->Stop();
   }

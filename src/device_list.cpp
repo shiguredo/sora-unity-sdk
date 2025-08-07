@@ -15,7 +15,7 @@
 #include "sdk/android/native_api/jni/jvm.h"
 #endif
 
-#if defined(SORA_UNITY_SDK_MACOS) || defined(SORA_UNITY_SDK_IOS) || !defined(SORA_UNITY_SDK_VISIONOS)
+#if defined(SORA_UNITY_SDK_MACOS) || defined(SORA_UNITY_SDK_IOS)
 #include <sora/mac/mac_capturer.h>
 #elif defined(SORA_UNITY_SDK_ANDROID)
 #include <sora/android/android_capturer.h>
@@ -26,7 +26,7 @@ namespace sora_unity_sdk {
 
 bool DeviceList::EnumVideoCapturer(
     std::function<void(std::string, std::string)> f) {
-#if defined(SORA_UNITY_SDK_MACOS) || defined(SORA_UNITY_SDK_IOS) || !defined(SORA_UNITY_SDK_VISIONOS)
+#if defined(SORA_UNITY_SDK_MACOS) || defined(SORA_UNITY_SDK_IOS)
 
   return sora::MacCapturer::EnumVideoDevice(f);
 
