@@ -90,6 +90,8 @@
   - @miosakuma
 - [UPDATE] 対応 Unity のバージョンに `6000.0` を追加する
   - @torikizi
+- [UPDATE] actions/checkout@v4 と actions/download-artifact@v4 を @v5 に上げる
+  - @torikizi
 - [ADD] .github ディレクトリに copilot-instructions.md を追加
   - @torikizi
 
