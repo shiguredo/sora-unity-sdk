@@ -28,8 +28,9 @@ struct UnityCameraCapturerConfig : sora::ScalableVideoTrackSourceConfig {
   int height;
 };
 
-class UnityCameraCapturer : public sora::ScalableVideoTrackSource,
-                            public webrtc::VideoSinkInterface<webrtc::VideoFrame> {
+class UnityCameraCapturer
+    : public sora::ScalableVideoTrackSource,
+      public webrtc::VideoSinkInterface<webrtc::VideoFrame> {
   webrtc::Clock* clock_ = webrtc::Clock::GetRealTimeClock();
 
   struct Impl {

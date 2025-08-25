@@ -112,7 +112,7 @@ void UnityContext::Init(IUnityInterfaces* ifs) {
   webrtc::LogMessage::LogThreads();
 
   log_sink_.reset(new webrtc::FileRotatingLogSink("./", "webrtc_logs",
-                                               kDefaultMaxLogFileSize, 10));
+                                                  kDefaultMaxLogFileSize, 10));
   if (!log_sink_->Init()) {
     RTC_LOG(LS_ERROR) << __FUNCTION__ << ": Failed to open log file";
     log_sink_.reset();

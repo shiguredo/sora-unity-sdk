@@ -11,6 +11,10 @@
 
 ## develop
 
+- [CHANGE] run.py をサブコマンド形式に変更
+  - `python run.py <target>` から `python run.py build <target>` に変更
+  - format コマンドを追加し、clang-format によるコードフォーマットを可能にする
+  - @voluntas
 - [CHANGE] 対応プラットフォームから Ubuntu 20.04 を削除する
   - ビルドに関して ubuntu-20.04_x86_64 を指定していた部分を ubuntu-22.04_x86_64 に変更し、Ubuntu 20.04 のビルドを削除する
   - @miosakuma
