@@ -1,6 +1,6 @@
 # Sora Unity SDK
 
-[![libwebrtc](https://img.shields.io/badge/libwebrtc-132.6834-blue.svg)](https://chromium.googlesource.com/external/webrtc/+/branch-heads/6834)
+[![libwebrtc](https://img.shields.io/badge/libwebrtc-138.7204-blue.svg)](https://chromium.googlesource.com/external/webrtc/+/branch-heads/7204)
 [![GitHub tag](https://img.shields.io/github/tag/shiguredo/sora-unity-sdk.svg)](https://github.com/shiguredo/sora-unity-sdk)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Actions Status](https://github.com/shiguredo/sora-unity-sdk/workflows/build/badge.svg)](https://github.com/shiguredo/sora-unity-sdk/actions)
@@ -38,7 +38,7 @@ Please read <https://github.com/shiguredo/oss/blob/master/README.en.md> before u
 
 ## システム条件
 
-- WebRTC SFU Sora 2024.2.0 以降
+- WebRTC SFU Sora 2025.1.0 以降
 
 ## 対応プラットフォーム
 
@@ -107,6 +107,15 @@ Please read <https://github.com/shiguredo/oss/blob/master/README.en.md> before u
   - H.264 のハードウェアデコードへの対応
   - AV1 のハードウェアエンコードへの対応
   - AV1 のハードウェアデコードへの対応
+- AMD AMF
+  - H.265 のハードウェアエンコードへの対応
+  - H.265 のハードウェアデコードへの対応
+  - H.264 のハードウェアエンコードへの対応
+  - H.264 のハードウェアデコードへの対応
+  - AV1 のハードウェアエンコードへの対応
+  - AV1 のハードウェアデコードへの対応
+    - Ubuntu x86_64 ではドライバーがデコードには対応していません
+  - VP9 のハードウェアデコードへの対応
 - ミュート機能
 - iOS, Android 向け音声出力先変更機能
 - マイクやカメラ等のメディアデバイスをつかまないようにする機能
