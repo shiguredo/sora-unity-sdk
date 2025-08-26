@@ -28,8 +28,9 @@ struct UnityCameraCapturerConfig : sora::ScalableVideoTrackSourceConfig {
   int height;
 };
 
-class UnityCameraCapturer : public sora::ScalableVideoTrackSource,
-                            public rtc::VideoSinkInterface<webrtc::VideoFrame> {
+class UnityCameraCapturer
+    : public sora::ScalableVideoTrackSource,
+      public webrtc::VideoSinkInterface<webrtc::VideoFrame> {
   webrtc::Clock* clock_ = webrtc::Clock::GetRealTimeClock();
 
   struct Impl {
@@ -38,7 +39,7 @@ class UnityCameraCapturer : public sora::ScalableVideoTrackSource,
                       void* camera_texture,
                       int width,
                       int height) = 0;
-    virtual rtc::scoped_refptr<webrtc::I420Buffer> Capture() = 0;
+    virtual webrtc::scoped_refptr<webrtc::I420Buffer> Capture() = 0;
   };
 
 #ifdef SORA_UNITY_SDK_WINDOWS
@@ -54,7 +55,7 @@ class UnityCameraCapturer : public sora::ScalableVideoTrackSource,
               void* camera_texture,
               int width,
               int height) override;
-    rtc::scoped_refptr<webrtc::I420Buffer> Capture() override;
+    webrtc::scoped_refptr<webrtc::I420Buffer> Capture() override;
   };
 #endif
 
@@ -71,7 +72,7 @@ class UnityCameraCapturer : public sora::ScalableVideoTrackSource,
               void* camera_texture,
               int width,
               int height) override;
-    rtc::scoped_refptr<webrtc::I420Buffer> Capture() override;
+    webrtc::scoped_refptr<webrtc::I420Buffer> Capture() override;
   };
 #endif
 
@@ -91,7 +92,7 @@ class UnityCameraCapturer : public sora::ScalableVideoTrackSource,
               void* camera_texture,
               int width,
               int height) override;
-    rtc::scoped_refptr<webrtc::I420Buffer> Capture() override;
+    webrtc::scoped_refptr<webrtc::I420Buffer> Capture() override;
   };
 #endif
 
@@ -110,7 +111,7 @@ class UnityCameraCapturer : public sora::ScalableVideoTrackSource,
               void* camera_texture,
               int width,
               int height) override;
-    rtc::scoped_refptr<webrtc::I420Buffer> Capture() override;
+    webrtc::scoped_refptr<webrtc::I420Buffer> Capture() override;
   };
 #endif
 
@@ -119,7 +120,7 @@ class UnityCameraCapturer : public sora::ScalableVideoTrackSource,
   bool stopped_ = false;
 
  public:
-  static rtc::scoped_refptr<UnityCameraCapturer> Create(
+  static webrtc::scoped_refptr<UnityCameraCapturer> Create(
       const UnityCameraCapturerConfig& config);
 
   UnityCameraCapturer(const UnityCameraCapturerConfig& config);

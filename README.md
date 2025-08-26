@@ -1,6 +1,6 @@
 # Sora Unity SDK
 
-[![libwebrtc](https://img.shields.io/badge/libwebrtc-132.6834-blue.svg)](https://chromium.googlesource.com/external/webrtc/+/branch-heads/6834)
+[![libwebrtc](https://img.shields.io/badge/libwebrtc-138.7204-blue.svg)](https://chromium.googlesource.com/external/webrtc/+/branch-heads/7204)
 [![GitHub tag](https://img.shields.io/github/tag/shiguredo/sora-unity-sdk.svg)](https://github.com/shiguredo/sora-unity-sdk)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Actions Status](https://github.com/shiguredo/sora-unity-sdk/workflows/build/badge.svg)](https://github.com/shiguredo/sora-unity-sdk/actions)
@@ -11,11 +11,11 @@ Sora Unity SDK は [WebRTC SFU Sora](https://sora.shiguredo.jp/) の Unity ク�
 
 We will not respond to PRs or issues that have not been discussed on Discord. Also, Discord is only available in Japanese.
 
-Please read https://github.com/shiguredo/oss/blob/master/README.en.md before use.
+Please read <https://github.com/shiguredo/oss/blob/master/README.en.md> before use.
 
 ## 時雨堂のオープンソースソフトウェアについて
 
-利用前に https://github.com/shiguredo/oss をお読みください。
+利用前に <https://github.com/shiguredo/oss> をお読みください。
 
 ## ドキュメント
 
@@ -33,11 +33,12 @@ Please read https://github.com/shiguredo/oss/blob/master/README.en.md before use
 
 ## 対応 Unity バージョン
 
+- Unity 6000.0 (LTS)
 - Unity 2022.3 (LTS)
 
 ## システム条件
 
-- WebRTC SFU Sora 2024.2.0 以降
+- WebRTC SFU Sora 2025.1.0 以降
 
 ## 対応プラットフォーム
 
@@ -45,8 +46,8 @@ Please read https://github.com/shiguredo/oss/blob/master/README.en.md before use
 - macOS 13.4.1 M1 以降
 - Android 7 以降
 - iOS 13 以降
-- Ubuntu 20.04 x86_64
 - Ubuntu 22.04 x86_64
+- Ubuntu 24.04 x86_64
 
 ## 対応機能
 
@@ -57,7 +58,6 @@ Please read https://github.com/shiguredo/oss/blob/master/README.en.md before use
 - Android への対応
 - Android OpenGL ES への対応
 - iOS 対応
-- Ubuntu 20.04 への対応
 - Ubuntu 22.04 への対応
 - SRTP/SRTCP の AES-GCM 対応
 - Unity のカメラ映像を取得し Sora で送信
@@ -107,16 +107,19 @@ Please read https://github.com/shiguredo/oss/blob/master/README.en.md before use
   - H.264 のハードウェアデコードへの対応
   - AV1 のハードウェアエンコードへの対応
   - AV1 のハードウェアデコードへの対応
+- AMD AMF
+  - H.265 のハードウェアエンコードへの対応
+  - H.265 のハードウェアデコードへの対応
+  - H.264 のハードウェアエンコードへの対応
+  - H.264 のハードウェアデコードへの対応
+  - AV1 のハードウェアエンコードへの対応
+  - AV1 のハードウェアデコードへの対応
+    - Ubuntu x86_64 ではドライバーがデコードには対応していません
+  - VP9 のハードウェアデコードへの対応
 - ミュート機能
 - iOS, Android 向け音声出力先変更機能
 - マイクやカメラ等のメディアデバイスをつかまないようにする機能
 - 接続確立後のカメラ切り替え機能
-
-## Sora Unity SDK for MS HoloLens 2
-
-- Discord でのお問い合わせはお受けしておりません
-- [support/hololens2](https://github.com/shiguredo/sora-unity-sdk/tree/support/hololens2) ブランチの修正や改善は優先実装としてお受けしています
-- 継続的なメンテナンスを有償にて提供しています
 
 ## 有償での優先実装
 
@@ -169,8 +172,8 @@ Please read https://github.com/shiguredo/oss/blob/master/README.en.md before use
 Apache License 2.0
 
 ```
-Copyright 2019-2023, Wandbox LLC (Original Author)
-Copyright 2019-2023, Shiguredo Inc.
+Copyright 2019-2025, Wandbox LLC (Original Author)
+Copyright 2019-2025, Shiguredo Inc.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -184,3 +187,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 ```
+
+## Sora Unity SDK for MS HoloLens 2
+
+継続的なメンテナンスを終了し、サポートも終了しました。

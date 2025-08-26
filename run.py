@@ -1,9 +1,11 @@
 import argparse
+import glob
 import logging
 import multiprocessing
 import os
 import platform
 import shlex
+import shutil
 from typing import List, Optional
 
 from buildbase import (
@@ -14,6 +16,8 @@ from buildbase import (
     cmake_path,
     cmd,
     cmdcap,
+    fix_clang_version,
+    get_clang_version,
     get_sora_info,
     get_webrtc_info,
     install_android_ndk,
@@ -125,7 +129,7 @@ def install_deps(
             install_cmake_args["ext"] = "zip"
         elif build_platform in ("macos_x86_64", "macos_arm64"):
             install_cmake_args["platform"] = "macos-universal"
-        elif build_platform in ("ubuntu-20.04_x86_64", "ubuntu-22.04_x86_64"):
+        elif build_platform in ("ubuntu-22.04_x86_64", "ubuntu-24.04_x86_64"):
             install_cmake_args["platform"] = "linux-x86_64"
         else:
             raise Exception("Failed to install CMake")
@@ -138,7 +142,13 @@ def install_deps(
 
         # Sora C++ SDK
         if local_sora_cpp_sdk_dir is None:
-            install_sora_and_deps(platform, source_dir, install_dir)
+            install_sora_and_deps(
+                version["SORA_CPP_SDK_VERSION"],
+                version["BOOST_VERSION"],
+                platform,
+                source_dir,
+                install_dir,
+            )
         else:
             build_sora(
                 platform,
@@ -160,7 +170,7 @@ def install_deps(
             install_protobuf_args["platform"] = "win64"
         elif build_platform in ("macos_x86_64", "macos_arm64"):
             install_protobuf_args["platform"] = "osx-universal_binary"
-        elif build_platform in ("ubuntu-20.04_x86_64", "ubuntu-22.04_x86_64"):
+        elif build_platform in ("ubuntu-22.04_x86_64", "ubuntu-24.04_x86_64"):
             install_protobuf_args["platform"] = "linux-x86_64"
         else:
             raise Exception("Failed to install Protobuf")
@@ -180,7 +190,7 @@ def install_deps(
             install_jsonif_args["platform"] = "darwin-amd64"
         elif build_platform == "macos_arm64":
             install_jsonif_args["platform"] = "darwin-arm64"
-        elif build_platform in ("ubuntu-20.04_x86_64", "ubuntu-22.04_x86_64"):
+        elif build_platform in ("ubuntu-22.04_x86_64", "ubuntu-24.04_x86_64"):
             install_jsonif_args["platform"] = "linux-amd64"
         else:
             raise Exception("Failed to install protoc-gen-jsonif")
@@ -209,14 +219,14 @@ def get_build_platform():
         os = release["NAME"]
         if os == "Ubuntu":
             osver = release["VERSION_ID"]
-            if osver == "20.04":
-                if arch == "x86_64":
-                    return "ubuntu-20.04_x86_64"
-                else:
-                    raise Exception("Unknown ubuntu arch")
-            elif osver == "22.04":
+            if osver == "22.04":
                 if arch == "x86_64":
                     return "ubuntu-22.04_x86_64"
+                else:
+                    raise Exception("Unknown ubuntu arch")
+            elif osver == "24.04":
+                if arch == "x86_64":
+                    return "ubuntu-24.04_x86_64"
                 else:
                     raise Exception("Unknown ubuntu arch")
             else:
@@ -227,30 +237,56 @@ def get_build_platform():
         raise Exception(f"OS {os} not supported")
 
 
-AVAILABLE_TARGETS = ["windows_x86_64", "macos_arm64", "ubuntu-20.04_x86_64", "ubuntu-22.04_x86_64", "ios", "android"]
+AVAILABLE_TARGETS = [
+    "windows_x86_64",
+    "macos_arm64",
+    "ubuntu-22.04_x86_64",
+    "ubuntu-24.04_x86_64",
+    "ios",
+    "android",
+]
 
 BUILD_PLATFORM = {
     "windows_x86_64": ["windows_x86_64"],
     "macos_x86_64": ["macos_x86_64", "macos_arm64", "ios"],
     "macos_arm64": ["macos_x86_64", "macos_arm64", "ios"],
-    "ubuntu-20.04_x86_64": ["ubuntu-20.04_x86_64", "android"],
     "ubuntu-22.04_x86_64": ["ubuntu-22.04_x86_64", "android"],
+    "ubuntu-24.04_x86_64": ["ubuntu-24.04_x86_64", "android"],
 }
 
 
-def main():
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--debug", action="store_true")
-    parser.add_argument("--relwithdebinfo", action="store_true")
-    parser.add_argument("--local-webrtc-build-dir", type=os.path.abspath)
-    parser.add_argument("--local-webrtc-build-args", default="", type=shlex.split)
-    parser.add_argument("--local-sora-cpp-sdk-dir", type=os.path.abspath)
-    parser.add_argument("--local-sora-cpp-sdk-args", default="", type=shlex.split)
-    parser.add_argument("target", choices=AVAILABLE_TARGETS)
+def _find_clang_binary(name: str) -> Optional[str]:
+    if shutil.which(name) is not None:
+        return name
+    else:
+        for n in range(50, 14, -1):
+            if shutil.which(f"{name}-{n}") is not None:
+                return f"{name}-{n}"
+    return None
 
-    args = parser.parse_args()
 
-    platform = args.target
+def _format(
+    clang_format_path: Optional[str] = None,
+):
+    if clang_format_path is None:
+        clang_format_path = _find_clang_binary("clang-format")
+    if clang_format_path is None:
+        raise Exception("clang-format not found. Please install it or specify the path.")
+    patterns = [
+        "src/**/*.h",
+        "src/**/*.cpp",
+    ]
+    target_files = []
+    for pattern in patterns:
+        files = glob.glob(pattern, recursive=True)
+        target_files.extend(files)
+    cmd([clang_format_path, "-i"] + target_files)
+
+
+def _build(args):
+    target = args.target
+
+    platform = target
     build_platform = get_build_platform()
     if build_platform not in BUILD_PLATFORM:
         raise Exception(f"Build platform {build_platform} is not supported.")
@@ -338,9 +374,27 @@ def main():
             cmake_args.append("-DCMAKE_XCODE_ATTRIBUTE_ONLY_ACTIVE_ARCH=NO")
         elif platform == "android":
             toolchain_file = os.path.join(
-                install_dir, "android-ndk", "build", "cmake", "android.toolchain.cmake"
+                sora_info.sora_install_dir, "share", "cmake", "android.toolchain.cmake"
             )
-            cmake_args.append(f"-DCMAKE_TOOLCHAIN_FILE={toolchain_file}")
+            android_ndk = os.path.join(install_dir, "android-ndk")
+            override_toolchain_file = os.path.join(
+                android_ndk, "build", "cmake", "android.toolchain.cmake"
+            )
+            override_c_compiler = os.path.join(webrtc_info.clang_dir, "bin", "clang")
+            override_cxx_compiler = os.path.join(webrtc_info.clang_dir, "bin", "clang++")
+            android_clang_dir = os.path.join(
+                android_ndk, "toolchains", "llvm", "prebuilt", "linux-x86_64"
+            )
+            sysroot = os.path.join(android_clang_dir, "sysroot")
+            cmake_args.append(
+                f"-DANDROID_OVERRIDE_TOOLCHAIN_FILE={cmake_path(override_toolchain_file)}"
+            )
+            cmake_args.append(f"-DANDROID_OVERRIDE_C_COMPILER={cmake_path(override_c_compiler)}")
+            cmake_args.append(
+                f"-DANDROID_OVERRIDE_CXX_COMPILER={cmake_path(override_cxx_compiler)}"
+            )
+            cmake_args.append(f"-DCMAKE_SYSROOT={cmake_path(sysroot)}")
+            cmake_args.append(f"-DCMAKE_TOOLCHAIN_FILE={cmake_path(toolchain_file)}")
             cmake_args.append(f"-DANDROID_PLATFORM=android-{android_native_api_level}")
             cmake_args.append(f"-DANDROID_NATIVE_API_LEVEL={android_native_api_level}")
             cmake_args.append("-DANDROID_ABI=arm64-v8a")
@@ -352,7 +406,16 @@ def main():
             # r23b には ANDROID_CPP_FEATURES=exceptions でも例外が設定されない問題がある
             # https://github.com/android/ndk/issues/1618
             cmake_args.append("-DCMAKE_ANDROID_EXCEPTIONS=ON")
-        elif platform in ("ubuntu-20.04_x86_64", "ubuntu-22.04_x86_64"):
+            clang_version = fix_clang_version(
+                android_clang_dir,
+                get_clang_version(os.path.join(android_clang_dir, "bin", "clang++")),
+            )
+            ldflags = [
+                f"-L{cmake_path(os.path.join(android_clang_dir, 'lib', 'clang', clang_version, 'lib', 'linux', 'aarch64'))}"
+            ]
+            cmake_args.append(f"-DCMAKE_EXE_LINKER_FLAGS={' '.join(ldflags)}")
+            cmake_args.append(f"-DCMAKE_SHARED_LINKER_FLAGS={' '.join(ldflags)}")
+        elif platform in ("ubuntu-22.04_x86_64", "ubuntu-24.04_x86_64"):
             cmake_args.append(
                 f"-DCMAKE_C_COMPILER={os.path.join(webrtc_info.clang_dir, 'bin', 'clang')}"
             )
@@ -423,6 +486,34 @@ def main():
                     configuration,
                 ]
             )
+
+
+def main():
+    parser = argparse.ArgumentParser()
+    sp = parser.add_subparsers(dest="command")
+
+    # build コマンド
+    bp = sp.add_parser("build")
+    bp.add_argument("target", choices=AVAILABLE_TARGETS)
+    bp.add_argument("--debug", action="store_true")
+    bp.add_argument("--relwithdebinfo", action="store_true")
+    bp.add_argument("--local-webrtc-build-dir", type=os.path.abspath)
+    bp.add_argument("--local-webrtc-build-args", default="", type=shlex.split)
+    bp.add_argument("--local-sora-cpp-sdk-dir", type=os.path.abspath)
+    bp.add_argument("--local-sora-cpp-sdk-args", default="", type=shlex.split)
+
+    # format コマンド
+    fp = sp.add_parser("format")
+    fp.add_argument("--clang-format-path", type=str, default=None)
+
+    args = parser.parse_args()
+
+    if args.command == "build":
+        _build(args)
+    elif args.command == "format":
+        _format(clang_format_path=args.clang_format_path)
+    else:
+        parser.print_help()
 
 
 if __name__ == "__main__":

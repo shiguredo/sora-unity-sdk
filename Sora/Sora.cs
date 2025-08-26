@@ -30,6 +30,42 @@ public class Sora : IDisposable
         AV1,
         H265,
     }
+    static string VideoCodecTypeToString(VideoCodecType type)
+    {
+        switch (type)
+        {
+            case VideoCodecType.VP9:
+                return "VP9";
+            case VideoCodecType.VP8:
+                return "VP8";
+            case VideoCodecType.H264:
+                return "H264";
+            case VideoCodecType.AV1:
+                return "AV1";
+            case VideoCodecType.H265:
+                return "H265";
+            default:
+                return "";
+        }
+    }
+    static VideoCodecType VideoCodecTypeFromString(string value)
+    {
+        switch (value)
+        {
+            case "VP9":
+                return VideoCodecType.VP9;
+            case "VP8":
+                return VideoCodecType.VP8;
+            case "H264":
+                return VideoCodecType.H264;
+            case "AV1":
+                return VideoCodecType.AV1;
+            case "H265":
+                return VideoCodecType.H265;
+            default:
+                return VideoCodecType.VP9;
+        }
+    }
     public enum AudioCodecType
     {
         OPUS,
@@ -135,6 +171,156 @@ public class Sora : IDisposable
         }
     }
 
+    public enum VideoCodecImplementation
+    {
+        // Internal は libwebrtc の内部で実装されているエンコーダー/デコーダーを利用する
+        // 通常はソフトウェア実装だが、macOS, iOS, Android 等のプラットフォーム向けに一部ハードウェア実装も存在する
+        Internal,
+        CiscoOpenH264,
+        IntelVpl,
+        NvidiaVideoCodecSdk,
+        AmdAmf,
+    }
+    static string VideoCodecImplementationToString(VideoCodecImplementation implementation)
+    {
+        switch (implementation)
+        {
+            case VideoCodecImplementation.Internal:
+                return "internal";
+            case VideoCodecImplementation.CiscoOpenH264:
+                return "cisco_openh264";
+            case VideoCodecImplementation.IntelVpl:
+                return "intel_vpl";
+            case VideoCodecImplementation.NvidiaVideoCodecSdk:
+                return "nvidia_video_codec_sdk";
+            case VideoCodecImplementation.AmdAmf:
+                return "amd_amf";
+            default:
+                return "";
+        }
+    }
+    static VideoCodecImplementation VideoCodecImplementationFromString(string value)
+    {
+        switch (value)
+        {
+            case "internal":
+                return VideoCodecImplementation.Internal;
+            case "cisco_openh264":
+                return VideoCodecImplementation.CiscoOpenH264;
+            case "intel_vpl":
+                return VideoCodecImplementation.IntelVpl;
+            case "nvidia_video_codec_sdk":
+                return VideoCodecImplementation.NvidiaVideoCodecSdk;
+            case "amd_amf":
+                return VideoCodecImplementation.AmdAmf;
+            default:
+                return VideoCodecImplementation.Internal;
+        }
+    }
+
+    public struct VideoCodecCapabilityConfig
+    {
+        public string? OpenH264Path;
+    }
+    public class VideoCodecCapability
+    {
+        // Parameters 系は JSON 文字列で表現する
+        // Unity に統一された汎用的な JSON ライブラリが無いので仕方がない
+
+        public struct Codec
+        {
+            // このビデオコーデックの...
+            public VideoCodecType Type;
+            // ...エンコーダーが利用可能かどうか
+            public bool Encoder;
+            // ...デコーダーが利用可能かどうか
+            public bool Decoder;
+            // コーデック固有のパラメータ
+            public string Parameters;
+        }
+        public struct Engine
+        {
+            public VideoCodecImplementation Name;
+            public Codec[] Codecs;
+            // 実装固有のパラメータ
+            public string Parameters;
+        }
+        public Engine[] Engines = new Engine[0];
+
+        public string ToJson()
+        {
+            var vcc = ConvertToInternalVideoCodecCapability(this);
+            var size = sora_video_codec_capability_to_json_size(Jsonif.Json.ToJson(vcc));
+            var buf = new byte[size];
+            sora_video_codec_capability_to_json(Jsonif.Json.ToJson(vcc), buf, size);
+            return System.Text.Encoding.UTF8.GetString(buf);
+        }
+    }
+
+    public class VideoCodecPreference
+    {
+        public struct Codec
+        {
+            public VideoCodecType Type;
+            public VideoCodecImplementation? Encoder;
+            public VideoCodecImplementation? Decoder;
+            // C++ SDK 的には必須なんだけど、struct では初期値を持てないので null 許容にしている
+            // SoraConf.Internal 系の値に変換する時に null を "{}" に変えてやる
+            public string? Parameters;
+        }
+        public Codec[] Codecs = new Codec[0];
+
+        public string ToJson()
+        {
+            var vcp = ConvertToInternalVideoCodecPreference(this);
+            var size = sora_video_codec_preference_to_json_size(Jsonif.Json.ToJson(vcp));
+            var buf = new byte[size];
+            sora_video_codec_preference_to_json(Jsonif.Json.ToJson(vcp), buf, size);
+            return System.Text.Encoding.UTF8.GetString(buf);
+        }
+        // この VideoCodecPreference が、どれかのコーデックでこの implementation を使うように要求しているかどうか
+        public bool HasImplementation(VideoCodecImplementation implementation)
+        {
+            var vcp = ConvertToInternalVideoCodecPreference(this);
+            return sora_video_codec_preference_has_implementation(Jsonif.Json.ToJson(vcp), VideoCodecImplementationToString(implementation)) != 0;
+        }
+        // 自身のコーデックを、preference の同じコーデックで上書きする
+        public void Merge(VideoCodecPreference preference)
+        {
+            var vcp = ConvertToInternalVideoCodecPreference(this);
+            var vcp2 = ConvertToInternalVideoCodecPreference(preference);
+            var size = sora_video_codec_preference_merge_size(Jsonif.Json.ToJson(vcp), Jsonif.Json.ToJson(vcp2));
+            var buf = new byte[size];
+            sora_video_codec_preference_merge(Jsonif.Json.ToJson(vcp), Jsonif.Json.ToJson(vcp2), buf, size);
+            var vcpr = Jsonif.Json.FromJson<SoraConf.Internal.VideoCodecPreference>(System.Text.Encoding.UTF8.GetString(buf));
+            var result = ConvertToVideoCodecPreference(vcpr);
+            this.Codecs = result.Codecs;
+        }
+        // 指定した capability から implementation の実装だけを利用する VideoCodecPreference を生成する
+        public static VideoCodecPreference CreateFromImplementation(VideoCodecCapability capability, VideoCodecImplementation implementation)
+        {
+            var vcc = ConvertToInternalVideoCodecCapability(capability);
+            var size = sora_create_video_codec_preference_from_implementation_size(Jsonif.Json.ToJson(vcc), VideoCodecImplementationToString(implementation));
+            var buf = new byte[size];
+            sora_create_video_codec_preference_from_implementation(Jsonif.Json.ToJson(vcc), VideoCodecImplementationToString(implementation), buf, size);
+            var vcpr = Jsonif.Json.FromJson<SoraConf.Internal.VideoCodecPreference>(System.Text.Encoding.UTF8.GetString(buf));
+            return ConvertToVideoCodecPreference(vcpr);
+        }
+
+        // 可能な限り HWA を利用する VideoCodecPreference を返す
+        // 優先度的には Intel VPL > Nvidia Video Codec SDK > Internal となる
+        public static VideoCodecPreference GetHardwareAcceleratorPreference(VideoCodecCapability capability)
+        {
+            // Merge は同じコーデックを上書きするので、優先度が高いのを後でマージすることで正しい優先度になる
+            var preference = new VideoCodecPreference();
+            preference.Merge(CreateFromImplementation(capability, VideoCodecImplementation.Internal));
+            preference.Merge(CreateFromImplementation(capability, VideoCodecImplementation.NvidiaVideoCodecSdk));
+            preference.Merge(CreateFromImplementation(capability, VideoCodecImplementation.AmdAmf));
+            preference.Merge(CreateFromImplementation(capability, VideoCodecImplementation.IntelVpl));
+            return preference;
+        }
+    }
+
     /// <summary>
     /// Sora の設定
     /// </summary>
@@ -178,7 +364,7 @@ public class Sora : IDisposable
         public CameraConfig CameraConfig = new CameraConfig();
         public bool Video = true;
         public bool Audio = true;
-        public VideoCodecType VideoCodecType = VideoCodecType.VP9;
+        public VideoCodecType? VideoCodecType;
         public string VideoVp9Params = "";
         public string VideoAv1Params = "";
         public string VideoH264Params = "";
@@ -205,7 +391,7 @@ public class Sora : IDisposable
         /// 指定したデバイスのスピーカーを利用することが出来ます。
         /// </remarks>
         public string AudioPlayoutDevice = "";
-        public AudioCodecType AudioCodecType = AudioCodecType.OPUS;
+        public AudioCodecType? AudioCodecType;
         public int AudioBitRate = 0;
         public string AudioStreamingLanguageCode = "";
 
@@ -238,8 +424,9 @@ public class Sora : IDisposable
         public ForwardingFilter ForwardingFilter;
         public List<ForwardingFilter> ForwardingFilters;
 
-        // ハードウェアエンコーダー/デコーダーを利用するかどうか。null の場合は実装依存となる
-        public bool? UseHardwareEncoder;
+        // 利用するエンコーダー/デコーダーの指定
+        // null の場合は VideoCodecImplementation.Internal な実装のみ利用する
+        public VideoCodecPreference? VideoCodecPreference;
 
         // 証明書周りの設定
         public string? ClientCert;
@@ -402,7 +589,7 @@ public class Sora : IDisposable
         cc.camera_config.video_width = config.CameraConfig.VideoWidth;
         cc.camera_config.video_height = config.CameraConfig.VideoHeight;
         cc.camera_config.video_fps = config.CameraConfig.VideoFps;
-        cc.video_codec_type = config.VideoCodecType.ToString();
+        cc.video_codec_type = config.VideoCodecType == null ? "" : config.VideoCodecType.ToString();
         cc.video_vp9_params = config.VideoVp9Params;
         cc.video_av1_params = config.VideoAv1Params;
         cc.video_h264_params = config.VideoH264Params;
@@ -411,7 +598,7 @@ public class Sora : IDisposable
         cc.unity_audio_output = config.UnityAudioOutput;
         cc.audio_recording_device = config.AudioRecordingDevice;
         cc.audio_playout_device = config.AudioPlayoutDevice;
-        cc.audio_codec_type = config.AudioCodecType.ToString();
+        cc.audio_codec_type = config.AudioCodecType == null ? "" : config.AudioCodecType.ToString();
         cc.audio_bit_rate = config.AudioBitRate;
         cc.audio_streaming_language_code = config.AudioStreamingLanguageCode;
         if (config.EnableDataChannelSignaling)
@@ -478,9 +665,9 @@ public class Sora : IDisposable
             }
             cc.SetForwardingFilters(ffs);
         }
-        if (config.UseHardwareEncoder.HasValue)
+        if (config.VideoCodecPreference != null)
         {
-            cc.SetUseHardwareEncoder(config.UseHardwareEncoder.Value);
+            cc.SetVideoCodecPreference(ConvertToInternalVideoCodecPreference(config.VideoCodecPreference));
         }
         if (config.ClientCert != null)
         {
@@ -548,6 +735,106 @@ public class Sora : IDisposable
             ff.SetMetadata(filter.Metadata);
         }
         return ff;
+    }
+
+    static SoraConf.Internal.VideoCodecCapabilityConfig ConvertToInternalVideoCodecCapabilityConfig(VideoCodecCapabilityConfig config)
+    {
+        var vccc = new SoraConf.Internal.VideoCodecCapabilityConfig();
+        if (config.OpenH264Path != null)
+        {
+            vccc.openh264_path = config.OpenH264Path;
+        }
+        return vccc;
+    }
+
+    static VideoCodecCapability ConvertToVideoCodecCapability(SoraConf.Internal.VideoCodecCapability capability)
+    {
+        var vcc = new VideoCodecCapability();
+        var vcces = new List<VideoCodecCapability.Engine>();
+        foreach (var engine in capability.engines)
+        {
+            var e = new VideoCodecCapability.Engine();
+            e.Name = VideoCodecImplementationFromString(engine.name);
+            var ecs = new List<Sora.VideoCodecCapability.Codec>();
+            foreach (var codec in engine.codecs)
+            {
+                var c = new VideoCodecCapability.Codec();
+                c.Type = VideoCodecTypeFromString(codec.type);
+                c.Encoder = codec.encoder;
+                c.Decoder = codec.decoder;
+                c.Parameters = codec.parameters;
+                ecs.Add(c);
+            }
+            e.Codecs = ecs.ToArray();
+            e.Parameters = engine.parameters;
+            vcces.Add(e);
+        }
+        vcc.Engines = vcces.ToArray();
+        return vcc;
+    }
+    static SoraConf.Internal.VideoCodecCapability ConvertToInternalVideoCodecCapability(VideoCodecCapability capability)
+    {
+        var vcc = new SoraConf.Internal.VideoCodecCapability();
+        foreach (var engine in capability.Engines)
+        {
+            var e = new SoraConf.Internal.VideoCodecCapability.Engine();
+            e.name = VideoCodecImplementationToString(engine.Name);
+            foreach (var codec in engine.Codecs)
+            {
+                var c = new SoraConf.Internal.VideoCodecCapability.Codec();
+                c.type = VideoCodecTypeToString(codec.Type);
+                c.encoder = codec.Encoder;
+                c.decoder = codec.Decoder;
+                c.parameters = codec.Parameters;
+                e.codecs.Add(c);
+            }
+            e.parameters = engine.Parameters;
+            vcc.engines.Add(e);
+        }
+        return vcc;
+    }
+
+    static VideoCodecPreference ConvertToVideoCodecPreference(SoraConf.Internal.VideoCodecPreference preference)
+    {
+        var vcp = new VideoCodecPreference();
+        var vcpcs = new List<VideoCodecPreference.Codec>();
+        foreach (var codec in preference.codecs)
+        {
+            var c = new VideoCodecPreference.Codec();
+            c.Type = VideoCodecTypeFromString(codec.type);
+            if (codec.HasEncoder())
+            {
+                c.Encoder = VideoCodecImplementationFromString(codec.encoder);
+            }
+            if (codec.HasDecoder())
+            {
+                c.Decoder = VideoCodecImplementationFromString(codec.decoder);
+            }
+            c.Parameters = codec.parameters;
+            vcpcs.Add(c);
+        }
+        vcp.Codecs = vcpcs.ToArray();
+        return vcp;
+    }
+    static SoraConf.Internal.VideoCodecPreference ConvertToInternalVideoCodecPreference(VideoCodecPreference preference)
+    {
+        var vcp = new SoraConf.Internal.VideoCodecPreference();
+        foreach (var codec in preference.Codecs)
+        {
+            var c = new SoraConf.Internal.VideoCodecPreference.Codec();
+            c.type = VideoCodecTypeToString(codec.Type);
+            if (codec.Encoder != null)
+            {
+                c.SetEncoder(VideoCodecImplementationToString(codec.Encoder.Value));
+            }
+            if (codec.Decoder != null)
+            {
+                c.SetDecoder(VideoCodecImplementationToString(codec.Decoder.Value));
+            }
+            c.parameters = codec.Parameters == null ? "{}" : codec.Parameters;
+            vcp.codecs.Add(c);
+        }
+        return vcp;
     }
 
     /// <summary>
@@ -1004,11 +1291,6 @@ public class Sora : IDisposable
         return list.ToArray();
     }
 
-    public static bool IsH264Supported()
-    {
-        return sora_is_h264_supported() != 0;
-    }
-
     public static void Setenv(string name, string value)
     {
         sora_setenv(name, value);
@@ -1061,6 +1343,17 @@ public class Sora : IDisposable
             sora_get_connected_signaling_url(p, buf, size);
             return System.Text.Encoding.UTF8.GetString(buf);
         }
+    }
+
+    public static VideoCodecCapability GetVideoCodecCapability(VideoCodecCapabilityConfig config)
+    {
+        var c = ConvertToInternalVideoCodecCapabilityConfig(config);
+        var cjson = Jsonif.Json.ToJson(c);
+        int size = sora_get_video_codec_capability_size(cjson);
+        byte[] buf = new byte[size];
+        sora_get_video_codec_capability(cjson, buf, size);
+        var vcc = Jsonif.Json.FromJson<SoraConf.Internal.VideoCodecCapability>(System.Text.Encoding.UTF8.GetString(buf));
+        return ConvertToVideoCodecCapability(vcc);
     }
 
 #if UNITY_IOS && !UNITY_EDITOR
@@ -1120,8 +1413,6 @@ public class Sora : IDisposable
     [DllImport(DllName)]
     private static extern int sora_device_enum_audio_playout(DeviceEnumCallbackDelegate f, IntPtr userdata);
     [DllImport(DllName)]
-    private static extern int sora_is_h264_supported();
-    [DllImport(DllName)]
     private static extern void sora_setenv(string name, string value);
     [DllImport(DllName)]
     private static extern int sora_get_audio_enabled(IntPtr p);
@@ -1139,6 +1430,29 @@ public class Sora : IDisposable
     private static extern void sora_get_selected_signaling_url(IntPtr p, [Out] byte[] buf, int size);
     [DllImport(DllName)]
     private static extern void sora_get_connected_signaling_url(IntPtr p, [Out] byte[] buf, int size);
+    [DllImport(DllName)]
+    private static extern int sora_get_video_codec_capability_size(string config);
+    [DllImport(DllName)]
+    private static extern void sora_get_video_codec_capability(string config, [Out] byte[] buf, int size);
+    [DllImport(DllName)]
+    private static extern int sora_video_codec_preference_has_implementation(string self, string implementation);
+    [DllImport(DllName)]
+    private static extern int sora_video_codec_preference_merge_size(string self, string preference);
+    [DllImport(DllName)]
+    private static extern void sora_video_codec_preference_merge(string self, string preference, [Out] byte[] buf, int size);
+    [DllImport(DllName)]
+    private static extern int sora_create_video_codec_preference_from_implementation_size(string capability, string implementation);
+    [DllImport(DllName)]
+    private static extern void sora_create_video_codec_preference_from_implementation(string capability, string implementation, [Out] byte[] buf, int size);
+    [DllImport(DllName)]
+    private static extern int sora_video_codec_capability_to_json_size(string self);
+    [DllImport(DllName)]
+    private static extern void sora_video_codec_capability_to_json(string self, [Out] byte[] buf, int size);
+    [DllImport(DllName)]
+    private static extern int sora_video_codec_preference_to_json_size(string self);
+    [DllImport(DllName)]
+    private static extern void sora_video_codec_preference_to_json(string self, [Out] byte[] buf, int size);
+
 
     public interface IAudioOutputHelper : IDisposable
     {

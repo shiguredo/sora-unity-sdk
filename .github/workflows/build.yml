@@ -17,7 +17,7 @@ jobs:
           - windows_x86_64
     runs-on: windows-2022
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
     - name: Cache
       id: cache
       uses: actions/cache@v4
@@ -26,7 +26,7 @@ jobs:
         key: ${{ matrix.name }}-v3-${{ hashFiles('VERSIONS') }}
         restore-keys: |
           ${{ matrix.name }}-v3-
-    - run: python3 run.py ${{ matrix.name }}
+    - run: python3 run.py build ${{ matrix.name }}
     - name: Copy ${{ matrix.name }} files
       run: |
         mkdir ${{ matrix.name }}
@@ -47,7 +47,7 @@ jobs:
           - ios
     runs-on: macos-14
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
     - name: Cache
       id: cache
       uses: actions/cache@v4
@@ -56,7 +56,7 @@ jobs:
         key: ${{ matrix.name }}-v7-${{ hashFiles('VERSIONS') }}
         restore-keys: |
           ${{ matrix.name }}-v7-
-    - run: python3 run.py ${{ matrix.name }}
+    - run: python3 run.py build ${{ matrix.name }}
     # macOS 用
     - name: Copy macOS arm64 files
       if: matrix.name == 'macos_arm64'
@@ -89,12 +89,16 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        name:
-          - android
-          - ubuntu-20.04_x86_64
-    runs-on: ubuntu-20.04
+        include:
+          - name: android
+            runs-on: ubuntu-22.04
+          - name: ubuntu-22.04_x86_64
+            runs-on: ubuntu-22.04
+          - name: ubuntu-24.04_x86_64
+            runs-on: ubuntu-24.04
+    runs-on: ${{ matrix.runs-on }}
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
     - name: Cache
       id: cache
       uses: actions/cache@v4
@@ -104,10 +108,10 @@ jobs:
         restore-keys: |
           ${{ matrix.name }}-v1-
     - name: Prepare Ubuntu x86_64
-      if: matrix.name == 'ubuntu-20.04_x86_64'
+      if: matrix.name == 'ubuntu-22.04_x86_64' || matrix.name == 'ubuntu-24.04_x86_64'
       run: |
         sudo apt install libgl-dev
-    - run: python3 run.py ${{ matrix.name }}
+    - run: python3 run.py build ${{ matrix.name }}
     # Android 用
     - name: Copy Android files
       if: matrix.name == 'android'
@@ -123,27 +127,38 @@ jobs:
         name: android
         path: android/
     # Ubuntu 用
-    - name: Copy Ubuntu x86_64 files
-      if: matrix.name == 'ubuntu-20.04_x86_64'
+    - name: Copy Ubuntu 22.04 x86_64 files
+      if: matrix.name == 'ubuntu-22.04_x86_64'
       run: |
-        mkdir ubuntu-20.04_x86_64/
-        cp _build/ubuntu-20.04_x86_64/release/sora_unity_sdk/libSoraUnitySdk.so ubuntu-20.04_x86_64/
+        mkdir ubuntu-22.04_x86_64/
+        cp _build/ubuntu-22.04_x86_64/release/sora_unity_sdk/libSoraUnitySdk.so ubuntu-22.04_x86_64/
     - name: Upload Ubuntu x86_64 Artifact
-      if: matrix.name == 'ubuntu-20.04_x86_64'
+      if: matrix.name == 'ubuntu-22.04_x86_64'
       uses: actions/upload-artifact@v4
       with:
-        name: ubuntu-20.04_x86_64
-        path: ubuntu-20.04_x86_64/
+        name: ubuntu-22.04_x86_64
+        path: ubuntu-22.04_x86_64/
+    - name: Copy Ubuntu 24.04 x86_64 files
+      if: matrix.name == 'ubuntu-24.04_x86_64'
+      run: |
+        mkdir ubuntu-24.04_x86_64/
+        cp _build/ubuntu-24.04_x86_64/release/sora_unity_sdk/libSoraUnitySdk.so ubuntu-24.04_x86_64/
+    - name: Upload Ubuntu 24.04 x86_64 Artifact
+      if: matrix.name == 'ubuntu-24.04_x86_64'
+      uses: actions/upload-artifact@v4
+      with:
+        name: ubuntu-24.04_x86_64
+        path: ubuntu-24.04_x86_64/
   package:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-24.04
     needs:
       - build-windows
       - build-macos
       - build-ubuntu
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
     - name: Download artifacts
-      uses: actions/download-artifact@v4
+      uses: actions/download-artifact@v5
     - name: Packaging
       run: |
         set -ex
@@ -151,7 +166,8 @@ jobs:
         mkdir -p SoraUnitySdk/Plugins/SoraUnitySdk/macos/arm64
         mkdir -p SoraUnitySdk/Plugins/SoraUnitySdk/ios
         mkdir -p SoraUnitySdk/Plugins/SoraUnitySdk/android/arm64-v8a
-        mkdir -p SoraUnitySdk/Plugins/SoraUnitySdk/linux/x86_64
+        mkdir -p SoraUnitySdk/Plugins/SoraUnitySdk/ubuntu-22.04/x86_64
+        mkdir -p SoraUnitySdk/Plugins/SoraUnitySdk/ubuntu-24.04/x86_64
         mkdir -p SoraUnitySdk/StreamingAssets/SoraUnitySdk
         cp windows_x86_64/SoraUnitySdk.dll SoraUnitySdk/Plugins/SoraUnitySdk/windows/x86_64/
         cp -r windows_x86_64/Sora/ SoraUnitySdk/SoraUnitySdk/
@@ -164,8 +180,8 @@ jobs:
         cp ios/libboost_json.a SoraUnitySdk/Plugins/SoraUnitySdk/ios/
         cp ios/libsora.a SoraUnitySdk/Plugins/SoraUnitySdk/ios/
         cp ios/libboost_filesystem.a SoraUnitySdk/Plugins/SoraUnitySdk/ios/
-        cp ubuntu-20.04_x86_64/libSoraUnitySdk.so SoraUnitySdk/Plugins/SoraUnitySdk/linux/x86_64/
-
+        cp ubuntu-22.04_x86_64/libSoraUnitySdk.so SoraUnitySdk/Plugins/SoraUnitySdk/ubuntu-22.04/x86_64/
+        cp ubuntu-24.04_x86_64/libSoraUnitySdk.so SoraUnitySdk/Plugins/SoraUnitySdk/ubuntu-24.04/x86_64/
         cp LICENSE SoraUnitySdk/SoraUnitySdk/
         cp NOTICE.md SoraUnitySdk/SoraUnitySdk/
 
@@ -181,9 +197,9 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
     - name: Checkout code
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5
     - name: Download SoraUnitySdk
-      uses: actions/download-artifact@v4
+      uses: actions/download-artifact@v5
       with:
         name: SoraUnitySdk
         path: SoraUnitySdk

@@ -11,6 +11,98 @@
 
 ## develop
 
+## 2025.2.0
+
+**リリース日**: 2025-08-26
+
+- [CHANGE] run.py をサブコマンド形式に変更
+  - `python run.py <target>` から `python run.py build <target>` に変更
+  - format コマンドを追加し、clang-format によるコードフォーマットを可能にする
+  - @voluntas
+- [CHANGE] 対応プラットフォームから Ubuntu 20.04 を削除する
+  - ビルドに関して ubuntu-20.04_x86_64 を指定していた部分を ubuntu-22.04_x86_64 に変更し、Ubuntu 20.04 のビルドを削除する
+  - @miosakuma
+- [CHANGE] Plugins/SoraUnitySdk/linux ディレクトリを Plugins/SoraUnitySdk/ubuntu-22.04 と Plugins/SoraUnitySdk/ubuntu-24.04 に分ける
+  - Ubuntu 22.04 のビルドとは別に Ubuntu 24.04 のビルドを行うようにする
+  - @torikizi
+- [CHANGE] Sora.Config.UseHardwareEncoder フラグを削除
+  - 代わりに `Sora.Config.VideoCodecPreference` を利用して下さい
+  - @melpon
+- [CHANGE] Sora.IsH264Supported() 関数を削除
+  - 代わりに `Sora.GetVideoCodecCapability()` 関数を利用して下さい
+  - @melpon
+- [CHANGE] Sora.Config.VideoCodecType を Nullable 型に変更し、デフォルト値を `VP9` から未指定に変更する
+  - 未指定の場合、シグナリング "type": "connect" でビデオコーデック指定を行わない
+  - ビデオコーデック指定を行わない場合は Sora のデフォルト値 `VP9` が利用される
+  - @miosakuma
+- [CHANGE] Sora.Config.AudioCodecType を Nullable 型に変更し、デフォルト値を `OPUS` から未指定に変更する
+  - 未指定の場合、シグナリング "type": "connect" でオーディオコーデック指定を行わない
+  - オーディオコーデック指定を行わない場合は Sora のデフォルト値 `OPUS` が利用される
+  - @miosakuma
+- [UPDATE] Sora C++ SDK を `2025.4.0` に上げる
+  - `BOOST_VERSION` を `1.88.0` にアップデート
+  - `CMAKE_VERSION` を `4.0.3` にアップデート
+  - `ANDROID_NDK_VERSION` を `r28b` にアップデート
+  - @torikizi
+- [UPDATE] libwebrtc を `m138.7204.0.1` に上げる
+  - `rtc::` を `webrtc::` に変更する
+  - `cricket::AudioOptions` を `webrtc::AudioOptions` に変更する
+  - Android が利用するコンパイラを libwebrtc の clang にする
+  - `webrtc::AudioDeviceModule::Create` から `webrtc::CreateAudioDeviceModule` に変更する
+  - `webrtc::CreateWindowsCoreAudioAudioDeviceModule` の引数を `task_queue_factory.get()` から `&env.task_queue_factory()` に変更する
+  - `sora::AudioDeviceModuleConfig` から `task_queue_factory` を削除して `env` を追加する
+  - `CreateADM` 関数のシグネチャを `webrtc::TaskQueueFactory*` から `webrtc::Environment` に変更する
+  - `AudioDeviceModule` の新たな引数に対応するため `webrtc::CreateEnvironment()` を追加する
+  - UnityAudioDevice のコンストラクタと Create 関数のシグネチャを変更
+    - WebRTC の推奨事項に従うため、コンストラクタで `webrtc::Environment` を先頭引数に変更する
+      - [WebRTC の推奨事項が書いてあるコメントリンク](https://source.chromium.org/chromium/chromium/src/+/main:third_party/webrtc/api/environment/environment.h;l=38-41;drc=ee5ab349f3307fb53405b5b502a203539b431c2d)
+  - devicelist.cpp に以下のヘッダーを追加する
+    - api/audio/create_audio_device_module.h
+    - api/environment/environment_factory.h
+  - unity_audio_device.h に以下のヘッダーを追加する
+    - api/environment/environment.h
+  - @torikizi @melpon
+- [ADD] 利用するビデオコーデックを詳細に指定するための enum やクラス、関数などを追加
+  - `Sora.VideoCodecImplementation` 列挙型
+  - `Sora.VideoCodecCapabilityConfig` クラス
+  - `Sora.VideoCodecCapability` クラス
+  - `Sora.VideoCodecPreference` クラス
+  - `Sora.GetVideoCodecPreference()` 関数
+  - `Sora.Config.VideoCodecPreference` フィールド
+  - @melpon
+- [ADD] AMD AMF のサポートを追加
+  - Sora.cs に AMD AMF のサポートを追加する
+    - `VideoCodecImplementation` 列挙型に `AmdAmf` を追加する
+    - `VideoCodecImplementationToString()` と `VideoCodecImplementationFromString()` に `AmdAmf` 用の case を追加する
+    - `VideoCodecPreference.GetHardwareAcceleratorPreference()` に AMD AMF 用の `VideoCodecPreference` を追加する
+      - 次の順序で優先されるように追加する(上から優先する)
+        - Intel VPL
+        - AMD AMF
+        - NVIDIA Video Codec SDK
+        - Internal
+      - `preference.Merge()` は同じコーデックが既に存在する場合、引数に渡した `VideoCodecPreference` で上書きされるため、コード上では優先度の低い順に並べている
+  - converter.cpp に `AMFContext` の初期化を追加する
+    - `sora::VideoCodecCapabilityConfig` の `amf_context` に `AMFContext` の値を設定することで AMD AMF を利用可能にする
+  - @torikizi
+- [ADD] Ubuntu 22.04 でのビルドに対応する
+  - Ubuntu 20.04 を Ubuntu 22.04 に変更し、Ubuntu 22.04 用のビルドを追加する
+  - @miosakuma
+- [ADD] 対応プラットフォームに Ubuntu 24.04 を追加する
+  - Ubuntu 24.04 用のビルドを追加する
+  - Ubuntu 24.04 用のリリースバイナリを追加する
+  - @miosakuma @torikizi
+
+### misc
+
+- [CHANGE] package タスクを実行する環境を `ubuntu-20.04` から `ubuntu-24.04` に変更する
+  - @miosakuma
+- [UPDATE] 対応 Unity のバージョンに `6000.0` を追加する
+  - @torikizi
+- [UPDATE] actions/checkout@v4 と actions/download-artifact@v4 を @v5 に上げる
+  - @torikizi
+- [ADD] .github ディレクトリに copilot-instructions.md を追加
+  - @torikizi
+
 ## 2025.1.0
 
 **リリース日**: 2025-01-29

@@ -107,12 +107,12 @@ void UnityContext::Init(IUnityInterfaces* ifs) {
 #if defined(SORA_UNITY_SDK_WINDOWS) || defined(SORA_UNITY_SDK_MACOS) || \
     defined(SORA_UNITY_SDK_UBUNTU)
   const size_t kDefaultMaxLogFileSize = 10 * 1024 * 1024;
-  rtc::LogMessage::LogToDebug((rtc::LoggingSeverity)rtc::LS_NONE);
-  rtc::LogMessage::LogTimestamps();
-  rtc::LogMessage::LogThreads();
+  webrtc::LogMessage::LogToDebug((webrtc::LoggingSeverity)webrtc::LS_NONE);
+  webrtc::LogMessage::LogTimestamps();
+  webrtc::LogMessage::LogThreads();
 
-  log_sink_.reset(new rtc::FileRotatingLogSink("./", "webrtc_logs",
-                                               kDefaultMaxLogFileSize, 10));
+  log_sink_.reset(new webrtc::FileRotatingLogSink("./", "webrtc_logs",
+                                                  kDefaultMaxLogFileSize, 10));
   if (!log_sink_->Init()) {
     RTC_LOG(LS_ERROR) << __FUNCTION__ << ": Failed to open log file";
     log_sink_.reset();
@@ -120,15 +120,15 @@ void UnityContext::Init(IUnityInterfaces* ifs) {
   }
   log_sink_->DisableBuffering();
 
-  rtc::LogMessage::AddLogToStream(log_sink_.get(), rtc::LS_INFO);
+  webrtc::LogMessage::AddLogToStream(log_sink_.get(), webrtc::LS_INFO);
 
   RTC_LOG(LS_INFO) << "Log initialized";
 #endif
 
 #if defined(SORA_UNITY_SDK_ANDROID) || defined(SORA_UNITY_SDK_IOS)
-  rtc::LogMessage::LogToDebug((rtc::LoggingSeverity)rtc::LS_INFO);
-  rtc::LogMessage::LogTimestamps();
-  rtc::LogMessage::LogThreads();
+  webrtc::LogMessage::LogToDebug((webrtc::LoggingSeverity)webrtc::LS_INFO);
+  webrtc::LogMessage::LogTimestamps();
+  webrtc::LogMessage::LogThreads();
 #endif
 
   ifs_ = ifs;
@@ -142,7 +142,7 @@ void UnityContext::Shutdown() {
 
   RTC_LOG(LS_INFO) << "Log uninitialized";
 
-  rtc::LogMessage::RemoveLogToStream(log_sink_.get());
+  webrtc::LogMessage::RemoveLogToStream(log_sink_.get());
   log_sink_.reset();
 }
 

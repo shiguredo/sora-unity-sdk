@@ -2,11 +2,13 @@
 #include "sora_version.h"
 
 // WebRTC
+#include <api/audio/create_audio_device_module.h>
 #include <api/audio_codecs/builtin_audio_decoder_factory.h>
 #include <api/audio_codecs/builtin_audio_encoder_factory.h>
 #include <api/create_peerconnection_factory.h>
+#include <api/environment/environment.h>
+#include <api/environment/environment_factory.h>
 #include <api/rtc_event_log/rtc_event_log_factory.h>
-#include <api/task_queue/default_task_queue_factory.h>
 #include <media/engine/webrtc_media_engine.h>
 #include <modules/audio_device/include/audio_device.h>
 #include <modules/audio_device/include/audio_device_factory.h>
@@ -26,6 +28,8 @@
 #include <sora/sora_peer_connection_factory.h>
 #include <sora/sora_video_decoder_factory.h>
 #include <sora/sora_video_encoder_factory.h>
+
+#include "converter.h"
 
 #ifdef SORA_UNITY_SDK_ANDROID
 #include <sora/android/android_capturer.h>
@@ -238,11 +242,16 @@ void Sora::DoConnect(const sora_conf::internal::ConnectConfig& cc,
 
   sora::SoraClientContextConfig client_config;
   client_config.use_audio_device = false;
-  if (cc.has_use_hardware_encoder()) {
-    client_config.use_hardware_encoder = cc.use_hardware_encoder;
+  client_config.video_codec_factory_config.capability_config =
+      ConvertToVideoCodecCapabilityConfigWithSession(
+          cc.video_codec_capability_config);
+  if (cc.has_video_codec_preference()) {
+    client_config.video_codec_factory_config.preference =
+        ConvertToVideoCodecPreference(cc.video_codec_preference);
   }
   client_config.configure_dependencies =
       [&, this](webrtc::PeerConnectionFactoryDependencies& dependencies) {
+        auto webrtc_env = webrtc::CreateEnvironment();
         // worker 上の env
         auto worker_env = dependencies.worker_thread->BlockingCall(
             [] { return sora::GetJNIEnv(); });
@@ -258,11 +267,11 @@ void Sora::DoConnect(const sora_conf::internal::ConnectConfig& cc,
         void* worker_context = nullptr;
 #endif
 
-        unity_adm_ = CreateADM(
-            dependencies.task_queue_factory.get(), cc.no_audio_device,
-            cc.unity_audio_input, cc.unity_audio_output, on_handle_audio_,
-            cc.audio_recording_device, cc.audio_playout_device,
-            dependencies.worker_thread, worker_env, worker_context);
+        unity_adm_ =
+            CreateADM(webrtc_env, cc.no_audio_device, cc.unity_audio_input,
+                      cc.unity_audio_output, on_handle_audio_,
+                      cc.audio_recording_device, cc.audio_playout_device,
+                      dependencies.worker_thread, worker_env, worker_context);
         dependencies.worker_thread->BlockingCall(
             [&] { dependencies.adm = unity_adm_; });
 
@@ -317,14 +326,14 @@ void Sora::DoConnect(const sora_conf::internal::ConnectConfig& cc,
     capturer_ = capturer;
     capturer_type_ = cc.camera_config.capturer_type;
 
-    std::string audio_track_id = rtc::CreateRandomString(16);
+    std::string audio_track_id = webrtc::CreateRandomString(16);
     audio_track_ = sora_context_->peer_connection_factory()->CreateAudioTrack(
         audio_track_id, sora_context_->peer_connection_factory()
-                            ->CreateAudioSource(cricket::AudioOptions())
+                            ->CreateAudioSource(webrtc::AudioOptions())
                             .get());
 
     if (capturer) {
-      std::string video_track_id = rtc::CreateRandomString(16);
+      std::string video_track_id = webrtc::CreateRandomString(16);
       video_track_ = sora_context_->peer_connection_factory()->CreateVideoTrack(
           capturer, video_track_id);
     }
@@ -493,7 +502,7 @@ void Sora::DoConnect(const sora_conf::internal::ConnectConfig& cc,
     signaling_->Connect();
   }
 
-  io_thread_ = rtc::Thread::Create();
+  io_thread_ = webrtc::Thread::Create();
   if (!io_thread_->SetName("Sora IO Thread", nullptr)) {
     RTC_LOG(LS_INFO) << "Failed to set thread name";
     on_disconnect((int)sora_conf::ErrorCode::INTERNAL_ERROR,
@@ -571,7 +580,7 @@ void Sora::SwitchCamera(const sora_conf::internal::CameraConfig& cc) {
   capturer_ = capturer;
   capturer_type_ = cc.capturer_type;
 
-  std::string video_track_id = rtc::CreateRandomString(16);
+  std::string video_track_id = webrtc::CreateRandomString(16);
   auto video_track = sora_context_->peer_connection_factory()->CreateVideoTrack(
       capturer, video_track_id);
 
@@ -590,9 +599,9 @@ void Sora::SwitchCamera(const sora_conf::internal::CameraConfig& cc) {
 }
 void Sora::DoSwitchCamera(
     const sora_conf::internal::CameraConfig& cc,
-    rtc::scoped_refptr<webrtc::VideoTrackInterface> video_track) {
+    webrtc::scoped_refptr<webrtc::VideoTrackInterface> video_track) {
   if (video_track_ == nullptr) {
-    webrtc::RTCErrorOr<rtc::scoped_refptr<webrtc::RtpSenderInterface>>
+    webrtc::RTCErrorOr<webrtc::scoped_refptr<webrtc::RtpSenderInterface>>
         video_result = signaling_->GetPeerConnection()->AddTrack(video_track,
                                                                  {stream_id_});
     video_sender_ = video_result.value();
@@ -637,28 +646,28 @@ void Sora::SetOnHandleAudio(std::function<void(const int16_t*, int, int)> f) {
   on_handle_audio_ = f;
 }
 
-rtc::scoped_refptr<UnityAudioDevice> Sora::CreateADM(
-    webrtc::TaskQueueFactory* task_queue_factory,
+webrtc::scoped_refptr<UnityAudioDevice> Sora::CreateADM(
+    webrtc::Environment env,
     bool dummy_audio,
     bool unity_audio_input,
     bool unity_audio_output,
     std::function<void(const int16_t*, int, int)> on_handle_audio,
     std::string audio_recording_device,
     std::string audio_playout_device,
-    rtc::Thread* worker_thread,
+    webrtc::Thread* worker_thread,
     void* jni_env,
     void* android_context) {
-  rtc::scoped_refptr<webrtc::AudioDeviceModule> adm;
+  webrtc::scoped_refptr<webrtc::AudioDeviceModule> adm;
 
   if (dummy_audio) {
     adm = worker_thread->BlockingCall([&] {
-      return webrtc::AudioDeviceModule::Create(
-          webrtc::AudioDeviceModule::kDummyAudio, task_queue_factory);
+      return webrtc::CreateAudioDeviceModule(
+          env, webrtc::AudioDeviceModule::kDummyAudio);
     });
   } else {
     sora::AudioDeviceModuleConfig config;
     config.audio_layer = webrtc::AudioDeviceModule::kPlatformDefaultAudio;
-    config.task_queue_factory = task_queue_factory;
+    config.env = env;
     config.jni_env = jni_env;
     config.application_context = android_context;
     adm = worker_thread->BlockingCall(
@@ -667,12 +676,11 @@ rtc::scoped_refptr<UnityAudioDevice> Sora::CreateADM(
 
   return worker_thread->BlockingCall([&] {
     return UnityAudioDevice::Create(adm, !unity_audio_input,
-                                    !unity_audio_output, on_handle_audio,
-                                    task_queue_factory);
+                                    !unity_audio_output, on_handle_audio, env);
   });
 }
 
-bool Sora::InitADM(rtc::scoped_refptr<webrtc::AudioDeviceModule> adm,
+bool Sora::InitADM(webrtc::scoped_refptr<webrtc::AudioDeviceModule> adm,
                    std::string audio_recording_device,
                    std::string audio_playout_device) {
   // 録音デバイスと再生デバイスを指定する
@@ -753,49 +761,8 @@ bool Sora::InitADM(rtc::scoped_refptr<webrtc::AudioDeviceModule> adm,
   return true;
 }
 
-sora::SoraSignalingConfig::ForwardingFilter Sora::ConvertToForwardingFilter(
-    const sora_conf::internal::ForwardingFilter& filter) {
-  sora::SoraSignalingConfig::ForwardingFilter ff;
-
-  if (filter.has_action()) {
-    ff.action = filter.action;
-  }
-  if (filter.has_name()) {
-    ff.name = filter.name;
-  }
-  if (filter.has_priority()) {
-    ff.priority = filter.priority;
-  }
-  for (const auto& rs : filter.rules) {
-    std::vector<sora::SoraSignalingConfig::ForwardingFilter::Rule> ffrs;
-    for (const auto& r : rs.rules) {
-      sora::SoraSignalingConfig::ForwardingFilter::Rule ffr;
-      ffr.field = r.field;
-      ffr.op = r.op;
-      ffr.values = r.values;
-      ffrs.push_back(ffr);
-    }
-    ff.rules.push_back(ffrs);
-  }
-
-  if (filter.has_version()) {
-    ff.version = filter.version;
-  }
-  if (filter.has_metadata()) {
-    boost::system::error_code ec;
-    auto ffmd = boost::json::parse(filter.metadata, ec);
-    if (ec) {
-      RTC_LOG(LS_WARNING) << "Invalid JSON: forwarding_filter metadata="
-                          << filter.metadata;
-    } else {
-      ff.metadata = ffmd;
-    }
-  }
-
-  return ff;
-}
-
-rtc::scoped_refptr<webrtc::VideoTrackSourceInterface> Sora::CreateVideoCapturer(
+webrtc::scoped_refptr<webrtc::VideoTrackSourceInterface>
+Sora::CreateVideoCapturer(
     int capturer_type,
     void* unity_camera_texture,
     bool no_video_device,
@@ -804,7 +771,7 @@ rtc::scoped_refptr<webrtc::VideoTrackSourceInterface> Sora::CreateVideoCapturer(
     int video_height,
     int video_fps,
     std::function<void(const webrtc::VideoFrame& frame)> on_frame,
-    rtc::Thread* signaling_thread,
+    webrtc::Thread* signaling_thread,
     void* jni_env,
     void* android_context,
     UnityContext* unity_context) {
@@ -848,17 +815,18 @@ void Sora::GetStats(std::function<void(std::string)> on_get_stats) {
       return;
     }
 
-    pc->GetStats(sora::RTCStatsCallback::Create(
-                     [self, on_get_stats = std::move(on_get_stats)](
-                         const rtc::scoped_refptr<const webrtc::RTCStatsReport>&
-                             report) {
-                       std::string json = report->ToJson();
-                       self->PushEvent([on_get_stats = std::move(on_get_stats),
-                                        json = std::move(json)]() {
-                         on_get_stats(std::move(json));
-                       });
-                     })
-                     .get());
+    pc->GetStats(
+        sora::RTCStatsCallback::Create(
+            [self, on_get_stats = std::move(on_get_stats)](
+                const webrtc::scoped_refptr<const webrtc::RTCStatsReport>&
+                    report) {
+              std::string json = report->ToJson();
+              self->PushEvent([on_get_stats = std::move(on_get_stats),
+                               json = std::move(json)]() {
+                on_get_stats(std::move(json));
+              });
+            })
+            .get());
   });
 }
 
@@ -908,14 +876,14 @@ void Sora::OnSetOffer(std::string offer) {
       on_set_offer_(offer);
     }
   });
-  stream_id_ = rtc::CreateRandomString(16);
+  stream_id_ = webrtc::CreateRandomString(16);
   if (audio_track_ != nullptr) {
-    webrtc::RTCErrorOr<rtc::scoped_refptr<webrtc::RtpSenderInterface>>
+    webrtc::RTCErrorOr<webrtc::scoped_refptr<webrtc::RtpSenderInterface>>
         audio_result = signaling_->GetPeerConnection()->AddTrack(audio_track_,
                                                                  {stream_id_});
   }
   if (video_track_ != nullptr) {
-    webrtc::RTCErrorOr<rtc::scoped_refptr<webrtc::RtpSenderInterface>>
+    webrtc::RTCErrorOr<webrtc::scoped_refptr<webrtc::RtpSenderInterface>>
         video_result = signaling_->GetPeerConnection()->AddTrack(video_track_,
                                                                  {stream_id_});
     video_sender_ = video_result.value();
@@ -964,7 +932,7 @@ void Sora::OnMessage(std::string label, std::string data) {
   });
 }
 void Sora::OnTrack(
-    rtc::scoped_refptr<webrtc::RtpTransceiverInterface> transceiver) {
+    webrtc::scoped_refptr<webrtc::RtpTransceiverInterface> transceiver) {
   auto track = transceiver->receiver()->track();
   if (track->kind() == webrtc::MediaStreamTrackInterface::kVideoKind) {
     auto connection_id = transceiver->receiver()->stream_ids()[0];
@@ -979,7 +947,7 @@ void Sora::OnTrack(
   }
 }
 void Sora::OnRemoveTrack(
-    rtc::scoped_refptr<webrtc::RtpReceiverInterface> receiver) {
+    webrtc::scoped_refptr<webrtc::RtpReceiverInterface> receiver) {
   auto track = receiver->track();
   if (track->kind() == webrtc::MediaStreamTrackInterface::kVideoKind) {
     auto track_id = renderer_->RemoveTrack(
