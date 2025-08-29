@@ -11,6 +11,14 @@
 
 ## develop
 
+- [CHANGE] VERSION ファイルと DEPS ファイルを分離する
+  - VERSION ファイルは SDK のバージョン番号のみにする
+  - DEPS ファイルに依存関係のバージョンを移動し、`BOOST_SHA256_HASH` を追加
+  - run.py を新構成に対応
+    - 依存は DEPS ファイルから、SDK バージョンは VERSION ファイルから読み込むように変更
+  - build.yml を VERSIONS から DEPS に変更
+  - @torikizi
+
 ## 2025.2.0
 
 **リリース日**: 2025-08-26
