@@ -23,7 +23,7 @@ jobs:
       uses: actions/cache@v4
       with:
         path: _install
-        key: ${{ matrix.name }}-v3-${{ hashFiles('VERSIONS') }}
+        key: ${{ matrix.name }}-v3-${{ hashFiles('DEPS') }}
         restore-keys: |
           ${{ matrix.name }}-v3-
     - run: python3 run.py build ${{ matrix.name }}
@@ -53,7 +53,7 @@ jobs:
       uses: actions/cache@v4
       with:
         path: _install
-        key: ${{ matrix.name }}-v7-${{ hashFiles('VERSIONS') }}
+        key: ${{ matrix.name }}-v7-${{ hashFiles('DEPS') }}
         restore-keys: |
           ${{ matrix.name }}-v7-
     - run: python3 run.py build ${{ matrix.name }}
@@ -104,7 +104,7 @@ jobs:
       uses: actions/cache@v4
       with:
         path: _install
-        key: ${{ matrix.name }}-v1-${{ hashFiles('VERSIONS') }}
+        key: ${{ matrix.name }}-v1-${{ hashFiles('DEPS') }}
         restore-keys: |
           ${{ matrix.name }}-v1-
     - name: Prepare Ubuntu x86_64
