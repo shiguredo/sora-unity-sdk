@@ -190,8 +190,8 @@ jobs:
       with:
         name: SoraUnitySdk
         path: SoraUnitySdk
-  release:
-    name: Upload Release Asset
+  create-release:
+    name: Create Release
     if: contains(github.ref, 'tags/202')
     needs: [package]
     runs-on: ubuntu-24.04
@@ -206,19 +206,19 @@ jobs:
     - name: Archive to zip SoraUnitySdk
       run: |
         zip -r SoraUnitySdk SoraUnitySdk
-    - name: Create Release
-      if: ${{ !contains(github.ref, 'canary') }}
-      run: |
-        gh release create "${{ github.ref_name }}" \
-          --title "${{ github.ref_name }}" \
-          ./SoraUnitySdk.zip
-      env:
-        GH_TOKEN: ${{ github.token }}
-    - name: Create Release (Prerelease)
+    - name: Release (Prerelease)
       if: contains(github.ref, 'canary')
       run: |
         gh release create "${{ github.ref_name }}" \
           --prerelease \
+          --title "${{ github.ref_name }}" \
+          ./SoraUnitySdk.zip
+      env:
+        GH_TOKEN: ${{ github.token }}
+    - name: Release
+      if: ${{ !contains(github.ref, 'canary') }}
+      run: |
+        gh release create "${{ github.ref_name }}" \
           --title "${{ github.ref_name }}" \
           ./SoraUnitySdk.zip
       env:
