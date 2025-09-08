@@ -11,6 +11,9 @@
 
 ## develop
 
+- [CHANGE] `actions/create-release` と `actions/upload-release-asset` を `gh release create` に変更する
+  - @torikizi
+
 ## 2025.2.0
 
 **リリース日**: 2025-08-26

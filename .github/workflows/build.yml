@@ -207,22 +207,19 @@ jobs:
       run: |
         zip -r SoraUnitySdk SoraUnitySdk
     - name: Create Release
-      id: create_release
-      uses: actions/create-release@v1
+      if: ${{ !contains(github.ref, 'canary') }}
+      run: |
+        gh release create "${{ github.ref_name }}" \
+          --title "${{ github.ref_name }}" \
+          ./SoraUnitySdk.zip
       env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        tag_name: ${{ github.ref }}
-        release_name: Release ${{ github.ref }}
-        draft: false
-        prerelease: ${{ contains(github.ref, 'canary') }}
-    - name: Upload Release Asset
-      id: upload-release-asset 
-      uses: actions/upload-release-asset@v1
+        GH_TOKEN: ${{ github.token }}
+    - name: Create Release (Prerelease)
+      if: contains(github.ref, 'canary')
+      run: |
+        gh release create "${{ github.ref_name }}" \
+          --prerelease \
+          --title "${{ github.ref_name }}" \
+          ./SoraUnitySdk.zip
       env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ./SoraUnitySdk.zip
-        asset_name: SoraUnitySdk.zip
-        asset_content_type: application/zip
+        GH_TOKEN: ${{ github.token }}
