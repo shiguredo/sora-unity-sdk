@@ -11,6 +11,8 @@
 
 ## develop
 
+### misc
+
 - [CHANGE] `actions/create-release` と `actions/upload-release-asset` を `gh release create` に変更する
   - @torikizi
 
