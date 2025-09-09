@@ -1,3 +1,6 @@
+// Nullable 参照型を有効化
+#nullable enable
+
 using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
@@ -135,7 +138,7 @@ public class Sora : IDisposable
     public class CameraConfig
     {
         public CapturerType CapturerType = Sora.CapturerType.DeviceCamera;
-        public UnityEngine.Camera UnityCamera = null;
+        public UnityEngine.Camera? UnityCamera = null;
         public int UnityCameraRenderTargetDepthBuffer = 16;
         // 空文字ならデフォルトデバイスを利用する
         public string VideoCapturerDevice = "";
@@ -421,8 +424,8 @@ public class Sora : IDisposable
         // Proxy サーバーに接続するときの User-Agent。未設定ならデフォルト値が使われる
         public string ProxyAgent = "";
         [System.Obsolete("forwardingFilter は非推奨です。代わりに forwardingFilters を使用してください。")]
-        public ForwardingFilter ForwardingFilter;
-        public List<ForwardingFilter> ForwardingFilters;
+        public ForwardingFilter? ForwardingFilter;
+        public List<ForwardingFilter>? ForwardingFilters;
 
         // 利用するエンコーダー/デコーダーの指定
         // null の場合は VideoCodecImplementation.Internal な実装のみ利用する
@@ -446,7 +449,7 @@ public class Sora : IDisposable
     GCHandle onHandleAudioHandle;
     GCHandle onCapturerFrameHandle;
     UnityEngine.Rendering.CommandBuffer commandBuffer;
-    UnityEngine.Camera unityCamera;
+    UnityEngine.Camera? unityCamera;
 
     /// <summary>
     /// Sora オブジェクトを破棄します。
@@ -857,6 +860,10 @@ public class Sora : IDisposable
         IntPtr unityCameraTexture = IntPtr.Zero;
         if (config.CapturerType == CapturerType.UnityCamera)
         {
+            if (config.UnityCamera == null)
+            {
+                throw new ArgumentNullException(nameof(config.UnityCamera), "CapturerType.UnityCamera の場合は UnityCamera を指定してください。");
+            }
             unityCamera = config.UnityCamera;
             var texture = new UnityEngine.RenderTexture(config.VideoWidth, config.VideoHeight, config.UnityCameraRenderTargetDepthBuffer, UnityEngine.RenderTextureFormat.BGRA32);
             unityCamera.targetTexture = texture;
@@ -905,7 +912,7 @@ public class Sora : IDisposable
     static private void TrackCallback(uint trackId, string connectionId, IntPtr userdata)
     {
         var callback = GCHandle.FromIntPtr(userdata).Target as Action<uint, string>;
-        callback(trackId, connectionId);
+        callback?.Invoke(trackId, connectionId);
     }
 
     /// <summary>
@@ -924,8 +931,15 @@ public class Sora : IDisposable
                 onAddTrackHandle.Free();
             }
 
-            onAddTrackHandle = GCHandle.Alloc(value);
-            sora_set_on_add_track(p, TrackCallback, GCHandle.ToIntPtr(onAddTrackHandle));
+            if (value == null)
+            {
+                sora_set_on_add_track(p, null, IntPtr.Zero);
+            }
+            else
+            {
+                onAddTrackHandle = GCHandle.Alloc(value);
+                sora_set_on_add_track(p, TrackCallback, GCHandle.ToIntPtr(onAddTrackHandle));
+            }
         }
     }
     public Action<uint, string> OnRemoveTrack
@@ -937,8 +951,15 @@ public class Sora : IDisposable
                 onRemoveTrackHandle.Free();
             }
 
-            onRemoveTrackHandle = GCHandle.Alloc(value);
-            sora_set_on_remove_track(p, TrackCallback, GCHandle.ToIntPtr(onRemoveTrackHandle));
+            if (value == null)
+            {
+                sora_set_on_remove_track(p, null, IntPtr.Zero);
+            }
+            else
+            {
+                onRemoveTrackHandle = GCHandle.Alloc(value);
+                sora_set_on_remove_track(p, TrackCallback, GCHandle.ToIntPtr(onRemoveTrackHandle));
+            }
         }
     }
 
@@ -948,7 +969,7 @@ public class Sora : IDisposable
     static private void SetOfferCallback(string json, IntPtr userdata)
     {
         var callback = GCHandle.FromIntPtr(userdata).Target as Action<string>;
-        callback(json);
+        callback?.Invoke(json);
     }
 
     public Action<string> OnSetOffer
@@ -960,8 +981,15 @@ public class Sora : IDisposable
                 onSetOfferHandle.Free();
             }
 
-            onSetOfferHandle = GCHandle.Alloc(value);
-            sora_set_on_set_offer(p, SetOfferCallback, GCHandle.ToIntPtr(onSetOfferHandle));
+            if (value == null)
+            {
+                sora_set_on_set_offer(p, null, IntPtr.Zero);
+            }
+            else
+            {
+                onSetOfferHandle = GCHandle.Alloc(value);
+                sora_set_on_set_offer(p, SetOfferCallback, GCHandle.ToIntPtr(onSetOfferHandle));
+            }
         }
     }
 
@@ -971,7 +999,7 @@ public class Sora : IDisposable
     static private void NotifyCallback(string json, IntPtr userdata)
     {
         var callback = GCHandle.FromIntPtr(userdata).Target as Action<string>;
-        callback(json);
+        callback?.Invoke(json);
     }
 
     public Action<string> OnNotify
@@ -983,8 +1011,15 @@ public class Sora : IDisposable
                 onNotifyHandle.Free();
             }
 
-            onNotifyHandle = GCHandle.Alloc(value);
-            sora_set_on_notify(p, NotifyCallback, GCHandle.ToIntPtr(onNotifyHandle));
+            if (value == null)
+            {
+                sora_set_on_notify(p, null, IntPtr.Zero);
+            }
+            else
+            {
+                onNotifyHandle = GCHandle.Alloc(value);
+                sora_set_on_notify(p, NotifyCallback, GCHandle.ToIntPtr(onNotifyHandle));
+            }
         }
     }
 
@@ -994,7 +1029,7 @@ public class Sora : IDisposable
     static private void PushCallback(string json, IntPtr userdata)
     {
         var callback = GCHandle.FromIntPtr(userdata).Target as Action<string>;
-        callback(json);
+        callback?.Invoke(json);
     }
 
     public Action<string> OnPush
@@ -1006,8 +1041,15 @@ public class Sora : IDisposable
                 onPushHandle.Free();
             }
 
-            onPushHandle = GCHandle.Alloc(value);
-            sora_set_on_push(p, PushCallback, GCHandle.ToIntPtr(onPushHandle));
+            if (value == null)
+            {
+                sora_set_on_push(p, null, IntPtr.Zero);
+            }
+            else
+            {
+                onPushHandle = GCHandle.Alloc(value);
+                sora_set_on_push(p, PushCallback, GCHandle.ToIntPtr(onPushHandle));
+            }
         }
     }
 
@@ -1019,7 +1061,7 @@ public class Sora : IDisposable
         var callback = GCHandle.FromIntPtr(userdata).Target as Action<string, byte[]>;
         byte[] data = new byte[size];
         Marshal.Copy(buf, data, 0, size);
-        callback(label, data);
+        callback?.Invoke(label, data);
     }
 
     public Action<string, byte[]> OnMessage
@@ -1031,8 +1073,15 @@ public class Sora : IDisposable
                 onMessageHandle.Free();
             }
 
-            onMessageHandle = GCHandle.Alloc(value);
-            sora_set_on_message(p, MessageCallback, GCHandle.ToIntPtr(onMessageHandle));
+            if (value == null)
+            {
+                sora_set_on_message(p, null, IntPtr.Zero);
+            }
+            else
+            {
+                onMessageHandle = GCHandle.Alloc(value);
+                sora_set_on_message(p, MessageCallback, GCHandle.ToIntPtr(onMessageHandle));
+            }
         }
     }
 
@@ -1042,7 +1091,7 @@ public class Sora : IDisposable
     static private void DisconnectCallback(int errorCode, string message, IntPtr userdata)
     {
         var callback = GCHandle.FromIntPtr(userdata).Target as Action<SoraConf.ErrorCode, string>;
-        callback((SoraConf.ErrorCode)errorCode, message);
+        callback?.Invoke((SoraConf.ErrorCode)errorCode, message);
     }
 
     public Action<SoraConf.ErrorCode, string> OnDisconnect
@@ -1054,8 +1103,15 @@ public class Sora : IDisposable
                 onDisconnectHandle.Free();
             }
 
-            onDisconnectHandle = GCHandle.Alloc(value);
-            sora_set_on_disconnect(p, DisconnectCallback, GCHandle.ToIntPtr(onDisconnectHandle));
+            if (value == null)
+            {
+                sora_set_on_disconnect(p, null, IntPtr.Zero);
+            }
+            else
+            {
+                onDisconnectHandle = GCHandle.Alloc(value);
+                sora_set_on_disconnect(p, DisconnectCallback, GCHandle.ToIntPtr(onDisconnectHandle));
+            }
         }
     }
 
@@ -1065,7 +1121,7 @@ public class Sora : IDisposable
     static private void DataChannelCallback(string label, IntPtr userdata)
     {
         var callback = GCHandle.FromIntPtr(userdata).Target as Action<string>;
-        callback(label);
+        callback?.Invoke(label);
     }
 
     public Action<string> OnDataChannel
@@ -1077,8 +1133,15 @@ public class Sora : IDisposable
                 onDataChannelHandle.Free();
             }
 
-            onDataChannelHandle = GCHandle.Alloc(value);
-            sora_set_on_data_channel(p, DataChannelCallback, GCHandle.ToIntPtr(onDataChannelHandle));
+            if (value == null)
+            {
+                sora_set_on_data_channel(p, null, IntPtr.Zero);
+            }
+            else
+            {
+                onDataChannelHandle = GCHandle.Alloc(value);
+                sora_set_on_data_channel(p, DataChannelCallback, GCHandle.ToIntPtr(onDataChannelHandle));
+            }
         }
     }
 
@@ -1118,7 +1181,7 @@ public class Sora : IDisposable
         var callback = GCHandle.FromIntPtr(userdata).Target as Action<short[], int, int>;
         short[] buf2 = new short[samples * channels];
         Marshal.Copy(buf, buf2, 0, samples * channels);
-        callback(buf2, samples, channels);
+        callback?.Invoke(buf2, samples, channels);
     }
 
     /// <summary>
@@ -1138,8 +1201,15 @@ public class Sora : IDisposable
                 onHandleAudioHandle.Free();
             }
 
-            onHandleAudioHandle = GCHandle.Alloc(value);
-            sora_set_on_handle_audio(p, HandleAudioCallback, GCHandle.ToIntPtr(onHandleAudioHandle));
+            if (value == null)
+            {
+                sora_set_on_handle_audio(p, null, IntPtr.Zero);
+            }
+            else
+            {
+                onHandleAudioHandle = GCHandle.Alloc(value);
+                sora_set_on_handle_audio(p, HandleAudioCallback, GCHandle.ToIntPtr(onHandleAudioHandle));
+            }
         }
     }
 
@@ -1150,7 +1220,7 @@ public class Sora : IDisposable
     {
         var callback = GCHandle.FromIntPtr(userdata).Target as Action<SoraConf.VideoFrame>;
         var frame = Jsonif.Json.FromJson<SoraConf.VideoFrame>(data);
-        callback(frame);
+        callback?.Invoke(frame);
     }
 
     /// <summary>
@@ -1175,8 +1245,15 @@ public class Sora : IDisposable
                 onCapturerFrameHandle.Free();
             }
 
-            onCapturerFrameHandle = GCHandle.Alloc(value);
-            sora_set_on_capturer_frame(p, CapturerFrameCallback, GCHandle.ToIntPtr(onCapturerFrameHandle));
+            if (value == null)
+            {
+                sora_set_on_capturer_frame(p, null, IntPtr.Zero);
+            }
+            else
+            {
+                onCapturerFrameHandle = GCHandle.Alloc(value);
+                sora_set_on_capturer_frame(p, CapturerFrameCallback, GCHandle.ToIntPtr(onCapturerFrameHandle));
+            }
         }
     }
 
@@ -1187,7 +1264,7 @@ public class Sora : IDisposable
     {
         GCHandle handle = GCHandle.FromIntPtr(userdata);
         var callback = GCHandle.FromIntPtr(userdata).Target as Action<string>;
-        callback(json);
+        callback?.Invoke(json);
         handle.Free();
     }
 
@@ -1202,6 +1279,8 @@ public class Sora : IDisposable
     /// </summary>
     public void SendMessage(string label, byte[] buf)
     {
+        if (label is null) throw new ArgumentNullException(nameof(label));
+        if (buf is null) throw new ArgumentNullException(nameof(buf));
         sora_send_message(p, label, buf, buf.Length);
     }
 
@@ -1211,7 +1290,7 @@ public class Sora : IDisposable
     static private void DeviceEnumCallback(string device_name, string unique_name, IntPtr userdata)
     {
         var callback = GCHandle.FromIntPtr(userdata).Target as Action<string, string>;
-        callback(device_name, unique_name);
+        callback?.Invoke(device_name, unique_name);
     }
 
     public struct DeviceInfo
@@ -1219,7 +1298,7 @@ public class Sora : IDisposable
         public string DeviceName;
         public string UniqueName;
     }
-    public static DeviceInfo[] GetVideoCapturerDevices()
+    public static DeviceInfo[]? GetVideoCapturerDevices()
     {
         var list = new System.Collections.Generic.List<DeviceInfo>();
         Action<string, string> f = (deviceName, uniqueName) =>
@@ -1243,7 +1322,7 @@ public class Sora : IDisposable
         return list.ToArray();
     }
 
-    public static DeviceInfo[] GetAudioRecordingDevices()
+    public static DeviceInfo[]? GetAudioRecordingDevices()
     {
         var list = new System.Collections.Generic.List<DeviceInfo>();
         Action<string, string> f = (deviceName, uniqueName) =>
@@ -1267,7 +1346,7 @@ public class Sora : IDisposable
         return list.ToArray();
     }
 
-    public static DeviceInfo[] GetAudioPlayoutDevices()
+    public static DeviceInfo[]? GetAudioPlayoutDevices()
     {
         var list = new System.Collections.Generic.List<DeviceInfo>();
         Action<string, string> f = (deviceName, uniqueName) =>
@@ -1293,6 +1372,8 @@ public class Sora : IDisposable
 
     public static void Setenv(string name, string value)
     {
+        if (name is null) throw new ArgumentNullException(nameof(name));
+        if (value is null) throw new ArgumentNullException(nameof(value));
         sora_setenv(name, value);
     }
 
@@ -1464,8 +1545,8 @@ public class Sora : IDisposable
     // Androidの実装
     public class AndroidAudioOutputHelper : IAudioOutputHelper
     {
-        private AndroidJavaObject soraAudioManager;
-        private ChangeRouteCallbackProxy callbackProxy;
+        private AndroidJavaObject? soraAudioManager;
+        private ChangeRouteCallbackProxy? callbackProxy;
 
         private class ChangeRouteCallbackProxy : AndroidJavaProxy
         {
@@ -1481,7 +1562,7 @@ public class Sora : IDisposable
             }
         }
 
-        public AndroidAudioOutputHelper(Action onChangeRoute)
+        public AndroidAudioOutputHelper(Action? onChangeRoute)
         {
             using (var soraAudioManagerFactoryClass = new AndroidJavaClass("jp.shiguredo.sora.audiomanager.SoraAudioManagerFactory"))
             {
@@ -1500,19 +1581,22 @@ public class Sora : IDisposable
 
         public void Dispose()
         {
-            soraAudioManager.Call("stop");
+            if (soraAudioManager != null)
+            {
+                soraAudioManager.Call("stop");
+            }
             soraAudioManager = null;
             callbackProxy = null;
         }
 
         public bool IsHandsfree()
         {
-            return soraAudioManager.Call<bool>("isHandsfree");
+            return soraAudioManager != null && soraAudioManager.Call<bool>("isHandsfree");
         }
 
         public void SetHandsfree(bool enabled)
         {
-            soraAudioManager.Call("setHandsfree", enabled);
+            soraAudioManager?.Call("setHandsfree", enabled);
         }
     }
 #endif
@@ -1526,13 +1610,13 @@ public class Sora : IDisposable
         static private void ChangeRouteCallback(IntPtr userdata)
         {
             var callback = GCHandle.FromIntPtr(userdata).Target as Action;
-            callback();
+            callback?.Invoke();
         }
 
         GCHandle onChangeRouteHandle;
         IntPtr p;
 
-        public DefaultAudioOutputHelper(Action onChangeRoute)
+        public DefaultAudioOutputHelper(Action? onChangeRoute)
         {
             if (onChangeRoute == null)
             {
@@ -1581,7 +1665,7 @@ public class Sora : IDisposable
 
     public class AudioOutputHelperFactory
     {
-        public static IAudioOutputHelper Create(Action onChangeRoute)
+        public static IAudioOutputHelper Create(Action? onChangeRoute)
         {
 #if UNITY_ANDROID && !UNITY_EDITOR
             return new AndroidAudioOutputHelper(onChangeRoute);
