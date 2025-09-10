@@ -1492,7 +1492,7 @@ public class Sora : IDisposable
 
         private class ChangeRouteCallbackProxy : AndroidJavaProxy
         {
-            public event Action onChangeRoute;
+            public event Action? onChangeRoute;
 
             public ChangeRouteCallbackProxy() : base("jp.shiguredo.sora.audiomanager.SoraAudioManager$OnChangeRouteObserver")
             {
@@ -1573,7 +1573,10 @@ public class Sora : IDisposable
             if (p != IntPtr.Zero)
             {
                 sora_audio_output_helper_destroy(p);
-                onChangeRouteHandle.Free();
+                if (onChangeRouteHandle.IsAllocated)
+                {
+                    onChangeRouteHandle.Free();
+                }
                 p = IntPtr.Zero;
             }
         }
@@ -1595,7 +1598,7 @@ public class Sora : IDisposable
 #endif
 
         [DllImport(DllName)]
-        private static extern IntPtr sora_audio_output_helper_create(ChangeRouteCallbackDelegate cb, IntPtr userdata);
+        private static extern IntPtr sora_audio_output_helper_create(ChangeRouteCallbackDelegate? cb, IntPtr userdata);
         [DllImport(DllName)]
         private static extern void sora_audio_output_helper_destroy(IntPtr p);
         [DllImport(DllName)]
