@@ -116,6 +116,7 @@ public class Sora : IDisposable
         public int? Priority;
         public class Rule
         {
+            // 必須フィールドは空文字で初期化しておく
             public string Field = "";
             public string Operator = "";
             public List<string> Values = new List<string>();
@@ -533,10 +534,15 @@ public class Sora : IDisposable
         IntPtr unityCameraTexture = IntPtr.Zero;
         if (config.CameraConfig.CapturerType == CapturerType.UnityCamera)
         {
-            unityCamera = config.CameraConfig.UnityCamera;
+            if (config.CameraConfig.UnityCamera == null)
+            {
+                throw new ArgumentNullException(nameof(config.CameraConfig.UnityCamera), "CapturerType が UnityCamera の場合は UnityCamera を指定してください。");
+            }
+            var cam = config.CameraConfig.UnityCamera!;
+            unityCamera = cam;
             var texture = new UnityEngine.RenderTexture(config.CameraConfig.VideoWidth, config.CameraConfig.VideoHeight, config.CameraConfig.UnityCameraRenderTargetDepthBuffer, UnityEngine.RenderTextureFormat.BGRA32);
-            unityCamera.targetTexture = texture;
-            unityCamera.enabled = true;
+            cam.targetTexture = texture;
+            cam.enabled = true;
             unityCameraTexture = texture.GetNativeTexturePtr();
         }
 
@@ -863,7 +869,7 @@ public class Sora : IDisposable
             {
                 throw new ArgumentNullException(nameof(config.UnityCamera), "CapturerType が UnityCamera の場合は UnityCamera を指定してください。");
             }
-            var cam = config.UnityCamera;
+            var cam = config.UnityCamera!;
             unityCamera = cam;
             var texture = new UnityEngine.RenderTexture(config.VideoWidth, config.VideoHeight, config.UnityCameraRenderTargetDepthBuffer, UnityEngine.RenderTextureFormat.BGRA32);
             cam.targetTexture = texture;
@@ -1193,9 +1199,19 @@ public class Sora : IDisposable
     static private void StatsCallback(string json, IntPtr userdata)
     {
         GCHandle handle = GCHandle.FromIntPtr(userdata);
-        var callback = GCHandle.FromIntPtr(userdata).Target as Action<string>;
-        callback?.Invoke(json);
-        handle.Free();
+        try
+        {
+            var callback = handle.Target as Action<string>;
+            callback?.Invoke(json);
+        }
+        catch (Exception ex)
+        {
+            Debug.LogException(ex);
+        }
+        finally
+        {
+            handle.Free();
+        }
     }
 
     public void GetStats(Action<string> onGetStats)
