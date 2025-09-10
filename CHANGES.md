@@ -12,23 +12,16 @@
 ## develop
 
 - [CHANGE] Sora.cs を Nullable 対応にする
-  - 既存 API の挙動は変更せず、破壊的変更は実施しない
   - `#nullable enable` を追加した
   - nullable が有効になったことで以下の変更を実施し、Unity Editor でのワーニングを修正した
     - コールバック呼び出しを `callback?.Invoke(...)` に統一した
-    - 非 NULL フィールドの未初期化警告を `= null!;` で抑止するように修正した
-      - 例: 
-        - `commandBuffer`
-        - `Config.ForwardingFilter`
-        - `Config.ForwardingFilters`
-        - `ForwardingFilter.Rule.Field`
-        - `ForwardingFilter.Rule.Operator`
-    - NULL を取り得るフィールドを Nullable に変更した
-      - 例: `unityCamera`, Android の `soraAudioManager`, `callbackProxy`
-      - `CameraConfig.UnityCamera` を `UnityEngine.Camera?` に変更
-    - Android/Default オーディオヘルパーの `onChangeRoute` を `Action?` に
-    - Android 側の安全化: `IsHandsfree()` は null ガード、`SetHandsfree()` は null 条件演算子（`?.`）で呼び出すように変更
-    - デバイス列挙の戻り値を `DeviceInfo[]?` に変更した
+    - `null!` の使用を削減し null 安全に変更した
+      - `CameraConfig.UnityCamera` を `UnityEngine.Camera?` に変更し、使用時にガードを追加
+      - `Config.ForwardingFilter` と `Config.ForwardingFilters` を nullable に変更（デフォルト null）
+      - `ForwardingFilter.Rule.Field` と `Operator` に空文字の初期値を設定
+      - `SwitchCamera()` で Unity カメラ指定時の null チェックを追加
+    - Android/Default オーディオヘルパーの `onChangeRoute` を `Action?` に変更
+    - Android 側の安全化: `IsHandsfree()`/`SetHandsfree()` は null 条件演算子（`?.`）で呼び出すように変更（未取得時は `false`）
   - @torikizi
 
 ### misc

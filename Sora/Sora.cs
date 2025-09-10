@@ -116,8 +116,8 @@ public class Sora : IDisposable
         public int? Priority;
         public class Rule
         {
-            public string Field = null!;
-            public string Operator = null!;
+            public string Field = "";
+            public string Operator = "";
             public List<string> Values = new List<string>();
         }
         public List<List<Rule>> Rules = new List<List<Rule>>();
@@ -137,7 +137,7 @@ public class Sora : IDisposable
     public class CameraConfig
     {
         public CapturerType CapturerType = Sora.CapturerType.DeviceCamera;
-        public UnityEngine.Camera UnityCamera = null!;
+        public UnityEngine.Camera? UnityCamera;
         public int UnityCameraRenderTargetDepthBuffer = 16;
         // 空文字ならデフォルトデバイスを利用する
         public string VideoCapturerDevice = "";
@@ -163,7 +163,7 @@ public class Sora : IDisposable
             return new CameraConfig()
             {
                 CapturerType = Sora.CapturerType.DeviceCamera,
-                UnityCamera = null!,
+                UnityCamera = null,
                 UnityCameraRenderTargetDepthBuffer = 16,
                 VideoCapturerDevice = videoCapturerDevice,
                 VideoWidth = videoWidth,
@@ -423,8 +423,8 @@ public class Sora : IDisposable
         // Proxy サーバーに接続するときの User-Agent。未設定ならデフォルト値が使われる
         public string ProxyAgent = "";
         [System.Obsolete("forwardingFilter は非推奨です。代わりに forwardingFilters を使用してください。")]
-        public ForwardingFilter ForwardingFilter = null!;
-        public List<ForwardingFilter> ForwardingFilters = null!;
+        public ForwardingFilter? ForwardingFilter;
+        public List<ForwardingFilter>? ForwardingFilters;
 
         // 利用するエンコーダー/デコーダーの指定
         // null の場合は VideoCodecImplementation.Internal な実装のみ利用する
@@ -447,7 +447,7 @@ public class Sora : IDisposable
     GCHandle onDataChannelHandle;
     GCHandle onHandleAudioHandle;
     GCHandle onCapturerFrameHandle;
-    UnityEngine.Rendering.CommandBuffer commandBuffer = null!;
+    UnityEngine.Rendering.CommandBuffer commandBuffer;
     UnityEngine.Camera? unityCamera;
 
     /// <summary>
@@ -852,14 +852,18 @@ public class Sora : IDisposable
         if (unityCamera != null)
         {
             unityCamera.enabled = false;
-            unityCamera.targetTexture = null!;
+            unityCamera.targetTexture = null;
             unityCamera = null;
         }
 
         IntPtr unityCameraTexture = IntPtr.Zero;
         if (config.CapturerType == CapturerType.UnityCamera)
         {
-            var cam = config.UnityCamera!; // Unity カメラ利用時は必須
+            if (config.UnityCamera == null)
+            {
+                throw new ArgumentNullException(nameof(config.UnityCamera), "CapturerType が UnityCamera の場合は UnityCamera を指定してください。");
+            }
+            var cam = config.UnityCamera;
             unityCamera = cam;
             var texture = new UnityEngine.RenderTexture(config.VideoWidth, config.VideoHeight, config.UnityCameraRenderTargetDepthBuffer, UnityEngine.RenderTextureFormat.BGRA32);
             cam.targetTexture = texture;
@@ -1510,12 +1514,12 @@ public class Sora : IDisposable
 
         public bool IsHandsfree()
         {
-            return soraAudioManager.Call<bool>("isHandsfree");
+            return soraAudioManager?.Call<bool>("isHandsfree") ?? false;
         }
 
         public void SetHandsfree(bool enabled)
         {
-            soraAudioManager.Call("setHandsfree", enabled);
+            soraAudioManager?.Call("setHandsfree", enabled);
         }
     }
 #endif
