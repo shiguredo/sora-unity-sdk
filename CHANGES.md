@@ -11,6 +11,28 @@
 
 ## develop
 
+- [CHANGE] Sora.cs を Nullable 対応にする
+  - `#nullable enable` を追加する
+  - nullable が有効になったことで以下の変更を実施し、Unity Editor でのワーニングを修正する
+    - コールバック呼び出しを `callback?.Invoke(...)` に統一する
+    - `null!` の使用を削減し null 安全に変更する
+      - `CameraConfig.UnityCamera` を `UnityEngine.Camera?` に変更し、使用時にガードを追加する
+      - `Config.ForwardingFilter` と `Config.ForwardingFilters` を nullable に変更する
+      - `ForwardingFilter.Rule.Field` と `Operator` に空文字の初期値を設定する
+      - `SwitchCamera()` で Unity カメラ指定時の null チェックを追加する
+    - Android/Default オーディオヘルパーの `onChangeRoute` の null 許容対応
+      - コンストラクタおよび `AudioOutputHelperFactory.Create` の引数を `Action?` に変更する
+      - Android 実装の内部イベント `onChangeRoute` も `Action?` に変更する
+      - `null` を指定した場合はコールバック未設定として安全に動作する
+    - Android 側の安全化: `IsHandsfree()`/`SetHandsfree()` は null 条件演算子（`?.`）で呼び出すように変更する
+    - DefaultAudioOutputHelper.Dispose の GCHandle 解放を安全にする
+      - `sora_audio_output_helper_destroy(p)` 実行後、`onChangeRouteHandle.IsAllocated` を確認してから `Free()` を呼ぶように修正する
+      - `onChangeRoute` が `null` の場合にも未割り当て `GCHandle` を誤って解放しないようにし、クラッシュの可能性を排除する
+    - デバイス列挙メソッドの戻り値型を変更する
+      - 失敗時に `null` を返す仕様とするため、戻り値型を `DeviceInfo[]` から `DeviceInfo[]?` に変更する
+        - 対象メソッド: `GetVideoCapturerDevices()`, `GetAudioRecordingDevices()`, `GetAudioPlayoutDevices()`
+  - @torikizi
+
 ### misc
 
 - [CHANGE] `actions/create-release` と `actions/upload-release-asset` を `gh release create` に変更する
