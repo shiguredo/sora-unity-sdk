@@ -11,6 +11,26 @@
 
 ## develop
 
+- [CHANGE] Sora.cs を Nullable 対応にする
+  - 既存 API の挙動は変更せず、破壊的変更は実施しない
+  - `#nullable enable` を追加した
+  - nullable が有効になったことで以下の変更を実施し、Unity Editor でのワーニングを修正した
+    - コールバック呼び出しを `callback?.Invoke(...)` に統一した
+    - 非 NULL フィールドの未初期化警告を `= null!;` で抑止するように修正した
+      - 例: 
+        - `commandBuffer`
+        - `Config.ForwardingFilter`
+        - `Config.ForwardingFilters`
+        - `ForwardingFilter.Rule.Field`
+        - `ForwardingFilter.Rule.Operator`
+    - NULL を取り得るフィールドを Nullable に変更した
+      - 例: `unityCamera`, Android の `soraAudioManager`, `callbackProxy`
+      - `CameraConfig.UnityCamera` を `UnityEngine.Camera?` に変更
+    - Android/Default オーディオヘルパーの `onChangeRoute` を `Action?` に
+    - Android 側の安全化: `IsHandsfree()` は null ガード、`SetHandsfree()` は null 条件演算子（`?.`）で呼び出すように変更
+    - デバイス列挙の戻り値を `DeviceInfo[]?` に変更した
+  - @torikizi
+
 ### misc
 
 - [CHANGE] `actions/create-release` と `actions/upload-release-asset` を `gh release create` に変更する

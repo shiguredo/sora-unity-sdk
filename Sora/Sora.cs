@@ -859,10 +859,11 @@ public class Sora : IDisposable
         IntPtr unityCameraTexture = IntPtr.Zero;
         if (config.CapturerType == CapturerType.UnityCamera)
         {
-            unityCamera = config.UnityCamera;
+            var cam = config.UnityCamera!; // Unity カメラ利用時は必須
+            unityCamera = cam;
             var texture = new UnityEngine.RenderTexture(config.VideoWidth, config.VideoHeight, config.UnityCameraRenderTargetDepthBuffer, UnityEngine.RenderTextureFormat.BGRA32);
-            unityCamera.targetTexture = texture;
-            unityCamera.enabled = true;
+            cam.targetTexture = texture;
+            cam.enabled = true;
             unityCameraTexture = texture.GetNativeTexturePtr();
         }
         var cc = new SoraConf.Internal.CameraConfig();
@@ -1496,7 +1497,7 @@ public class Sora : IDisposable
                     callbackProxy = new ChangeRouteCallbackProxy();
                     callbackProxy.onChangeRoute += onChangeRoute;
                 }
-                soraAudioManager!.Call("start", callbackProxy);
+                soraAudioManager.Call("start", callbackProxy);
             }
         }
 
@@ -1509,12 +1510,12 @@ public class Sora : IDisposable
 
         public bool IsHandsfree()
         {
-            return soraAudioManager!.Call<bool>("isHandsfree");
+            return soraAudioManager.Call<bool>("isHandsfree");
         }
 
         public void SetHandsfree(bool enabled)
         {
-            soraAudioManager!.Call("setHandsfree", enabled);
+            soraAudioManager.Call("setHandsfree", enabled);
         }
     }
 #endif
