@@ -11,7 +11,7 @@
 
 ## develop
 
-- [ADD] DegradationPreference を追加し、劣化時のエンコード優先度を指定できるようにする
+- [ADD] DegradationPreference を追加し、エンコード時の劣化の優先順位を指定できるようにする
   - `enum DegradationPreference` を追加
     - `Disabled` は無効
     - `MaintainFramerate` はフレームレートを優先
