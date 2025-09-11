@@ -11,8 +11,6 @@
 
 ## develop
 
-### add
-
 - [ADD] DegradationPreference を追加し、劣化時のエンコード優先度を指定できるようにする
   - `enum DegradationPreference` を追加
     - `Disabled` は無効
