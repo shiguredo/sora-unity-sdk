@@ -538,7 +538,7 @@ public class Sora : IDisposable
             {
                 throw new ArgumentNullException(nameof(config.CameraConfig.UnityCamera), "CapturerType が UnityCamera の場合は UnityCamera を指定してください。");
             }
-            var cam = config.CameraConfig.UnityCamera!;
+            var cam = config.CameraConfig.UnityCamera;
             unityCamera = cam;
             var texture = new UnityEngine.RenderTexture(config.CameraConfig.VideoWidth, config.CameraConfig.VideoHeight, config.CameraConfig.UnityCameraRenderTargetDepthBuffer, UnityEngine.RenderTextureFormat.BGRA32);
             cam.targetTexture = texture;
@@ -869,7 +869,7 @@ public class Sora : IDisposable
             {
                 throw new ArgumentNullException(nameof(config.UnityCamera), "CapturerType が UnityCamera の場合は UnityCamera を指定してください。");
             }
-            var cam = config.UnityCamera!;
+            var cam = config.UnityCamera;
             unityCamera = cam;
             var texture = new UnityEngine.RenderTexture(config.VideoWidth, config.VideoHeight, config.UnityCameraRenderTargetDepthBuffer, UnityEngine.RenderTextureFormat.BGRA32);
             cam.targetTexture = texture;
@@ -1242,7 +1242,7 @@ public class Sora : IDisposable
         public string DeviceName;
         public string UniqueName;
     }
-    public static DeviceInfo[]? GetVideoCapturerDevices()
+    public static DeviceInfo[] GetVideoCapturerDevices()
     {
         var list = new System.Collections.Generic.List<DeviceInfo>();
         Action<string, string> f = (deviceName, uniqueName) =>
@@ -1255,18 +1255,22 @@ public class Sora : IDisposable
         };
 
         GCHandle handle = GCHandle.Alloc(f);
-        int result = sora_device_enum_video_capturer(DeviceEnumCallback, GCHandle.ToIntPtr(handle));
-        handle.Free();
-
-        if (result == 0)
+        try
         {
-            return null;
+            int result = sora_device_enum_video_capturer(DeviceEnumCallback, GCHandle.ToIntPtr(handle));
+            if (result == 0)
+            {
+                throw new InvalidOperationException("Failed to enumerate video capturer devices");
+            }
+            return list.ToArray();
         }
-
-        return list.ToArray();
+        finally
+        {
+            handle.Free();
+        }
     }
 
-    public static DeviceInfo[]? GetAudioRecordingDevices()
+    public static DeviceInfo[] GetAudioRecordingDevices()
     {
         var list = new System.Collections.Generic.List<DeviceInfo>();
         Action<string, string> f = (deviceName, uniqueName) =>
@@ -1279,18 +1283,22 @@ public class Sora : IDisposable
         };
 
         GCHandle handle = GCHandle.Alloc(f);
-        int result = sora_device_enum_audio_recording(DeviceEnumCallback, GCHandle.ToIntPtr(handle));
-        handle.Free();
-
-        if (result == 0)
+        try
         {
-            return null;
+            int result = sora_device_enum_audio_recording(DeviceEnumCallback, GCHandle.ToIntPtr(handle));
+            if (result == 0)
+            {
+                throw new InvalidOperationException("Failed to enumerate audio recording devices");
+            }
+            return list.ToArray();
         }
-
-        return list.ToArray();
+        finally
+        {
+            handle.Free();
+        }
     }
 
-    public static DeviceInfo[]? GetAudioPlayoutDevices()
+    public static DeviceInfo[] GetAudioPlayoutDevices()
     {
         var list = new System.Collections.Generic.List<DeviceInfo>();
         Action<string, string> f = (deviceName, uniqueName) =>
@@ -1303,15 +1311,19 @@ public class Sora : IDisposable
         };
 
         GCHandle handle = GCHandle.Alloc(f);
-        int result = sora_device_enum_audio_playout(DeviceEnumCallback, GCHandle.ToIntPtr(handle));
-        handle.Free();
-
-        if (result == 0)
+        try
         {
-            return null;
+            int result = sora_device_enum_audio_playout(DeviceEnumCallback, GCHandle.ToIntPtr(handle));
+            if (result == 0)
+            {
+                throw new InvalidOperationException("Failed to enumerate audio playout devices");
+            }
+            return list.ToArray();
         }
-
-        return list.ToArray();
+        finally
+        {
+            handle.Free();
+        }
     }
 
     public static void Setenv(string name, string value)
@@ -1572,11 +1584,11 @@ public class Sora : IDisposable
         {
             if (p != IntPtr.Zero)
             {
-                sora_audio_output_helper_destroy(p);
                 if (onChangeRouteHandle.IsAllocated)
                 {
                     onChangeRouteHandle.Free();
                 }
+                sora_audio_output_helper_destroy(p);
                 p = IntPtr.Zero;
             }
         }
