@@ -105,6 +105,7 @@ message ConnectConfig {
     string audio_playout_device = 30;
     string audio_codec_type = 31;
     int32 audio_bit_rate = 34;
+    string degradation_preference = 35;
     optional bool data_channel_signaling = 36;
     int32 data_channel_signaling_timeout = 37;
     optional bool ignore_disconnect_websocket = 39;
