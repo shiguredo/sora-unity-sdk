@@ -70,6 +70,23 @@ public class Sora : IDisposable
     {
         OPUS,
     }
+    // DegradationPreference のための変換関数
+    static string DegradationPreferenceToString(DegradationPreference preference)
+    {
+        switch (preference)
+        {
+            case DegradationPreference.Disabled:
+                return "Disabled";
+            case DegradationPreference.MaintainFramerate:
+                return "MaintainFramerate";
+            case DegradationPreference.MaintainResolution:
+                return "MaintainResolution";
+            case DegradationPreference.Balanced:
+                return "Balanced";
+            default:
+                return "";
+        }
+    }
     // SimulcastRid のためのパラメータ
     public enum SimulcastRidType
     {
@@ -603,7 +620,7 @@ public class Sora : IDisposable
         cc.video_av1_params = config.VideoAv1Params;
         cc.video_h264_params = config.VideoH264Params;
         cc.video_bit_rate = config.VideoBitRate;
-        cc.degradation_preference = config.DegradationPreference == null ? "" : config.DegradationPreference.ToString();
+        cc.degradation_preference = config.DegradationPreference == null ? "" : DegradationPreferenceToString(config.DegradationPreference.Value);
         cc.unity_audio_input = config.UnityAudioInput;
         cc.unity_audio_output = config.UnityAudioOutput;
         cc.audio_recording_device = config.AudioRecordingDevice;

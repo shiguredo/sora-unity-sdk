@@ -411,8 +411,11 @@ void Sora::DoConnect(const sora_conf::internal::ConnectConfig& cc,
         config.degradation_preference = webrtc::DegradationPreference::MAINTAIN_RESOLUTION;
       } else if (cc.degradation_preference == "Balanced") {
         config.degradation_preference = webrtc::DegradationPreference::BALANCED;
+      } else {
+        RTC_LOG(LS_WARNING) << "Invalid degradation_preference value: "
+                            << cc.degradation_preference;
+        // 不正な値の場合は何も設定しない（std::optional なので nullopt のまま）
       }
-      // 不正な値の場合は何も設定しない（std::optional なので nullopt のまま）
     }
     if (cc.has_data_channel_signaling()) {
       config.data_channel_signaling = cc.data_channel_signaling;
