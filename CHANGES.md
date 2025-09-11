@@ -11,6 +11,19 @@
 
 ## develop
 
+### add
+
+- [ADD] DegradationPreference を追加し、劣化時のエンコード優先度を指定できるようにする
+  - `enum DegradationPreference` を追加
+    - `Disabled` は無効
+    - `MaintainFramerate` はフレームレートを優先
+    - `MaintainResolution` は解像度を優先
+    - `Balanced` はバランスを優先
+  - `Config.DegradationPreference` を追加
+  - `sora_conf_internal.proto` に `degradation_preference` を追加
+  - Sora.cpp で文字列から `webrtc::DegradationPreference` enum への変換を実装
+  - @torikizi
+
 ### misc
 
 - [CHANGE] `actions/create-release` と `actions/upload-release-asset` を `gh release create` に変更する

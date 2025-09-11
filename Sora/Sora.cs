@@ -86,6 +86,14 @@ public class Sora : IDisposable
         R1,
         R2,
     }
+    // DegradationPreference のためのパラメータ
+    public enum DegradationPreference
+    {
+        Disabled,
+        MaintainFramerate,
+        MaintainResolution,
+        Balanced,
+    }
     public class DataChannel
     {
         // 以下は設定必須
@@ -369,6 +377,7 @@ public class Sora : IDisposable
         public string VideoAv1Params = "";
         public string VideoH264Params = "";
         public int VideoBitRate = 0;
+        public DegradationPreference? DegradationPreference;
         // デバイスから録音する代わりに Sora.ProcessAudio() で指定したデータを録音データとして利用するかどうか
         public bool UnityAudioInput = false;
         // 再生データをデバイスで再生する代わりに Sora.OnHandleAudio コールバックで再生データを受け取るようにするかどうか
@@ -594,6 +603,7 @@ public class Sora : IDisposable
         cc.video_av1_params = config.VideoAv1Params;
         cc.video_h264_params = config.VideoH264Params;
         cc.video_bit_rate = config.VideoBitRate;
+        cc.degradation_preference = config.DegradationPreference == null ? "" : config.DegradationPreference.ToString();
         cc.unity_audio_input = config.UnityAudioInput;
         cc.unity_audio_output = config.UnityAudioOutput;
         cc.audio_recording_device = config.AudioRecordingDevice;

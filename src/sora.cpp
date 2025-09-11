@@ -9,6 +9,7 @@
 #include <api/environment/environment.h>
 #include <api/environment/environment_factory.h>
 #include <api/rtc_event_log/rtc_event_log_factory.h>
+#include <api/rtp_parameters.h>
 #include <media/engine/webrtc_media_engine.h>
 #include <modules/audio_device/include/audio_device.h>
 #include <modules/audio_device/include/audio_device_factory.h>
@@ -401,6 +402,18 @@ void Sora::DoConnect(const sora_conf::internal::ConnectConfig& cc,
     config.video_bit_rate = cc.video_bit_rate;
     config.audio_codec_type = cc.audio_codec_type;
     config.audio_bit_rate = cc.audio_bit_rate;
+    if (!cc.degradation_preference.empty()) {
+      if (cc.degradation_preference == "Disabled") {
+        config.degradation_preference = webrtc::DegradationPreference::DISABLED;
+      } else if (cc.degradation_preference == "MaintainFramerate") {
+        config.degradation_preference = webrtc::DegradationPreference::MAINTAIN_FRAMERATE;
+      } else if (cc.degradation_preference == "MaintainResolution") {
+        config.degradation_preference = webrtc::DegradationPreference::MAINTAIN_RESOLUTION;
+      } else if (cc.degradation_preference == "Balanced") {
+        config.degradation_preference = webrtc::DegradationPreference::BALANCED;
+      }
+      // 不正な値の場合は何も設定しない（std::optional なので nullopt のまま）
+    }
     if (cc.has_data_channel_signaling()) {
       config.data_channel_signaling = cc.data_channel_signaling;
     }
