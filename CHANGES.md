@@ -11,6 +11,14 @@
 
 ## develop
 
+- [UPDATE] libwebrtc を `m140.7339.2.0` に上げる
+  - macOS, iOS が Apple clang ではなく libwebrtc の clang を使うようになったので、その対応を入れている
+  - @melpon
+- [UPDATE] Sora C++ SDK を `2025.6.0-canary.0` に上げる
+  - `BOOST_VERSION` を `1.89.0` にアップデート
+  - `CMAKE_VERSION` を `4.1.0` にアップデート
+  - @melpon
+
 ### misc
 
 - [CHANGE] `actions/create-release` と `actions/upload-release-asset` を `gh release create` に変更する

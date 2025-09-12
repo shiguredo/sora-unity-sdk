@@ -84,13 +84,9 @@ def install_deps(
         webrtc_info = get_webrtc_info(platform, local_webrtc_build_dir, install_dir, debug)
 
         # Windows は MSVC を使うので不要
-        # macOS と iOS は Apple Clang を使うので不要
         # Android は libc++ のために必要
         # webrtc-build をソースビルドしてる場合は既にローカルにあるので不要
-        if (
-            platform not in ("windows_x86_64", "macos_x86_64", "macos_arm64", "ios")
-            and local_webrtc_build_dir is None
-        ):
+        if platform not in ("windows_x86_64", "macos_x86_64") and local_webrtc_build_dir is None:
             webrtc_version = read_version_file(webrtc_info.version_file)
 
             # LLVM
@@ -366,12 +362,28 @@ def _build(args):
             cmake_args.append(f"-DCMAKE_CXX_COMPILER_TARGET={target}")
             cmake_args.append(f"-DCMAKE_OBJCXX_COMPILER_TARGET={target}")
             cmake_args.append(f"-DCMAKE_SYSROOT={sysroot}")
+            cmake_args.append(
+                f"-DCMAKE_C_COMPILER={os.path.join(webrtc_info.clang_dir, 'bin', 'clang')}"
+            )
+            cmake_args.append(
+                f"-DCMAKE_CXX_COMPILER={os.path.join(webrtc_info.clang_dir, 'bin', 'clang++')}"
+            )
+            cmake_args.append(
+                f"-DLIBCXX_INCLUDE_DIR={cmake_path(os.path.join(webrtc_info.libcxx_dir, 'include'))}"
+            )
         elif platform == "ios":
-            cmake_args += ["-G", "Xcode"]
+            cmake_args.append(
+                f"-DCMAKE_C_COMPILER={os.path.join(webrtc_info.clang_dir, 'bin', 'clang')}"
+            )
+            cmake_args.append(
+                f"-DCMAKE_CXX_COMPILER={os.path.join(webrtc_info.clang_dir, 'bin', 'clang++')}"
+            )
+            cmake_args.append(
+                f"-DLIBCXX_INCLUDE_DIR={cmake_path(os.path.join(webrtc_info.libcxx_dir, 'include'))}"
+            )
             cmake_args.append("-DCMAKE_SYSTEM_NAME=iOS")
-            cmake_args.append('-DCMAKE_OSX_ARCHITECTURES="x86_64;arm64"')
+            cmake_args.append('-DCMAKE_OSX_ARCHITECTURES="arm64"')
             cmake_args.append("-DCMAKE_OSX_DEPLOYMENT_TARGET=13.0")
-            cmake_args.append("-DCMAKE_XCODE_ATTRIBUTE_ONLY_ACTIVE_ARCH=NO")
         elif platform == "android":
             toolchain_file = os.path.join(
                 sora_info.sora_install_dir, "share", "cmake", "android.toolchain.cmake"
@@ -429,63 +441,16 @@ def _build(args):
             raise Exception(f"Platform {platform} not supported.")
 
         cmd(["cmake", BASE_DIR, *cmake_args])
-
-        if platform == "ios":
-            cmd(
-                [
-                    "cmake",
-                    "--build",
-                    ".",
-                    f"-j{multiprocessing.cpu_count()}",
-                    "--config",
-                    configuration,
-                    "--target",
-                    "SoraUnitySdk",
-                    "--",
-                    "-arch",
-                    "x86_64",
-                    "-sdk",
-                    "iphonesimulator",
-                ]
-            )
-            cmd(
-                [
-                    "cmake",
-                    "--build",
-                    ".",
-                    f"-j{multiprocessing.cpu_count()}",
-                    "--config",
-                    configuration,
-                    "--target",
-                    "SoraUnitySdk",
-                    "--",
-                    "-arch",
-                    "arm64",
-                    "-sdk",
-                    "iphoneos",
-                ]
-            )
-            cmd(
-                [
-                    "lipo",
-                    "-create",
-                    "-output",
-                    os.path.join(unity_build_dir, "libSoraUnitySdk.a"),
-                    os.path.join(unity_build_dir, "Release-iphonesimulator", "libSoraUnitySdk.a"),
-                    os.path.join(unity_build_dir, "Release-iphoneos", "libSoraUnitySdk.a"),
-                ]
-            )
-        else:
-            cmd(
-                [
-                    "cmake",
-                    "--build",
-                    ".",
-                    f"-j{multiprocessing.cpu_count()}",
-                    "--config",
-                    configuration,
-                ]
-            )
+        cmd(
+            [
+                "cmake",
+                "--build",
+                ".",
+                f"-j{multiprocessing.cpu_count()}",
+                "--config",
+                configuration,
+            ]
+        )
 
 
 def main():

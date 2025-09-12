@@ -25,6 +25,7 @@
 # limitations under the License.
 import filecmp
 import glob
+import hashlib
 import logging
 import multiprocessing
 import os
@@ -143,7 +144,12 @@ def add_path(path: str, is_after=False):
         os.environ["PATH"] = path + PATH_SEPARATOR + os.environ["PATH"]
 
 
-def download(url: str, output_dir: Optional[str] = None, filename: Optional[str] = None) -> str:
+def download(
+    url: str,
+    output_dir: Optional[str] = None,
+    filename: Optional[str] = None,
+    expected_sha256: Optional[str] = None,
+) -> str:
     if filename is None:
         output_path = urllib.parse.urlparse(url).path.split("/")[-1]
     else:
@@ -153,20 +159,65 @@ def download(url: str, output_dir: Optional[str] = None, filename: Optional[str]
         output_path = os.path.join(output_dir, output_path)
 
     if os.path.exists(output_path):
-        return output_path
+        # ファイルが既に存在する場合でもハッシュチェックを行う
+        if expected_sha256 is not None:
+            try:
+                verify_sha256(output_path, expected_sha256)
+            except ValueError:
+                # ハッシュ不一致の場合はファイルを削除して再ダウンロードを試みる
+                logging.warning(f"Existing file has invalid hash, removing: {output_path}")
+                os.remove(output_path)
+                # 再ダウンロードを試みる
+                return download(url, output_dir, filename, expected_sha256)
+        else:
+            return output_path
 
     try:
+        logging.info(f"Downloading {url} to {output_path}")
         if shutil.which("curl") is not None:
             cmd(["curl", "-fLo", output_path, url])
         else:
             cmd(["wget", "-cO", output_path, url])
+
+        # ダウンロード後にハッシュチェック
+        if expected_sha256 is not None:
+            try:
+                verify_sha256(output_path, expected_sha256)
+            except ValueError as e:
+                logging.error(f"Hash verification failed. {e}")
+                raise
+
     except Exception:
         # ゴミを残さないようにする
         if os.path.exists(output_path):
+            logging.error(f"Removing incomplete/invalid file: {output_path}")
             os.remove(output_path)
         raise
 
     return output_path
+
+
+def verify_sha256(file_path: str, expected_sha256: str):
+    """ファイルの SHA256 ハッシュを検証する"""
+    logging.info(f"Verifying SHA256 hash for {file_path}")
+    sha256_hash = hashlib.sha256()
+    with open(file_path, "rb") as f:
+        # メモリ効率のため、チャンクごとに読み込む
+        for byte_block in iter(lambda: f.read(4096), b""):
+            sha256_hash.update(byte_block)
+
+    actual_sha256 = sha256_hash.hexdigest()
+    if actual_sha256 != expected_sha256.lower():
+        error_msg = (
+            f"SHA256 hash mismatch for {file_path}:\n"
+            f"  Expected: {expected_sha256.lower()}\n"
+            f"  Actual:   {actual_sha256}"
+        )
+        logging.error(error_msg)
+        logging.error("Aborting due to hash verification failure")
+        raise ValueError(error_msg)
+    else:
+        logging.info(f"SHA256 hash verified successfully for {file_path}")
 
 
 def read_version_file(path: str) -> Dict[str, str]:
@@ -302,7 +353,12 @@ def _extractzip(z: zipfile.ZipFile, path: str):
 def extract(file: str, output_dir: str, output_dirname: str, filetype: Optional[str] = None):
     path = os.path.join(output_dir, output_dirname)
     logging.info(f"Extract {file} to {path}")
-    if filetype == "gzip" or file.endswith(".tar.gz"):
+    if (
+        filetype == "gzip"
+        or file.endswith(".tar.gz")
+        or filetype == "lzma"
+        or file.endswith(".tar.xz")
+    ):
         rm_rf(path)
         with tarfile.open(file) as t:
             dir = is_single_dir_tar(t)
@@ -570,7 +626,14 @@ def get_webrtc_info(
 
 
 @versioned
-def install_boost(version, source_dir, install_dir, sora_version, platform: str):
+def install_boost(
+    version,
+    source_dir,
+    install_dir,
+    sora_version,
+    platform: str,
+    expected_sha256: Optional[str] = None,
+):
     win = platform.startswith("windows_")
     filename = (
         f"boost-{version}_sora-cpp-sdk-{sora_version}_{platform}.{'zip' if win else 'tar.gz'}"
@@ -579,6 +642,7 @@ def install_boost(version, source_dir, install_dir, sora_version, platform: str)
     archive = download(
         f"https://github.com/shiguredo/sora-cpp-sdk/releases/download/{sora_version}/{filename}",
         output_dir=source_dir,
+        expected_sha256=expected_sha256,
     )
     rm_rf(os.path.join(install_dir, "boost"))
     extract(archive, output_dir=install_dir, output_dirname="boost")
@@ -685,6 +749,7 @@ def build_and_install_boost(
     source_dir,
     build_dir,
     install_dir,
+    expected_sha256: str,
     debug: bool,
     cxx: str,
     cflags: List[str],
@@ -701,12 +766,14 @@ def build_and_install_boost(
     android_build_platform="linux-x86_64",
 ):
     version_underscore = version.replace(".", "_")
+
     archive = download(
         # 公式サイトに負荷をかけないための時雨堂によるミラー
         f"https://oss-mirrors.shiguredo.jp/boost_{version_underscore}.tar.gz",
         # Boost 公式のミラー
         # f"https://archives.boost.io/release/{version}/source/boost_{version_underscore}.tar.gz",
         source_dir,
+        expected_sha256=expected_sha256,
     )
     extract(archive, output_dir=build_dir, output_dirname="boost")
     with cd(os.path.join(build_dir, "boost")):
@@ -733,7 +800,9 @@ def build_and_install_boost(
         if target_os == "iphone":
             IOS_BUILD_TARGETS = [("arm64", "iphoneos")]
             for arch, sdk in IOS_BUILD_TARGETS:
-                clangpp = cmdcap(["xcodebuild", "-find", "clang++"])
+                # xcode の clang++ を利用する
+                # ただし cxx が指定されてた場合はそちらを優先する
+                clangpp = cmdcap(["xcodebuild", "-find", "clang++"]) if len(cxx) == 0 else cxx
                 sysroot = cmdcap(["xcrun", "--sdk", sdk, "--show-sdk-path"])
                 boost_arch = "x86" if arch == "x86_64" else "arm"
                 with open("project-config.jam", "w", encoding="utf-8") as f:
@@ -934,7 +1003,7 @@ def build_sora(
         ]
 
     with cd(local_sora_cpp_sdk_dir):
-        cmd(["python3", "run.py", platform, *local_sora_cpp_sdk_args])
+        cmd(["python3", "run.py", "build", platform, *local_sora_cpp_sdk_args])
 
 
 class SoraInfo(NamedTuple):
@@ -1050,6 +1119,21 @@ def install_android_sdk_cmdline_tools(version, install_dir, source_dir):
     sdkmanager = os.path.join(tools_dir, "cmdline-tools", "bin", "sdkmanager")
     # ライセンスを許諾する
     cmd(["/bin/bash", "-c", f"yes | {sdkmanager} --sdk_root={tools_dir} --licenses"])
+
+
+@versioned
+def install_android_sdk_platform_tools(version, install_dir, source_dir, platform):
+    if version not in ("latest",):
+        raise Exception(f"Supports only 'latest' version, but got: {version}")
+    if platform not in ("windows", "darwin", "linux"):
+        raise Exception(f"Not supported platform: {platform}")
+    archive = download(
+        f"https://dl.google.com/android/repository/platform-tools-{version}-{platform}.zip",
+        source_dir,
+    )
+    tools_dir = os.path.join(install_dir, "android-sdk-platform-tools")
+    rm_rf(tools_dir)
+    extract(archive, output_dir=tools_dir, output_dirname="platform-tools")
 
 
 @versioned
@@ -1229,6 +1313,93 @@ def install_sdl2(
 
 
 @versioned
+def install_sdl3(
+    version, source_dir, build_dir, install_dir, debug: bool, platform: str, cmake_args: List[str]
+):
+    url = f"https://github.com/libsdl-org/SDL/releases/download/release-{version}/SDL3-{version}.tar.gz"
+    path = download(url, source_dir)
+    sdl3_source_dir = os.path.join(source_dir, "sdl3")
+    sdl3_build_dir = os.path.join(build_dir, "sdl3")
+    sdl3_install_dir = os.path.join(install_dir, "sdl3")
+    rm_rf(sdl3_source_dir)
+    rm_rf(sdl3_build_dir)
+    rm_rf(sdl3_install_dir)
+    extract(path, source_dir, "sdl3")
+
+    mkdir_p(sdl3_build_dir)
+    with cd(sdl3_build_dir):
+        configuration = "Debug" if debug else "Release"
+        cmake_args = cmake_args[:]
+        cmake_args += [
+            sdl3_source_dir,
+            f"-DCMAKE_BUILD_TYPE={configuration}",
+            f"-DCMAKE_INSTALL_PREFIX={cmake_path(sdl3_install_dir)}",
+            "-DBUILD_SHARED_LIBS=OFF",
+            "-DSDL_STATIC=ON",
+            "-DSDL_SHARED=OFF",
+        ]
+        if platform == "windows":
+            cmake_args += [
+                f"-DCMAKE_MSVC_RUNTIME_LIBRARY={'MultiThreaded' if not debug else 'MultiThreadedDebug'}",
+                "-DSDL_AUDIO=OFF",
+                "-DSDL_JOYSTICK=OFF",
+                "-DSDL_HAPTIC=OFF",
+                # GitHub Actions 上で gameinput.h が存在しないのに
+                # なぜか  check_c_source_compiles() が成功してしまうので
+                # HAVE_GAMEINPUT_H=0 で強制的に無効化する
+                "-DHAVE_GAMEINPUT_H=0",
+            ]
+        elif platform == "macos":
+            # どの環境でも同じようにインストールされるようにするため全部 ON/OFF を明示的に指定する
+            cmake_args += [
+                "-DSDL_AUDIO=OFF",
+                "-DSDL_VIDEO=ON",
+                "-DSDL_RENDER=ON",
+                "-DSDL_HAPTIC=ON",
+                "-DSDL_POWER=ON",
+                "-DSDL_JOYSTICK=ON",
+                "-DSDL_SENSOR=ON",
+                "-DSDL_OPENGL=ON",
+                "-DSDL_OPENGLES=ON",
+                "-DSDL_METAL=ON",
+                "-DSDL_VULKAN=OFF",
+            ]
+        elif platform == "linux":
+            # どの環境でも同じようにインストールされるようにするため全部 ON/OFF を明示的に指定する
+            cmake_args += [
+                "-DSDL_AUDIO=OFF",
+                "-DSDL_VIDEO=ON",
+                "-DSDL_RENDER=ON",
+                "-DSDL_HAPTIC=ON",
+                "-DSDL_POWER=ON",
+                "-DSDL_JOYSTICK=ON",
+                "-DSDL_SENSOR=ON",
+                "-DSDL_OPENGL=ON",
+                "-DSDL_OPENGLES=ON",
+                "-DSDL_X11=ON",
+                "-DSDL_X11_SHARED=OFF",
+                "-DSDL_X11_XCURSOR=OFF",
+                "-DSDL_X11_XDBE=OFF",
+                "-DSDL_X11_XFIXES=OFF",
+                "-DSDL_X11_XINPUT=OFF",
+                "-DSDL_X11_XRANDR=OFF",
+                "-DSDL_X11_XSCRNSAVER=OFF",
+                "-DSDL_X11_XSHAPE=OFF",
+                "-DSDL_X11_XSYNC=OFF",
+                "-DSDL_WAYLAND=OFF",
+                "-DSDL_VULKAN=OFF",
+                "-DSDL_KMSDRM=OFF",
+                "-DSDL_RPI=OFF",
+            ]
+        cmd(["cmake"] + cmake_args)
+
+        cmd(
+            ["cmake", "--build", ".", "--config", configuration, f"-j{multiprocessing.cpu_count()}"]
+        )
+        cmd(["cmake", "--install", ".", "--config", configuration])
+
+
+@versioned
 def install_cli11(version, install_dir):
     cli11_install_dir = os.path.join(install_dir, "cli11")
     rm_rf(cli11_install_dir)
@@ -1310,6 +1481,35 @@ def install_vpl(version, configuration, source_dir, build_dir, install_dir, cmak
 
 
 @versioned
+def install_blend2d_official(
+    version,
+    configuration,
+    source_dir,
+    build_dir,
+    install_dir,
+    cmake_args,
+    expected_sha256: Optional[str] = None,
+):
+    rm_rf(os.path.join(source_dir, "blend2d"))
+    rm_rf(os.path.join(build_dir, "blend2d"))
+    rm_rf(os.path.join(install_dir, "blend2d"))
+
+    # 公式サイトに負荷をかけないための時雨堂によるミラー
+    url = f"https://oss-mirrors.shiguredo.jp/blend2d-{version}.tar.gz"
+    # Blend2d 公式
+    # url = f"https://blend2d.com/download/blend2d-{version}.tar.gz"
+    path = download(url, source_dir, expected_sha256=expected_sha256)
+    extract(path, source_dir, "blend2d")
+    _build_blend2d(
+        configuration=configuration,
+        source_dir=source_dir,
+        build_dir=build_dir,
+        install_dir=install_dir,
+        cmake_args=cmake_args,
+    )
+
+
+@versioned
 def install_blend2d(
     version,
     configuration,
@@ -1318,7 +1518,6 @@ def install_blend2d(
     install_dir,
     blend2d_version,
     asmjit_version,
-    ios,
     cmake_args,
 ):
     rm_rf(os.path.join(source_dir, "blend2d"))
@@ -1334,7 +1533,16 @@ def install_blend2d(
         asmjit_version,
         os.path.join(source_dir, "blend2d", "3rdparty", "asmjit"),
     )
+    _build_blend2d(
+        configuration=configuration,
+        source_dir=source_dir,
+        build_dir=build_dir,
+        install_dir=install_dir,
+        cmake_args=cmake_args,
+    )
 
+
+def _build_blend2d(configuration, source_dir, build_dir, install_dir, cmake_args):
     mkdir_p(os.path.join(build_dir, "blend2d"))
     with cd(os.path.join(build_dir, "blend2d")):
         cmd(
@@ -1352,37 +1560,17 @@ def install_blend2d(
         if os.path.exists(project_path):
             replace_vcproj_static_runtime(project_path)
 
-        if ios:
-            cmd(
-                [
-                    "cmake",
-                    "--build",
-                    ".",
-                    f"-j{multiprocessing.cpu_count()}",
-                    "--config",
-                    configuration,
-                    "--target",
-                    "blend2d",
-                    "--",
-                    "-arch",
-                    "arm64",
-                    "-sdk",
-                    "iphoneos",
-                ]
-            )
-            cmd(["cmake", "--build", ".", "--target", "install", "--config", configuration])
-        else:
-            cmd(
-                [
-                    "cmake",
-                    "--build",
-                    ".",
-                    f"-j{multiprocessing.cpu_count()}",
-                    "--config",
-                    configuration,
-                ]
-            )
-            cmd(["cmake", "--build", ".", "--target", "install", "--config", configuration])
+        cmd(
+            [
+                "cmake",
+                "--build",
+                ".",
+                f"-j{multiprocessing.cpu_count()}",
+                "--config",
+                configuration,
+            ]
+        )
+        cmd(["cmake", "--build", ".", "--target", "install", "--config", configuration])
 
 
 @versioned

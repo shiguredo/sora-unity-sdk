@@ -1,6 +1,8 @@
 #include "sora.h"
 #include "sora_version.h"
 
+#include <future>
+
 // WebRTC
 #include <api/audio/create_audio_device_module.h>
 #include <api/audio_codecs/builtin_audio_decoder_factory.h>
