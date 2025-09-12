@@ -196,6 +196,8 @@ elseif (SORA_UNITY_SDK_PACKAGE STREQUAL "macos_x86_64" OR SORA_UNITY_SDK_PACKAGE
     PRIVATE
       SORA_UNITY_SDK_MACOS
   )
+  target_compile_options(SoraUnitySdk PRIVATE "-nostdinc++")
+  target_include_directories(SoraUnitySdk PRIVATE ${LIBCXX_INCLUDE_DIR})
 
 elseif (SORA_UNITY_SDK_PACKAGE STREQUAL "ios")
   enable_language(OBJCXX)
@@ -210,6 +212,8 @@ elseif (SORA_UNITY_SDK_PACKAGE STREQUAL "ios")
     PRIVATE
       SORA_UNITY_SDK_IOS
   )
+  target_compile_options(SoraUnitySdk PRIVATE "-nostdinc++")
+  target_include_directories(SoraUnitySdk PRIVATE ${LIBCXX_INCLUDE_DIR})
   install(TARGETS SoraUnitySdk DESTINATION lib)
 
 elseif (SORA_UNITY_SDK_PACKAGE STREQUAL "android")
