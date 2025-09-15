@@ -4,13 +4,13 @@ package sora_conf.internal;
 
 enum DegradationPreference {
     // 自動劣化を無効化
-    DISABLED = 1;
+    DISABLED = 0;
     // フレームレートを優先維持（解像度を下げる）
-    MAINTAIN_FRAMERATE = 2;
+    MAINTAIN_FRAMERATE = 1;
     // 解像度を優先維持（フレームレートを下げる）
-    MAINTAIN_RESOLUTION = 3;
+    MAINTAIN_RESOLUTION = 2;
     // バランスよく劣化
-    BALANCED = 4;
+    BALANCED = 3;
 }
 
 message DataChannel {
