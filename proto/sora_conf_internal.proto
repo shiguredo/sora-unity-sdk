@@ -3,8 +3,6 @@ syntax = "proto3";
 package sora_conf.internal;
 
 enum DegradationPreference {
-    // 未指定
-    DEGRADATION_PREFERENCE_UNSPECIFIED = 0;
     // 自動劣化を無効化
     DISABLED = 1;
     // フレームレートを優先維持（解像度を下げる）
