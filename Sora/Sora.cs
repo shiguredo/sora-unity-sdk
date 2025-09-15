@@ -70,23 +70,7 @@ public class Sora : IDisposable
     {
         OPUS,
     }
-    // DegradationPreference のための変換関数
-    static string DegradationPreferenceToString(DegradationPreference preference)
-    {
-        switch (preference)
-        {
-            case DegradationPreference.Disabled:
-                return "Disabled";
-            case DegradationPreference.MaintainFramerate:
-                return "MaintainFramerate";
-            case DegradationPreference.MaintainResolution:
-                return "MaintainResolution";
-            case DegradationPreference.Balanced:
-                return "Balanced";
-            default:
-                return "";
-        }
-    }
+
     // SimulcastRid のためのパラメータ
     public enum SimulcastRidType
     {
@@ -103,12 +87,15 @@ public class Sora : IDisposable
         R1,
         R2,
     }
-    // DegradationPreference のためのパラメータ
     public enum DegradationPreference
     {
+        // degradation preference を無効にします
         Disabled,
+        // フレームレートを優先して維持し、帯域不足時は主に解像度を下げます
         MaintainFramerate,
+        // 解像度を優先して維持し、帯域不足時は主にフレームレートを下げます
         MaintainResolution,
+        // 解像度とフレームレートの両方をバランスよく下げます。
         Balanced,
     }
     public class DataChannel
@@ -620,7 +607,24 @@ public class Sora : IDisposable
         cc.video_av1_params = config.VideoAv1Params;
         cc.video_h264_params = config.VideoH264Params;
         cc.video_bit_rate = config.VideoBitRate;
-        cc.degradation_preference = config.DegradationPreference == null ? "" : DegradationPreferenceToString(config.DegradationPreference.Value);
+        if (config.DegradationPreference.HasValue)
+        {
+            switch (config.DegradationPreference.Value)
+            {
+                case DegradationPreference.Disabled:
+                    cc.SetDegradationPreference(SoraConf.Internal.DegradationPreference.DISABLED);
+                    break;
+                case DegradationPreference.MaintainFramerate:
+                    cc.SetDegradationPreference(SoraConf.Internal.DegradationPreference.MAINTAIN_FRAMERATE);
+                    break;
+                case DegradationPreference.MaintainResolution:
+                    cc.SetDegradationPreference(SoraConf.Internal.DegradationPreference.MAINTAIN_RESOLUTION);
+                    break;
+                case DegradationPreference.Balanced:
+                    cc.SetDegradationPreference(SoraConf.Internal.DegradationPreference.BALANCED);
+                    break;
+            }
+        }
         cc.unity_audio_input = config.UnityAudioInput;
         cc.unity_audio_output = config.UnityAudioOutput;
         cc.audio_recording_device = config.AudioRecordingDevice;

@@ -2,6 +2,19 @@ syntax = "proto3";
 
 package sora_conf.internal;
 
+enum DegradationPreference {
+    // 未指定
+    DEGRADATION_PREFERENCE_UNSPECIFIED = 0;
+    // 自動劣化を無効化
+    DISABLED = 1;
+    // フレームレートを優先維持（解像度を下げる）
+    MAINTAIN_FRAMERATE = 2;
+    // 解像度を優先維持（フレームレートを下げる）
+    MAINTAIN_RESOLUTION = 3;
+    // バランスよく劣化
+    BALANCED = 4;
+}
+
 message DataChannel {
     string label = 1;
     string direction = 2;
@@ -105,7 +118,7 @@ message ConnectConfig {
     string audio_playout_device = 30;
     string audio_codec_type = 31;
     int32 audio_bit_rate = 34;
-    string degradation_preference = 35;
+    optional DegradationPreference degradation_preference = 35;
     optional bool data_channel_signaling = 36;
     int32 data_channel_signaling_timeout = 37;
     optional bool ignore_disconnect_websocket = 39;

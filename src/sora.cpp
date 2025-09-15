@@ -402,19 +402,24 @@ void Sora::DoConnect(const sora_conf::internal::ConnectConfig& cc,
     config.video_bit_rate = cc.video_bit_rate;
     config.audio_codec_type = cc.audio_codec_type;
     config.audio_bit_rate = cc.audio_bit_rate;
-    if (!cc.degradation_preference.empty()) {
-      if (cc.degradation_preference == "Disabled") {
-        config.degradation_preference = webrtc::DegradationPreference::DISABLED;
-      } else if (cc.degradation_preference == "MaintainFramerate") {
-        config.degradation_preference = webrtc::DegradationPreference::MAINTAIN_FRAMERATE;
-      } else if (cc.degradation_preference == "MaintainResolution") {
-        config.degradation_preference = webrtc::DegradationPreference::MAINTAIN_RESOLUTION;
-      } else if (cc.degradation_preference == "Balanced") {
-        config.degradation_preference = webrtc::DegradationPreference::BALANCED;
-      } else {
-        RTC_LOG(LS_WARNING) << "Invalid degradation_preference value: "
-                            << cc.degradation_preference;
-        // 不正な値の場合は何も設定しない（std::optional なので nullopt のまま）
+    if (cc.has_degradation_preference()) {
+      switch (cc.degradation_preference) {
+        case sora_conf::internal::DegradationPreference::DISABLED:
+          config.degradation_preference = webrtc::DegradationPreference::DISABLED;
+          break;
+        case sora_conf::internal::DegradationPreference::MAINTAIN_FRAMERATE:
+          config.degradation_preference = webrtc::DegradationPreference::MAINTAIN_FRAMERATE;
+          break;
+        case sora_conf::internal::DegradationPreference::MAINTAIN_RESOLUTION:
+          config.degradation_preference = webrtc::DegradationPreference::MAINTAIN_RESOLUTION;
+          break;
+        case sora_conf::internal::DegradationPreference::BALANCED:
+          config.degradation_preference = webrtc::DegradationPreference::BALANCED;
+          break;
+        case sora_conf::internal::DegradationPreference::DEGRADATION_PREFERENCE_UNSPECIFIED:
+        default:
+          // 未指定または未知値は何も設定しない
+          break;
       }
     }
     if (cc.has_data_channel_signaling()) {

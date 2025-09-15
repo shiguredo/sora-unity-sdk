@@ -13,13 +13,12 @@
 
 - [ADD] DegradationPreference を追加し、エンコード時の劣化の優先順位を指定できるようにする
   - `enum DegradationPreference` を追加
-    - `Disabled` は無効
-    - `MaintainFramerate` はフレームレートを優先
-    - `MaintainResolution` は解像度を優先
-    - `Balanced` はバランスを優先
+    - `Disabled`: 無効
+    - `MaintainFramerate`: フレームレート優先
+    - `MaintainResolution`: 解像度優先
+    - `Balanced`: バランス優先
   - `Config.DegradationPreference` を追加
   - `sora_conf_internal.proto` に `degradation_preference` を追加
-  - Sora.cpp で文字列から `webrtc::DegradationPreference` enum への変換を実装
   - @torikizi
 
 ### misc
