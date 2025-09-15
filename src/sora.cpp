@@ -416,9 +416,6 @@ void Sora::DoConnect(const sora_conf::internal::ConnectConfig& cc,
         case sora_conf::internal::DegradationPreference::BALANCED:
           config.degradation_preference = webrtc::DegradationPreference::BALANCED;
           break;
-        default:
-          // 未指定または未知値は何も設定しない
-          break;
       }
     }
     if (cc.has_data_channel_signaling()) {
