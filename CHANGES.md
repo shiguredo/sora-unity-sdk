@@ -18,6 +18,15 @@
   - `BOOST_VERSION` を `1.89.0` にアップデート
   - `CMAKE_VERSION` を `4.1.0` にアップデート
   - @melpon
+- [ADD] DegradationPreference を追加し、エンコード時の劣化の優先順位を指定できるようにする
+  - `enum DegradationPreference` を追加
+    - `Disabled`: 無効
+    - `MaintainFramerate`: フレームレート優先
+    - `MaintainResolution`: 解像度優先
+    - `Balanced`: バランス優先
+  - `Config.DegradationPreference` を追加
+  - `sora_conf_internal.proto` に `degradation_preference` を追加
+  - @torikizi
 
 ### misc
 
