@@ -749,7 +749,6 @@ def build_and_install_boost(
     source_dir,
     build_dir,
     install_dir,
-    expected_sha256: str,
     debug: bool,
     cxx: str,
     cflags: List[str],
@@ -764,6 +763,7 @@ def build_and_install_boost(
     address_model="64",
     runtime_link=None,
     android_build_platform="linux-x86_64",
+    expected_sha256: Optional[str] = None,
 ):
     version_underscore = version.replace(".", "_")
 
@@ -2282,21 +2282,33 @@ def fix_clang_version(clang_dir, clang_version):
 
 
 class Platform(object):
-    def _check(self, flag):
+    def _check(self, flag, error_message):
         if not flag:
-            raise Exception("Not supported")
+            raise Exception(error_message)
 
     def _check_platform_target(self, p: PlatformTarget):
         if p.os == "raspberry-pi-os":
-            self._check(p.arch in ("armv6", "armv7", "armv8"))
+            self._check(
+                p.arch in ("armv6", "armv7", "armv8"),
+                f"Architecture {p.arch} is not supported for {p.os}. Supported: armv6, armv7, armv8",
+            )
         elif p.os == "jetson":
-            self._check(p.arch == "armv8")
+            self._check(
+                p.arch == "armv8",
+                f"Architecture {p.arch} is not supported for {p.os}. Only armv8 is supported",
+            )
         elif p.os in ("ios", "android"):
-            self._check(p.arch is None)
+            self._check(p.arch is None, f"Architecture should be None for {p.os}, but got {p.arch}")
         elif p.os == "ubuntu":
-            self._check(p.arch in ("x86_64", "armv8"))
+            self._check(
+                p.arch in ("x86_64", "armv8"),
+                f"Architecture {p.arch} is not supported for {p.os}. Supported: x86_64, armv8",
+            )
         else:
-            self._check(p.arch in ("x86_64", "arm64", "hololens2"))
+            self._check(
+                p.arch in ("x86_64", "arm64", "hololens2"),
+                f"Architecture {p.arch} is not supported for {p.os}. Supported: x86_64, arm64, hololens2",
+            )
 
     def __init__(self, target_os, target_osver, target_arch, target_extra=None):
         build = get_build_platform()
@@ -2306,32 +2318,83 @@ class Platform(object):
         self._check_platform_target(target)
 
         if target.os == "windows":
-            self._check(target.arch in ("x86_64", "arm64", "hololens2"))
-            self._check(build.os == "windows")
-            self._check(build.arch == "x86_64")
+            self._check(
+                target.arch in ("x86_64", "arm64", "hololens2"),
+                f"Target architecture {target.arch} is not supported for Windows",
+            )
+            self._check(
+                build.os == "windows",
+                f"Windows target requires Windows build platform, but got {build.os}",
+            )
+            self._check(
+                build.arch == "x86_64",
+                f"Windows build requires x86_64 architecture, but got {build.arch}",
+            )
         if target.os == "macos":
-            self._check(build.os == "macos")
-            self._check(build.arch in ("x86_64", "arm64"))
+            self._check(
+                build.os == "macos",
+                f"macOS target requires macOS build platform, but got {build.os}",
+            )
+            self._check(
+                build.arch in ("x86_64", "arm64"),
+                f"macOS build requires x86_64 or arm64, but got {build.arch}",
+            )
         if target.os == "ios":
-            self._check(build.os == "macos")
-            self._check(build.arch in ("x86_64", "arm64"))
+            self._check(
+                build.os == "macos", f"iOS target requires macOS build platform, but got {build.os}"
+            )
+            self._check(
+                build.arch in ("x86_64", "arm64"),
+                f"iOS build requires x86_64 or arm64, but got {build.arch}",
+            )
         if target.os == "android":
-            self._check(build.os in ("ubuntu", "macos"))
+            self._check(
+                build.os in ("ubuntu", "macos"),
+                f"Android target requires Ubuntu or macOS build platform, but got {build.os}",
+            )
             if build.os == "ubuntu":
-                self._check(build.arch == "x86_64")
+                self._check(
+                    build.arch == "x86_64",
+                    f"Android build on Ubuntu requires x86_64, but got {build.arch}",
+                )
             elif build.os == "macos":
-                self._check(build.arch in ("x86_64", "arm64"))
+                self._check(
+                    build.arch in ("x86_64", "arm64"),
+                    f"Android build on macOS requires x86_64 or arm64, but got {build.arch}",
+                )
         if target.os == "ubuntu":
-            self._check(build.os == "ubuntu")
-            self._check(build.arch in ("x86_64", "armv8"))
+            self._check(
+                build.os == "ubuntu",
+                f"Ubuntu target requires Ubuntu build platform, but got {build.os}",
+            )
+            self._check(
+                build.arch in ("x86_64", "armv8"),
+                f"Ubuntu build requires x86_64 or armv8, but got {build.arch}",
+            )
             if build.arch == target.arch:
-                self._check(build.osver == target.osver)
+                self._check(
+                    build.osver == target.osver,
+                    f"When building for the same architecture ({build.arch}), OS versions must match. "
+                    f"Build OS: Ubuntu {build.osver}, Target OS: Ubuntu {target.osver}. "
+                    f"This typically happens when GitHub Actions runner OS version doesn't match the target.",
+                )
         if target.os == "raspberry-pi-os":
-            self._check(build.os == "ubuntu")
-            self._check(build.arch == "x86_64")
+            self._check(
+                build.os == "ubuntu",
+                f"Raspberry Pi OS target requires Ubuntu build platform, but got {build.os}",
+            )
+            self._check(
+                build.arch == "x86_64",
+                f"Raspberry Pi OS build requires x86_64, but got {build.arch}",
+            )
         if target.os == "jetson":
-            self._check(build.os == "ubuntu")
-            self._check(build.arch == "x86_64")
+            self._check(
+                build.os == "ubuntu",
+                f"Jetson target requires Ubuntu build platform, but got {build.os}",
+            )
+            self._check(
+                build.arch == "x86_64", f"Jetson build requires x86_64, but got {build.arch}"
+            )
 
         self.build = build
         self.target = target
