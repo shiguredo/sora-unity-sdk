@@ -190,7 +190,7 @@ public class Sora : IDisposable
         Internal,
         CiscoOpenH264,
         IntelVpl,
-        NvidiaVideoCodecSdk,
+        NvidiaVideoCodec,
         AmdAmf,
     }
     static string VideoCodecImplementationToString(VideoCodecImplementation implementation)
@@ -203,8 +203,8 @@ public class Sora : IDisposable
                 return "cisco_openh264";
             case VideoCodecImplementation.IntelVpl:
                 return "intel_vpl";
-            case VideoCodecImplementation.NvidiaVideoCodecSdk:
-                return "nvidia_video_codec_sdk";
+            case VideoCodecImplementation.NvidiaVideoCodec:
+                return "nvidia_video_codec";
             case VideoCodecImplementation.AmdAmf:
                 return "amd_amf";
             default:
@@ -221,8 +221,8 @@ public class Sora : IDisposable
                 return VideoCodecImplementation.CiscoOpenH264;
             case "intel_vpl":
                 return VideoCodecImplementation.IntelVpl;
-            case "nvidia_video_codec_sdk":
-                return VideoCodecImplementation.NvidiaVideoCodecSdk;
+            case "nvidia_video_codec":
+                return VideoCodecImplementation.NvidiaVideoCodec;
             case "amd_amf":
                 return VideoCodecImplementation.AmdAmf;
             default:
@@ -320,13 +320,13 @@ public class Sora : IDisposable
         }
 
         // 可能な限り HWA を利用する VideoCodecPreference を返す
-        // 優先度的には Intel VPL > Nvidia Video Codec SDK > Internal となる
+        // 優先度的には Intel VPL > Nvidia Video Codec > Internal となる
         public static VideoCodecPreference GetHardwareAcceleratorPreference(VideoCodecCapability capability)
         {
             // Merge は同じコーデックを上書きするので、優先度が高いのを後でマージすることで正しい優先度になる
             var preference = new VideoCodecPreference();
             preference.Merge(CreateFromImplementation(capability, VideoCodecImplementation.Internal));
-            preference.Merge(CreateFromImplementation(capability, VideoCodecImplementation.NvidiaVideoCodecSdk));
+            preference.Merge(CreateFromImplementation(capability, VideoCodecImplementation.NvidiaVideoCodec));
             preference.Merge(CreateFromImplementation(capability, VideoCodecImplementation.AmdAmf));
             preference.Merge(CreateFromImplementation(capability, VideoCodecImplementation.IntelVpl));
             return preference;

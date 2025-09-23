@@ -11,6 +11,8 @@
 
 ## develop
 
+- [CHANGE] VideoCodecImplementation の NvidiaVideoCodecSdk を NvidiaVideoCodec に変更する
+  - @torikizi
 - [UPDATE] libwebrtc を `m140.7339.2.0` に上げる
   - macOS, iOS が Apple clang ではなく libwebrtc の clang を使うようになったので、その対応を入れている
   - @melpon
