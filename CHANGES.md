@@ -11,6 +11,13 @@
 
 ## develop
 
+## 2025.2.1
+
+**リリース日**: 2025-09-xx
+
+- [CHANGE] VideoCodecImplementation の NvidiaVideoCodecSdk を NvidiaVideoCodec に変更する
+  - @torikizi
+
 ## 2025.2.0
 
 **リリース日**: 2025-08-26

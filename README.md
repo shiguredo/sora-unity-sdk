@@ -93,7 +93,7 @@ Please read <https://github.com/shiguredo/oss/blob/master/README.en.md> before u
   - H.265 ハードウェアデコードへの対応
   - H.264 ハードウェアエンコードへの対応
   - H.264 ハードウェアデコードへの対応
-- NVIDIA VIDEO CODEC SDK
+- NVIDIA VIDEO CODEC
   - H.265 のハードウェアエンコードへの対応
   - H.265 のハードウェアデコードへの対応
   - H.264 のハードウェアエンコードへの対応
