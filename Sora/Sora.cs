@@ -160,6 +160,10 @@ public class Sora : IDisposable
 
         public static CameraConfig FromUnityCamera(UnityEngine.Camera unityCamera, int unityCameraRenderTargetDepthBuffer, int videoWidth, int videoHeight, int videoFps)
         {
+            if (unityCamera == null)
+            {
+                throw new ArgumentNullException(nameof(unityCamera));
+            }
             return new CameraConfig()
             {
                 CapturerType = Sora.CapturerType.UnityCamera,
