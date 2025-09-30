@@ -107,6 +107,8 @@ Please read <https://github.com/shiguredo/oss/blob/master/README.en.md> before u
   - H.264 のハードウェアデコードへの対応
   - AV1 のハードウェアエンコードへの対応
   - AV1 のハードウェアデコードへの対応
+  - VP9 のハードウェアエンコードへの対応
+  - VP9 のハードウェアデコードへの対応
 - AMD AMF
   - H.265 のハードウェアエンコードへの対応
   - H.265 のハードウェアデコードへの対応
