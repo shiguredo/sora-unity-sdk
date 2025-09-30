@@ -1615,7 +1615,8 @@ public class Sora : IDisposable
         {
             if (p != IntPtr.Zero)
             {
-                // ネイティブリソースを破棄する前に GCHandle を解放する
+                // ネイティブ側がコールバックを保持している可能性があるため、
+                // 先にネイティブリソースを破棄してから GCHandle を解放する
                 sora_audio_output_helper_destroy(p);
                 if (onChangeRouteHandle.IsAllocated)
                 {

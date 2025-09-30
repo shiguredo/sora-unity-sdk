@@ -27,12 +27,10 @@
       - Android 実装の内部イベント `onChangeRoute` も `Action?` に変更する
       - `null` を指定した場合はコールバック未設定として安全に動作する
     - Android 側の安全化: `IsHandsfree()`/`SetHandsfree()` は null 条件演算子（`?.`）で呼び出すように変更する
-    - DefaultAudioOutputHelper.Dispose の GCHandle 解放を安全にする
-      - `sora_audio_output_helper_destroy(p)` 実行後、`onChangeRouteHandle.IsAllocated` を確認してから `Free()` を呼ぶように修正する
-      - `onChangeRoute` が `null` の場合にも未割り当て `GCHandle` を誤って解放しないようにし、クラッシュの可能性を排除する
-    - デバイス列挙メソッドの戻り値型を変更する
-      - 失敗時に `null` を返す仕様とするため、戻り値型を `DeviceInfo[]` から `DeviceInfo[]?` に変更する
-        - 対象メソッド: `GetVideoCapturerDevices()`, `GetAudioRecordingDevices()`, `GetAudioPlayoutDevices()`
+    - DefaultAudioOutputHelper.Dispose の GCHandle 解放順序を修正する
+      - ネイティブリソース破棄前に GCHandle を参照している可能性があるため、先に `sora_audio_output_helper_destroy(p)` を実行してからネイティブ側のコールバック参照を解放する
+      - その後、`onChangeRouteHandle.IsAllocated` を確認してから `Free()` を呼び、安全に GCHandle を解放する
+      - `onChangeRoute` が `null` の場合にも未割り当て `GCHandle` を誤って解放しないようにする
   - @torikizi
 - [UPDATE] libwebrtc を `m140.7339.2.0` に上げる
   - macOS, iOS が Apple clang ではなく libwebrtc の clang を使うようになったので、その対応を入れている
