@@ -1615,11 +1615,12 @@ public class Sora : IDisposable
         {
             if (p != IntPtr.Zero)
             {
+                // ネイティブリソースを破棄する前に GCHandle を解放する
+                sora_audio_output_helper_destroy(p);
                 if (onChangeRouteHandle.IsAllocated)
                 {
                     onChangeRouteHandle.Free();
                 }
-                sora_audio_output_helper_destroy(p);
                 p = IntPtr.Zero;
             }
         }
