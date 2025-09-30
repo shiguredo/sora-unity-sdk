@@ -11,6 +11,8 @@
 
 ## develop
 
+- [CHANGE] VideoCodecImplementation の NvidiaVideoCodecSdk を NvidiaVideoCodec に変更する
+  - @torikizi
 - [CHANGE] Sora.cs を Nullable 対応にする
   - `#nullable enable` を追加する
   - nullable が有効になったことで以下の変更を実施し、Unity Editor でのワーニングを修正する
@@ -31,6 +33,22 @@
     - デバイス列挙メソッドの戻り値型を変更する
       - 失敗時に `null` を返す仕様とするため、戻り値型を `DeviceInfo[]` から `DeviceInfo[]?` に変更する
         - 対象メソッド: `GetVideoCapturerDevices()`, `GetAudioRecordingDevices()`, `GetAudioPlayoutDevices()`
+  - @torikizi
+- [UPDATE] libwebrtc を `m140.7339.2.0` に上げる
+  - macOS, iOS が Apple clang ではなく libwebrtc の clang を使うようになったので、その対応を入れている
+  - @melpon
+- [UPDATE] Sora C++ SDK を `2025.6.0-canary.1` に上げる
+  - `BOOST_VERSION` を `1.89.0` にアップデート
+  - `CMAKE_VERSION` を `4.1.0` にアップデート
+  - @melpon
+- [ADD] DegradationPreference を追加し、エンコード時の劣化の優先順位を指定できるようにする
+  - `enum DegradationPreference` を追加
+    - `Disabled`: 無効
+    - `MaintainFramerate`: フレームレート優先
+    - `MaintainResolution`: 解像度優先
+    - `Balanced`: バランス優先
+  - `Config.DegradationPreference` を追加
+  - `sora_conf_internal.proto` に `degradation_preference` を追加
   - @torikizi
 
 ### misc

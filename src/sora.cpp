@@ -1,6 +1,8 @@
 #include "sora.h"
 #include "sora_version.h"
 
+#include <future>
+
 // WebRTC
 #include <api/audio/create_audio_device_module.h>
 #include <api/audio_codecs/builtin_audio_decoder_factory.h>
@@ -9,6 +11,7 @@
 #include <api/environment/environment.h>
 #include <api/environment/environment_factory.h>
 #include <api/rtc_event_log/rtc_event_log_factory.h>
+#include <api/rtp_parameters.h>
 #include <media/engine/webrtc_media_engine.h>
 #include <modules/audio_device/include/audio_device.h>
 #include <modules/audio_device/include/audio_device_factory.h>
@@ -401,6 +404,22 @@ void Sora::DoConnect(const sora_conf::internal::ConnectConfig& cc,
     config.video_bit_rate = cc.video_bit_rate;
     config.audio_codec_type = cc.audio_codec_type;
     config.audio_bit_rate = cc.audio_bit_rate;
+    if (cc.has_degradation_preference()) {
+      switch (cc.degradation_preference) {
+        case sora_conf::internal::DegradationPreference::DISABLED:
+          config.degradation_preference = webrtc::DegradationPreference::DISABLED;
+          break;
+        case sora_conf::internal::DegradationPreference::MAINTAIN_FRAMERATE:
+          config.degradation_preference = webrtc::DegradationPreference::MAINTAIN_FRAMERATE;
+          break;
+        case sora_conf::internal::DegradationPreference::MAINTAIN_RESOLUTION:
+          config.degradation_preference = webrtc::DegradationPreference::MAINTAIN_RESOLUTION;
+          break;
+        case sora_conf::internal::DegradationPreference::BALANCED:
+          config.degradation_preference = webrtc::DegradationPreference::BALANCED;
+          break;
+      }
+    }
     if (cc.has_data_channel_signaling()) {
       config.data_channel_signaling = cc.data_channel_signaling;
     }
