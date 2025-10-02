@@ -85,8 +85,7 @@ class UnityAudioDevice : public webrtc::AudioDeviceModule {
   // Main initialization and termination
   virtual int32_t Init() override {
     RTC_LOG(LS_INFO) << "Init";
-    device_buffer_ =
-        std::make_unique<webrtc::AudioDeviceBuffer>(env_);
+    device_buffer_ = std::make_unique<webrtc::AudioDeviceBuffer>(env_);
     initialized_ = true;
     return adm_->Init();
   }
