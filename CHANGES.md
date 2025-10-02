@@ -15,6 +15,7 @@
   - @torikizi
 - [UPDATE] libwebrtc を `m141.7390.2.0` に上げる
   - macOS, iOS が Apple clang ではなく libwebrtc の clang を使うようになったので、その対応を入れている
+  - unity_audio_device.h の Init() 関数内で AudioDeviceBuffer の生成に env_ を渡すようにする
   - @melpon @torikizi
 - [UPDATE] Sora C++ SDK を `2025.6.0-canary.5` に上げる
   - `BOOST_VERSION` を `1.89.0` にアップデート
