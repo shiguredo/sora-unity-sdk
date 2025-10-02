@@ -20,7 +20,7 @@
   - @melpon @torikizi
 - [UPDATE] Sora C++ SDK を `2025.6.0-canary.5` に上げる
   - `BOOST_VERSION` を `1.89.0` にアップデート
-  - `CMAKE_VERSION` を `4.1.0` にアップデート
+  - `CMAKE_VERSION` を `4.1.2` にアップデート
   - @melpon @torikizi
 - [ADD] DegradationPreference を追加し、エンコード時の劣化の優先順位を指定できるようにする
   - `enum DegradationPreference` を追加
