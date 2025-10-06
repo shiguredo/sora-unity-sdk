@@ -904,11 +904,10 @@ public class Sora : IDisposable
             {
                 throw new ArgumentNullException(nameof(config.UnityCamera), "CapturerType が UnityCamera の場合は UnityCamera を指定してください。");
             }
-            var cam = config.UnityCamera;
-            unityCamera = cam;
+            unityCamera = config.UnityCamera;
             var texture = new UnityEngine.RenderTexture(config.VideoWidth, config.VideoHeight, config.UnityCameraRenderTargetDepthBuffer, UnityEngine.RenderTextureFormat.BGRA32);
-            cam.targetTexture = texture;
-            cam.enabled = true;
+            unityCamera.targetTexture = texture;
+            unityCamera.enabled = true;
             unityCameraTexture = texture.GetNativeTexturePtr();
         }
         var cc = new SoraConf.Internal.CameraConfig();
@@ -953,7 +952,7 @@ public class Sora : IDisposable
     static private void TrackCallback(uint trackId, string connectionId, IntPtr userdata)
     {
         var callback = GCHandle.FromIntPtr(userdata).Target as Action<uint, string>;
-        callback?.Invoke(trackId, connectionId);
+        callback!.Invoke(trackId, connectionId);
     }
 
     /// <summary>
@@ -1234,19 +1233,9 @@ public class Sora : IDisposable
     static private void StatsCallback(string json, IntPtr userdata)
     {
         GCHandle handle = GCHandle.FromIntPtr(userdata);
-        try
-        {
-            var callback = handle.Target as Action<string>;
-            callback?.Invoke(json);
-        }
-        catch (Exception ex)
-        {
-            Debug.LogException(ex);
-        }
-        finally
-        {
-            handle.Free();
-        }
+        var callback = GCHandle.FromIntPtr(userdata).Target as Action<string>;
+        callback!(json);
+        handle.Free();
     }
 
     public void GetStats(Action<string> onGetStats)
