@@ -1266,7 +1266,7 @@ public class Sora : IDisposable
         public string DeviceName;
         public string UniqueName;
     }
-    public static DeviceInfo[] GetVideoCapturerDevices()
+    public static DeviceInfo[]? GetVideoCapturerDevices()
     {
         var list = new System.Collections.Generic.List<DeviceInfo>();
         Action<string, string> f = (deviceName, uniqueName) =>
@@ -1279,22 +1279,18 @@ public class Sora : IDisposable
         };
 
         GCHandle handle = GCHandle.Alloc(f);
-        try
+        int result = sora_device_enum_video_capturer(DeviceEnumCallback, GCHandle.ToIntPtr(handle));
+        handle.Free();
+
+        if (result == 0)
         {
-            int result = sora_device_enum_video_capturer(DeviceEnumCallback, GCHandle.ToIntPtr(handle));
-            if (result == 0)
-            {
-                throw new InvalidOperationException("Failed to enumerate video capturer devices");
-            }
-            return list.ToArray();
+            return null;
         }
-        finally
-        {
-            handle.Free();
-        }
+
+        return list.ToArray();
     }
 
-    public static DeviceInfo[] GetAudioRecordingDevices()
+    public static DeviceInfo[]? GetAudioRecordingDevices()
     {
         var list = new System.Collections.Generic.List<DeviceInfo>();
         Action<string, string> f = (deviceName, uniqueName) =>
@@ -1307,22 +1303,18 @@ public class Sora : IDisposable
         };
 
         GCHandle handle = GCHandle.Alloc(f);
-        try
+        int result = sora_device_enum_audio_recording(DeviceEnumCallback, GCHandle.ToIntPtr(handle));
+        handle.Free();
+
+        if (result == 0)
         {
-            int result = sora_device_enum_audio_recording(DeviceEnumCallback, GCHandle.ToIntPtr(handle));
-            if (result == 0)
-            {
-                throw new InvalidOperationException("Failed to enumerate audio recording devices");
-            }
-            return list.ToArray();
+            return null;
         }
-        finally
-        {
-            handle.Free();
-        }
+
+        return list.ToArray();
     }
 
-    public static DeviceInfo[] GetAudioPlayoutDevices()
+    public static DeviceInfo[]? GetAudioPlayoutDevices()
     {
         var list = new System.Collections.Generic.List<DeviceInfo>();
         Action<string, string> f = (deviceName, uniqueName) =>
@@ -1335,19 +1327,15 @@ public class Sora : IDisposable
         };
 
         GCHandle handle = GCHandle.Alloc(f);
-        try
+        int result = sora_device_enum_audio_playout(DeviceEnumCallback, GCHandle.ToIntPtr(handle));
+        handle.Free();
+
+        if (result == 0)
         {
-            int result = sora_device_enum_audio_playout(DeviceEnumCallback, GCHandle.ToIntPtr(handle));
-            if (result == 0)
-            {
-                throw new InvalidOperationException("Failed to enumerate audio playout devices");
-            }
-            return list.ToArray();
+            return null;
         }
-        finally
-        {
-            handle.Free();
-        }
+
+        return list.ToArray();
     }
 
     public static void Setenv(string name, string value)
@@ -1523,12 +1511,13 @@ public class Sora : IDisposable
     // Androidの実装
     public class AndroidAudioOutputHelper : IAudioOutputHelper
     {
-        private AndroidJavaObject? soraAudioManager;
-        private ChangeRouteCallbackProxy? callbackProxy;
+    private AndroidJavaObject soraAudioManager;
+    private ChangeRouteCallbackProxy callbackProxy;
+    private bool disposed = false;
 
         private class ChangeRouteCallbackProxy : AndroidJavaProxy
         {
-            public event Action? onChangeRoute;
+            public Action? onChangeRoute;
 
             public ChangeRouteCallbackProxy() : base("jp.shiguredo.sora.audiomanager.SoraAudioManager$OnChangeRouteObserver")
             {
@@ -1548,9 +1537,9 @@ public class Sora : IDisposable
                 AndroidJavaObject currentActivity = unityPlayerClass.GetStatic<AndroidJavaObject>("currentActivity");
                 soraAudioManager = soraAudioManagerFactoryClass.CallStatic<AndroidJavaObject>("createWithMainThreadWrapper", currentActivity);
 
+                callbackProxy = new ChangeRouteCallbackProxy();
                 if (onChangeRoute != null)
                 {
-                    callbackProxy = new ChangeRouteCallbackProxy();
                     callbackProxy.onChangeRoute += onChangeRoute;
                 }
                 soraAudioManager.Call("start", callbackProxy);
@@ -1559,19 +1548,32 @@ public class Sora : IDisposable
 
         public void Dispose()
         {
-            soraAudioManager?.Call("stop");
-            soraAudioManager = null;
-            callbackProxy = null;
+            if (disposed)
+            {
+                return;
+            }
+            disposed = true;
+
+            soraAudioManager.Call("stop");
+            soraAudioManager.Dispose();
         }
 
         public bool IsHandsfree()
         {
-            return soraAudioManager?.Call<bool>("isHandsfree") ?? false;
+            if (disposed)
+            {
+                throw new ObjectDisposedException(nameof(AndroidAudioOutputHelper));
+            }
+            return soraAudioManager.Call<bool>("isHandsfree");
         }
 
         public void SetHandsfree(bool enabled)
         {
-            soraAudioManager?.Call("setHandsfree", enabled);
+            if (disposed)
+            {
+                throw new ObjectDisposedException(nameof(AndroidAudioOutputHelper));
+            }
+            soraAudioManager.Call("setHandsfree", enabled);
         }
     }
 #endif

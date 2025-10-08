@@ -26,6 +26,7 @@
       - コンストラクタおよび `AudioOutputHelperFactory.Create` の引数を `Action?` に変更する
       - Android 実装の内部イベント `onChangeRoute` も `Action?` に変更する
       - `null` を指定した場合はコールバック未設定として安全に動作する
+      - onChangeRoute は event ではなく Action? に変更する
     - Android 側の安全化: `IsHandsfree()`/`SetHandsfree()` は null 条件演算子（`?.`）で呼び出すように変更する
     - DefaultAudioOutputHelper.Dispose の GCHandle 解放順序を修正する
       - ネイティブリソース破棄前に GCHandle を参照している可能性があるため、先に `sora_audio_output_helper_destroy(p)` を実行してからネイティブ側のコールバック参照を解放する
