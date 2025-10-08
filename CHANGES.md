@@ -22,16 +22,20 @@
       - `Config.ForwardingFilter` と `Config.ForwardingFilters` を nullable に変更する
       - `ForwardingFilter.Rule.Field` と `Operator` に空文字の初期値を設定する
       - `SwitchCamera()` で Unity カメラ指定時の null チェックを追加する
+    - GetVideoCapturerDevices, GetAudioRecordingDevices, GetAudioPlayoutDevices が null を返す可能性があるように変更する
     - Android/Default オーディオヘルパーの `onChangeRoute` の null 許容対応
       - コンストラクタおよび `AudioOutputHelperFactory.Create` の引数を `Action?` に変更する
       - Android 実装の内部イベント `onChangeRoute` も `Action?` に変更する
       - `null` を指定した場合はコールバック未設定として安全に動作する
       - onChangeRoute は event ではなく Action? に変更する
+    - AndroidAudioOutputHelper の内部状態管理（disposed フラグ追加、Dispose/IsHandsfree/SetHandsfree の安全化）
     - Android 側の安全化: `IsHandsfree()`/`SetHandsfree()` は null 条件演算子（`?.`）で呼び出すように変更する
     - DefaultAudioOutputHelper.Dispose の GCHandle 解放順序を修正する
       - ネイティブリソース破棄前に GCHandle を参照している可能性があるため、先に `sora_audio_output_helper_destroy(p)` を実行してからネイティブ側のコールバック参照を解放する
       - その後、`onChangeRouteHandle.IsAllocated` を確認してから `Free()` を呼び、安全に GCHandle を解放する
       - `onChangeRoute` が `null` の場合にも未割り当て `GCHandle` を誤って解放しないようにする
+    - コールバックの null 許容対応と null チェックの強化
+    - GCHandle の解放順序・安全性の見直し
   - @torikizi
 - [UPDATE] libwebrtc を `m140.7339.2.0` に上げる
   - macOS, iOS が Apple clang ではなく libwebrtc の clang を使うようになったので、その対応を入れている
