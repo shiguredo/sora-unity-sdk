@@ -16,7 +16,7 @@
 - [CHANGE] Sora.cs を Nullable 対応にする
   - `#nullable enable` を追加する
   - nullable が有効になったことで以下の変更を実施し、Unity Editor でのワーニングを修正する
-    - コールバック呼び出しを `callback!.Invoke(...)` に統一する
+    - コールバック呼び出しを `callback!(...)` に統一する
       - GCHandle から取得するコールバックは絶対に null にならないため、`?.` ではなく `!` を使用
     - nullable 型の適切な使用
       - `CameraConfig.UnityCamera` を `UnityEngine.Camera?` に変更し、使用時にガードを追加する
@@ -29,9 +29,6 @@
       - Android 実装の内部 `onChangeRoute` を `event Action` から `Action?` に変更する
       - `null` を指定した場合はコールバック未設定として安全に動作する
       - AndroidAudioOutputHelper に disposed フラグを追加し、Dispose 後の操作を安全化する
-      - DefaultAudioOutputHelper.Dispose の GCHandle 解放順序を修正する
-        - 先に `sora_audio_output_helper_destroy(p)` でネイティブリソースを破棄
-        - その後 `onChangeRouteHandle.IsAllocated` 確認後に `Free()` を呼び出す
   - @torikizi
 - [UPDATE] libwebrtc を `m140.7339.2.0` に上げる
   - macOS, iOS が Apple clang ではなく libwebrtc の clang を使うようになったので、その対応を入れている

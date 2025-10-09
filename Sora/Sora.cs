@@ -555,11 +555,10 @@ public class Sora : IDisposable
             {
                 throw new ArgumentNullException(nameof(config.CameraConfig.UnityCamera), "CapturerType が UnityCamera の場合は UnityCamera を指定してください。");
             }
-            var cam = config.CameraConfig.UnityCamera;
-            unityCamera = cam;
+            unityCamera = config.CameraConfig.UnityCamera;
             var texture = new UnityEngine.RenderTexture(config.CameraConfig.VideoWidth, config.CameraConfig.VideoHeight, config.CameraConfig.UnityCameraRenderTargetDepthBuffer, UnityEngine.RenderTextureFormat.BGRA32);
-            cam.targetTexture = texture;
-            cam.enabled = true;
+            unityCamera.targetTexture = texture;
+            unityCamera.enabled = true;
             unityCameraTexture = texture.GetNativeTexturePtr();
         }
 
@@ -952,7 +951,7 @@ public class Sora : IDisposable
     static private void TrackCallback(uint trackId, string connectionId, IntPtr userdata)
     {
         var callback = GCHandle.FromIntPtr(userdata).Target as Action<uint, string>;
-        callback!.Invoke(trackId, connectionId);
+        callback!(trackId, connectionId);
     }
 
     /// <summary>
@@ -995,7 +994,7 @@ public class Sora : IDisposable
     static private void SetOfferCallback(string json, IntPtr userdata)
     {
         var callback = GCHandle.FromIntPtr(userdata).Target as Action<string>;
-        callback!.Invoke(json);
+        callback!(json);
     }
 
     public Action<string> OnSetOffer
@@ -1018,7 +1017,7 @@ public class Sora : IDisposable
     static private void NotifyCallback(string json, IntPtr userdata)
     {
         var callback = GCHandle.FromIntPtr(userdata).Target as Action<string>;
-        callback!.Invoke(json);
+        callback!(json);
     }
 
     public Action<string> OnNotify
@@ -1041,7 +1040,7 @@ public class Sora : IDisposable
     static private void PushCallback(string json, IntPtr userdata)
     {
         var callback = GCHandle.FromIntPtr(userdata).Target as Action<string>;
-        callback!.Invoke(json);
+        callback!(json);
     }
 
     public Action<string> OnPush
@@ -1066,7 +1065,7 @@ public class Sora : IDisposable
         var callback = GCHandle.FromIntPtr(userdata).Target as Action<string, byte[]>;
         byte[] data = new byte[size];
         Marshal.Copy(buf, data, 0, size);
-        callback!.Invoke(label, data);
+        callback!(label, data);
     }
 
     public Action<string, byte[]> OnMessage
@@ -1089,7 +1088,7 @@ public class Sora : IDisposable
     static private void DisconnectCallback(int errorCode, string message, IntPtr userdata)
     {
         var callback = GCHandle.FromIntPtr(userdata).Target as Action<SoraConf.ErrorCode, string>;
-        callback!.Invoke((SoraConf.ErrorCode)errorCode, message);
+        callback!((SoraConf.ErrorCode)errorCode, message);
     }
 
     public Action<SoraConf.ErrorCode, string> OnDisconnect
@@ -1112,7 +1111,7 @@ public class Sora : IDisposable
     static private void DataChannelCallback(string label, IntPtr userdata)
     {
         var callback = GCHandle.FromIntPtr(userdata).Target as Action<string>;
-        callback!.Invoke(label);
+        callback!(label);
     }
 
     public Action<string> OnDataChannel
@@ -1165,7 +1164,7 @@ public class Sora : IDisposable
         var callback = GCHandle.FromIntPtr(userdata).Target as Action<short[], int, int>;
         short[] buf2 = new short[samples * channels];
         Marshal.Copy(buf, buf2, 0, samples * channels);
-        callback!.Invoke(buf2, samples, channels);
+        callback!(buf2, samples, channels);
     }
 
     /// <summary>
@@ -1197,7 +1196,7 @@ public class Sora : IDisposable
     {
         var callback = GCHandle.FromIntPtr(userdata).Target as Action<SoraConf.VideoFrame>;
         var frame = Jsonif.Json.FromJson<SoraConf.VideoFrame>(data);
-        callback!.Invoke(frame);
+        callback!(frame);
     }
 
     /// <summary>
@@ -1258,7 +1257,7 @@ public class Sora : IDisposable
     static private void DeviceEnumCallback(string device_name, string unique_name, IntPtr userdata)
     {
         var callback = GCHandle.FromIntPtr(userdata).Target as Action<string, string>;
-        callback!.Invoke(device_name, unique_name);
+        callback!(device_name, unique_name);
     }
 
     public struct DeviceInfo
@@ -1511,9 +1510,9 @@ public class Sora : IDisposable
     // Androidの実装
     public class AndroidAudioOutputHelper : IAudioOutputHelper
     {
-    private AndroidJavaObject soraAudioManager;
-    private ChangeRouteCallbackProxy callbackProxy;
-    private bool disposed = false;
+        private AndroidJavaObject soraAudioManager;
+        private ChangeRouteCallbackProxy callbackProxy;
+        private bool disposed = false;
 
         private class ChangeRouteCallbackProxy : AndroidJavaProxy
         {
@@ -1525,7 +1524,7 @@ public class Sora : IDisposable
 
             public void OnChangeRoute()
             {
-                onChangeRoute?.Invoke();
+                onChangeRoute?();
             }
         }
 
@@ -1587,7 +1586,7 @@ public class Sora : IDisposable
         static private void ChangeRouteCallback(IntPtr userdata)
         {
             var callback = GCHandle.FromIntPtr(userdata).Target as Action;
-            callback!.Invoke();
+            callback!();
         }
 
         GCHandle onChangeRouteHandle;
@@ -1595,15 +1594,13 @@ public class Sora : IDisposable
 
         public DefaultAudioOutputHelper(Action? onChangeRoute)
         {
-            if (onChangeRoute != null)
+            if (onChangeRoute == null)
             {
-                onChangeRouteHandle = GCHandle.Alloc(onChangeRoute);
-                p = sora_audio_output_helper_create(ChangeRouteCallback, GCHandle.ToIntPtr(onChangeRouteHandle));
+                onChangeRoute = () => { }; // 空のアクションを割り当てる
             }
-            else
-            {
-                p = sora_audio_output_helper_create(null, IntPtr.Zero);
-            }
+
+            onChangeRouteHandle = GCHandle.Alloc(onChangeRoute);
+            p = sora_audio_output_helper_create(ChangeRouteCallback, GCHandle.ToIntPtr(onChangeRouteHandle));
         }
 
         public void Dispose()
