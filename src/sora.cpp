@@ -407,16 +407,20 @@ void Sora::DoConnect(const sora_conf::internal::ConnectConfig& cc,
     if (cc.has_degradation_preference()) {
       switch (cc.degradation_preference) {
         case sora_conf::internal::DegradationPreference::DISABLED:
-          config.degradation_preference = webrtc::DegradationPreference::DISABLED;
+          config.degradation_preference =
+              webrtc::DegradationPreference::DISABLED;
           break;
         case sora_conf::internal::DegradationPreference::MAINTAIN_FRAMERATE:
-          config.degradation_preference = webrtc::DegradationPreference::MAINTAIN_FRAMERATE;
+          config.degradation_preference =
+              webrtc::DegradationPreference::MAINTAIN_FRAMERATE;
           break;
         case sora_conf::internal::DegradationPreference::MAINTAIN_RESOLUTION:
-          config.degradation_preference = webrtc::DegradationPreference::MAINTAIN_RESOLUTION;
+          config.degradation_preference =
+              webrtc::DegradationPreference::MAINTAIN_RESOLUTION;
           break;
         case sora_conf::internal::DegradationPreference::BALANCED:
-          config.degradation_preference = webrtc::DegradationPreference::BALANCED;
+          config.degradation_preference =
+              webrtc::DegradationPreference::BALANCED;
           break;
       }
     }
