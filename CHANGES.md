@@ -13,6 +13,23 @@
 
 - [CHANGE] VideoCodecImplementation の NvidiaVideoCodecSdk を NvidiaVideoCodec に変更する
   - @torikizi
+- [CHANGE] Sora.cs を Nullable 対応にする
+  - `#nullable enable` を追加する
+  - nullable が有効になったことで以下の変更を実施し、Unity Editor でのワーニングを修正する
+    - コールバック呼び出しを `callback!(...)` に統一する
+      - GCHandle から取得するコールバックは絶対に null にならないため、`?.` ではなく `!` を使用
+    - nullable 型の適切な使用
+      - `CameraConfig.UnityCamera` を `UnityEngine.Camera?` に変更し、使用時にガードを追加する
+      - `Config.ForwardingFilter` と `Config.ForwardingFilters` を nullable に変更する
+      - `ForwardingFilter.Rule.Field` と `Operator` に空文字の初期値を設定する
+      - `SwitchCamera()` で Unity カメラ指定時の null チェックを追加する
+    - GetVideoCapturerDevices, GetAudioRecordingDevices, GetAudioPlayoutDevices が null を返す可能性があるように変更する
+    - AudioOutputHelper の null 安全性向上
+      - コンストラクタおよび `AudioOutputHelperFactory.Create` の引数を `Action?` に変更する
+      - Android 実装の内部 `onChangeRoute` を `event Action` から `Action?` に変更する
+      - `null` を指定した場合はコールバック未設定として安全に動作する
+      - AndroidAudioOutputHelper に disposed フラグを追加し、Dispose 後の操作を安全化する
+  - @torikizi
 - [UPDATE] libwebrtc を `m141.7390.2.0` に上げる
   - macOS, iOS が Apple clang ではなく libwebrtc の clang を使うようになったので、その対応を入れている
   - unity_audio_device.h の Init() 関数内で AudioDeviceBuffer の生成に env_ を渡すようにする

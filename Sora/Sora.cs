@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using UnityEngine;
 
+#nullable enable
+
 public class Sora : IDisposable
 {
     public enum Role
@@ -126,8 +128,9 @@ public class Sora : IDisposable
         public int? Priority;
         public class Rule
         {
-            public string Field;
-            public string Operator;
+            // 必須フィールドは空文字で初期化しておく
+            public string Field = "";
+            public string Operator = "";
             public List<string> Values = new List<string>();
         }
         public List<List<Rule>> Rules = new List<List<Rule>>();
@@ -147,7 +150,7 @@ public class Sora : IDisposable
     public class CameraConfig
     {
         public CapturerType CapturerType = Sora.CapturerType.DeviceCamera;
-        public UnityEngine.Camera UnityCamera = null;
+        public UnityEngine.Camera? UnityCamera;
         public int UnityCameraRenderTargetDepthBuffer = 16;
         // 空文字ならデフォルトデバイスを利用する
         public string VideoCapturerDevice = "";
@@ -157,6 +160,10 @@ public class Sora : IDisposable
 
         public static CameraConfig FromUnityCamera(UnityEngine.Camera unityCamera, int unityCameraRenderTargetDepthBuffer, int videoWidth, int videoHeight, int videoFps)
         {
+            if (unityCamera == null)
+            {
+                throw new ArgumentNullException(nameof(unityCamera));
+            }
             return new CameraConfig()
             {
                 CapturerType = Sora.CapturerType.UnityCamera,
@@ -434,8 +441,8 @@ public class Sora : IDisposable
         // Proxy サーバーに接続するときの User-Agent。未設定ならデフォルト値が使われる
         public string ProxyAgent = "";
         [System.Obsolete("forwardingFilter は非推奨です。代わりに forwardingFilters を使用してください。")]
-        public ForwardingFilter ForwardingFilter;
-        public List<ForwardingFilter> ForwardingFilters;
+        public ForwardingFilter? ForwardingFilter;
+        public List<ForwardingFilter>? ForwardingFilters;
 
         // 利用するエンコーダー/デコーダーの指定
         // null の場合は VideoCodecImplementation.Internal な実装のみ利用する
@@ -459,7 +466,7 @@ public class Sora : IDisposable
     GCHandle onHandleAudioHandle;
     GCHandle onCapturerFrameHandle;
     UnityEngine.Rendering.CommandBuffer commandBuffer;
-    UnityEngine.Camera unityCamera;
+    UnityEngine.Camera? unityCamera;
 
     /// <summary>
     /// Sora オブジェクトを破棄します。
@@ -544,6 +551,10 @@ public class Sora : IDisposable
         IntPtr unityCameraTexture = IntPtr.Zero;
         if (config.CameraConfig.CapturerType == CapturerType.UnityCamera)
         {
+            if (config.CameraConfig.UnityCamera == null)
+            {
+                throw new ArgumentNullException(nameof(config.CameraConfig.UnityCamera), "CapturerType が UnityCamera の場合は UnityCamera を指定してください。");
+            }
             unityCamera = config.CameraConfig.UnityCamera;
             var texture = new UnityEngine.RenderTexture(config.CameraConfig.VideoWidth, config.CameraConfig.VideoHeight, config.CameraConfig.UnityCameraRenderTargetDepthBuffer, UnityEngine.RenderTextureFormat.BGRA32);
             unityCamera.targetTexture = texture;
@@ -888,6 +899,10 @@ public class Sora : IDisposable
         IntPtr unityCameraTexture = IntPtr.Zero;
         if (config.CapturerType == CapturerType.UnityCamera)
         {
+            if (config.UnityCamera == null)
+            {
+                throw new ArgumentNullException(nameof(config.UnityCamera), "CapturerType が UnityCamera の場合は UnityCamera を指定してください。");
+            }
             unityCamera = config.UnityCamera;
             var texture = new UnityEngine.RenderTexture(config.VideoWidth, config.VideoHeight, config.UnityCameraRenderTargetDepthBuffer, UnityEngine.RenderTextureFormat.BGRA32);
             unityCamera.targetTexture = texture;
@@ -936,7 +951,7 @@ public class Sora : IDisposable
     static private void TrackCallback(uint trackId, string connectionId, IntPtr userdata)
     {
         var callback = GCHandle.FromIntPtr(userdata).Target as Action<uint, string>;
-        callback(trackId, connectionId);
+        callback!(trackId, connectionId);
     }
 
     /// <summary>
@@ -979,7 +994,7 @@ public class Sora : IDisposable
     static private void SetOfferCallback(string json, IntPtr userdata)
     {
         var callback = GCHandle.FromIntPtr(userdata).Target as Action<string>;
-        callback(json);
+        callback!(json);
     }
 
     public Action<string> OnSetOffer
@@ -1002,7 +1017,7 @@ public class Sora : IDisposable
     static private void NotifyCallback(string json, IntPtr userdata)
     {
         var callback = GCHandle.FromIntPtr(userdata).Target as Action<string>;
-        callback(json);
+        callback!(json);
     }
 
     public Action<string> OnNotify
@@ -1025,7 +1040,7 @@ public class Sora : IDisposable
     static private void PushCallback(string json, IntPtr userdata)
     {
         var callback = GCHandle.FromIntPtr(userdata).Target as Action<string>;
-        callback(json);
+        callback!(json);
     }
 
     public Action<string> OnPush
@@ -1050,7 +1065,7 @@ public class Sora : IDisposable
         var callback = GCHandle.FromIntPtr(userdata).Target as Action<string, byte[]>;
         byte[] data = new byte[size];
         Marshal.Copy(buf, data, 0, size);
-        callback(label, data);
+        callback!(label, data);
     }
 
     public Action<string, byte[]> OnMessage
@@ -1073,7 +1088,7 @@ public class Sora : IDisposable
     static private void DisconnectCallback(int errorCode, string message, IntPtr userdata)
     {
         var callback = GCHandle.FromIntPtr(userdata).Target as Action<SoraConf.ErrorCode, string>;
-        callback((SoraConf.ErrorCode)errorCode, message);
+        callback!((SoraConf.ErrorCode)errorCode, message);
     }
 
     public Action<SoraConf.ErrorCode, string> OnDisconnect
@@ -1096,7 +1111,7 @@ public class Sora : IDisposable
     static private void DataChannelCallback(string label, IntPtr userdata)
     {
         var callback = GCHandle.FromIntPtr(userdata).Target as Action<string>;
-        callback(label);
+        callback!(label);
     }
 
     public Action<string> OnDataChannel
@@ -1149,7 +1164,7 @@ public class Sora : IDisposable
         var callback = GCHandle.FromIntPtr(userdata).Target as Action<short[], int, int>;
         short[] buf2 = new short[samples * channels];
         Marshal.Copy(buf, buf2, 0, samples * channels);
-        callback(buf2, samples, channels);
+        callback!(buf2, samples, channels);
     }
 
     /// <summary>
@@ -1181,7 +1196,7 @@ public class Sora : IDisposable
     {
         var callback = GCHandle.FromIntPtr(userdata).Target as Action<SoraConf.VideoFrame>;
         var frame = Jsonif.Json.FromJson<SoraConf.VideoFrame>(data);
-        callback(frame);
+        callback!(frame);
     }
 
     /// <summary>
@@ -1218,7 +1233,7 @@ public class Sora : IDisposable
     {
         GCHandle handle = GCHandle.FromIntPtr(userdata);
         var callback = GCHandle.FromIntPtr(userdata).Target as Action<string>;
-        callback(json);
+        callback!(json);
         handle.Free();
     }
 
@@ -1242,7 +1257,7 @@ public class Sora : IDisposable
     static private void DeviceEnumCallback(string device_name, string unique_name, IntPtr userdata)
     {
         var callback = GCHandle.FromIntPtr(userdata).Target as Action<string, string>;
-        callback(device_name, unique_name);
+        callback!(device_name, unique_name);
     }
 
     public struct DeviceInfo
@@ -1250,7 +1265,7 @@ public class Sora : IDisposable
         public string DeviceName;
         public string UniqueName;
     }
-    public static DeviceInfo[] GetVideoCapturerDevices()
+    public static DeviceInfo[]? GetVideoCapturerDevices()
     {
         var list = new System.Collections.Generic.List<DeviceInfo>();
         Action<string, string> f = (deviceName, uniqueName) =>
@@ -1274,7 +1289,7 @@ public class Sora : IDisposable
         return list.ToArray();
     }
 
-    public static DeviceInfo[] GetAudioRecordingDevices()
+    public static DeviceInfo[]? GetAudioRecordingDevices()
     {
         var list = new System.Collections.Generic.List<DeviceInfo>();
         Action<string, string> f = (deviceName, uniqueName) =>
@@ -1298,7 +1313,7 @@ public class Sora : IDisposable
         return list.ToArray();
     }
 
-    public static DeviceInfo[] GetAudioPlayoutDevices()
+    public static DeviceInfo[]? GetAudioPlayoutDevices()
     {
         var list = new System.Collections.Generic.List<DeviceInfo>();
         Action<string, string> f = (deviceName, uniqueName) =>
@@ -1497,10 +1512,11 @@ public class Sora : IDisposable
     {
         private AndroidJavaObject soraAudioManager;
         private ChangeRouteCallbackProxy callbackProxy;
+        private bool disposed = false;
 
         private class ChangeRouteCallbackProxy : AndroidJavaProxy
         {
-            public event Action onChangeRoute;
+            public Action? onChangeRoute;
 
             public ChangeRouteCallbackProxy() : base("jp.shiguredo.sora.audiomanager.SoraAudioManager$OnChangeRouteObserver")
             {
@@ -1508,11 +1524,11 @@ public class Sora : IDisposable
 
             public void OnChangeRoute()
             {
-                onChangeRoute?.Invoke();
+                onChangeRoute?();
             }
         }
 
-        public AndroidAudioOutputHelper(Action onChangeRoute)
+        public AndroidAudioOutputHelper(Action? onChangeRoute)
         {
             using (var soraAudioManagerFactoryClass = new AndroidJavaClass("jp.shiguredo.sora.audiomanager.SoraAudioManagerFactory"))
             {
@@ -1520,9 +1536,9 @@ public class Sora : IDisposable
                 AndroidJavaObject currentActivity = unityPlayerClass.GetStatic<AndroidJavaObject>("currentActivity");
                 soraAudioManager = soraAudioManagerFactoryClass.CallStatic<AndroidJavaObject>("createWithMainThreadWrapper", currentActivity);
 
+                callbackProxy = new ChangeRouteCallbackProxy();
                 if (onChangeRoute != null)
                 {
-                    callbackProxy = new ChangeRouteCallbackProxy();
                     callbackProxy.onChangeRoute += onChangeRoute;
                 }
                 soraAudioManager.Call("start", callbackProxy);
@@ -1531,18 +1547,31 @@ public class Sora : IDisposable
 
         public void Dispose()
         {
+            if (disposed)
+            {
+                return;
+            }
+            disposed = true;
+
             soraAudioManager.Call("stop");
-            soraAudioManager = null;
-            callbackProxy = null;
+            soraAudioManager.Dispose();
         }
 
         public bool IsHandsfree()
         {
+            if (disposed)
+            {
+                throw new ObjectDisposedException(nameof(AndroidAudioOutputHelper));
+            }
             return soraAudioManager.Call<bool>("isHandsfree");
         }
 
         public void SetHandsfree(bool enabled)
         {
+            if (disposed)
+            {
+                throw new ObjectDisposedException(nameof(AndroidAudioOutputHelper));
+            }
             soraAudioManager.Call("setHandsfree", enabled);
         }
     }
@@ -1557,13 +1586,13 @@ public class Sora : IDisposable
         static private void ChangeRouteCallback(IntPtr userdata)
         {
             var callback = GCHandle.FromIntPtr(userdata).Target as Action;
-            callback();
+            callback!();
         }
 
         GCHandle onChangeRouteHandle;
         IntPtr p;
 
-        public DefaultAudioOutputHelper(Action onChangeRoute)
+        public DefaultAudioOutputHelper(Action? onChangeRoute)
         {
             if (onChangeRoute == null)
             {
@@ -1578,8 +1607,13 @@ public class Sora : IDisposable
         {
             if (p != IntPtr.Zero)
             {
+                // ネイティブ側がコールバックを保持している可能性があるため、
+                // 先にネイティブリソースを破棄してから GCHandle を解放する
                 sora_audio_output_helper_destroy(p);
-                onChangeRouteHandle.Free();
+                if (onChangeRouteHandle.IsAllocated)
+                {
+                    onChangeRouteHandle.Free();
+                }
                 p = IntPtr.Zero;
             }
         }
@@ -1612,7 +1646,7 @@ public class Sora : IDisposable
 
     public class AudioOutputHelperFactory
     {
-        public static IAudioOutputHelper Create(Action onChangeRoute)
+        public static IAudioOutputHelper Create(Action? onChangeRoute)
         {
 #if UNITY_ANDROID && !UNITY_EDITOR
             return new AndroidAudioOutputHelper(onChangeRoute);
