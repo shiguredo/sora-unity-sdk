@@ -31,6 +31,14 @@ static std::string UnityGfxRendererToString(UnityGfxRenderer renderer) {
       return "kUnityGfxRendererNvn";
     case kUnityGfxRendererXboxOneD3D12:
       return "kUnityGfxRendererXboxOneD3D12";
+    case kUnityGfxRendererGameCoreXboxOne:
+      return "kUnityGfxRendererGameCoreXboxOne";
+    case kUnityGfxRendererGameCoreXboxSeries:
+      return "kUnityGfxRendererGameCoreXboxSeries";
+    case kUnityGfxRendererPS5:
+      return "kUnityGfxRendererPS5";
+    case kUnityGfxRendererPS5NGGC:
+      return "kUnityGfxRendererPS5NGGC";
     default:
       return "Unknown";
   }
@@ -48,6 +56,11 @@ void UnityContext::OnGraphicsDeviceEvent(UnityGfxDeviceEventType eventType) {
         d3d11_device_ = ifs_->Get<IUnityGraphicsD3D11>()->GetDevice();
         d3d11_device_->GetImmediateContext(&d3d11_device_context_);
       }
+      if (renderer_type == kUnityGfxRendererD3D12) {
+        d3d12_device_ = ifs_->Get<IUnityGraphicsD3D12v4>()->GetDevice();
+        d3d12_command_queue_ =
+            ifs_->Get<IUnityGraphicsD3D12v4>()->GetCommandQueue();
+      }
 #endif
       break;
     }
@@ -58,6 +71,7 @@ void UnityContext::OnGraphicsDeviceEvent(UnityGfxDeviceEventType eventType) {
         d3d11_device_context_ = nullptr;
       }
       d3d11_device_ = nullptr;
+      d3d12_device_ = nullptr;
 #endif
 
       if (graphics_ != nullptr) {
@@ -79,23 +93,12 @@ UnityContext& UnityContext::Instance() {
 
 bool UnityContext::IsInitialized() {
   std::lock_guard<std::mutex> guard(mutex_);
-#ifdef SORA_UNITY_SDK_WINDOWS
-  return ifs_ != nullptr && d3d11_device_ != nullptr;
-#endif
-
-#if defined(SORA_UNITY_SDK_MACOS) || defined(SORA_UNITY_SDK_IOS)
   if (ifs_ == nullptr || graphics_ == nullptr) {
     return false;
   }
-
-  // Metal だけ対応する
-  auto renderer_type = graphics_->GetRenderer();
-  if (renderer_type != kUnityGfxRendererMetal) {
-    return false;
-  }
-
-  return true;
-#endif
+  // kUnityGfxDeviceEventInitialize さえ呼ばれていれば初期化済みとみなす。
+  // 未対応のレンダリングタイプだった場合は Unity カメラキャプチャが動作しないが
+  // それ以外の機能は使えるので許容する。
   return true;
 }
 
@@ -157,6 +160,16 @@ ID3D11Device* UnityContext::GetD3D11Device() {
 ID3D11DeviceContext* UnityContext::GetD3D11DeviceContext() {
   std::lock_guard<std::mutex> guard(mutex_);
   return d3d11_device_context_;
+}
+
+ID3D12Device* UnityContext::GetD3D12Device() {
+  std::lock_guard<std::mutex> guard(mutex_);
+  return d3d12_device_;
+}
+
+ID3D12CommandQueue* UnityContext::GetD3D12CommandQueue() {
+  std::lock_guard<std::mutex> guard(mutex_);
+  return d3d12_command_queue_;
 }
 #endif
 

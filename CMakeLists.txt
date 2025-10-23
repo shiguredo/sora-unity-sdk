@@ -131,7 +131,7 @@ if (SORA_UNITY_SDK_PACKAGE STREQUAL "windows_x86_64")
       MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
   )
 
-  target_sources(SoraUnitySdk PRIVATE src/unity_camera_capturer_d3d11.cpp)
+  target_sources(SoraUnitySdk PRIVATE src/unity_camera_capturer_d3d11.cpp src/unity_camera_capturer_d3d12.cpp)
 
   #target_link_libraries(SoraUnitySdk
   #  PRIVATE

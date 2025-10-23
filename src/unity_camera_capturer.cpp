@@ -65,6 +65,12 @@ bool UnityCameraCapturer::Init(UnityContext* context,
       capturer_.reset(new D3D11Impl());
 #endif
       break;
+    case kUnityGfxRendererD3D12:
+#ifdef SORA_UNITY_SDK_WINDOWS
+      RTC_LOG(LS_INFO) << "Init UnityCameraCapturer with D3D12Impl";
+      capturer_.reset(new D3D12Impl());
+#endif
+      break;
     case kUnityGfxRendererMetal:
 #if defined(SORA_UNITY_SDK_MACOS) || defined(SORA_UNITY_SDK_IOS)
       RTC_LOG(LS_INFO) << "Init UnityCameraCapturer with MetalImpl";
