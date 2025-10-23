@@ -78,7 +78,6 @@ bool UnityCameraCapturer::Init(UnityContext* context,
 #endif
       break;
     case kUnityGfxRendererOpenGLCore:
-    case kUnityGfxRendererOpenGLES20:
     case kUnityGfxRendererOpenGLES30:
 #if defined(SORA_UNITY_SDK_ANDROID) || defined(SORA_UNITY_SDK_UBUNTU)
       RTC_LOG(LS_INFO) << "Init UnityCameraCapturer with OpenglImpl";

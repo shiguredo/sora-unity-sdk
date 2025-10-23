@@ -13,8 +13,6 @@ static std::string UnityGfxRendererToString(UnityGfxRenderer renderer) {
       return "kUnityGfxRendererD3D11";
     case kUnityGfxRendererNull:
       return "kUnityGfxRendererNull";
-    case kUnityGfxRendererOpenGLES20:
-      return "kUnityGfxRendererOpenGLES20";
     case kUnityGfxRendererOpenGLES30:
       return "kUnityGfxRendererOpenGLES30";
     case kUnityGfxRendererPS4:
@@ -47,19 +45,19 @@ void UnityContext::OnGraphicsDeviceEvent(UnityGfxDeviceEventType eventType) {
                        << UnityGfxRendererToString(renderer_type);
 #ifdef SORA_UNITY_SDK_WINDOWS
       if (renderer_type == kUnityGfxRendererD3D11) {
-        device_ = ifs_->Get<IUnityGraphicsD3D11>()->GetDevice();
-        device_->GetImmediateContext(&context_);
+        d3d11_device_ = ifs_->Get<IUnityGraphicsD3D11>()->GetDevice();
+        d3d11_device_->GetImmediateContext(&d3d11_device_context_);
       }
 #endif
       break;
     }
     case kUnityGfxDeviceEventShutdown:
 #ifdef SORA_UNITY_SDK_WINDOWS
-      if (context_ != nullptr) {
-        context_->Release();
-        context_ = nullptr;
+      if (d3d11_device_context_ != nullptr) {
+        d3d11_device_context_->Release();
+        d3d11_device_context_ = nullptr;
       }
-      device_ = nullptr;
+      d3d11_device_ = nullptr;
 #endif
 
       if (graphics_ != nullptr) {
@@ -82,7 +80,7 @@ UnityContext& UnityContext::Instance() {
 bool UnityContext::IsInitialized() {
   std::lock_guard<std::mutex> guard(mutex_);
 #ifdef SORA_UNITY_SDK_WINDOWS
-  return ifs_ != nullptr && device_ != nullptr;
+  return ifs_ != nullptr && d3d11_device_ != nullptr;
 #endif
 
 #if defined(SORA_UNITY_SDK_MACOS) || defined(SORA_UNITY_SDK_IOS)
@@ -151,14 +149,14 @@ IUnityInterfaces* UnityContext::GetInterfaces() {
 }
 
 #ifdef SORA_UNITY_SDK_WINDOWS
-ID3D11Device* UnityContext::GetDevice() {
+ID3D11Device* UnityContext::GetD3D11Device() {
   std::lock_guard<std::mutex> guard(mutex_);
-  return device_;
+  return d3d11_device_;
 }
 
-ID3D11DeviceContext* UnityContext::GetDeviceContext() {
+ID3D11DeviceContext* UnityContext::GetD3D11DeviceContext() {
   std::lock_guard<std::mutex> guard(mutex_);
-  return context_;
+  return d3d11_device_context_;
 }
 #endif
 

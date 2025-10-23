@@ -10,6 +10,7 @@
 #include "unity/IUnityInterface.h"
 
 #ifdef SORA_UNITY_SDK_WINDOWS
+#include <d3d11.h>
 #include "unity/IUnityGraphicsD3D11.h"
 #endif
 
@@ -40,12 +41,12 @@ class UnityContext {
 
 #ifdef SORA_UNITY_SDK_WINDOWS
  private:
-  ID3D11Device* device_ = nullptr;
-  ID3D11DeviceContext* context_ = nullptr;
+  ID3D11Device* d3d11_device_ = nullptr;
+  ID3D11DeviceContext* d3d11_device_context_ = nullptr;
 
  public:
-  ID3D11Device* GetDevice();
-  ID3D11DeviceContext* GetDeviceContext();
+  ID3D11Device* GetD3D11Device();
+  ID3D11DeviceContext* GetD3D11DeviceContext();
 #endif
 };
 
