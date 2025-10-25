@@ -139,6 +139,19 @@ UnityCameraCapturer::D3D12Impl::Capture() {
   cmd_allocator_->Reset();
   cmd_list_->Reset(cmd_allocator_, nullptr);
 
+  // 全てのレンダリングが終わってからこの関数を呼び出してもらってるのでバリアは不要
+  // // D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE → D3D12_RESOURCE_STATE_COPY_SOURCE
+  // D3D12_RESOURCE_BARRIER to_copy_barrier = {};
+  // to_copy_barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+  // to_copy_barrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+  // to_copy_barrier.Transition.pResource = camera_texture_;
+  // to_copy_barrier.Transition.Subresource =
+  //     D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
+  // to_copy_barrier.Transition.StateBefore =
+  //     D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
+  // to_copy_barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_COPY_SOURCE;
+  // cmd_list_->ResourceBarrier(1, &to_copy_barrier);
+
   // camera_texture から readback_buffer_ にテクスチャをコピー
   D3D12_TEXTURE_COPY_LOCATION dst = {};
   dst.pResource = readback_buffer_;
@@ -155,6 +168,19 @@ UnityCameraCapturer::D3D12Impl::Capture() {
   src.SubresourceIndex = 0;
 
   cmd_list_->CopyTextureRegion(&dst, 0, 0, 0, &src, nullptr);
+
+  // // D3D12_RESOURCE_STATE_COPY_SOURCE → D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE
+  // D3D12_RESOURCE_BARRIER to_shader_barrier = {};
+  // to_shader_barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+  // to_shader_barrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+  // to_shader_barrier.Transition.pResource = camera_texture_;
+  // to_shader_barrier.Transition.Subresource =
+  //     D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
+  // to_shader_barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_COPY_SOURCE;
+  // to_shader_barrier.Transition.StateAfter =
+  //     D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
+  // cmd_list_->ResourceBarrier(1, &to_shader_barrier);
+
   cmd_list_->Close();
 
   ID3D12CommandList* lists[] = {cmd_list_};
