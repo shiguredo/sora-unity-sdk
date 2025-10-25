@@ -39,6 +39,8 @@
   - `BOOST_VERSION` を `1.89.0` にアップデート
   - `CMAKE_VERSION` を `4.1.2` にアップデート
   - @melpon @torikizi
+- [UPDATE] Unity が提供しているヘッダーを `6000.0.38f1` のヘッダーファイルにする
+  - @melpon
 - [ADD] DegradationPreference を追加し、エンコード時の劣化の優先順位を指定できるようにする
   - `enum DegradationPreference` を追加
     - `Disabled`: 無効
@@ -48,6 +50,10 @@
   - `Config.DegradationPreference` を追加
   - `sora_conf_internal.proto` に `degradation_preference` を追加
   - @torikizi
+- [ADD] Unity カメラキャプチャで DirextX 12 をサポートする
+  - @melpon
+- [FIX] Unity カメラキャプチャがサポートしていないグラフィックエンジンを利用すると SDK 全体が動作しないのを修正
+  - @melpon
 
 ### misc
 
