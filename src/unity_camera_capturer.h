@@ -60,22 +60,20 @@ class UnityCameraCapturer
 
   class D3D12Impl : public Impl {
     UnityContext* context_ = nullptr;
-    void* camera_texture_ = nullptr;  // ID3D12Resource*
+    ID3D12Resource* camera_texture_ = nullptr;
     int width_ = 0;
     int height_ = 0;
 
-    // D3D12 resources
     ID3D12Resource* readback_buffer_ = nullptr;
-    UINT64 readback_buffer_size_ = 0;
-    UINT64 footprint_offset_ = 0;
-    unsigned int row_pitch_ = 0;  // from footprint
+    size_t readback_buffer_total_bytes_ = 0;
+    size_t readback_buffer_row_pitch_ = 0;
 
     ID3D12CommandAllocator* cmd_allocator_ = nullptr;
     ID3D12GraphicsCommandList* cmd_list_ = nullptr;
     ID3D12Fence* fence_ = nullptr;
     HANDLE fence_event_ = nullptr;
     UINT64 fence_value_ = 0;
-    ID3D12CommandQueue* queue_ = nullptr;  // from Unity
+    ID3D12CommandQueue* queue_ = nullptr;
 
    public:
     ~D3D12Impl() override;

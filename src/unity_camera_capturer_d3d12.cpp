@@ -39,7 +39,7 @@ bool UnityCameraCapturer::D3D12Impl::Init(UnityContext* context,
                                           int width,
                                           int height) {
   context_ = context;
-  camera_texture_ = camera_texture;
+  camera_texture_ = static_cast<ID3D12Resource*>(camera_texture);
   width_ = width;
   height_ = height;
 
@@ -51,39 +51,34 @@ bool UnityCameraCapturer::D3D12Impl::Init(UnityContext* context,
   }
   queue_ = queue;
 
-  ID3D12Resource* camera = reinterpret_cast<ID3D12Resource*>(camera_texture_);
-  if (camera == nullptr) {
+  if (camera_texture_ == nullptr) {
     RTC_LOG(LS_ERROR) << "ID3D12Resource (camera_texture) is null";
     return false;
   }
 
-  D3D12_RESOURCE_DESC src_desc = camera->GetDesc();
-  // 現実装は BGRA8 を前提に ARGBToI420 変換を行う
+  auto src_desc = camera_texture_->GetDesc();
+  // BGRA8888 必須
   if (src_desc.Format != DXGI_FORMAT_B8G8R8A8_UNORM) {
     RTC_LOG(LS_WARNING)
         << "Unexpected D3D12 texture format; expected BGRA8. format="
         << static_cast<int>(src_desc.Format);
   }
 
-  // 段取り: テクスチャ -> READBACK バッファへ CopyTextureRegion して Map
-  UINT64 total_size = 0;
+  // camera_texture と同じサイズの readback 可能なテクスチャを作成
+  UINT64 total_bytes = 0;
   D3D12_PLACED_SUBRESOURCE_FOOTPRINT footprint;
   UINT num_rows = 0;
   UINT64 row_size_in_bytes = 0;
   device->GetCopyableFootprints(&src_desc, 0, 1, 0, &footprint, &num_rows,
-                                &row_size_in_bytes, &total_size);
+                                &row_size_in_bytes, &total_bytes);
 
   D3D12_HEAP_PROPERTIES heap_props = {};
   heap_props.Type = D3D12_HEAP_TYPE_READBACK;
-  heap_props.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_UNKNOWN;
-  heap_props.MemoryPoolPreference = D3D12_MEMORY_POOL_UNKNOWN;
-  heap_props.CreationNodeMask = 1;
-  heap_props.VisibleNodeMask = 1;
 
   D3D12_RESOURCE_DESC buf_desc = {};
   buf_desc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
   buf_desc.Alignment = 0;
-  buf_desc.Width = total_size;
+  buf_desc.Width = total_bytes;
   buf_desc.Height = 1;
   buf_desc.DepthOrArraySize = 1;
   buf_desc.MipLevels = 1;
@@ -101,6 +96,7 @@ bool UnityCameraCapturer::D3D12Impl::Init(UnityContext* context,
     return false;
   }
 
+  // コマンドアロケータとコマンドリストを作成
   hr = device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT,
                                       IID_PPV_ARGS(&cmd_allocator_));
   if (!SUCCEEDED(hr)) {
@@ -115,9 +111,10 @@ bool UnityCameraCapturer::D3D12Impl::Init(UnityContext* context,
     RTC_LOG(LS_ERROR) << "CreateCommandList failed hr=" << hr;
     return false;
   }
-  // Start closed; we'll Reset per frame
+  // フレーム毎に Reset するのでここで Close 状態にしておく
   cmd_list_->Close();
 
+  // コマンドの実行を待つためのフェンスを作成
   hr = device->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&fence_));
   if (!SUCCEEDED(hr)) {
     RTC_LOG(LS_ERROR) << "CreateFence failed hr=" << hr;
@@ -130,74 +127,40 @@ bool UnityCameraCapturer::D3D12Impl::Init(UnityContext* context,
     return false;
   }
 
-  footprint_offset_ = footprint.Offset;
-  row_pitch_ = footprint.Footprint.RowPitch;
-  readback_buffer_size_ = total_size;
+  readback_buffer_row_pitch_ = footprint.Footprint.RowPitch;
+  readback_buffer_total_bytes_ = total_bytes;
 
   return true;
 }
 
 webrtc::scoped_refptr<webrtc::I420Buffer>
 UnityCameraCapturer::D3D12Impl::Capture() {
-  ID3D12Resource* camera = reinterpret_cast<ID3D12Resource*>(camera_texture_);
-  if (camera == nullptr) {
-    RTC_LOG(LS_ERROR) << "ID3D12Resource (camera_texture) is null";
-    return nullptr;
-  }
-
-  // Reset allocator/list per frame
+  // コマンドリストの準備
   cmd_allocator_->Reset();
   cmd_list_->Reset(cmd_allocator_, nullptr);
 
-  // Transition camera texture to COPY_SOURCE (assume typically shader resource)
-  D3D12_RESOURCE_BARRIER to_copy_barrier = {};
-  to_copy_barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
-  to_copy_barrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
-  to_copy_barrier.Transition.pResource = camera;
-  to_copy_barrier.Transition.Subresource =
-      D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
-  to_copy_barrier.Transition.StateBefore =
-      D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
-  to_copy_barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_COPY_SOURCE;
-  cmd_list_->ResourceBarrier(1, &to_copy_barrier);
-
-  // Recreate footprint for copy location (we only stored offset and row pitch)
-  D3D12_RESOURCE_DESC src_desc = camera->GetDesc();
+  // camera_texture から readback_buffer_ にテクスチャをコピー
   D3D12_TEXTURE_COPY_LOCATION dst = {};
   dst.pResource = readback_buffer_;
   dst.Type = D3D12_TEXTURE_COPY_TYPE_PLACED_FOOTPRINT;
-  dst.PlacedFootprint.Offset = footprint_offset_;
-  dst.PlacedFootprint.Footprint.Format = src_desc.Format;
-  dst.PlacedFootprint.Footprint.Width = static_cast<UINT>(width_);
-  dst.PlacedFootprint.Footprint.Height = static_cast<UINT>(height_);
+  dst.PlacedFootprint.Footprint.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
+  dst.PlacedFootprint.Footprint.Width = width_;
+  dst.PlacedFootprint.Footprint.Height = height_;
   dst.PlacedFootprint.Footprint.Depth = 1;
-  dst.PlacedFootprint.Footprint.RowPitch = row_pitch_;
+  dst.PlacedFootprint.Footprint.RowPitch = readback_buffer_row_pitch_;
 
   D3D12_TEXTURE_COPY_LOCATION src = {};
-  src.pResource = camera;
+  src.pResource = camera_texture_;
   src.Type = D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX;
   src.SubresourceIndex = 0;
 
   cmd_list_->CopyTextureRegion(&dst, 0, 0, 0, &src, nullptr);
-
-  // Transition back to shader resource state
-  D3D12_RESOURCE_BARRIER to_shader_barrier = {};
-  to_shader_barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
-  to_shader_barrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
-  to_shader_barrier.Transition.pResource = camera;
-  to_shader_barrier.Transition.Subresource =
-      D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
-  to_shader_barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_COPY_SOURCE;
-  to_shader_barrier.Transition.StateAfter =
-      D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
-  cmd_list_->ResourceBarrier(1, &to_shader_barrier);
-
   cmd_list_->Close();
 
   ID3D12CommandList* lists[] = {cmd_list_};
   queue_->ExecuteCommandLists(1, lists);
 
-  // Fence wait
+  // 実行したコマンドが反映されるまで待つ
   fence_value_++;
   queue_->Signal(fence_, fence_value_);
   if (fence_->GetCompletedValue() < fence_value_) {
@@ -205,8 +168,8 @@ UnityCameraCapturer::D3D12Impl::Capture() {
     WaitForSingleObject(fence_event_, INFINITE);
   }
 
-  // Map readback buffer and convert BGRA -> I420
-  D3D12_RANGE read_range = {0, static_cast<SIZE_T>(readback_buffer_size_)};
+  // readback_buffer_ からピクセルデータを読み込む
+  const D3D12_RANGE read_range = {0, readback_buffer_total_bytes_};
   void* data = nullptr;
   HRESULT hr = readback_buffer_->Map(0, &read_range, &data);
   if (!SUCCEEDED(hr) || data == nullptr) {
@@ -214,16 +177,16 @@ UnityCameraCapturer::D3D12Impl::Capture() {
     return nullptr;
   }
 
+  // Windows の場合は座標系の関係で上下反転してるので、頑張って元の向きに戻す
   std::unique_ptr<uint8_t[]> buf(new uint8_t[width_ * height_ * 4]);
-  const uint8_t* base = reinterpret_cast<const uint8_t*>(data) +
-                        static_cast<size_t>(footprint_offset_);
-  const size_t src_pitch = static_cast<size_t>(row_pitch_);
+  const uint8_t* base = static_cast<const uint8_t*>(data);
+  const size_t pitch = readback_buffer_row_pitch_;
   for (int y = 0; y < height_; ++y) {
-    // Flip vertically to match D3D11 path behavior
-    const uint8_t* src_row = base + src_pitch * (height_ - 1 - y);
-    std::memcpy(buf.get() + width_ * 4 * y, src_row, width_ * 4);
+    const uint8_t* row = base + pitch * (height_ - 1 - y);
+    std::memcpy(buf.get() + width_ * 4 * y, row, width_ * 4);
   }
 
+  // ARGB -> I420 変換
   webrtc::scoped_refptr<webrtc::I420Buffer> i420_buffer =
       webrtc::I420Buffer::Create(width_, height_);
   libyuv::ARGBToI420(buf.get(), width_ * 4, i420_buffer->MutableDataY(),
@@ -231,7 +194,8 @@ UnityCameraCapturer::D3D12Impl::Capture() {
                      i420_buffer->StrideU(), i420_buffer->MutableDataV(),
                      i420_buffer->StrideV(), width_, height_);
 
-  D3D12_RANGE written_range = {0, 0};  // no CPU writes
+  // writeback するデータは無いので空範囲を指定する
+  const D3D12_RANGE written_range = {0, 0};
   readback_buffer_->Unmap(0, &written_range);
 
   return i420_buffer;
