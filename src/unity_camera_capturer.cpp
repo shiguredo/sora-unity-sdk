@@ -95,7 +95,8 @@ bool UnityCameraCapturer::Init(UnityContext* context,
   }
 
   if (capturer_ == nullptr) {
-    RTC_LOG(LS_INFO) << "Failed to Init for UnityCameraCapturer";
+    RTC_LOG(LS_WARNING) << "Failed to create renderer: "
+                        << UnityGfxRendererToString(renderer_type);
     return false;
   }
 
