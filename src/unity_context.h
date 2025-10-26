@@ -56,6 +56,8 @@ class UnityContext {
 #endif
 };
 
+std::string UnityGfxRendererToString(UnityGfxRenderer renderer);
+
 }  // namespace sora_unity_sdk
 
 #endif

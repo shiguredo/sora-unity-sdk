@@ -50,9 +50,9 @@
   - `Config.DegradationPreference` を追加
   - `sora_conf_internal.proto` に `degradation_preference` を追加
   - @torikizi
-- [ADD] Unity カメラキャプチャで DirextX 12 をサポートする
+- [ADD] Unity カメラキャプチャで DirectX 12 をサポートする
   - @melpon
-- [FIX] Unity カメラキャプチャがサポートしていないグラフィックエンジンを利用すると SDK 全体が動作しないのを修正
+- [FIX] Unity カメラキャプチャがサポートしていないグラフィックエンジンを利用すると SDK 全体が動作しないのを修正し、Unity カメラキャプチャを利用しない場合は正常に動作するようにする
   - @melpon
 
 ### misc

@@ -7,7 +7,7 @@ void UnityContext::OnGraphicsDeviceEventStatic(
   Instance().OnGraphicsDeviceEvent(eventType);
 }
 
-static std::string UnityGfxRendererToString(UnityGfxRenderer renderer) {
+std::string UnityGfxRendererToString(UnityGfxRenderer renderer) {
   switch (renderer) {
     case kUnityGfxRendererD3D11:
       return "kUnityGfxRendererD3D11";

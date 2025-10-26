@@ -44,11 +44,11 @@ class UnityCameraCapturer
 
 #ifdef SORA_UNITY_SDK_WINDOWS
   class D3D11Impl : public Impl {
-    UnityContext* context_;
-    void* camera_texture_;
-    void* frame_texture_;
-    int width_;
-    int height_;
+    UnityContext* context_ = nullptr;
+    void* camera_texture_ = nullptr;
+    void* frame_texture_ = nullptr;
+    int width_ = 0;
+    int height_ = 0;
 
    public:
     bool Init(UnityContext* context,
