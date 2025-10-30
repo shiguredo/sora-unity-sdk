@@ -50,6 +50,9 @@
   - `Config.DegradationPreference` を追加
   - `sora_conf_internal.proto` に `degradation_preference` を追加
   - @torikizi
+- [ADD] テクスチャキャプチャの機能を追加する
+  - `CameraConfig.FromTexture()` を利用することで、指定したテクスチャを使ってキャプチャが出来るようになります
+  - @melpon
 - [ADD] Unity カメラキャプチャで DirectX 12 をサポートする
   - @melpon
 - [FIX] Unity カメラキャプチャがサポートしていないグラフィックエンジンを利用すると SDK 全体が動作しないのを修正し、Unity カメラキャプチャを利用しない場合は正常に動作するようにする

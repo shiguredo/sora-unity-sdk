@@ -23,6 +23,7 @@ public class Sora : IDisposable
     {
         DeviceCamera = 0,
         UnityCamera = 1,
+        Texture = 2,
     }
     public enum VideoCodecType
     {
@@ -142,7 +143,7 @@ public class Sora : IDisposable
     /// </summary>
     /// <remarks>
     /// デバイスカメラまたは Unity カメラの設定を行います。
-    /// 各フィールドに直接値を入力しても構いませんが、FromDeviceCamera() または FromUnityCamera() を使って生成することを推奨します。
+    /// 各フィールドに直接値を入力しても構いませんが、FromDeviceCamera(), FromUnityCamera() または FromTexture() を使って生成することを推奨します。
     /// 
     /// Sora.GetVideoCapturerDevices() で取得した DeviceName または UniqueName を VideoCapturerDevice に設定することで、
     /// 指定したデバイスのカメラを利用することが出来ます。
@@ -157,6 +158,7 @@ public class Sora : IDisposable
         public int VideoWidth = 640;
         public int VideoHeight = 480;
         public int VideoFps = 30;
+        public UnityEngine.Texture? Texture;
 
         public static CameraConfig FromUnityCamera(UnityEngine.Camera unityCamera, int unityCameraRenderTargetDepthBuffer, int videoWidth, int videoHeight, int videoFps)
         {
@@ -185,6 +187,17 @@ public class Sora : IDisposable
                 VideoCapturerDevice = videoCapturerDevice,
                 VideoWidth = videoWidth,
                 VideoHeight = videoHeight,
+                VideoFps = videoFps,
+            };
+        }
+        public static CameraConfig FromTexture(UnityEngine.Texture texture, int videoFps)
+        {
+            return new CameraConfig()
+            {
+                CapturerType = Sora.CapturerType.Texture,
+                Texture = texture,
+                VideoWidth = texture.width,
+                VideoHeight = texture.height,
                 VideoFps = videoFps,
             };
         }
@@ -561,6 +574,14 @@ public class Sora : IDisposable
             unityCamera.enabled = true;
             unityCameraTexture = texture.GetNativeTexturePtr();
         }
+        else if (config.CameraConfig.CapturerType == CapturerType.Texture)
+        {
+            if (config.CameraConfig.Texture == null)
+            {
+                throw new ArgumentNullException(nameof(config.CameraConfig.Texture), "CapturerType が Texture の場合は Texture を指定してください。");
+            }
+            unityCameraTexture = config.CameraConfig.Texture!.GetNativeTexturePtr();
+        }
 
         var role =
             config.Role == Role.Sendonly ? "sendonly" :
@@ -908,6 +929,14 @@ public class Sora : IDisposable
             unityCamera.targetTexture = texture;
             unityCamera.enabled = true;
             unityCameraTexture = texture.GetNativeTexturePtr();
+        }
+        else if (config.CapturerType == CapturerType.Texture)
+        {
+            if (config.Texture == null)
+            {
+                throw new ArgumentNullException(nameof(config.Texture), "CapturerType が Texture の場合は Texture を指定してください。");
+            }
+            unityCameraTexture = config.Texture!.GetNativeTexturePtr();
         }
         var cc = new SoraConf.Internal.CameraConfig();
         cc.capturer_type = (int)config.CapturerType;
