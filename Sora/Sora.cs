@@ -1524,7 +1524,7 @@ public class Sora : IDisposable
 
             public void OnChangeRoute()
             {
-                onChangeRoute?();
+                onChangeRoute?.Invoke();
             }
         }
 
