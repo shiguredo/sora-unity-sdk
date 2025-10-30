@@ -961,15 +961,15 @@ public class Sora : IDisposable
     }
 
     /// <summary>
-    /// trackId で受信した映像を texture にレンダリングする
+    /// videoSinkId で受信した映像を texture にレンダリングする
     /// </summary>
     /// <remarks>
     /// Role.Sendonly または Role.Sendrecv で映像を送信している場合、
-    /// 自身の trackId を指定すれば、自身が送信している映像を texture にレンダリングすることもできます。
+    /// 自身の videoSinkId を指定すれば、自身が送信している映像を texture にレンダリングすることもできます。
     /// </remarks>
-    public void RenderTrackToTexture(uint trackId, UnityEngine.Texture texture)
+    public void RenderTrackToTexture(uint videoSinkId, UnityEngine.Texture texture)
     {
-        commandBuffer.IssuePluginCustomTextureUpdateV2(sora_get_texture_update_callback(), texture, trackId);
+        commandBuffer.IssuePluginCustomTextureUpdateV2(sora_get_texture_update_callback(), texture, videoSinkId);
         UnityEngine.Graphics.ExecuteCommandBuffer(commandBuffer);
         commandBuffer.Clear();
     }
@@ -977,17 +977,17 @@ public class Sora : IDisposable
     private delegate void TrackCallbackDelegate(uint track_id, string connection_id, IntPtr userdata);
 
     [AOT.MonoPInvokeCallback(typeof(TrackCallbackDelegate))]
-    static private void TrackCallback(uint trackId, string connectionId, IntPtr userdata)
+    static private void TrackCallback(uint videoSinkId, string connectionId, IntPtr userdata)
     {
         var callback = GCHandle.FromIntPtr(userdata).Target as Action<uint, string>;
-        callback!(trackId, connectionId);
+        callback!(videoSinkId, connectionId);
     }
 
     /// <summary>
     /// トラックが追加された時のコールバック
     /// </summary>
     /// <remarks>
-    /// Action の引数は uint trackId, string connectionId です。
+    /// Action の引数は uint videoSinkId, string connectionId です。
     /// connectionId が空文字だった場合、送信者自身のトラックが追加されたことを表します。
     /// </remarks>
     public Action<uint, string> OnAddTrack
