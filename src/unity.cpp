@@ -522,7 +522,8 @@ void* sora_rtp_transceiver_get_receiver(void* p) {
 }
 
 // RtpReceiver
-extern "C++" static sora_conf::internal::RtpReceiverInfo get_rtp_receiver_info(
+extern "C++" {
+static sora_conf::internal::RtpReceiverInfo get_rtp_receiver_info(
     webrtc::RtpReceiverInterface* receiver) {
   sora_conf::internal::RtpReceiverInfo info;
   info.id = receiver->id();
@@ -530,6 +531,7 @@ extern "C++" static sora_conf::internal::RtpReceiverInfo get_rtp_receiver_info(
     info.stream_ids.push_back(stream->id());
   }
   return info;
+}
 }
 int sora_rtp_receiver_get_info_size(void* p) {
   auto info =
