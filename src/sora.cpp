@@ -1033,6 +1033,14 @@ void Sora::PushEvent(std::function<void()> f) {
   event_queue_.push_back(std::move(f));
 }
 
+webrtc::AudioTrackInterface* Sora::GetAudioTrack() const {
+  return audio_track_.get();
+}
+
+webrtc::VideoTrackInterface* Sora::GetVideoTrack() const {
+  return video_track_.get();
+}
+
 bool Sora::GetAudioEnabled() const {
   if (audio_track_ == nullptr) {
     return false;

@@ -267,6 +267,14 @@ void sora_setenv(const char* name, const char* value) {
 #endif
 }
 
+void* sora_get_audio_track(void* p) {
+  auto wsora = (SoraWrapper*)p;
+  return wsora->sora->GetAudioTrack();
+}
+void* sora_get_video_track(void* p) {
+  auto wsora = (SoraWrapper*)p;
+  return wsora->sora->GetVideoTrack();
+}
 unity_bool_t sora_get_audio_enabled(void* p) {
   auto wsora = (SoraWrapper*)p;
   return wsora->sora->GetAudioEnabled();

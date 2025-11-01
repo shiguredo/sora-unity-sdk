@@ -1484,6 +1484,26 @@ public class Sora : IDisposable
         sora_setenv(name, value);
     }
 
+    public AudioTrack? GetAudioTrack()
+    {
+        IntPtr ptr = sora_get_audio_track(p);
+        if (ptr == IntPtr.Zero)
+        {
+            return null;
+        }
+        return new AudioTrack(ptr);
+    }
+
+    public VideoTrack? GetVideoTrack()
+    {
+        IntPtr ptr = sora_get_video_track(p);
+        if (ptr == IntPtr.Zero)
+        {
+            return null;
+        }
+        return new VideoTrack(ptr);
+    }
+
     public bool AudioEnabled
     {
         get { return sora_get_audio_enabled(p) != 0; }
@@ -1606,6 +1626,10 @@ public class Sora : IDisposable
     private static extern int sora_device_enum_audio_playout(DeviceEnumCallbackDelegate f, IntPtr userdata);
     [DllImport(DllName)]
     private static extern void sora_setenv(string name, string value);
+    [DllImport(DllName)]
+    private static extern IntPtr sora_get_audio_track(IntPtr p);
+    [DllImport(DllName)]
+    private static extern IntPtr sora_get_video_track(IntPtr p);
     [DllImport(DllName)]
     private static extern int sora_get_audio_enabled(IntPtr p);
     [DllImport(DllName)]

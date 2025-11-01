@@ -121,6 +121,8 @@ UNITY_INTERFACE_EXPORT unity_bool_t
 sora_device_enum_audio_playout(device_enum_cb_t f, void* userdata);
 UNITY_INTERFACE_EXPORT void sora_setenv(const char* name, const char* value);
 
+UNITY_INTERFACE_EXPORT void* sora_get_audio_track(void* p);
+UNITY_INTERFACE_EXPORT void* sora_get_video_track(void* p);
 UNITY_INTERFACE_EXPORT unity_bool_t sora_get_audio_enabled(void* p);
 UNITY_INTERFACE_EXPORT void sora_set_audio_enabled(void* p,
                                                    unity_bool_t enabled);
