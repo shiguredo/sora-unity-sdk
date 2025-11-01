@@ -12,9 +12,17 @@ extern "C" {
 typedef unsigned int ptrid_t;
 typedef int32_t unity_bool_t;
 
-typedef void (*track_cb_t)(ptrid_t track_id,
+typedef void (*track_cb_t)(ptrid_t video_sink_id,
                            const char* connection_id,
                            void* userdata);
+typedef void (*media_stream_track_cb_t)(void* transceiver,
+                                        void* track,
+                                        const char* connection_id,
+                                        void* userdata);
+typedef void (*remove_media_stream_track_cb_t)(void* receiver,
+                                               void* track,
+                                               const char* connection_id,
+                                               void* userdata);
 typedef void (*set_offer_cb_t)(const char* json, void* userdata);
 typedef void (*notify_cb_t)(const char* json, void* userdata);
 typedef void (*push_cb_t)(const char* json, void* userdata);
@@ -36,6 +44,14 @@ UNITY_INTERFACE_EXPORT void sora_set_on_add_track(void* p,
 UNITY_INTERFACE_EXPORT void sora_set_on_remove_track(void* p,
                                                      track_cb_t on_remove_track,
                                                      void* userdata);
+UNITY_INTERFACE_EXPORT void sora_set_on_media_stream_track(
+    void* p,
+    media_stream_track_cb_t on_media_stream_track,
+    void* userdata);
+UNITY_INTERFACE_EXPORT void sora_set_on_remove_media_stream_track(
+    void* p,
+    remove_media_stream_track_cb_t on_remove_media_stream_track,
+    void* userdata);
 UNITY_INTERFACE_EXPORT void sora_set_on_set_offer(void* p,
                                                   set_offer_cb_t on_set_offer,
                                                   void* userdata);
@@ -66,6 +82,12 @@ UNITY_INTERFACE_EXPORT void sora_destroy(void* sora);
 
 UNITY_INTERFACE_EXPORT void* sora_get_render_callback();
 UNITY_INTERFACE_EXPORT int sora_get_render_callback_event_id(void* p);
+
+UNITY_INTERFACE_EXPORT void* sora_get_video_track_from_video_sink_id(
+    void* p,
+    ptrid_t video_sink_id);
+UNITY_INTERFACE_EXPORT ptrid_t
+sora_get_video_sink_id_from_video_track(void* p, void* video_track);
 
 UNITY_INTERFACE_EXPORT void sora_process_audio(void* p,
                                                const void* buf,
@@ -148,6 +170,46 @@ UNITY_INTERFACE_EXPORT int sora_video_codec_preference_to_json_size(
     const char* self);
 UNITY_INTERFACE_EXPORT void
 sora_video_codec_preference_to_json(const char* self, void* buf, int size);
+
+// MediaStreamTrack
+UNITY_INTERFACE_EXPORT int sora_media_stream_track_get_kind_size(void* p);
+UNITY_INTERFACE_EXPORT void sora_media_stream_track_get_kind(void* p,
+                                                             void* buf,
+                                                             int size);
+UNITY_INTERFACE_EXPORT int sora_media_stream_track_get_id_size(void* p);
+UNITY_INTERFACE_EXPORT void sora_media_stream_track_get_id(void* p,
+                                                           void* buf,
+                                                           int size);
+
+// AudioTrackSink
+typedef void (*audio_track_sink_on_data_cb_t)(
+    const short* data,
+    int bits_per_sample,
+    int sample_rate,
+    int number_of_channels,
+    int number_of_frames,
+    const long* absolute_capture_timestamp_ms,
+    void* userdata);
+typedef int (*audio_track_sink_num_preferred_channels_cb_t)(void* userdata);
+UNITY_INTERFACE_EXPORT void* sora_audio_track_sink_create(
+    audio_track_sink_on_data_cb_t on_data,
+    audio_track_sink_num_preferred_channels_cb_t num_preferred_channels,
+    void* userdata);
+UNITY_INTERFACE_EXPORT void sora_audio_track_sink_destroy(void* p);
+
+// AudioTrack
+UNITY_INTERFACE_EXPORT void sora_audio_track_add_sink(void* track, void* sink);
+UNITY_INTERFACE_EXPORT void sora_audio_track_remove_sink(void* track,
+                                                         void* sink);
+
+// RtpTransceiver
+UNITY_INTERFACE_EXPORT void* sora_rtp_transceiver_get_receiver(void* p);
+
+// RtpReceiver
+UNITY_INTERFACE_EXPORT int sora_rtp_receiver_get_info_size(void* p);
+UNITY_INTERFACE_EXPORT void sora_rtp_receiver_get_info(void* p,
+                                                       void* buf,
+                                                       int size);
 
 typedef void (*change_route_cb_t)(void* userdata);
 UNITY_INTERFACE_EXPORT void* sora_audio_output_helper_create(

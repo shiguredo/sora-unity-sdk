@@ -44,6 +44,14 @@ class Sora : public std::enable_shared_from_this<Sora>,
   void SetOnAddTrack(std::function<void(ptrid_t, std::string)> on_add_track);
   void SetOnRemoveTrack(
       std::function<void(ptrid_t, std::string)> on_remove_track);
+  void SetOnMediaStreamTrack(
+      std::function<void(webrtc::RtpTransceiverInterface*,
+                         webrtc::MediaStreamTrackInterface*,
+                         const std::string&)> on_media_stream_track);
+  void SetOnRemoveMediaStreamTrack(
+      std::function<void(webrtc::RtpReceiverInterface*,
+                         webrtc::MediaStreamTrackInterface*,
+                         const std::string&)> on_remove_media_stream_track);
   void SetOnSetOffer(std::function<void(std::string)> on_set_offer);
   void SetOnNotify(std::function<void(std::string)> on_notify);
   void SetOnPush(std::function<void(std::string)> on_push);
@@ -61,6 +69,11 @@ class Sora : public std::enable_shared_from_this<Sora>,
   int GetRenderCallbackEventID() const;
 
   void RenderCallback();
+
+  webrtc::VideoTrackInterface* GetVideoTrackFromVideoSinkId(
+      ptrid_t video_sink_id) const;
+  ptrid_t GetVideoSinkIdFromVideoTrack(
+      webrtc::VideoTrackInterface* video_track) const;
 
   void ProcessAudio(const void* p, int offset, int samples);
   void SetOnHandleAudio(std::function<void(const int16_t*, int, int)> f);
@@ -155,6 +168,14 @@ class Sora : public std::enable_shared_from_this<Sora>,
   webrtc::scoped_refptr<webrtc::RtpSenderInterface> video_sender_;
   std::function<void(ptrid_t, std::string)> on_add_track_;
   std::function<void(ptrid_t, std::string)> on_remove_track_;
+  std::function<void(webrtc::RtpTransceiverInterface*,
+                     webrtc::MediaStreamTrackInterface*,
+                     const std::string&)>
+      on_media_stream_track_;
+  std::function<void(webrtc::RtpReceiverInterface*,
+                     webrtc::MediaStreamTrackInterface*,
+                     const std::string&)>
+      on_remove_media_stream_track_;
   std::function<void(std::string)> on_set_offer_;
   std::function<void(std::string)> on_notify_;
   std::function<void(std::string)> on_push_;
@@ -172,7 +193,7 @@ class Sora : public std::enable_shared_from_this<Sora>,
 
   ptrid_t ptrid_;
 
-  std::map<ptrid_t, std::string> connection_ids_;
+  std::map<std::string, std::string> connection_ids_;
 
   std::string stream_id_;
 
