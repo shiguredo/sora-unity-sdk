@@ -138,3 +138,8 @@ message ConnectConfig {
     optional string client_key = 55;
     optional string ca_cert = 56;
 }
+
+message RtpReceiverInfo {
+    string id = 1;
+    repeated string stream_ids = 2;
+}

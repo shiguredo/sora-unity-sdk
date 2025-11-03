@@ -56,8 +56,9 @@ void* sora_create() {
 void sora_set_on_add_track(void* p, track_cb_t on_add_track, void* userdata) {
   auto wsora = (SoraWrapper*)p;
   wsora->sora->SetOnAddTrack(
-      [on_add_track, userdata](ptrid_t track_id, std::string connection_id) {
-        on_add_track(track_id, connection_id.c_str(), userdata);
+      [on_add_track, userdata](ptrid_t video_sink_id,
+                               std::string connection_id) {
+        on_add_track(video_sink_id, connection_id.c_str(), userdata);
       });
 }
 
@@ -66,8 +67,39 @@ void sora_set_on_remove_track(void* p,
                               void* userdata) {
   auto wsora = (SoraWrapper*)p;
   wsora->sora->SetOnRemoveTrack(
-      [on_remove_track, userdata](ptrid_t track_id, std::string connection_id) {
-        on_remove_track(track_id, connection_id.c_str(), userdata);
+      [on_remove_track, userdata](ptrid_t video_sink_id,
+                                  std::string connection_id) {
+        on_remove_track(video_sink_id, connection_id.c_str(), userdata);
+      });
+}
+
+void sora_set_on_media_stream_track(
+    void* p,
+    media_stream_track_cb_t on_media_stream_track,
+    void* userdata) {
+  auto wsora = (SoraWrapper*)p;
+  wsora->sora->SetOnMediaStreamTrack(
+      [on_media_stream_track, userdata](
+          webrtc::RtpTransceiverInterface* transceiver,
+          webrtc::MediaStreamTrackInterface* track,
+          const std::string& connection_id) {
+        on_media_stream_track(transceiver, track, connection_id.c_str(),
+                              userdata);
+      });
+}
+
+void sora_set_on_remove_media_stream_track(
+    void* p,
+    remove_media_stream_track_cb_t on_remove_media_stream_track,
+    void* userdata) {
+  auto wsora = (SoraWrapper*)p;
+  wsora->sora->SetOnRemoveMediaStreamTrack(
+      [on_remove_media_stream_track, userdata](
+          webrtc::RtpReceiverInterface* receiver,
+          webrtc::MediaStreamTrackInterface* track,
+          const std::string& connection_id) {
+        on_remove_media_stream_track(receiver, track, connection_id.c_str(),
+                                     userdata);
       });
 }
 
@@ -169,6 +201,16 @@ void* sora_get_render_callback() {
 int sora_get_render_callback_event_id(void* p) {
   auto wsora = (SoraWrapper*)p;
   return wsora->sora->GetRenderCallbackEventID();
+}
+
+void* sora_get_video_track_from_video_sink_id(void* p, ptrid_t video_sink_id) {
+  auto wsora = (SoraWrapper*)p;
+  return wsora->sora->GetVideoTrackFromVideoSinkId(video_sink_id);
+}
+ptrid_t sora_get_video_sink_id_from_video_track(void* p, void* video_track) {
+  auto wsora = (SoraWrapper*)p;
+  return wsora->sora->GetVideoSinkIdFromVideoTrack(
+      (webrtc::VideoTrackInterface*)video_track);
 }
 
 void sora_process_audio(void* p, const void* buf, int offset, int samples) {
@@ -396,6 +438,112 @@ void sora_video_codec_preference_to_json(const char* self,
     return;
   }
   std::memcpy(buf, json.c_str(), json.size());
+}
+
+// MediaStreamTrack
+int sora_media_stream_track_get_kind_size(void* p) {
+  auto track = (webrtc::MediaStreamTrackInterface*)p;
+  std::string kind = track->kind();
+  return (int)kind.size();
+}
+void sora_media_stream_track_get_kind(void* p, void* buf, int size) {
+  auto track = (webrtc::MediaStreamTrackInterface*)p;
+  std::string kind = track->kind();
+  std::memcpy(buf, kind.c_str(), std::min(size, (int)kind.size()));
+}
+int sora_media_stream_track_get_id_size(void* p) {
+  auto track = (webrtc::MediaStreamTrackInterface*)p;
+  std::string id = track->id();
+  return (int)id.size();
+}
+void sora_media_stream_track_get_id(void* p, void* buf, int size) {
+  auto track = (webrtc::MediaStreamTrackInterface*)p;
+  std::string id = track->id();
+  std::memcpy(buf, id.c_str(), std::min(size, (int)id.size()));
+}
+
+// AudioTrackSink
+class AudioTrackSinkImpl : public webrtc::AudioTrackSinkInterface {
+ public:
+  AudioTrackSinkImpl(
+      audio_track_sink_on_data_cb_t on_data,
+      audio_track_sink_num_preferred_channels_cb_t num_preferred_channels,
+      void* userdata)
+      : on_data_(on_data),
+        num_preferred_channels_(num_preferred_channels),
+        userdata_(userdata) {}
+  void OnData(const void* audio_data,
+              int bits_per_sample,
+              int sample_rate,
+              size_t number_of_channels,
+              size_t number_of_frames,
+              std::optional<int64_t> absolute_capture_timestamp_ms) override {
+    const short* data = static_cast<const short*>(audio_data);
+    long timestamp =
+        absolute_capture_timestamp_ms ? *absolute_capture_timestamp_ms : 0;
+    on_data_(data, bits_per_sample, sample_rate, (int)number_of_channels,
+             (int)number_of_frames, &timestamp, userdata_);
+  }
+  int NumPreferredChannels() const override {
+    return num_preferred_channels_(userdata_);
+  }
+
+ private:
+  audio_track_sink_on_data_cb_t on_data_;
+  audio_track_sink_num_preferred_channels_cb_t num_preferred_channels_;
+  void* userdata_;
+};
+void* sora_audio_track_sink_create(
+    audio_track_sink_on_data_cb_t on_data,
+    audio_track_sink_num_preferred_channels_cb_t num_preferred_channels,
+    void* userdata) {
+  return new AudioTrackSinkImpl(on_data, num_preferred_channels, userdata);
+}
+void sora_audio_track_sink_destroy(void* p) {
+  delete static_cast<AudioTrackSinkImpl*>(p);
+}
+
+// AudioTrack
+void sora_audio_track_add_sink(void* track, void* sink) {
+  auto audio_track = static_cast<webrtc::AudioTrackInterface*>(track);
+  auto audio_sink = static_cast<webrtc::AudioTrackSinkInterface*>(sink);
+  audio_track->AddSink(audio_sink);
+}
+void sora_audio_track_remove_sink(void* track, void* sink) {
+  auto audio_track = static_cast<webrtc::AudioTrackInterface*>(track);
+  auto audio_sink = static_cast<webrtc::AudioTrackSinkInterface*>(sink);
+  audio_track->RemoveSink(audio_sink);
+}
+
+// RtpTransceiver
+void* sora_rtp_transceiver_get_receiver(void* p) {
+  auto transceiver = static_cast<webrtc::RtpTransceiverInterface*>(p);
+  return transceiver->receiver().get();
+}
+
+// RtpReceiver
+extern "C++" {
+static sora_conf::internal::RtpReceiverInfo get_rtp_receiver_info(
+    webrtc::RtpReceiverInterface* receiver) {
+  sora_conf::internal::RtpReceiverInfo info;
+  info.id = receiver->id();
+  for (const auto& stream : receiver->streams()) {
+    info.stream_ids.push_back(stream->id());
+  }
+  return info;
+}
+}
+int sora_rtp_receiver_get_info_size(void* p) {
+  auto info =
+      get_rtp_receiver_info(static_cast<webrtc::RtpReceiverInterface*>(p));
+  auto json = jsonif::to_json(info);
+  return (int)json.size();
+}
+void sora_rtp_receiver_get_info(void* p, void* buf, int size) {
+  auto info =
+      get_rtp_receiver_info(static_cast<webrtc::RtpReceiverInterface*>(p));
+  auto json = jsonif::to_json(info);
+  std::memcpy(buf, json.c_str(), std::min(size, (int)json.size()));
 }
 
 struct AudioOutputHelperImpl : public sora::AudioChangeRouteObserver {

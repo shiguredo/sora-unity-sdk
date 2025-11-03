@@ -41,6 +41,15 @@
   - @melpon @torikizi
 - [UPDATE] Unity が提供しているヘッダーを `6000.0.38f1` のヘッダーファイルにする
   - @melpon
+- [ADD] オーディオやビデオが追加/削除された時に呼ばれるコールバック `OnMediaStreamTrack` と `OnRemoveMediaStreamTrack` を追加する
+  - C++ の `webrtc::PeerConnectionObserver` の `OnTrack()` と `OnRemoveTrack()` に相当する
+  - @melpon
+- [ADD] `MediaStreamTrack`, `VideoTrack`, `AudioTrack`, `RtpTransceiver`, `RtpReceiver` クラスを追加する
+  - これらは `OnMediaStreamTrack` と `OnRemoveMediaStreamTrack` の引数として渡される
+  - @melpon
+- [ADD] trackId という名前を videoSinkId に変更し、videoSinkId から `VideoTrack` を取得する関数 `GetVideoTrackFromVideoSinkId()` を追加する
+  - 既存の仕様から破壊的変更せずに `VideoTrack` を利用可能にするための仕組み
+  - @melpon
 - [ADD] DegradationPreference を追加し、エンコード時の劣化の優先順位を指定できるようにする
   - `enum DegradationPreference` を追加
     - `Disabled`: 無効

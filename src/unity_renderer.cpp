@@ -155,4 +155,29 @@ void UnityRenderer::ReplaceTrack(webrtc::VideoTrackInterface* oldTrack,
   it->second->SetTrack(newTrack);
 }
 
+webrtc::VideoTrackInterface* UnityRenderer::GetVideoTrackFromVideoSinkId(
+    ptrid_t video_sink_id) const {
+  auto it =
+      std::find_if(sinks_.begin(), sinks_.end(),
+                   [video_sink_id](const VideoSinkVector::value_type& sink) {
+                     return sink.second->GetSinkID() == video_sink_id;
+                   });
+  if (it == sinks_.end()) {
+    return nullptr;
+  }
+  return it->first;
+}
+
+ptrid_t UnityRenderer::GetVideoSinkId(
+    webrtc::VideoTrackInterface* track) const {
+  auto it = std::find_if(sinks_.begin(), sinks_.end(),
+                         [track](const VideoSinkVector::value_type& sink) {
+                           return sink.first == track;
+                         });
+  if (it == sinks_.end()) {
+    return 0;
+  }
+  return it->second->GetSinkID();
+}
+
 }  // namespace sora_unity_sdk

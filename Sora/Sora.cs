@@ -470,6 +470,8 @@ public class Sora : IDisposable
     IntPtr p;
     GCHandle onAddTrackHandle;
     GCHandle onRemoveTrackHandle;
+    GCHandle onMediaStreamTrackHandle;
+    GCHandle onRemoveMediaStreamTrackHandle;
     GCHandle onSetOfferHandle;
     GCHandle onNotifyHandle;
     GCHandle onPushHandle;
@@ -496,6 +498,12 @@ public class Sora : IDisposable
             p = IntPtr.Zero;
         }
 
+        foreach (var adapter in audioTrackSinks.Values)
+        {
+            adapter.Dispose();
+        }
+        audioTrackSinks.Clear();
+
         if (onAddTrackHandle.IsAllocated)
         {
             onAddTrackHandle.Free();
@@ -504,6 +512,16 @@ public class Sora : IDisposable
         if (onRemoveTrackHandle.IsAllocated)
         {
             onRemoveTrackHandle.Free();
+        }
+
+        if (onMediaStreamTrackHandle.IsAllocated)
+        {
+            onMediaStreamTrackHandle.Free();
+        }
+
+        if (onRemoveMediaStreamTrackHandle.IsAllocated)
+        {
+            onRemoveMediaStreamTrackHandle.Free();
         }
 
         if (onSetOfferHandle.IsAllocated)
@@ -961,15 +979,28 @@ public class Sora : IDisposable
     }
 
     /// <summary>
-    /// trackId で受信した映像を texture にレンダリングする
+    /// videoSinkId から対応する VideoTrack を取得する
+    /// </summary>
+    public VideoTrack GetVideoTrackFromVideoSinkId(uint videoSinkId)
+    {
+        IntPtr trackPtr = sora_get_video_track_from_video_sink_id(p, videoSinkId);
+        if (trackPtr == IntPtr.Zero)
+        {
+            throw new InvalidOperationException("指定した videoSinkId に対応する VideoTrack が見つかりません。");
+        }
+        return new VideoTrack(trackPtr);
+    }
+
+    /// <summary>
+    /// videoSinkId で受信した映像を texture にレンダリングする
     /// </summary>
     /// <remarks>
     /// Role.Sendonly または Role.Sendrecv で映像を送信している場合、
-    /// 自身の trackId を指定すれば、自身が送信している映像を texture にレンダリングすることもできます。
+    /// 自身の videoSinkId を指定すれば、自身が送信している映像を texture にレンダリングすることもできます。
     /// </remarks>
-    public void RenderTrackToTexture(uint trackId, UnityEngine.Texture texture)
+    public void RenderTrackToTexture(uint videoSinkId, UnityEngine.Texture texture)
     {
-        commandBuffer.IssuePluginCustomTextureUpdateV2(sora_get_texture_update_callback(), texture, trackId);
+        commandBuffer.IssuePluginCustomTextureUpdateV2(sora_get_texture_update_callback(), texture, videoSinkId);
         UnityEngine.Graphics.ExecuteCommandBuffer(commandBuffer);
         commandBuffer.Clear();
     }
@@ -977,17 +1008,17 @@ public class Sora : IDisposable
     private delegate void TrackCallbackDelegate(uint track_id, string connection_id, IntPtr userdata);
 
     [AOT.MonoPInvokeCallback(typeof(TrackCallbackDelegate))]
-    static private void TrackCallback(uint trackId, string connectionId, IntPtr userdata)
+    static private void TrackCallback(uint videoSinkId, string connectionId, IntPtr userdata)
     {
         var callback = GCHandle.FromIntPtr(userdata).Target as Action<uint, string>;
-        callback!(trackId, connectionId);
+        callback!(videoSinkId, connectionId);
     }
 
     /// <summary>
-    /// トラックが追加された時のコールバック
+    /// ビデオトラックが追加された時のコールバック
     /// </summary>
     /// <remarks>
-    /// Action の引数は uint trackId, string connectionId です。
+    /// Action の引数は uint videoSinkId, string connectionId です。
     /// connectionId が空文字だった場合、送信者自身のトラックが追加されたことを表します。
     /// </remarks>
     public Action<uint, string> OnAddTrack
@@ -1037,6 +1068,94 @@ public class Sora : IDisposable
 
             onSetOfferHandle = GCHandle.Alloc(value);
             sora_set_on_set_offer(p, SetOfferCallback, GCHandle.ToIntPtr(onSetOfferHandle));
+        }
+    }
+
+    private delegate void MediaStreamTrackCallbackDelegate(IntPtr transceiver, IntPtr track, string connectionId, IntPtr userdata);
+
+    [AOT.MonoPInvokeCallback(typeof(MediaStreamTrackCallbackDelegate))]
+    static private void MediaStreamTrackCallback(IntPtr transceiver, IntPtr track, string connectionId, IntPtr userdata)
+    {
+        var callback = GCHandle.FromIntPtr(userdata).Target as Action<RtpTransceiver, MediaStreamTrack, string>;
+        MediaStreamTrack managedTrack;
+        var tmp = new MediaStreamTrack(track);
+        if (tmp.Kind == MediaStreamTrack.VideoKind)
+        {
+            managedTrack = new VideoTrack(track);
+        }
+        else
+        {
+            managedTrack = new AudioTrack(track);
+        }
+        callback!(new RtpTransceiver(transceiver), managedTrack, connectionId);
+    }
+
+    /// <summary>
+    /// トラックが追加された時のコールバック
+    /// </summary>
+    /// <remarks>
+    /// Action の引数は RtpTransceiver transceiver, MediaStreamTrack track, string connectionId です。
+    /// track は track.Kind の値によって AudioTrack または VideoTrack のいずれかになります。
+    /// 
+    /// OnAddTrack と違い、オーディオトラックでも呼び出されますが、
+    /// 送信側のビデオ/オーディオが追加された場合には呼び出されません。
+    /// （RTCPeerConnection の ontrack イベントに対応しています）
+    /// </remarks>
+    public Action<RtpTransceiver, MediaStreamTrack, string> OnMediaStreamTrack
+    {
+        set
+        {
+            if (onMediaStreamTrackHandle.IsAllocated)
+            {
+                onMediaStreamTrackHandle.Free();
+            }
+
+            onMediaStreamTrackHandle = GCHandle.Alloc(value);
+            sora_set_on_media_stream_track(p, MediaStreamTrackCallback, GCHandle.ToIntPtr(onMediaStreamTrackHandle));
+        }
+    }
+
+    private delegate void RemoveMediaStreamTrackCallbackDelegate(IntPtr receiver, IntPtr track, string connectionId, IntPtr userdata);
+
+    [AOT.MonoPInvokeCallback(typeof(RemoveMediaStreamTrackCallbackDelegate))]
+    static private void RemoveMediaStreamTrackCallback(IntPtr receiver, IntPtr track, string connectionId, IntPtr userdata)
+    {
+        var callback = GCHandle.FromIntPtr(userdata).Target as Action<RtpReceiver, MediaStreamTrack, string>;
+        MediaStreamTrack managedTrack;
+        var tmp = new MediaStreamTrack(track);
+        if (tmp.Kind == MediaStreamTrack.VideoKind)
+        {
+            managedTrack = new VideoTrack(track);
+        }
+        else
+        {
+            managedTrack = new AudioTrack(track);
+        }
+
+        callback!(new RtpReceiver(receiver), managedTrack, connectionId);
+    }
+
+    /// <summary>
+    /// トラックが削除された時のコールバック
+    /// </summary>
+    /// <remarks>
+    /// Action の引数は RtpReceiver receiver, MediaStreamTrack track, string connectionId です。
+    /// track は track.Kind の値によって AudioTrack または VideoTrack のいずれかになります。
+    /// 
+    /// OnRemoveTrack と違い、オーディオトラックでも呼び出されますが、
+    /// 送信側のビデオ/オーディオが削除された場合には呼び出されません。
+    /// </remarks>
+    public Action<RtpReceiver, MediaStreamTrack, string> OnRemoveMediaStreamTrack
+    {
+        set
+        {
+            if (onRemoveMediaStreamTrackHandle.IsAllocated)
+            {
+                onRemoveMediaStreamTrackHandle.Free();
+            }
+
+            onRemoveMediaStreamTrackHandle = GCHandle.Alloc(value);
+            sora_set_on_remove_media_stream_track(p, RemoveMediaStreamTrackCallback, GCHandle.ToIntPtr(onRemoveMediaStreamTrackHandle));
         }
     }
 
@@ -1444,6 +1563,10 @@ public class Sora : IDisposable
     [DllImport(DllName)]
     private static extern void sora_set_on_remove_track(IntPtr p, TrackCallbackDelegate on_remove_track, IntPtr userdata);
     [DllImport(DllName)]
+    private static extern void sora_set_on_media_stream_track(IntPtr p, MediaStreamTrackCallbackDelegate on_media_stream_track, IntPtr userdata);
+    [DllImport(DllName)]
+    private static extern void sora_set_on_remove_media_stream_track(IntPtr p, RemoveMediaStreamTrackCallbackDelegate on_remove_media_stream_track, IntPtr userdata);
+    [DllImport(DllName)]
     private static extern void sora_set_on_set_offer(IntPtr p, SetOfferCallbackDelegate on_set_offer, IntPtr userdata);
     [DllImport(DllName)]
     private static extern void sora_set_on_notify(IntPtr p, NotifyCallbackDelegate on_notify, IntPtr userdata);
@@ -1527,7 +1650,38 @@ public class Sora : IDisposable
     private static extern int sora_video_codec_preference_to_json_size(string self);
     [DllImport(DllName)]
     private static extern void sora_video_codec_preference_to_json(string self, [Out] byte[] buf, int size);
+    [DllImport(DllName)]
+    private static extern int sora_media_stream_track_get_kind_size(IntPtr p);
+    [DllImport(DllName)]
+    private static extern void sora_media_stream_track_get_kind(IntPtr p, [Out] byte[] buf, int size);
+    [DllImport(DllName)]
+    private static extern int sora_media_stream_track_get_id_size(IntPtr p);
+    [DllImport(DllName)]
+    private static extern void sora_media_stream_track_get_id(IntPtr p, [Out] byte[] buf, int size);
 
+    private delegate void sora_audio_track_on_data_fn(IntPtr buf, int bits_per_sample, int sample_rate, int number_of_channels, int number_of_frames, long? absolute_capture_timestamp_ms, IntPtr userdata);
+    private delegate int sora_audio_track_num_preferred_channels_fn(IntPtr userdata);
+    [DllImport(DllName)]
+    private static extern IntPtr sora_audio_track_sink_create(sora_audio_track_on_data_fn on_data, sora_audio_track_num_preferred_channels_fn num_preferred_channels, IntPtr userdata);
+    [DllImport(DllName)]
+    private static extern void sora_audio_track_sink_destroy(IntPtr p);
+    [DllImport(DllName)]
+    private static extern void sora_audio_track_add_sink(IntPtr track, IntPtr sink);
+    [DllImport(DllName)]
+    private static extern void sora_audio_track_remove_sink(IntPtr track, IntPtr sink);
+
+    [DllImport(DllName)]
+    private static extern IntPtr sora_get_video_track_from_video_sink_id(IntPtr p, uint videoSinkId);
+    [DllImport(DllName)]
+    private static extern uint sora_get_video_sink_id_from_video_track(IntPtr p, IntPtr videoTrack);
+
+    [DllImport(DllName)]
+    private static extern IntPtr sora_rtp_transceiver_get_receiver(IntPtr p);
+
+    [DllImport(DllName)]
+    private static extern int sora_rtp_receiver_get_info_size(IntPtr p);
+    [DllImport(DllName)]
+    private static extern void sora_rtp_receiver_get_info(IntPtr p, [Out] byte[] buf, int size);
 
     public interface IAudioOutputHelper : IDisposable
     {
@@ -1682,6 +1836,241 @@ public class Sora : IDisposable
 #else
             return new DefaultAudioOutputHelper(onChangeRoute);
 #endif
+        }
+    }
+
+    /// <summary>
+    /// メディアストリームトラックを表すクラス
+    /// </summary>
+    /// <remarks>
+    /// webrtc::MediaStreamTrackInterface に対応しています。
+    /// 
+    /// 注意：このクラスおよび派生クラスはネイティブオブジェクトを所有しません。
+    /// C++ 側でネイティブオブジェクトが解放されると、
+    /// このクラスに対するあらゆる操作が未定義動作になります。
+    /// </remarks>
+    public class MediaStreamTrack
+    {
+        internal IntPtr p;
+
+        internal MediaStreamTrack(IntPtr p)
+        {
+            this.p = p;
+        }
+
+        public const string AudioKind = "audio";
+        public const string VideoKind = "video";
+
+        public string Kind
+        {
+            get
+            {
+                int size = sora_media_stream_track_get_kind_size(p);
+                byte[] buf = new byte[size];
+                sora_media_stream_track_get_kind(p, buf, size);
+                return System.Text.Encoding.UTF8.GetString(buf);
+            }
+        }
+
+        public string Id
+        {
+            get
+            {
+                int size = sora_media_stream_track_get_id_size(p);
+                byte[] buf = new byte[size];
+                sora_media_stream_track_get_id(p, buf, size);
+                return System.Text.Encoding.UTF8.GetString(buf);
+            }
+        }
+    }
+
+    /// <summary>
+    /// ビデオトラックを表すクラス
+    /// </summary>
+    /// <remarks>
+    /// webrtc::VideoTrackInterface に対応しています。
+    /// </remarks>
+    public class VideoTrack : MediaStreamTrack
+    {
+        internal VideoTrack(IntPtr p) : base(p)
+        {
+        }
+
+        public uint GetVideoSinkId(Sora sora)
+        {
+            return sora_get_video_sink_id_from_video_track(sora.p, this.p);
+        }
+
+        // TODO(melpon): 必要になったら実装する
+        // void AddOrUpdateSink(IVideoSink sink)
+        // {
+        // }
+        // void RemoveSink(IVideoSink sink)
+        // {
+        // }
+    }
+
+    public interface IAudioTrackSink
+    {
+        void OnData(short[] data, int bitsPerSample, int sampleRate, int numberOfChannels, int numberOfFrames, long? absoluteCaptureTimestampMs);
+    }
+
+    internal class AudioTrackSinkAdapter : IDisposable
+    {
+        private IAudioTrackSink sink;
+        private GCHandle selfHandle;
+        private sora_audio_track_on_data_fn onDataThunk;
+        private sora_audio_track_num_preferred_channels_fn numPreferredChannelsThunk;
+        private IntPtr p;
+
+        internal AudioTrackSinkAdapter(IAudioTrackSink sink)
+        {
+            this.sink = sink;
+            selfHandle = GCHandle.Alloc(this);
+            onDataThunk = OnDataThunk;
+            numPreferredChannelsThunk = NumPreferredChannelsThunk;
+            p = sora_audio_track_sink_create(onDataThunk, numPreferredChannelsThunk, GCHandle.ToIntPtr(selfHandle));
+        }
+
+        public void Dispose()
+        {
+            if (p != IntPtr.Zero)
+            {
+                sora_audio_track_sink_destroy(p);
+                p = IntPtr.Zero;
+            }
+            if (selfHandle.IsAllocated)
+            {
+                selfHandle.Free();
+            }
+        }
+
+        internal IntPtr Ptr
+        {
+            get { return p; }
+        }
+
+        [AOT.MonoPInvokeCallback(typeof(sora_audio_track_on_data_fn))]
+        private static void OnDataThunk(IntPtr buf, int bitsPerSample, int sampleRate, int numberOfChannels, int numberOfFrames, long? absoluteCaptureTimestampMs, IntPtr userdata)
+        {
+            var adapter = GCHandle.FromIntPtr(userdata).Target as AudioTrackSinkAdapter;
+            short[] data = new short[numberOfChannels * numberOfFrames];
+            Marshal.Copy(buf, data, 0, numberOfChannels * numberOfFrames);
+            adapter!.sink.OnData(data, bitsPerSample, sampleRate, numberOfChannels, numberOfFrames, absoluteCaptureTimestampMs);
+        }
+
+        [AOT.MonoPInvokeCallback(typeof(sora_audio_track_num_preferred_channels_fn))]
+        private static int NumPreferredChannelsThunk(IntPtr userdata)
+        {
+            return -1;
+        }
+    }
+
+    Dictionary<IAudioTrackSink, AudioTrackSinkAdapter> audioTrackSinks = new Dictionary<IAudioTrackSink, AudioTrackSinkAdapter>();
+
+    public class AudioTrack : MediaStreamTrack
+    {
+        internal AudioTrack(IntPtr p) : base(p)
+        {
+        }
+
+        public void AddSink(Sora sora, IAudioTrackSink sink)
+        {
+            if (sora.audioTrackSinks.ContainsKey(sink))
+            {
+                // すでに追加されている
+                throw new InvalidOperationException("The sink has already been added.");
+            }
+            var adapter = new AudioTrackSinkAdapter(sink);
+            sora_audio_track_add_sink(this.p, adapter.Ptr);
+            sora.audioTrackSinks[sink] = adapter;
+        }
+
+        public void RemoveSink(Sora sora, IAudioTrackSink sink)
+        {
+            if (!sora.audioTrackSinks.ContainsKey(sink))
+            {
+                return;
+            }
+            var adapter = sora.audioTrackSinks[sink];
+            sora_audio_track_remove_sink(this.p, adapter.Ptr);
+            adapter.Dispose();
+            sora.audioTrackSinks.Remove(sink);
+        }
+    }
+
+    /// <summary>
+    /// トランシーバを表すクラス
+    /// </summary>
+    /// <remarks>
+    /// webrtc::RtpTransceiver に対応しています。
+    /// 
+    /// 注意：このクラスはネイティブオブジェクトを所有しません。
+    /// C++ 側でネイティブオブジェクトが解放されると、
+    /// このクラスに対するあらゆる操作が未定義動作になります。
+    /// </remarks>
+    public class RtpTransceiver
+    {
+        private IntPtr p;
+
+        internal RtpTransceiver(IntPtr p)
+        {
+            this.p = p;
+        }
+
+        public RtpReceiver Receiver
+        {
+            get
+            {
+                return new RtpReceiver(sora_rtp_transceiver_get_receiver(p));
+            }
+        }
+    }
+
+    /// <summary>
+    /// レシーバーを表すクラス
+    /// </summary>
+    /// <remarks>
+    /// webrtc::RtpReceiver に対応しています。
+    /// 
+    /// 注意：このクラスはネイティブオブジェクトを所有しません。
+    /// C++ 側でネイティブオブジェクトが解放されると、
+    /// このクラスに対するあらゆる操作が未定義動作になります。
+    /// </remarks>
+    public class RtpReceiver
+    {
+        private IntPtr p;
+
+        internal RtpReceiver(IntPtr p)
+        {
+            this.p = p;
+        }
+
+        internal SoraConf.Internal.RtpReceiverInfo GetInfo()
+        {
+            int size = sora_rtp_receiver_get_info_size(p);
+            byte[] buf = new byte[size];
+            sora_rtp_receiver_get_info(p, buf, size);
+            var info = Jsonif.Json.FromJson<SoraConf.Internal.RtpReceiverInfo>(System.Text.Encoding.UTF8.GetString(buf));
+            return info;
+        }
+
+        public string[] StreamIds
+        {
+            get
+            {
+                var info = GetInfo();
+                return info.stream_ids.ToArray();
+            }
+        }
+
+        public string Id
+        {
+            get
+            {
+                var info = GetInfo();
+                return info.id;
+            }
         }
     }
 }

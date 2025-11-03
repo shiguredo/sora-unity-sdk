@@ -110,6 +110,18 @@ void Sora::SetOnRemoveTrack(
     std::function<void(ptrid_t, std::string)> on_remove_track) {
   on_remove_track_ = on_remove_track;
 }
+void Sora::SetOnMediaStreamTrack(
+    std::function<void(webrtc::RtpTransceiverInterface*,
+                       webrtc::MediaStreamTrackInterface*,
+                       const std::string&)> on_media_stream_track) {
+  on_media_stream_track_ = on_media_stream_track;
+}
+void Sora::SetOnRemoveMediaStreamTrack(
+    std::function<void(webrtc::RtpReceiverInterface*,
+                       webrtc::MediaStreamTrackInterface*,
+                       const std::string&)> on_remove_media_stream_track) {
+  on_remove_media_stream_track_ = on_remove_media_stream_track;
+}
 void Sora::SetOnSetOffer(std::function<void(std::string)> on_set_offer) {
   on_set_offer_ = std::move(on_set_offer);
 }
@@ -629,10 +641,10 @@ void Sora::DoSwitchCamera(
                                                                  {stream_id_});
     video_sender_ = video_result.value();
 
-    auto track_id = renderer_->AddTrack(video_track.get());
-    PushEvent([this, track_id]() {
+    auto video_sink_id = renderer_->AddTrack(video_track.get());
+    PushEvent([this, video_sink_id]() {
       if (on_add_track_) {
-        on_add_track_(track_id, "");
+        on_add_track_(video_sink_id, "");
       }
     });
   } else {
@@ -658,6 +670,16 @@ void Sora::RenderCallback() {
     static_cast<UnityCameraCapturer*>(capturer_.get())->OnRender();
   }
 }
+
+webrtc::VideoTrackInterface* Sora::GetVideoTrackFromVideoSinkId(
+    ptrid_t video_sink_id) const {
+  return renderer_->GetVideoTrackFromVideoSinkId(video_sink_id);
+}
+ptrid_t Sora::GetVideoSinkIdFromVideoTrack(
+    webrtc::VideoTrackInterface* video_track) const {
+  return renderer_->GetVideoSinkId(video_track);
+}
+
 void Sora::ProcessAudio(const void* p, int offset, int samples) {
   if (!unity_adm_) {
     return;
@@ -706,6 +728,14 @@ webrtc::scoped_refptr<UnityAudioDevice> Sora::CreateADM(
 bool Sora::InitADM(webrtc::scoped_refptr<webrtc::AudioDeviceModule> adm,
                    std::string audio_recording_device,
                    std::string audio_playout_device) {
+  // デフォルトデバイスを設定しておく
+  if (adm->RecordingDevices() > 0) {
+    adm->SetRecordingDevice(0);
+  }
+  if (adm->PlayoutDevices() > 0) {
+    adm->SetPlayoutDevice(0);
+  }
+
   // 録音デバイスと再生デバイスを指定する
   if (!audio_recording_device.empty()) {
     bool succeeded = false;
@@ -913,10 +943,10 @@ void Sora::OnSetOffer(std::string offer) {
   }
 
   if (video_track_ != nullptr) {
-    auto track_id = renderer_->AddTrack(video_track_.get());
-    PushEvent([this, track_id]() {
+    auto video_sink_id = renderer_->AddTrack(video_track_.get());
+    PushEvent([this, video_sink_id]() {
       if (on_add_track_) {
-        on_add_track_(track_id, "");
+        on_add_track_(video_sink_id, "");
       }
     });
   }
@@ -956,36 +986,46 @@ void Sora::OnMessage(std::string label, std::string data) {
 }
 void Sora::OnTrack(
     webrtc::scoped_refptr<webrtc::RtpTransceiverInterface> transceiver) {
-  auto track = transceiver->receiver()->track();
-  if (track->kind() == webrtc::MediaStreamTrackInterface::kVideoKind) {
+  PushEvent([this, transceiver]() {
+    auto track = transceiver->receiver()->track();
     auto connection_id = transceiver->receiver()->stream_ids()[0];
-    auto track_id = renderer_->AddTrack(
-        static_cast<webrtc::VideoTrackInterface*>(track.get()));
-    connection_ids_.insert(std::make_pair(track_id, connection_id));
-    PushEvent([this, track_id, connection_id]() {
+    connection_ids_.insert(std::make_pair(track->id(), connection_id));
+    if (track->kind() == webrtc::MediaStreamTrackInterface::kVideoKind) {
+      auto video_sink_id = renderer_->AddTrack(
+          static_cast<webrtc::VideoTrackInterface*>(track.get()));
       if (on_add_track_) {
-        on_add_track_(track_id, connection_id);
+        on_add_track_(video_sink_id, connection_id);
       }
-    });
-  }
+    }
+    if (on_media_stream_track_) {
+      on_media_stream_track_(transceiver.get(), track.get(), connection_id);
+    }
+  });
 }
 void Sora::OnRemoveTrack(
     webrtc::scoped_refptr<webrtc::RtpReceiverInterface> receiver) {
-  auto track = receiver->track();
-  if (track->kind() == webrtc::MediaStreamTrackInterface::kVideoKind) {
-    auto track_id = renderer_->RemoveTrack(
-        static_cast<webrtc::VideoTrackInterface*>(track.get()));
-    auto connection_id = connection_ids_[track_id];
-    connection_ids_.erase(track_id);
-
-    if (track_id != 0) {
-      PushEvent([this, track_id, connection_id]() {
-        if (on_remove_track_) {
-          on_remove_track_(track_id, connection_id);
-        }
-      });
+  PushEvent([this, receiver]() {
+    auto track = receiver->track();
+    auto connection_id = connection_ids_[track->id()];
+    if (on_remove_media_stream_track_) {
+      on_remove_media_stream_track_(receiver.get(), track.get(), connection_id);
     }
-  }
+
+    if (track->kind() == webrtc::MediaStreamTrackInterface::kVideoKind) {
+      auto video_track = static_cast<webrtc::VideoTrackInterface*>(track.get());
+      auto video_sink_id = renderer_->GetVideoSinkId(video_track);
+
+      if (video_sink_id != 0) {
+        if (on_remove_track_) {
+          on_remove_track_(video_sink_id, connection_id);
+        }
+      }
+
+      renderer_->RemoveTrack(video_track);
+    }
+
+    connection_ids_.erase(track->id());
+  });
 }
 
 void Sora::OnDataChannel(std::string label) {
