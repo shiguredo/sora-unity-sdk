@@ -41,6 +41,8 @@
   - @melpon @torikizi
 - [UPDATE] Unity が提供しているヘッダーを `6000.0.38f1` のヘッダーファイルにする
   - @melpon
+- [UPDATE] selfHandle を使ってコード整理
+  - @melpon
 - [ADD] オーディオやビデオが追加/削除された時に呼ばれるコールバック `OnMediaStreamTrack` と `OnRemoveMediaStreamTrack` を追加する
   - C++ の `webrtc::PeerConnectionObserver` の `OnTrack()` と `OnRemoveTrack()` に相当する
   - @melpon
