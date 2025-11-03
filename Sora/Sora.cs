@@ -1094,8 +1094,11 @@ public class Sora : IDisposable
     /// トラックが追加された時のコールバック
     /// </summary>
     /// <remarks>
-    /// OnAddTrack と違い、オーディオトラックでも呼び出されます。
-    /// また、自身のトラックが追加された場合は呼び出されません。
+    /// Action の引数は RtpTransceiver transceiver, MediaStreamTrack track, string connectionId です。
+    /// track は track.Kind の値によって AudioTrack または VideoTrack のいずれかになります。
+    /// 
+    /// OnAddTrack と違い、オーディオトラックでも呼び出されますが、
+    /// 送信側のビデオ/オーディオが追加された場合には呼び出されません。
     /// （RTCPeerConnection の ontrack イベントに対応しています）
     /// </remarks>
     public Action<RtpTransceiver, MediaStreamTrack, string> OnMediaStreamTrack
@@ -1136,8 +1139,11 @@ public class Sora : IDisposable
     /// トラックが削除された時のコールバック
     /// </summary>
     /// <remarks>
-    /// OnRemoveTrack と違い、オーディオトラックでも呼び出されます。
-    /// また、自身のトラックが削除された場合は呼び出されません。
+    /// Action の引数は RtpReceiver receiver, MediaStreamTrack track, string connectionId です。
+    /// track は track.Kind の値によって AudioTrack または VideoTrack のいずれかになります。
+    /// 
+    /// OnRemoveTrack と違い、オーディオトラックでも呼び出されますが、
+    /// 送信側のビデオ/オーディオが削除された場合には呼び出されません。
     /// </remarks>
     public Action<RtpReceiver, MediaStreamTrack, string> OnRemoveMediaStreamTrack
     {
@@ -1607,10 +1613,6 @@ public class Sora : IDisposable
     [DllImport(DllName)]
     private static extern void sora_setenv(string name, string value);
     [DllImport(DllName)]
-    private static extern IntPtr sora_get_audio_track(IntPtr p);
-    [DllImport(DllName)]
-    private static extern IntPtr sora_get_video_track(IntPtr p);
-    [DllImport(DllName)]
     private static extern int sora_get_audio_enabled(IntPtr p);
     [DllImport(DllName)]
     private static extern void sora_set_audio_enabled(IntPtr p, int enabled);
@@ -1672,7 +1674,6 @@ public class Sora : IDisposable
     private static extern IntPtr sora_get_video_track_from_video_sink_id(IntPtr p, uint videoSinkId);
     [DllImport(DllName)]
     private static extern uint sora_get_video_sink_id_from_video_track(IntPtr p, IntPtr videoTrack);
-
 
     [DllImport(DllName)]
     private static extern IntPtr sora_rtp_transceiver_get_receiver(IntPtr p);
@@ -1912,11 +1913,6 @@ public class Sora : IDisposable
     public interface IAudioTrackSink
     {
         void OnData(short[] data, int bitsPerSample, int sampleRate, int numberOfChannels, int numberOfFrames, long? absoluteCaptureTimestampMs);
-
-        // Returns the number of channels encoded by the sink. This can be less than
-        // the number_of_channels if down-mixing occur. A value of -1 means an unknown
-        // number.
-        int NumPreferredChannels();
     }
 
     internal class AudioTrackSinkAdapter : IDisposable
@@ -1966,8 +1962,7 @@ public class Sora : IDisposable
         [AOT.MonoPInvokeCallback(typeof(sora_audio_track_num_preferred_channels_fn))]
         private static int NumPreferredChannelsThunk(IntPtr userdata)
         {
-            var adapter = GCHandle.FromIntPtr(userdata).Target as AudioTrackSinkAdapter;
-            return adapter!.sink.NumPreferredChannels();
+            return -1;
         }
     }
 
@@ -2004,6 +1999,16 @@ public class Sora : IDisposable
         }
     }
 
+    /// <summary>
+    /// トランシーバを表すクラス
+    /// </summary>
+    /// <remarks>
+    /// webrtc::RtpTransceiver に対応しています。
+    /// 
+    /// 注意：このクラスはネイティブオブジェクトを所有しません。
+    /// C++ 側でネイティブオブジェクトが解放されると、
+    /// このクラスに対するあらゆる操作が未定義動作になります。
+    /// </remarks>
     public class RtpTransceiver
     {
         private IntPtr p;
@@ -2022,6 +2027,16 @@ public class Sora : IDisposable
         }
     }
 
+    /// <summary>
+    /// レシーバーを表すクラス
+    /// </summary>
+    /// <remarks>
+    /// webrtc::RtpReceiver に対応しています。
+    /// 
+    /// 注意：このクラスはネイティブオブジェクトを所有しません。
+    /// C++ 側でネイティブオブジェクトが解放されると、
+    /// このクラスに対するあらゆる操作が未定義動作になります。
+    /// </remarks>
     public class RtpReceiver
     {
         private IntPtr p;
