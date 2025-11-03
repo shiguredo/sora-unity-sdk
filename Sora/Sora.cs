@@ -468,18 +468,19 @@ public class Sora : IDisposable
     }
 
     IntPtr p;
-    GCHandle onAddTrackHandle;
-    GCHandle onRemoveTrackHandle;
-    GCHandle onMediaStreamTrackHandle;
-    GCHandle onRemoveMediaStreamTrackHandle;
-    GCHandle onSetOfferHandle;
-    GCHandle onNotifyHandle;
-    GCHandle onPushHandle;
-    GCHandle onMessageHandle;
-    GCHandle onDisconnectHandle;
-    GCHandle onDataChannelHandle;
-    GCHandle onHandleAudioHandle;
-    GCHandle onCapturerFrameHandle;
+    GCHandle selfHandle;
+    Action<uint, string> onAddTrack;
+    Action<uint, string> onRemoveTrack;
+    Action<RtpTransceiver, MediaStreamTrack, string> onMediaStreamTrack;
+    Action<RtpReceiver, MediaStreamTrack, string> onRemoveMediaStreamTrack;
+    Action<string> onSetOffer;
+    Action<string> onNotify;
+    Action<string> onPush;
+    Action<string, byte[]> onMessage;
+    Action<SoraConf.ErrorCode, string> onDisconnect;
+    Action<string> onDataChannel;
+    Action<short[], int, int> onHandleAudio;
+    Action<SoraConf.VideoFrame> onCapturerFrame;
     UnityEngine.Rendering.CommandBuffer commandBuffer;
     UnityEngine.Camera? unityCamera;
 
@@ -504,70 +505,16 @@ public class Sora : IDisposable
         }
         audioTrackSinks.Clear();
 
-        if (onAddTrackHandle.IsAllocated)
+        if (selfHandle.IsAllocated)
         {
-            onAddTrackHandle.Free();
-        }
-
-        if (onRemoveTrackHandle.IsAllocated)
-        {
-            onRemoveTrackHandle.Free();
-        }
-
-        if (onMediaStreamTrackHandle.IsAllocated)
-        {
-            onMediaStreamTrackHandle.Free();
-        }
-
-        if (onRemoveMediaStreamTrackHandle.IsAllocated)
-        {
-            onRemoveMediaStreamTrackHandle.Free();
-        }
-
-        if (onSetOfferHandle.IsAllocated)
-        {
-            onSetOfferHandle.Free();
-        }
-
-        if (onNotifyHandle.IsAllocated)
-        {
-            onNotifyHandle.Free();
-        }
-
-        if (onPushHandle.IsAllocated)
-        {
-            onPushHandle.Free();
-        }
-
-        if (onMessageHandle.IsAllocated)
-        {
-            onMessageHandle.Free();
-        }
-
-        if (onDisconnectHandle.IsAllocated)
-        {
-            onDisconnectHandle.Free();
-        }
-
-        if (onDataChannelHandle.IsAllocated)
-        {
-            onDataChannelHandle.Free();
-        }
-
-        if (onHandleAudioHandle.IsAllocated)
-        {
-            onHandleAudioHandle.Free();
-        }
-
-        if (onCapturerFrameHandle.IsAllocated)
-        {
-            onCapturerFrameHandle.Free();
+            selfHandle.Free();
         }
     }
 
     public Sora()
     {
         p = sora_create();
+        selfHandle = GCHandle.Alloc(this);
         commandBuffer = new UnityEngine.Rendering.CommandBuffer();
     }
 
@@ -1005,13 +952,13 @@ public class Sora : IDisposable
         commandBuffer.Clear();
     }
 
-    private delegate void TrackCallbackDelegate(uint track_id, string connection_id, IntPtr userdata);
+    private delegate void AddTrackCallbackDelegate(uint track_id, string connection_id, IntPtr userdata);
 
-    [AOT.MonoPInvokeCallback(typeof(TrackCallbackDelegate))]
-    static private void TrackCallback(uint videoSinkId, string connectionId, IntPtr userdata)
+    [AOT.MonoPInvokeCallback(typeof(AddTrackCallbackDelegate))]
+    static private void AddTrackCallback(uint videoSinkId, string connectionId, IntPtr userdata)
     {
-        var callback = GCHandle.FromIntPtr(userdata).Target as Action<uint, string>;
-        callback!(videoSinkId, connectionId);
+        var sora = GCHandle.FromIntPtr(userdata).Target as Sora;
+        sora!.onAddTrack(videoSinkId, connectionId);
     }
 
     /// <summary>
@@ -1025,49 +972,26 @@ public class Sora : IDisposable
     {
         set
         {
-            if (onAddTrackHandle.IsAllocated)
-            {
-                onAddTrackHandle.Free();
-            }
-
-            onAddTrackHandle = GCHandle.Alloc(value);
-            sora_set_on_add_track(p, TrackCallback, GCHandle.ToIntPtr(onAddTrackHandle));
+            onAddTrack = value;
+            sora_set_on_add_track(p, AddTrackCallback, GCHandle.ToIntPtr(selfHandle));
         }
     }
+
+    private delegate void RemoveTrackCallbackDelegate(uint track_id, string connection_id, IntPtr userdata);
+
+    [AOT.MonoPInvokeCallback(typeof(RemoveTrackCallbackDelegate))]
+    static private void RemoveTrackCallback(uint videoSinkId, string connectionId, IntPtr userdata)
+    {
+        var sora = GCHandle.FromIntPtr(userdata).Target as Sora;
+        sora!.onRemoveTrack(videoSinkId, connectionId);
+    }
+
     public Action<uint, string> OnRemoveTrack
     {
         set
         {
-            if (onRemoveTrackHandle.IsAllocated)
-            {
-                onRemoveTrackHandle.Free();
-            }
-
-            onRemoveTrackHandle = GCHandle.Alloc(value);
-            sora_set_on_remove_track(p, TrackCallback, GCHandle.ToIntPtr(onRemoveTrackHandle));
-        }
-    }
-
-    private delegate void SetOfferCallbackDelegate(string json, IntPtr userdata);
-
-    [AOT.MonoPInvokeCallback(typeof(SetOfferCallbackDelegate))]
-    static private void SetOfferCallback(string json, IntPtr userdata)
-    {
-        var callback = GCHandle.FromIntPtr(userdata).Target as Action<string>;
-        callback!(json);
-    }
-
-    public Action<string> OnSetOffer
-    {
-        set
-        {
-            if (onSetOfferHandle.IsAllocated)
-            {
-                onSetOfferHandle.Free();
-            }
-
-            onSetOfferHandle = GCHandle.Alloc(value);
-            sora_set_on_set_offer(p, SetOfferCallback, GCHandle.ToIntPtr(onSetOfferHandle));
+            onRemoveTrack = value;
+            sora_set_on_remove_track(p, RemoveTrackCallback, GCHandle.ToIntPtr(selfHandle));
         }
     }
 
@@ -1076,7 +1000,7 @@ public class Sora : IDisposable
     [AOT.MonoPInvokeCallback(typeof(MediaStreamTrackCallbackDelegate))]
     static private void MediaStreamTrackCallback(IntPtr transceiver, IntPtr track, string connectionId, IntPtr userdata)
     {
-        var callback = GCHandle.FromIntPtr(userdata).Target as Action<RtpTransceiver, MediaStreamTrack, string>;
+        var sora = GCHandle.FromIntPtr(userdata).Target as Sora;
         MediaStreamTrack managedTrack;
         var tmp = new MediaStreamTrack(track);
         if (tmp.Kind == MediaStreamTrack.VideoKind)
@@ -1087,7 +1011,7 @@ public class Sora : IDisposable
         {
             managedTrack = new AudioTrack(track);
         }
-        callback!(new RtpTransceiver(transceiver), managedTrack, connectionId);
+        sora!.onMediaStreamTrack(new RtpTransceiver(transceiver), managedTrack, connectionId);
     }
 
     /// <summary>
@@ -1105,13 +1029,8 @@ public class Sora : IDisposable
     {
         set
         {
-            if (onMediaStreamTrackHandle.IsAllocated)
-            {
-                onMediaStreamTrackHandle.Free();
-            }
-
-            onMediaStreamTrackHandle = GCHandle.Alloc(value);
-            sora_set_on_media_stream_track(p, MediaStreamTrackCallback, GCHandle.ToIntPtr(onMediaStreamTrackHandle));
+            onMediaStreamTrack = value;
+            sora_set_on_media_stream_track(p, MediaStreamTrackCallback, GCHandle.ToIntPtr(selfHandle));
         }
     }
 
@@ -1120,7 +1039,7 @@ public class Sora : IDisposable
     [AOT.MonoPInvokeCallback(typeof(RemoveMediaStreamTrackCallbackDelegate))]
     static private void RemoveMediaStreamTrackCallback(IntPtr receiver, IntPtr track, string connectionId, IntPtr userdata)
     {
-        var callback = GCHandle.FromIntPtr(userdata).Target as Action<RtpReceiver, MediaStreamTrack, string>;
+        var sora = GCHandle.FromIntPtr(userdata).Target as Sora;
         MediaStreamTrack managedTrack;
         var tmp = new MediaStreamTrack(track);
         if (tmp.Kind == MediaStreamTrack.VideoKind)
@@ -1132,7 +1051,7 @@ public class Sora : IDisposable
             managedTrack = new AudioTrack(track);
         }
 
-        callback!(new RtpReceiver(receiver), managedTrack, connectionId);
+        sora!.onRemoveMediaStreamTrack(new RtpReceiver(receiver), managedTrack, connectionId);
     }
 
     /// <summary>
@@ -1149,13 +1068,26 @@ public class Sora : IDisposable
     {
         set
         {
-            if (onRemoveMediaStreamTrackHandle.IsAllocated)
-            {
-                onRemoveMediaStreamTrackHandle.Free();
-            }
+            onRemoveMediaStreamTrack = value;
+            sora_set_on_remove_media_stream_track(p, RemoveMediaStreamTrackCallback, GCHandle.ToIntPtr(selfHandle));
+        }
+    }
 
-            onRemoveMediaStreamTrackHandle = GCHandle.Alloc(value);
-            sora_set_on_remove_media_stream_track(p, RemoveMediaStreamTrackCallback, GCHandle.ToIntPtr(onRemoveMediaStreamTrackHandle));
+    private delegate void SetOfferCallbackDelegate(string json, IntPtr userdata);
+
+    [AOT.MonoPInvokeCallback(typeof(SetOfferCallbackDelegate))]
+    static private void SetOfferCallback(string json, IntPtr userdata)
+    {
+        var sora = GCHandle.FromIntPtr(userdata).Target as Sora;
+        sora!.onSetOffer(json);
+    }
+
+    public Action<string> OnSetOffer
+    {
+        set
+        {
+            onSetOffer = value;
+            sora_set_on_set_offer(p, SetOfferCallback, GCHandle.ToIntPtr(selfHandle));
         }
     }
 
@@ -1164,21 +1096,16 @@ public class Sora : IDisposable
     [AOT.MonoPInvokeCallback(typeof(NotifyCallbackDelegate))]
     static private void NotifyCallback(string json, IntPtr userdata)
     {
-        var callback = GCHandle.FromIntPtr(userdata).Target as Action<string>;
-        callback!(json);
+        var sora = GCHandle.FromIntPtr(userdata).Target as Sora;
+        sora!.onNotify(json);
     }
 
     public Action<string> OnNotify
     {
         set
         {
-            if (onNotifyHandle.IsAllocated)
-            {
-                onNotifyHandle.Free();
-            }
-
-            onNotifyHandle = GCHandle.Alloc(value);
-            sora_set_on_notify(p, NotifyCallback, GCHandle.ToIntPtr(onNotifyHandle));
+            onNotify = value;
+            sora_set_on_notify(p, NotifyCallback, GCHandle.ToIntPtr(selfHandle));
         }
     }
 
@@ -1187,21 +1114,16 @@ public class Sora : IDisposable
     [AOT.MonoPInvokeCallback(typeof(PushCallbackDelegate))]
     static private void PushCallback(string json, IntPtr userdata)
     {
-        var callback = GCHandle.FromIntPtr(userdata).Target as Action<string>;
-        callback!(json);
+        var sora = GCHandle.FromIntPtr(userdata).Target as Sora;
+        sora!.onPush(json);
     }
 
     public Action<string> OnPush
     {
         set
         {
-            if (onPushHandle.IsAllocated)
-            {
-                onPushHandle.Free();
-            }
-
-            onPushHandle = GCHandle.Alloc(value);
-            sora_set_on_push(p, PushCallback, GCHandle.ToIntPtr(onPushHandle));
+            onPush = value;
+            sora_set_on_push(p, PushCallback, GCHandle.ToIntPtr(selfHandle));
         }
     }
 
@@ -1210,23 +1132,18 @@ public class Sora : IDisposable
     [AOT.MonoPInvokeCallback(typeof(MessageCallbackDelegate))]
     static private void MessageCallback(string label, IntPtr buf, int size, IntPtr userdata)
     {
-        var callback = GCHandle.FromIntPtr(userdata).Target as Action<string, byte[]>;
+        var sora = GCHandle.FromIntPtr(userdata).Target as Sora;
         byte[] data = new byte[size];
         Marshal.Copy(buf, data, 0, size);
-        callback!(label, data);
+        sora!.onMessage(label, data);
     }
 
     public Action<string, byte[]> OnMessage
     {
         set
         {
-            if (onMessageHandle.IsAllocated)
-            {
-                onMessageHandle.Free();
-            }
-
-            onMessageHandle = GCHandle.Alloc(value);
-            sora_set_on_message(p, MessageCallback, GCHandle.ToIntPtr(onMessageHandle));
+            onMessage = value;
+            sora_set_on_message(p, MessageCallback, GCHandle.ToIntPtr(selfHandle));
         }
     }
 
@@ -1235,21 +1152,16 @@ public class Sora : IDisposable
     [AOT.MonoPInvokeCallback(typeof(DisconnectCallbackDelegate))]
     static private void DisconnectCallback(int errorCode, string message, IntPtr userdata)
     {
-        var callback = GCHandle.FromIntPtr(userdata).Target as Action<SoraConf.ErrorCode, string>;
-        callback!((SoraConf.ErrorCode)errorCode, message);
+        var sora = GCHandle.FromIntPtr(userdata).Target as Sora;
+        sora!.onDisconnect((SoraConf.ErrorCode)errorCode, message);
     }
 
     public Action<SoraConf.ErrorCode, string> OnDisconnect
     {
         set
         {
-            if (onDisconnectHandle.IsAllocated)
-            {
-                onDisconnectHandle.Free();
-            }
-
-            onDisconnectHandle = GCHandle.Alloc(value);
-            sora_set_on_disconnect(p, DisconnectCallback, GCHandle.ToIntPtr(onDisconnectHandle));
+            onDisconnect = value;
+            sora_set_on_disconnect(p, DisconnectCallback, GCHandle.ToIntPtr(selfHandle));
         }
     }
 
@@ -1258,21 +1170,16 @@ public class Sora : IDisposable
     [AOT.MonoPInvokeCallback(typeof(DataChannelCallbackDelegate))]
     static private void DataChannelCallback(string label, IntPtr userdata)
     {
-        var callback = GCHandle.FromIntPtr(userdata).Target as Action<string>;
-        callback!(label);
+        var sora = GCHandle.FromIntPtr(userdata).Target as Sora;
+        sora!.onDataChannel(label);
     }
 
     public Action<string> OnDataChannel
     {
         set
         {
-            if (onDataChannelHandle.IsAllocated)
-            {
-                onDataChannelHandle.Free();
-            }
-
-            onDataChannelHandle = GCHandle.Alloc(value);
-            sora_set_on_data_channel(p, DataChannelCallback, GCHandle.ToIntPtr(onDataChannelHandle));
+            onDataChannel = value;
+            sora_set_on_data_channel(p, DataChannelCallback, GCHandle.ToIntPtr(selfHandle));
         }
     }
 
@@ -1309,10 +1216,10 @@ public class Sora : IDisposable
     [AOT.MonoPInvokeCallback(typeof(HandleAudioCallbackDelegate))]
     static private void HandleAudioCallback(IntPtr buf, int samples, int channels, IntPtr userdata)
     {
-        var callback = GCHandle.FromIntPtr(userdata).Target as Action<short[], int, int>;
+        var sora = GCHandle.FromIntPtr(userdata).Target as Sora;
         short[] buf2 = new short[samples * channels];
         Marshal.Copy(buf, buf2, 0, samples * channels);
-        callback!(buf2, samples, channels);
+        sora!.onHandleAudio(buf2, samples, channels);
     }
 
     /// <summary>
@@ -1327,13 +1234,8 @@ public class Sora : IDisposable
     {
         set
         {
-            if (onHandleAudioHandle.IsAllocated)
-            {
-                onHandleAudioHandle.Free();
-            }
-
-            onHandleAudioHandle = GCHandle.Alloc(value);
-            sora_set_on_handle_audio(p, HandleAudioCallback, GCHandle.ToIntPtr(onHandleAudioHandle));
+            onHandleAudio = value;
+            sora_set_on_handle_audio(p, HandleAudioCallback, GCHandle.ToIntPtr(selfHandle));
         }
     }
 
@@ -1342,9 +1244,9 @@ public class Sora : IDisposable
     [AOT.MonoPInvokeCallback(typeof(CapturerFrameCallbackDelegate))]
     static private void CapturerFrameCallback(string data, IntPtr userdata)
     {
-        var callback = GCHandle.FromIntPtr(userdata).Target as Action<SoraConf.VideoFrame>;
+        var sora = GCHandle.FromIntPtr(userdata).Target as Sora;
         var frame = Jsonif.Json.FromJson<SoraConf.VideoFrame>(data);
-        callback!(frame);
+        sora!.onCapturerFrame(frame);
     }
 
     /// <summary>
@@ -1364,13 +1266,8 @@ public class Sora : IDisposable
     {
         set
         {
-            if (onCapturerFrameHandle.IsAllocated)
-            {
-                onCapturerFrameHandle.Free();
-            }
-
-            onCapturerFrameHandle = GCHandle.Alloc(value);
-            sora_set_on_capturer_frame(p, CapturerFrameCallback, GCHandle.ToIntPtr(onCapturerFrameHandle));
+            onCapturerFrame = value;
+            sora_set_on_capturer_frame(p, CapturerFrameCallback, GCHandle.ToIntPtr(selfHandle));
         }
     }
 
@@ -1559,9 +1456,9 @@ public class Sora : IDisposable
     [DllImport(DllName)]
     private static extern IntPtr sora_create();
     [DllImport(DllName)]
-    private static extern void sora_set_on_add_track(IntPtr p, TrackCallbackDelegate on_add_track, IntPtr userdata);
+    private static extern void sora_set_on_add_track(IntPtr p, AddTrackCallbackDelegate on_add_track, IntPtr userdata);
     [DllImport(DllName)]
-    private static extern void sora_set_on_remove_track(IntPtr p, TrackCallbackDelegate on_remove_track, IntPtr userdata);
+    private static extern void sora_set_on_remove_track(IntPtr p, RemoveTrackCallbackDelegate on_remove_track, IntPtr userdata);
     [DllImport(DllName)]
     private static extern void sora_set_on_media_stream_track(IntPtr p, MediaStreamTrackCallbackDelegate on_media_stream_track, IntPtr userdata);
     [DllImport(DllName)]
