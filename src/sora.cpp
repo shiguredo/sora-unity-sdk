@@ -728,6 +728,14 @@ webrtc::scoped_refptr<UnityAudioDevice> Sora::CreateADM(
 bool Sora::InitADM(webrtc::scoped_refptr<webrtc::AudioDeviceModule> adm,
                    std::string audio_recording_device,
                    std::string audio_playout_device) {
+  // デフォルトデバイスを設定しておく
+  if (adm->RecordingDevices() > 0) {
+    adm->SetRecordingDevice(0);
+  }
+  if (adm->PlayoutDevices() > 0) {
+    adm->SetPlayoutDevice(0);
+  }
+
   // 録音デバイスと再生デバイスを指定する
   if (!audio_recording_device.empty()) {
     bool succeeded = false;
@@ -1031,14 +1039,6 @@ void Sora::OnDataChannel(std::string label) {
 void Sora::PushEvent(std::function<void()> f) {
   std::lock_guard<std::mutex> guard(event_mutex_);
   event_queue_.push_back(std::move(f));
-}
-
-webrtc::AudioTrackInterface* Sora::GetAudioTrack() const {
-  return audio_track_.get();
-}
-
-webrtc::VideoTrackInterface* Sora::GetVideoTrack() const {
-  return video_track_.get();
 }
 
 bool Sora::GetAudioEnabled() const {

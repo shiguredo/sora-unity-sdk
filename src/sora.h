@@ -82,8 +82,6 @@ class Sora : public std::enable_shared_from_this<Sora>,
 
   void SendMessage(const std::string& label, const std::string& data);
 
-  webrtc::AudioTrackInterface* GetAudioTrack() const;
-  webrtc::VideoTrackInterface* GetVideoTrack() const;
   bool GetAudioEnabled() const;
   void SetAudioEnabled(bool enabled);
   bool GetVideoEnabled() const;

@@ -1484,26 +1484,6 @@ public class Sora : IDisposable
         sora_setenv(name, value);
     }
 
-    public AudioTrack? GetAudioTrack()
-    {
-        IntPtr ptr = sora_get_audio_track(p);
-        if (ptr == IntPtr.Zero)
-        {
-            return null;
-        }
-        return new AudioTrack(ptr);
-    }
-
-    public VideoTrack? GetVideoTrack()
-    {
-        IntPtr ptr = sora_get_video_track(p);
-        if (ptr == IntPtr.Zero)
-        {
-            return null;
-        }
-        return new VideoTrack(ptr);
-    }
-
     public bool AudioEnabled
     {
         get { return sora_get_audio_enabled(p) != 0; }
