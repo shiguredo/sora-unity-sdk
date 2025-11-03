@@ -483,7 +483,7 @@ def _build(args):
         )
     if platform in ("ios",):
         install_file(
-            os.path.join(unity_build_dir, "bundled", "libSoraUnitySdk.a"),
+            os.path.join(unity_build_dir, "libSoraUnitySdk.a"),
             os.path.join(plugins_dir, "ios", "libSoraUnitySdk.a"),
         )
         install_file(

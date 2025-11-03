@@ -37,6 +37,10 @@ jobs:
           key: ${{ matrix.target }}-v1-${{ hashFiles('VERSIONS') }}
           restore-keys: |
             ${{ matrix.name }}-v1-
+      - name: Prepare Ubuntu x86_64
+        if: matrix.target == 'ubuntu-22.04_x86_64' || matrix.target == 'ubuntu-24.04_x86_64'
+        run: |
+          sudo apt install libgl-dev
       - run: python3 run.py build ${{ matrix.target }}
       - run: python3 run.py package
       - name: Upload Artifact
