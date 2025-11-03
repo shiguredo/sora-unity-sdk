@@ -73,32 +73,12 @@ crashlytics-build.properties
 
 *.dll
 
-# /Assets/Plugins/SoraUnitySdk.meta
-# /Assets/Plugins/SoraUnitySdk/android.meta
-# /Assets/Plugins/SoraUnitySdk/android/arm64-v8a.meta
-# /Assets/Plugins/SoraUnitySdk/android/arm64-v8a/libSoraUnitySdk.so
-# /Assets/Plugins/SoraUnitySdk/android/webrtc.jar
-# /Assets/Plugins/SoraUnitySdk/android/Sora.aar
-# /Assets/Plugins/SoraUnitySdk/macos.meta
-# /Assets/Plugins/SoraUnitySdk/macos/arm64.meta
-# /Assets/Plugins/SoraUnitySdk/macos/arm64/SoraUnitySdk.bundle/
-# /Assets/Plugins/SoraUnitySdk/ios.meta
-# /Assets/Plugins/SoraUnitySdk/ios/libSoraUnitySdk.a
-# /Assets/Plugins/SoraUnitySdk/ios/libwebrtc.a
-# /Assets/Plugins/SoraUnitySdk/ios/libsora.a
-# /Assets/Plugins/SoraUnitySdk/ios/libboost_json.a
-# /Assets/Plugins/SoraUnitySdk/ios/libboost_filesystem.a
-# /Assets/Plugins/SoraUnitySdk/ubuntu-22.04.meta
-# /Assets/Plugins/SoraUnitySdk/ubuntu-22.04/x86_64.meta
-# /Assets/Plugins/SoraUnitySdk/ubuntu-22.04/x86_64/libSoraUnitySdk.so
-# /Assets/Plugins/SoraUnitySdk/ubuntu-24.04.meta
-# /Assets/Plugins/SoraUnitySdk/ubuntu-24.04/x86_64.meta
-# /Assets/Plugins/SoraUnitySdk/ubuntu-24.04/x86_64/libSoraUnitySdk.so
-# /Assets/Plugins/SoraUnitySdk/windows.meta
-# /Assets/Plugins/SoraUnitySdk/windows/x86_64.meta
-# /Assets/SoraUnitySdk.meta
-# /Assets/SoraUnitySdk/
-# /Assets/StreamingAssets/SoraUnitySdk.meta
-# /Assets/StreamingAssets/SoraUnitySdk/
-# /webrtc_logs_*
-# /.env.json
+/Assets/SoraUnitySdk/Generated/
+/Assets/Plugins/SoraUnitySdk/**/*.dll
+/Assets/Plugins/SoraUnitySdk/**/*.so
+/Assets/Plugins/SoraUnitySdk/**/*.bundle
+/Assets/Plugins/SoraUnitySdk/**/*.jar
+/Assets/Plugins/SoraUnitySdk/**/*.aar
+/Assets/Plugins/SoraUnitySdk/**/*.a
+/webrtc_logs_*
+/.env.json

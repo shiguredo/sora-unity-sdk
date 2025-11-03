@@ -464,12 +464,12 @@ def _build(args):
     if platform in ("macos_x86_64",):
         install_file(
             os.path.join(unity_build_dir, "SoraUnitySdk.bundle"),
-            os.path.join(plugins_dir, "mac", "x86_64", "SoraUnitySdk.bundle"),
+            os.path.join(plugins_dir, "macos", "x86_64", "SoraUnitySdk.bundle"),
         )
     if platform in ("macos_arm64"):
         install_file(
             os.path.join(unity_build_dir, "SoraUnitySdk.bundle"),
-            os.path.join(plugins_dir, "mac", "arm64", "SoraUnitySdk.bundle"),
+            os.path.join(plugins_dir, "macos", "arm64", "SoraUnitySdk.bundle"),
         )
     if platform in ("ubuntu-22.04_x86_64",):
         install_file(
@@ -526,54 +526,48 @@ def _package():
     package_assets_dir = os.path.join(package_dir, "SoraUnitySdk")
     package_plugins_dir = os.path.join(package_dir, "Plugins", "SoraUnitySdk")
     package_editor_dir = os.path.join(package_dir, "Editor", "SoraUnitySdk")
-    # これらは必ず存在してる
-    install_file(os.path.join(assets_dir, "Sora.cs"), os.path.join(package_assets_dir, "Sora.cs"))
-    install_file(
-        os.path.join(assets_dir, "Generated", "Jsonif.cs"),
-        os.path.join(package_assets_dir, "Generated", "Jsonif.cs"),
-    )
-    install_file(
-        os.path.join(assets_dir, "Generated", "SoraConf.cs"),
-        os.path.join(package_assets_dir, "Generated", "SoraConf.cs"),
-    )
-    install_file(
-        os.path.join(assets_dir, "Generated", "SoraConfInternal.cs"),
-        os.path.join(package_assets_dir, "Generated", "SoraConfInternal.cs"),
-    )
-    install_file(
-        os.path.join(editor_dir, "SoraUnitySdkPostProcessor.cs"),
-        os.path.join(package_editor_dir, "SoraUnitySdkPostProcessor.cs"),
-    )
+    # これらは必ず存在してるので無条件でコピーする
+    assets_files = [
+        ("Sora.cs",),
+        ("Generated", "Jsonif.cs"),
+        ("Generated", "SoraConf.cs"),
+        ("Generated", "SoraConfInternal.cs"),
+    ]
+    editor_files = [
+        ("SoraUnitySdkPostProcessor.cs",),
+    ]
+    for assets_file in assets_files:
+        install_file(
+            os.path.join(assets_dir, *assets_file),
+            os.path.join(package_assets_dir, *assets_file),
+        )
+    for editor_file in editor_files:
+        install_file(
+            os.path.join(editor_dir, *editor_file),
+            os.path.join(package_editor_dir, *editor_file),
+        )
 
     # これらは存在していればコピーする
-    install_file_ifexists(
-        os.path.join(plugins_dir, "windows_x86_64", "SoraUnitySdk.dll"),
-        os.path.join(package_plugins_dir, "windows_x86_64", "SoraUnitySdk.dll"),
-    )
-    install_file_ifexists(
-        os.path.join(plugins_dir, "macos_x86_64", "SoraUnitySdk.bundle"),
-        os.path.join(package_plugins_dir, "macos_x86_64", "SoraUnitySdk.bundle"),
-    )
-    install_file_ifexists(
-        os.path.join(plugins_dir, "macos_arm64", "SoraUnitySdk.bundle"),
-        os.path.join(package_plugins_dir, "macos_arm64", "SoraUnitySdk.bundle"),
-    )
-    install_file_ifexists(
-        os.path.join(plugins_dir, "ubuntu-22.04_x86_64", "libSoraUnitySdk.so"),
-        os.path.join(package_plugins_dir, "ubuntu-24.04_x86_64", "libSoraUnitySdk.so"),
-    )
-    install_file_ifexists(
-        os.path.join(plugins_dir, "ubuntu-24.04_x86_64", "libSoraUnitySdk.so"),
-        os.path.join(package_plugins_dir, "ubuntu-24.04_x86_64", "libSoraUnitySdk.so"),
-    )
-    install_file_ifexists(
-        os.path.join(plugins_dir, "android", "libSoraUnitySdk.so"),
-        os.path.join(package_plugins_dir, "android", "libSoraUnitySdk.so"),
-    )
-    install_file_ifexists(
-        os.path.join(plugins_dir, "ios", "libSoraUnitySdk.a"),
-        os.path.join(package_plugins_dir, "ios", "libSoraUnitySdk.a"),
-    )
+    plugin_files = [
+        ("windows", "x86_64", "SoraUnitySdk.dll"),
+        ("macos", "x86_64", "SoraUnitySdk.bundle"),
+        ("macos", "arm64", "SoraUnitySdk.bundle"),
+        ("ubuntu-22.04", "x86_64", "libSoraUnity.so"),
+        ("ubuntu-24.04", "x86_64", "libSoraUnitySdk.so"),
+        ("android", "arm64-v8a", "libSoraUnitySdk.so"),
+        ("android", "webrtc.jar"),
+        ("android", "Sora.aar"),
+        ("ios", "libSoraUnitySdk.a"),
+        ("ios", "libwebrtc.a"),
+        ("ios", "libboost_json.a"),
+        ("ios", "libboost_filesystem.a"),
+        ("ios", "libsora.a"),
+    ]
+    for plugin_file in plugin_files:
+        install_file_ifexists(
+            os.path.join(plugins_dir, *plugin_file),
+            os.path.join(package_plugins_dir, *plugin_file),
+        )
 
 
 def main():
