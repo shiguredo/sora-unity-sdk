@@ -74,6 +74,8 @@ crashlytics-build.properties
 *.dll
 
 /Assets/SoraUnitySdk/Generated/
+/Assets/SoraUnitySdk/NOTICE.md
+/Assets/SoraUnitySdk/LICENSE
 /Assets/Plugins/SoraUnitySdk/**/*.dll
 /Assets/Plugins/SoraUnitySdk/**/*.so
 /Assets/Plugins/SoraUnitySdk/**/*.bundle

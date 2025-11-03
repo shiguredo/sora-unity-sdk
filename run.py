@@ -16,6 +16,9 @@ from buildbase import (
     cmake_path,
     cmd,
     cmdcap,
+    download,
+    enum_all_files,
+    extract,
     fix_clang_version,
     get_clang_version,
     get_sora_info,
@@ -570,6 +573,44 @@ def _package():
         )
 
 
+def _install(version: Optional[str], sdk_path: Optional[str]):
+    if version is None:
+        version = read_version_file(os.path.join(BASE_DIR, "VERSION"))["SORA_UNITY_SDK_VERSION"]
+
+    if sdk_path is None:
+        rm_rf("SoraUnitySdk.zip")
+        rm_rf("SoraUnitySdk")
+        url = f"https://github.com/shiguredo/sora-unity-sdk/releases/download/{version}/SoraUnitySdk.zip"
+        path = download(url, ".")
+        extract(path, ".", "SoraUnitySdk")
+
+    # 既存のファイル（特にメタデータ系）が残ってる可能性があるので
+    # １個１個ファイルをコピーしていく
+    sdk_path = "SoraUnitySdk" if sdk_path is None else sdk_path
+    for file in enum_all_files(sdk_path, sdk_path):
+        dst_base = os.path.join(BASE_DIR, "SoraUnitySdkSamples", "Assets")
+        # このディレクトリだけは全部置き換える
+        if "SoraUnitySdk.bundle" in file:
+            continue
+        srcfile = os.path.join(sdk_path, file)
+        dstfile = os.path.join(dst_base, file)
+        install_file(srcfile, dstfile)
+    # .bundle ディレクトリの置き換え
+    for root, dirs, _ in os.walk(sdk_path):
+        dst_base = os.path.join(BASE_DIR, "SoraUnitySdkSamples", "Assets")
+        for dir in dirs:
+            if dir == "SoraUnitySdk.bundle":
+                bundle_dir = os.path.relpath(os.path.join(root, dir), sdk_path)
+                src_bundle_dir = os.path.join(sdk_path, bundle_dir)
+                dst_bundle_dir = os.path.join(dst_base, bundle_dir)
+                rm_rf(dst_bundle_dir)
+                install_file(src_bundle_dir, dst_bundle_dir)
+
+    if sdk_path is None:
+        rm_rf("SoraUnitySdk.zip")
+        rm_rf("SoraUnitySdk")
+
+
 def main():
     parser = argparse.ArgumentParser()
     sp = parser.add_subparsers(dest="command")
@@ -587,6 +628,15 @@ def main():
     # package コマンド
     _pp = sp.add_parser("package")
 
+    # install コマンド
+    ip = sp.add_parser("install", help="Install Sora Unity SDK into SoraUnitySdkSamples")
+    # SoraUnitySdkSamples にインストールする Sora Unity SDK のバージョン
+    # 省略した場合は VERSION ファイルのバージョンを使う
+    ip.add_argument("--version")
+    # これを指定している場合、Sora Unity SDK のダウンロードをせず、このディレクトリの内容をコピーする
+    # GitHub Actions からバイナリをダウンロードしてきたものを反映させる時用のフラグ
+    ip.add_argument("--sdk-path")
+
     # format コマンド
     fp = sp.add_parser("format")
     fp.add_argument("--clang-format-path", type=str, default=None)
@@ -597,6 +647,8 @@ def main():
         _build(args)
     elif args.command == "package":
         _package()
+    elif args.command == "install":
+        _install(args.version, args.sdk_path)
     elif args.command == "format":
         _format(clang_format_path=args.clang_format_path)
     else:
