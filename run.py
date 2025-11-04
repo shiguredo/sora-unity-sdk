@@ -523,31 +523,22 @@ def _build(args):
 def _package():
     assets_dir = os.path.join(BASE_DIR, "SoraUnitySdkSamples", "Assets", "SoraUnitySdk")
     plugins_dir = os.path.join(BASE_DIR, "SoraUnitySdkSamples", "Assets", "Plugins", "SoraUnitySdk")
-    editor_dir = os.path.join(BASE_DIR, "SoraUnitySdkSamples", "Assets", "Editor", "SoraUnitySdk")
     package_dir = os.path.join(BASE_DIR, "_package", "SoraUnitySdk")
     rm_rf(package_dir)
     package_assets_dir = os.path.join(package_dir, "SoraUnitySdk")
     package_plugins_dir = os.path.join(package_dir, "Plugins", "SoraUnitySdk")
-    package_editor_dir = os.path.join(package_dir, "Editor", "SoraUnitySdk")
     # これらは必ず存在してるので無条件でコピーする
     assets_files = [
         ("Sora.cs",),
         ("Generated", "Jsonif.cs"),
         ("Generated", "SoraConf.cs"),
         ("Generated", "SoraConfInternal.cs"),
-    ]
-    editor_files = [
-        ("SoraUnitySdkPostProcessor.cs",),
+        ("Editor", "SoraUnitySdkPostProcessor.cs"),
     ]
     for assets_file in assets_files:
         install_file(
             os.path.join(assets_dir, *assets_file),
             os.path.join(package_assets_dir, *assets_file),
-        )
-    for editor_file in editor_files:
-        install_file(
-            os.path.join(editor_dir, *editor_file),
-            os.path.join(package_editor_dir, *editor_file),
         )
 
     # これらは存在していればコピーする
