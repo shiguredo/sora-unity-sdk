@@ -1908,6 +1908,18 @@ public class Sora : IDisposable
         }
     }
 
+    /// <summary>
+    /// 送信側のオーディオ用のシンク
+    /// </summary>
+    /// <remarks>
+    /// ローカルから送信されるオーディオデータ、例えばマイクから取得したデータ
+    /// などを受け取るためのシンクを設定します。
+    /// 
+    /// 注意：
+    /// このシンクは Sora.Connect() を呼び出す前に設定して下さい。
+    /// また、Sora.Connect() を呼び出した後は Sora インスタンスを破棄するまで値を書き換えないで下さい。
+    /// Sora.Connect() を呼び出した後に値を書き換えた場合の挙動は未定義動作となります。
+    /// </remarks>
     public IAudioTrackSink? SenderAudioTrackSink
     {
         get { return senderAudioTrackSink; }
