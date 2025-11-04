@@ -469,18 +469,18 @@ public class Sora : IDisposable
 
     IntPtr p;
     GCHandle selfHandle;
-    Action<uint, string> onAddTrack;
-    Action<uint, string> onRemoveTrack;
-    Action<RtpTransceiver, MediaStreamTrack, string> onMediaStreamTrack;
-    Action<RtpReceiver, MediaStreamTrack, string> onRemoveMediaStreamTrack;
-    Action<string> onSetOffer;
-    Action<string> onNotify;
-    Action<string> onPush;
-    Action<string, byte[]> onMessage;
-    Action<SoraConf.ErrorCode, string> onDisconnect;
-    Action<string> onDataChannel;
-    Action<short[], int, int> onHandleAudio;
-    Action<SoraConf.VideoFrame> onCapturerFrame;
+    Action<uint, string>? onAddTrack;
+    Action<uint, string>? onRemoveTrack;
+    Action<RtpTransceiver, MediaStreamTrack, string>? onMediaStreamTrack;
+    Action<RtpReceiver, MediaStreamTrack, string>? onRemoveMediaStreamTrack;
+    Action<string>? onSetOffer;
+    Action<string>? onNotify;
+    Action<string>? onPush;
+    Action<string, byte[]>? onMessage;
+    Action<SoraConf.ErrorCode, string>? onDisconnect;
+    Action<string>? onDataChannel;
+    Action<short[], int, int>? onHandleAudio;
+    Action<SoraConf.VideoFrame>? onCapturerFrame;
     UnityEngine.Rendering.CommandBuffer commandBuffer;
     UnityEngine.Camera? unityCamera;
 
@@ -958,7 +958,7 @@ public class Sora : IDisposable
     static private void AddTrackCallback(uint videoSinkId, string connectionId, IntPtr userdata)
     {
         var sora = GCHandle.FromIntPtr(userdata).Target as Sora;
-        sora!.onAddTrack(videoSinkId, connectionId);
+        sora!.onAddTrack!(videoSinkId, connectionId);
     }
 
     /// <summary>
@@ -968,12 +968,12 @@ public class Sora : IDisposable
     /// Action の引数は uint videoSinkId, string connectionId です。
     /// connectionId が空文字だった場合、送信者自身のトラックが追加されたことを表します。
     /// </remarks>
-    public Action<uint, string> OnAddTrack
+    public Action<uint, string>? OnAddTrack
     {
         set
         {
             onAddTrack = value;
-            sora_set_on_add_track(p, AddTrackCallback, GCHandle.ToIntPtr(selfHandle));
+            sora_set_on_add_track(p, value == null ? null : AddTrackCallback, GCHandle.ToIntPtr(selfHandle));
         }
     }
 
@@ -983,15 +983,15 @@ public class Sora : IDisposable
     static private void RemoveTrackCallback(uint videoSinkId, string connectionId, IntPtr userdata)
     {
         var sora = GCHandle.FromIntPtr(userdata).Target as Sora;
-        sora!.onRemoveTrack(videoSinkId, connectionId);
+        sora!.onRemoveTrack!(videoSinkId, connectionId);
     }
 
-    public Action<uint, string> OnRemoveTrack
+    public Action<uint, string>? OnRemoveTrack
     {
         set
         {
             onRemoveTrack = value;
-            sora_set_on_remove_track(p, RemoveTrackCallback, GCHandle.ToIntPtr(selfHandle));
+            sora_set_on_remove_track(p, value == null ? null : RemoveTrackCallback, GCHandle.ToIntPtr(selfHandle));
         }
     }
 
@@ -1011,7 +1011,7 @@ public class Sora : IDisposable
         {
             managedTrack = new AudioTrack(track);
         }
-        sora!.onMediaStreamTrack(new RtpTransceiver(transceiver), managedTrack, connectionId);
+        sora!.onMediaStreamTrack!(new RtpTransceiver(transceiver), managedTrack, connectionId);
     }
 
     /// <summary>
@@ -1025,12 +1025,12 @@ public class Sora : IDisposable
     /// 送信側のビデオ/オーディオが追加された場合には呼び出されません。
     /// （RTCPeerConnection の ontrack イベントに対応しています）
     /// </remarks>
-    public Action<RtpTransceiver, MediaStreamTrack, string> OnMediaStreamTrack
+    public Action<RtpTransceiver, MediaStreamTrack, string>? OnMediaStreamTrack
     {
         set
         {
             onMediaStreamTrack = value;
-            sora_set_on_media_stream_track(p, MediaStreamTrackCallback, GCHandle.ToIntPtr(selfHandle));
+            sora_set_on_media_stream_track(p, value == null ? null : MediaStreamTrackCallback, GCHandle.ToIntPtr(selfHandle));
         }
     }
 
@@ -1051,7 +1051,7 @@ public class Sora : IDisposable
             managedTrack = new AudioTrack(track);
         }
 
-        sora!.onRemoveMediaStreamTrack(new RtpReceiver(receiver), managedTrack, connectionId);
+        sora!.onRemoveMediaStreamTrack!(new RtpReceiver(receiver), managedTrack, connectionId);
     }
 
     /// <summary>
@@ -1064,12 +1064,12 @@ public class Sora : IDisposable
     /// OnRemoveTrack と違い、オーディオトラックでも呼び出されますが、
     /// 送信側のビデオ/オーディオが削除された場合には呼び出されません。
     /// </remarks>
-    public Action<RtpReceiver, MediaStreamTrack, string> OnRemoveMediaStreamTrack
+    public Action<RtpReceiver, MediaStreamTrack, string>? OnRemoveMediaStreamTrack
     {
         set
         {
             onRemoveMediaStreamTrack = value;
-            sora_set_on_remove_media_stream_track(p, RemoveMediaStreamTrackCallback, GCHandle.ToIntPtr(selfHandle));
+            sora_set_on_remove_media_stream_track(p, value == null ? null : RemoveMediaStreamTrackCallback, GCHandle.ToIntPtr(selfHandle));
         }
     }
 
@@ -1079,15 +1079,15 @@ public class Sora : IDisposable
     static private void SetOfferCallback(string json, IntPtr userdata)
     {
         var sora = GCHandle.FromIntPtr(userdata).Target as Sora;
-        sora!.onSetOffer(json);
+        sora!.onSetOffer!(json);
     }
 
-    public Action<string> OnSetOffer
+    public Action<string>? OnSetOffer
     {
         set
         {
             onSetOffer = value;
-            sora_set_on_set_offer(p, SetOfferCallback, GCHandle.ToIntPtr(selfHandle));
+            sora_set_on_set_offer(p, value == null ? null : SetOfferCallback, GCHandle.ToIntPtr(selfHandle));
         }
     }
 
@@ -1097,15 +1097,15 @@ public class Sora : IDisposable
     static private void NotifyCallback(string json, IntPtr userdata)
     {
         var sora = GCHandle.FromIntPtr(userdata).Target as Sora;
-        sora!.onNotify(json);
+        sora!.onNotify!(json);
     }
 
-    public Action<string> OnNotify
+    public Action<string>? OnNotify
     {
         set
         {
             onNotify = value;
-            sora_set_on_notify(p, NotifyCallback, GCHandle.ToIntPtr(selfHandle));
+            sora_set_on_notify(p, value == null ? null : NotifyCallback, GCHandle.ToIntPtr(selfHandle));
         }
     }
 
@@ -1115,15 +1115,15 @@ public class Sora : IDisposable
     static private void PushCallback(string json, IntPtr userdata)
     {
         var sora = GCHandle.FromIntPtr(userdata).Target as Sora;
-        sora!.onPush(json);
+        sora!.onPush!(json);
     }
 
-    public Action<string> OnPush
+    public Action<string>? OnPush
     {
         set
         {
             onPush = value;
-            sora_set_on_push(p, PushCallback, GCHandle.ToIntPtr(selfHandle));
+            sora_set_on_push(p, value == null ? null : PushCallback, GCHandle.ToIntPtr(selfHandle));
         }
     }
 
@@ -1135,15 +1135,15 @@ public class Sora : IDisposable
         var sora = GCHandle.FromIntPtr(userdata).Target as Sora;
         byte[] data = new byte[size];
         Marshal.Copy(buf, data, 0, size);
-        sora!.onMessage(label, data);
+        sora!.onMessage!(label, data);
     }
 
-    public Action<string, byte[]> OnMessage
+    public Action<string, byte[]>? OnMessage
     {
         set
         {
             onMessage = value;
-            sora_set_on_message(p, MessageCallback, GCHandle.ToIntPtr(selfHandle));
+            sora_set_on_message(p, value == null ? null : MessageCallback, GCHandle.ToIntPtr(selfHandle));
         }
     }
 
@@ -1153,15 +1153,15 @@ public class Sora : IDisposable
     static private void DisconnectCallback(int errorCode, string message, IntPtr userdata)
     {
         var sora = GCHandle.FromIntPtr(userdata).Target as Sora;
-        sora!.onDisconnect((SoraConf.ErrorCode)errorCode, message);
+        sora!.onDisconnect!((SoraConf.ErrorCode)errorCode, message);
     }
 
-    public Action<SoraConf.ErrorCode, string> OnDisconnect
+    public Action<SoraConf.ErrorCode, string>? OnDisconnect
     {
         set
         {
             onDisconnect = value;
-            sora_set_on_disconnect(p, DisconnectCallback, GCHandle.ToIntPtr(selfHandle));
+            sora_set_on_disconnect(p, value == null ? null : DisconnectCallback, GCHandle.ToIntPtr(selfHandle));
         }
     }
 
@@ -1171,15 +1171,15 @@ public class Sora : IDisposable
     static private void DataChannelCallback(string label, IntPtr userdata)
     {
         var sora = GCHandle.FromIntPtr(userdata).Target as Sora;
-        sora!.onDataChannel(label);
+        sora!.onDataChannel!(label);
     }
 
-    public Action<string> OnDataChannel
+    public Action<string>? OnDataChannel
     {
         set
         {
             onDataChannel = value;
-            sora_set_on_data_channel(p, DataChannelCallback, GCHandle.ToIntPtr(selfHandle));
+            sora_set_on_data_channel(p, value == null ? null : DataChannelCallback, GCHandle.ToIntPtr(selfHandle));
         }
     }
 
@@ -1219,7 +1219,7 @@ public class Sora : IDisposable
         var sora = GCHandle.FromIntPtr(userdata).Target as Sora;
         short[] buf2 = new short[samples * channels];
         Marshal.Copy(buf, buf2, 0, samples * channels);
-        sora!.onHandleAudio(buf2, samples, channels);
+        sora!.onHandleAudio!(buf2, samples, channels);
     }
 
     /// <summary>
@@ -1230,12 +1230,12 @@ public class Sora : IDisposable
     /// 再生デバイスで直接再生する代わりに、再生するためのデータをこのコールバックに渡します。
     /// また、このコールバックは Unity スレッドとは別のスレッドから呼ばれることに注意して下さい。
     /// </remarks>
-    public Action<short[], int, int> OnHandleAudio
+    public Action<short[], int, int>? OnHandleAudio
     {
         set
         {
             onHandleAudio = value;
-            sora_set_on_handle_audio(p, HandleAudioCallback, GCHandle.ToIntPtr(selfHandle));
+            sora_set_on_handle_audio(p, value == null ? null : HandleAudioCallback, GCHandle.ToIntPtr(selfHandle));
         }
     }
 
@@ -1246,7 +1246,7 @@ public class Sora : IDisposable
     {
         var sora = GCHandle.FromIntPtr(userdata).Target as Sora;
         var frame = Jsonif.Json.FromJson<SoraConf.VideoFrame>(data);
-        sora!.onCapturerFrame(frame);
+        sora!.onCapturerFrame!(frame);
     }
 
     /// <summary>
@@ -1262,12 +1262,12 @@ public class Sora : IDisposable
     /// このコールバックは Unity スレッドとは別のスレッドから呼ばれることに注意して下さい。
     /// また、Android ではこのコールバックを利用できません。
     /// </remarks>
-    public Action<SoraConf.VideoFrame> OnCapturerFrame
+    public Action<SoraConf.VideoFrame>? OnCapturerFrame
     {
         set
         {
             onCapturerFrame = value;
-            sora_set_on_capturer_frame(p, CapturerFrameCallback, GCHandle.ToIntPtr(selfHandle));
+            sora_set_on_capturer_frame(p, value == null ? null : CapturerFrameCallback, GCHandle.ToIntPtr(selfHandle));
         }
     }
 
@@ -1456,25 +1456,25 @@ public class Sora : IDisposable
     [DllImport(DllName)]
     private static extern IntPtr sora_create();
     [DllImport(DllName)]
-    private static extern void sora_set_on_add_track(IntPtr p, AddTrackCallbackDelegate on_add_track, IntPtr userdata);
+    private static extern void sora_set_on_add_track(IntPtr p, AddTrackCallbackDelegate? on_add_track, IntPtr userdata);
     [DllImport(DllName)]
-    private static extern void sora_set_on_remove_track(IntPtr p, RemoveTrackCallbackDelegate on_remove_track, IntPtr userdata);
+    private static extern void sora_set_on_remove_track(IntPtr p, RemoveTrackCallbackDelegate? on_remove_track, IntPtr userdata);
     [DllImport(DllName)]
-    private static extern void sora_set_on_media_stream_track(IntPtr p, MediaStreamTrackCallbackDelegate on_media_stream_track, IntPtr userdata);
+    private static extern void sora_set_on_media_stream_track(IntPtr p, MediaStreamTrackCallbackDelegate? on_media_stream_track, IntPtr userdata);
     [DllImport(DllName)]
-    private static extern void sora_set_on_remove_media_stream_track(IntPtr p, RemoveMediaStreamTrackCallbackDelegate on_remove_media_stream_track, IntPtr userdata);
+    private static extern void sora_set_on_remove_media_stream_track(IntPtr p, RemoveMediaStreamTrackCallbackDelegate? on_remove_media_stream_track, IntPtr userdata);
     [DllImport(DllName)]
-    private static extern void sora_set_on_set_offer(IntPtr p, SetOfferCallbackDelegate on_set_offer, IntPtr userdata);
+    private static extern void sora_set_on_set_offer(IntPtr p, SetOfferCallbackDelegate? on_set_offer, IntPtr userdata);
     [DllImport(DllName)]
-    private static extern void sora_set_on_notify(IntPtr p, NotifyCallbackDelegate on_notify, IntPtr userdata);
+    private static extern void sora_set_on_notify(IntPtr p, NotifyCallbackDelegate? on_notify, IntPtr userdata);
     [DllImport(DllName)]
-    private static extern void sora_set_on_push(IntPtr p, PushCallbackDelegate on_push, IntPtr userdata);
+    private static extern void sora_set_on_push(IntPtr p, PushCallbackDelegate? on_push, IntPtr userdata);
     [DllImport(DllName)]
-    private static extern void sora_set_on_message(IntPtr p, MessageCallbackDelegate on_message, IntPtr userdata);
+    private static extern void sora_set_on_message(IntPtr p, MessageCallbackDelegate? on_message, IntPtr userdata);
     [DllImport(DllName)]
-    private static extern void sora_set_on_disconnect(IntPtr p, DisconnectCallbackDelegate on_disconnect, IntPtr userdata);
+    private static extern void sora_set_on_disconnect(IntPtr p, DisconnectCallbackDelegate? on_disconnect, IntPtr userdata);
     [DllImport(DllName)]
-    private static extern void sora_set_on_data_channel(IntPtr p, DataChannelCallbackDelegate on_data_channel, IntPtr userdata);
+    private static extern void sora_set_on_data_channel(IntPtr p, DataChannelCallbackDelegate? on_data_channel, IntPtr userdata);
     [DllImport(DllName)]
     private static extern void sora_dispatch_events(IntPtr p);
     [DllImport(DllName)]
@@ -1494,9 +1494,9 @@ public class Sora : IDisposable
     [DllImport(DllName)]
     private static extern void sora_process_audio(IntPtr p, [In] float[] data, int offset, int samples);
     [DllImport(DllName)]
-    private static extern void sora_set_on_handle_audio(IntPtr p, HandleAudioCallbackDelegate on_handle_audio, IntPtr userdata);
+    private static extern void sora_set_on_handle_audio(IntPtr p, HandleAudioCallbackDelegate? on_handle_audio, IntPtr userdata);
     [DllImport(DllName)]
-    private static extern void sora_set_on_capturer_frame(IntPtr p, CapturerFrameCallbackDelegate on_capturer_frame, IntPtr userdata);
+    private static extern void sora_set_on_capturer_frame(IntPtr p, CapturerFrameCallbackDelegate? on_capturer_frame, IntPtr userdata);
     [DllImport(DllName)]
     private static extern void sora_get_stats(IntPtr p, StatsCallbackDelegate on_get_stats, IntPtr userdata);
     [DllImport(DllName)]

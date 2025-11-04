@@ -55,6 +55,10 @@ void* sora_create() {
 
 void sora_set_on_add_track(void* p, track_cb_t on_add_track, void* userdata) {
   auto wsora = (SoraWrapper*)p;
+  if (on_add_track == nullptr) {
+    wsora->sora->SetOnAddTrack(nullptr);
+    return;
+  }
   wsora->sora->SetOnAddTrack(
       [on_add_track, userdata](ptrid_t video_sink_id,
                                std::string connection_id) {
@@ -66,6 +70,10 @@ void sora_set_on_remove_track(void* p,
                               track_cb_t on_remove_track,
                               void* userdata) {
   auto wsora = (SoraWrapper*)p;
+  if (on_remove_track == nullptr) {
+    wsora->sora->SetOnRemoveTrack(nullptr);
+    return;
+  }
   wsora->sora->SetOnRemoveTrack(
       [on_remove_track, userdata](ptrid_t video_sink_id,
                                   std::string connection_id) {
@@ -78,6 +86,10 @@ void sora_set_on_media_stream_track(
     media_stream_track_cb_t on_media_stream_track,
     void* userdata) {
   auto wsora = (SoraWrapper*)p;
+  if (on_media_stream_track == nullptr) {
+    wsora->sora->SetOnMediaStreamTrack(nullptr);
+    return;
+  }
   wsora->sora->SetOnMediaStreamTrack(
       [on_media_stream_track, userdata](
           webrtc::RtpTransceiverInterface* transceiver,
@@ -93,6 +105,10 @@ void sora_set_on_remove_media_stream_track(
     remove_media_stream_track_cb_t on_remove_media_stream_track,
     void* userdata) {
   auto wsora = (SoraWrapper*)p;
+  if (on_remove_media_stream_track == nullptr) {
+    wsora->sora->SetOnRemoveMediaStreamTrack(nullptr);
+    return;
+  }
   wsora->sora->SetOnRemoveMediaStreamTrack(
       [on_remove_media_stream_track, userdata](
           webrtc::RtpReceiverInterface* receiver,
@@ -107,6 +123,10 @@ void sora_set_on_set_offer(void* p,
                            set_offer_cb_t on_set_offer,
                            void* userdata) {
   auto wsora = (SoraWrapper*)p;
+  if (on_set_offer == nullptr) {
+    wsora->sora->SetOnSetOffer(nullptr);
+    return;
+  }
   wsora->sora->SetOnSetOffer([on_set_offer, userdata](std::string json) {
     on_set_offer(json.c_str(), userdata);
   });
@@ -114,6 +134,10 @@ void sora_set_on_set_offer(void* p,
 
 void sora_set_on_notify(void* p, notify_cb_t on_notify, void* userdata) {
   auto wsora = (SoraWrapper*)p;
+  if (on_notify == nullptr) {
+    wsora->sora->SetOnNotify(nullptr);
+    return;
+  }
   wsora->sora->SetOnNotify([on_notify, userdata](std::string json) {
     on_notify(json.c_str(), userdata);
   });
@@ -121,6 +145,10 @@ void sora_set_on_notify(void* p, notify_cb_t on_notify, void* userdata) {
 
 void sora_set_on_push(void* p, push_cb_t on_push, void* userdata) {
   auto wsora = (SoraWrapper*)p;
+  if (on_push == nullptr) {
+    wsora->sora->SetOnPush(nullptr);
+    return;
+  }
   wsora->sora->SetOnPush([on_push, userdata](std::string json) {
     on_push(json.c_str(), userdata);
   });
@@ -128,6 +156,10 @@ void sora_set_on_push(void* p, push_cb_t on_push, void* userdata) {
 
 void sora_set_on_message(void* p, message_cb_t on_message, void* userdata) {
   auto wsora = (SoraWrapper*)p;
+  if (on_message == nullptr) {
+    wsora->sora->SetOnMessage(nullptr);
+    return;
+  }
   wsora->sora->SetOnMessage(
       [on_message, userdata](std::string label, std::string data) {
         on_message(label.c_str(), data.c_str(), (int)data.size(), userdata);
@@ -138,6 +170,10 @@ void sora_set_on_disconnect(void* p,
                             disconnect_cb_t on_disconnect,
                             void* userdata) {
   auto wsora = (SoraWrapper*)p;
+  if (on_disconnect == nullptr) {
+    wsora->sora->SetOnDisconnect(nullptr);
+    return;
+  }
   wsora->sora->SetOnDisconnect(
       [on_disconnect, userdata](int error_code, std::string reason) {
         on_disconnect(error_code, reason.c_str(), userdata);
@@ -148,6 +184,10 @@ void sora_set_on_data_channel(void* p,
                               data_channel_cb_t on_data_channel,
                               void* userdata) {
   auto wsora = (SoraWrapper*)p;
+  if (on_data_channel == nullptr) {
+    wsora->sora->SetOnDataChannel(nullptr);
+    return;
+  }
   wsora->sora->SetOnDataChannel([on_data_channel, userdata](std::string label) {
     on_data_channel(label.c_str(), userdata);
   });
@@ -157,6 +197,10 @@ void sora_set_on_capturer_frame(void* p,
                                 capturer_frame_cb_t on_capturer_frame,
                                 void* userdata) {
   auto wsora = (SoraWrapper*)p;
+  if (on_capturer_frame == nullptr) {
+    wsora->sora->SetOnCapturerFrame(nullptr);
+    return;
+  }
   wsora->sora->SetOnCapturerFrame(
       [on_capturer_frame, userdata](std::string data) {
         on_capturer_frame(data.c_str(), userdata);
@@ -219,6 +263,10 @@ void sora_process_audio(void* p, const void* buf, int offset, int samples) {
 }
 void sora_set_on_handle_audio(void* p, handle_audio_cb_t f, void* userdata) {
   auto wsora = (SoraWrapper*)p;
+  if (f == nullptr) {
+    wsora->sora->SetOnHandleAudio(nullptr);
+    return;
+  }
   wsora->sora->SetOnHandleAudio(
       [f, userdata](const int16_t* buf, int samples, int channels) {
         f(buf, samples, channels, userdata);
