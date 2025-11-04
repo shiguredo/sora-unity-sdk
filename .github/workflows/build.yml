@@ -34,7 +34,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: _install
-          key: ${{ matrix.target }}-v1-${{ hashFiles('VERSIONS') }}
+          key: ${{ matrix.target }}-v1-${{ hashFiles('VERSION') }}
           restore-keys: |
             ${{ matrix.name }}-v1-
       - name: Prepare Ubuntu x86_64
