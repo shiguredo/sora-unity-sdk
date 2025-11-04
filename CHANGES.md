@@ -45,6 +45,8 @@
   - @melpon
 - [UPDATE] [sora-unity-sdk-samples](https://github.com/shiguredo/sora-unity-sdk-samples) のプロジェクトと統合
   - @melpon
+- [UPDATE] 各種コールバックを nullable にする
+  - @melpon
 - [ADD] オーディオやビデオが追加/削除された時に呼ばれるコールバック `OnMediaStreamTrack` と `OnRemoveMediaStreamTrack` を追加する
   - C++ の `webrtc::PeerConnectionObserver` の `OnTrack()` と `OnRemoveTrack()` に相当する
   - @melpon
