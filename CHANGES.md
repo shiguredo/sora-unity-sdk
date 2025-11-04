@@ -70,6 +70,8 @@
   - @melpon
 - [ADD] Unity カメラキャプチャで DirectX 12 をサポートする
   - @melpon
+- [ADD] `Sora.SenderAudioTrackSink` を使って送信するオーディオデータを取得可能にする
+  - @melpon
 - [FIX] Unity カメラキャプチャがサポートしていないグラフィックエンジンを利用すると SDK 全体が動作しないのを修正し、Unity カメラキャプチャを利用しない場合は正常に動作するようにする
   - @melpon
 
@@ -82,6 +84,8 @@
 - [UPDATE] GitHub Actions のワークフローやパッケージング処理の見直し
   - @melpon
 - [ADD] `run.py` に `package` コマンドと `install` コマンドを追加
+  - @melpon
+- [ADD] examples で `Sora.SenderAudioTrackSink` を使って送信側のマイク音量を取れるようにする
   - @melpon
 
 ## 2025.2.0
