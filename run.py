@@ -457,8 +457,10 @@ def _build(args):
             ]
         )
 
-    # ビルドしたライブラリを SoraUnitySdkSamples 以下のプロジェクトにコピーする
-    plugins_dir = os.path.join(BASE_DIR, "SoraUnitySdkSamples", "Assets", "Plugins", "SoraUnitySdk")
+    # ビルドしたライブラリを SoraUnitySdkExamples 以下のプロジェクトにコピーする
+    plugins_dir = os.path.join(
+        BASE_DIR, "SoraUnitySdkExamples", "Assets", "Plugins", "SoraUnitySdk"
+    )
     if platform in ("windows_x86_64",):
         install_file(
             os.path.join(unity_build_dir, configuration, "SoraUnitySdk.dll"),
@@ -521,8 +523,10 @@ def _build(args):
 
 
 def _package():
-    assets_dir = os.path.join(BASE_DIR, "SoraUnitySdkSamples", "Assets", "SoraUnitySdk")
-    plugins_dir = os.path.join(BASE_DIR, "SoraUnitySdkSamples", "Assets", "Plugins", "SoraUnitySdk")
+    assets_dir = os.path.join(BASE_DIR, "SoraUnitySdkExamples", "Assets", "SoraUnitySdk")
+    plugins_dir = os.path.join(
+        BASE_DIR, "SoraUnitySdkExamples", "Assets", "Plugins", "SoraUnitySdk"
+    )
     package_dir = os.path.join(BASE_DIR, "_package", "SoraUnitySdk")
     rm_rf(package_dir)
     package_assets_dir = os.path.join(package_dir, "SoraUnitySdk")
@@ -588,7 +592,7 @@ def _install(version: Optional[str], sdk_path: Optional[str]):
     # １個１個ファイルをコピーしていく
     sdk_path = "SoraUnitySdk" if sdk_path is None else sdk_path
     for file in enum_all_files(sdk_path, sdk_path):
-        dst_base = os.path.join(BASE_DIR, "SoraUnitySdkSamples", "Assets")
+        dst_base = os.path.join(BASE_DIR, "SoraUnitySdkExamples", "Assets")
         # このディレクトリだけは全部置き換える
         if "SoraUnitySdk.bundle" in file:
             continue
@@ -597,7 +601,7 @@ def _install(version: Optional[str], sdk_path: Optional[str]):
         install_file(srcfile, dstfile)
     # .bundle ディレクトリの置き換え
     for root, dirs, _ in os.walk(sdk_path):
-        dst_base = os.path.join(BASE_DIR, "SoraUnitySdkSamples", "Assets")
+        dst_base = os.path.join(BASE_DIR, "SoraUnitySdkExamples", "Assets")
         for dir in dirs:
             if dir == "SoraUnitySdk.bundle":
                 bundle_dir = os.path.relpath(os.path.join(root, dir), sdk_path)
@@ -629,8 +633,8 @@ def main():
     _pp = sp.add_parser("package")
 
     # install コマンド
-    ip = sp.add_parser("install", help="Install Sora Unity SDK into SoraUnitySdkSamples")
-    # SoraUnitySdkSamples にインストールする Sora Unity SDK のバージョン
+    ip = sp.add_parser("install", help="Install Sora Unity SDK into SoraUnitySdkExamples")
+    # SoraUnitySdkExamples にインストールする Sora Unity SDK のバージョン
     # 省略した場合は VERSION ファイルのバージョンを使う
     ip.add_argument("--version")
     # これを指定している場合、Sora Unity SDK のダウンロードをせず、このディレクトリの内容をコピーする

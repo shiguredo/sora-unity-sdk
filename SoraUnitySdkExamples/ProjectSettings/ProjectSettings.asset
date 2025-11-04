@@ -13,7 +13,7 @@ PlayerSettings:
   useOnDemandResources: 0
   accelerometerFrequency: 60
   companyName: Shiguredo
-  productName: SoraUnitySdkSamples
+  productName: SoraUnitySdkExamples
   defaultCursor: {fileID: 0}
   cursorHotspot: {x: 0, y: 0}
   m_SplashScreenBackgroundColor: {r: 0.13725491, g: 0.12156863, b: 0.1254902, a: 1}
@@ -164,8 +164,8 @@ PlayerSettings:
   androidMaxAspectRatio: 2.1
   androidMinAspectRatio: 1
   applicationIdentifier:
-    Android: jp.shiguredo.SoraUnitySdkSamples
-    iPhone: jp.shiguredo.SoraUnitySdkSamples
+    Android: jp.shiguredo.SoraUnitySdkExamples
+    iPhone: jp.shiguredo.SoraUnitySdkExamples
   buildNumber:
     Standalone: 0
     VisionOS: 0
@@ -582,7 +582,10 @@ PlayerSettings:
   m_BuildTargetGroupLightmapSettings: []
   m_BuildTargetGroupLoadStoreDebugModeSettings: []
   m_BuildTargetNormalMapEncoding: []
-  m_BuildTargetDefaultTextureCompressionFormat: []
+  m_BuildTargetDefaultTextureCompressionFormat:
+  - serializedVersion: 3
+    m_BuildTarget: Android
+    m_Formats: 01000000
   playModeTestRunnerEnabled: 0
   runPlayModeTestAsEditModeTest: 0
   actionOnDotNetUnhandledException: 1
@@ -894,7 +897,7 @@ PlayerSettings:
   metroCertificateNotAfter: 0000000000000000
   metroApplicationDescription: Template_3D
   wsaImages: {}
-  metroTileShortName: SoraUnitySdkSamples
+  metroTileShortName: SoraUnitySdkExamples
   metroTileShowName: 0
   metroMediumTileShowName: 0
   metroLargeTileShowName: 0

@@ -52,5 +52,5 @@
         "temp/": true,
         "Temp/": true
     },
-    "dotnet.defaultSolution": "SoraUnitySdkSamples.sln"
+    "dotnet.defaultSolution": "SoraUnitySdkExamples.sln"
 }

@@ -75,7 +75,7 @@
 
 - [CHANGE] `actions/create-release` と `actions/upload-release-asset` を `gh release create` に変更する
   - @torikizi
-- [UPDATE] ライブラリの C# 側のソースを SoraUnitySdkSamples 以下に移動する
+- [UPDATE] ライブラリの C# 側のソースを SoraUnitySdkExamples 以下に移動する
   - @melpon
 - [UPDATE] GitHub Actions のワークフローやパッケージング処理の見直し
   - @melpon
