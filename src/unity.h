@@ -100,7 +100,8 @@ typedef void (*handle_audio_cb_t)(const int16_t* buf,
 UNITY_INTERFACE_EXPORT void sora_set_on_handle_audio(void* p,
                                                      handle_audio_cb_t f,
                                                      void* userdata);
-UNITY_INTERFACE_EXPORT void sora_set_sender_audio_sink(void* p, void* sink);
+UNITY_INTERFACE_EXPORT void sora_set_sender_audio_track_sink(void* p,
+                                                             void* sink);
 
 UNITY_INTERFACE_EXPORT void sora_get_stats(void* p,
                                            stats_cb_t f,

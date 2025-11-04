@@ -77,7 +77,7 @@ class Sora : public std::enable_shared_from_this<Sora>,
 
   void ProcessAudio(const void* p, int offset, int samples);
   void SetOnHandleAudio(std::function<void(const int16_t*, int, int)> f);
-  void SetSenderAudioSink(webrtc::AudioTrackSinkInterface* sink);
+  void SetSenderAudioTrackSink(webrtc::AudioTrackSinkInterface* sink);
 
   void GetStats(std::function<void(std::string)> on_get_stats);
 
@@ -187,7 +187,7 @@ class Sora : public std::enable_shared_from_this<Sora>,
   std::function<void(const int16_t*, int, int)> on_handle_audio_;
   std::function<void(std::string)> on_capturer_frame_;
 
-  webrtc::AudioTrackSinkInterface* sender_audio_sink_ = nullptr;
+  webrtc::AudioTrackSinkInterface* sender_audio_track_sink_ = nullptr;
 
   std::shared_ptr<sora::SoraClientContext> sora_context_;
   std::unique_ptr<webrtc::Thread> io_thread_;

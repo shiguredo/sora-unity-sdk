@@ -272,9 +272,9 @@ void sora_set_on_handle_audio(void* p, handle_audio_cb_t f, void* userdata) {
         f(buf, samples, channels, userdata);
       });
 }
-void sora_set_sender_audio_sink(void* p, void* sink) {
+void sora_set_sender_audio_track_sink(void* p, void* sink) {
   auto wsora = (SoraWrapper*)p;
-  wsora->sora->SetSenderAudioSink(
+  wsora->sora->SetSenderAudioTrackSink(
       static_cast<webrtc::AudioTrackSinkInterface*>(sink));
 }
 

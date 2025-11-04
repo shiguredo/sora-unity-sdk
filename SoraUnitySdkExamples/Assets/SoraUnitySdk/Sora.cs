@@ -505,11 +505,11 @@ public class Sora : IDisposable
         }
         audioTrackSinks.Clear();
 
-        if (senderAudioSinkAdapter != null)
+        if (senderAudioTrackSinkAdapter != null)
         {
-            senderAudioSinkAdapter.Dispose();
-            senderAudioSinkAdapter = null;
-            senderAudioSink = null;
+            senderAudioTrackSinkAdapter.Dispose();
+            senderAudioTrackSinkAdapter = null;
+            senderAudioTrackSink = null;
         }
 
         if (selfHandle.IsAllocated)
@@ -1503,7 +1503,7 @@ public class Sora : IDisposable
     [DllImport(DllName)]
     private static extern void sora_set_on_handle_audio(IntPtr p, HandleAudioCallbackDelegate? on_handle_audio, IntPtr userdata);
     [DllImport(DllName)]
-    private static extern void sora_set_sender_audio_sink(IntPtr p, IntPtr sink);
+    private static extern void sora_set_sender_audio_track_sink(IntPtr p, IntPtr sink);
     [DllImport(DllName)]
     private static extern void sora_set_on_capturer_frame(IntPtr p, CapturerFrameCallbackDelegate? on_capturer_frame, IntPtr userdata);
     [DllImport(DllName)]
@@ -1874,8 +1874,8 @@ public class Sora : IDisposable
     }
 
     Dictionary<IAudioTrackSink, AudioTrackSinkAdapter> audioTrackSinks = new Dictionary<IAudioTrackSink, AudioTrackSinkAdapter>();
-    IAudioTrackSink? senderAudioSink = null;
-    AudioTrackSinkAdapter? senderAudioSinkAdapter = null;
+    IAudioTrackSink? senderAudioTrackSink = null;
+    AudioTrackSinkAdapter? senderAudioTrackSinkAdapter = null;
 
     public class AudioTrack : MediaStreamTrack
     {
@@ -1908,26 +1908,26 @@ public class Sora : IDisposable
         }
     }
 
-    public IAudioTrackSink? SenderAudioSink
+    public IAudioTrackSink? SenderAudioTrackSink
     {
-        get { return senderAudioSink; }
+        get { return senderAudioTrackSink; }
         set
         {
             if (value == null)
             {
-                if (this.senderAudioSinkAdapter != null)
+                if (this.senderAudioTrackSinkAdapter != null)
                 {
-                    sora_set_sender_audio_sink(this.p, IntPtr.Zero);
-                    this.senderAudioSinkAdapter.Dispose();
-                    this.senderAudioSinkAdapter = null;
-                    this.senderAudioSink = null;
+                    sora_set_sender_audio_track_sink(this.p, IntPtr.Zero);
+                    this.senderAudioTrackSinkAdapter.Dispose();
+                    this.senderAudioTrackSinkAdapter = null;
+                    this.senderAudioTrackSink = null;
                 }
                 return;
             }
             var adapter = new AudioTrackSinkAdapter(value);
-            sora_set_sender_audio_sink(this.p, adapter.Ptr);
-            this.senderAudioSink = value;
-            this.senderAudioSinkAdapter = adapter;
+            sora_set_sender_audio_track_sink(this.p, adapter.Ptr);
+            this.senderAudioTrackSink = value;
+            this.senderAudioTrackSinkAdapter = adapter;
         }
     }
 

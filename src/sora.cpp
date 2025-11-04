@@ -284,7 +284,7 @@ void Sora::DoConnect(const sora_conf::internal::ConnectConfig& cc,
 
         unity_adm_ = CreateADM(
             webrtc_env, cc.no_audio_device, cc.unity_audio_input,
-            cc.unity_audio_output, on_handle_audio_, sender_audio_sink_,
+            cc.unity_audio_output, on_handle_audio_, sender_audio_track_sink_,
             cc.audio_recording_device, cc.audio_playout_device,
             dependencies.worker_thread, worker_env, worker_context);
         dependencies.worker_thread->BlockingCall(
@@ -690,8 +690,8 @@ void Sora::ProcessAudio(const void* p, int offset, int samples) {
 void Sora::SetOnHandleAudio(std::function<void(const int16_t*, int, int)> f) {
   on_handle_audio_ = f;
 }
-void Sora::SetSenderAudioSink(webrtc::AudioTrackSinkInterface* sink) {
-  sender_audio_sink_ = sink;
+void Sora::SetSenderAudioTrackSink(webrtc::AudioTrackSinkInterface* sink) {
+  sender_audio_track_sink_ = sink;
 }
 
 webrtc::scoped_refptr<UnityAudioDevice> Sora::CreateADM(
