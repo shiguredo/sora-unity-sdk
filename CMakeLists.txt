@@ -77,7 +77,7 @@ target_sources(SoraUnitySdk
 
 file(MAKE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/proto")
 file(MAKE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/proto/cpp")
-file(MAKE_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/Sora/Generated")
+file(MAKE_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/SoraUnitySdkExamples/Assets/SoraUnitySdk/Generated")
 if (WIN32)
   set(EXE_EXT ".exe")
 endif()
@@ -85,14 +85,14 @@ add_custom_command(
   OUTPUT
     "${CMAKE_CURRENT_BINARY_DIR}/proto/cpp/sora_conf.json.h"
     "${CMAKE_CURRENT_BINARY_DIR}/proto/cpp/sora_conf_internal.json.h"
-    "${CMAKE_CURRENT_SOURCE_DIR}/Sora/Generated/SoraConf.cs"
-    "${CMAKE_CURRENT_SOURCE_DIR}/Sora/Generated/SoraConfInternal.cs"
-    "${CMAKE_CURRENT_SOURCE_DIR}/Sora/Generated/Jsonif.cs"
+    "${CMAKE_CURRENT_SOURCE_DIR}/SoraUnitySdkExamples/Assets/SoraUnitySdk/Generated/SoraConf.cs"
+    "${CMAKE_CURRENT_SOURCE_DIR}/SoraUnitySdkExamples/Assets/SoraUnitySdk/Generated/SoraConfInternal.cs"
+    "${CMAKE_CURRENT_SOURCE_DIR}/SoraUnitySdkExamples/Assets/SoraUnitySdk/Generated/Jsonif.cs"
   COMMAND
     "${PROTOBUF_DIR}/bin/protoc${EXE_EXT}"
   ARGS
     --jsonif-cpp_out "${CMAKE_CURRENT_BINARY_DIR}/proto/cpp"
-    --jsonif-unity_out "${CMAKE_CURRENT_SOURCE_DIR}/Sora/Generated"
+    --jsonif-unity_out "${CMAKE_CURRENT_SOURCE_DIR}/SoraUnitySdkExamples/Assets/SoraUnitySdk/Generated"
     --plugin=protoc-gen-jsonif-cpp="${PROTOC_GEN_JSONIF_DIR}/bin/protoc-gen-jsonif-cpp${EXE_EXT}"
     --plugin=protoc-gen-jsonif-unity="${PROTOC_GEN_JSONIF_DIR}/bin/protoc-gen-jsonif-unity${EXE_EXT}"
     -I "${CMAKE_CURRENT_SOURCE_DIR}/proto/"

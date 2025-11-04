@@ -43,6 +43,8 @@
   - @melpon
 - [UPDATE] selfHandle を使ってコード整理
   - @melpon
+- [UPDATE] [sora-unity-sdk-samples](https://github.com/shiguredo/sora-unity-sdk-samples) のプロジェクトと統合
+  - @melpon
 - [ADD] オーディオやビデオが追加/削除された時に呼ばれるコールバック `OnMediaStreamTrack` と `OnRemoveMediaStreamTrack` を追加する
   - C++ の `webrtc::PeerConnectionObserver` の `OnTrack()` と `OnRemoveTrack()` に相当する
   - @melpon
@@ -73,6 +75,12 @@
 
 - [CHANGE] `actions/create-release` と `actions/upload-release-asset` を `gh release create` に変更する
   - @torikizi
+- [UPDATE] ライブラリの C# 側のソースを SoraUnitySdkExamples 以下に移動する
+  - @melpon
+- [UPDATE] GitHub Actions のワークフローやパッケージング処理の見直し
+  - @melpon
+- [ADD] `run.py` に `package` コマンドと `install` コマンドを追加
+  - @melpon
 
 ## 2025.2.0
 

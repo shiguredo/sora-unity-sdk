@@ -23,7 +23,7 @@ Please read <https://github.com/shiguredo/oss/blob/master/README.en.md> before u
 
 ## サンプル
 
-[shiguredo/sora\-unity\-sdk\-samples: WebRTC SFU Sora Unity SDK サンプル集](https://github.com/shiguredo/sora-unity-sdk-samples)
+[WebRTC SFU Sora Unity SDK サンプル集](./SoraUnitySdkExamples)
 
 ### サンプル動作例
 

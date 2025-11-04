@@ -16,12 +16,17 @@ from buildbase import (
     cmake_path,
     cmd,
     cmdcap,
+    download,
+    enum_all_files,
+    extract,
     fix_clang_version,
     get_clang_version,
     get_sora_info,
     get_webrtc_info,
     install_android_ndk,
     install_cmake,
+    install_file,
+    install_file_ifexists,
     install_llvm,
     install_protobuf,
     install_protoc_gen_jsonif,
@@ -29,6 +34,7 @@ from buildbase import (
     install_webrtc,
     mkdir_p,
     read_version_file,
+    rm_rf,
 )
 
 logging.basicConfig(level=logging.DEBUG)
@@ -319,13 +325,12 @@ def _build(args):
     else:
         configuration = "Release"
 
+    webrtc_info = get_webrtc_info(platform, args.local_webrtc_build_dir, install_dir, args.debug)
+    sora_info = get_sora_info(platform, args.local_sora_cpp_sdk_dir, install_dir, args.debug)
+
     unity_build_dir = os.path.join(build_dir, "sora_unity_sdk")
     mkdir_p(unity_build_dir)
     with cd(unity_build_dir):
-        webrtc_info = get_webrtc_info(
-            platform, args.local_webrtc_build_dir, install_dir, args.debug
-        )
-        sora_info = get_sora_info(platform, args.local_sora_cpp_sdk_dir, install_dir, args.debug)
         webrtc_version = read_version_file(webrtc_info.version_file)
         webrtc_commit = webrtc_version["WEBRTC_COMMIT"]
         with cd(BASE_DIR):
@@ -452,6 +457,163 @@ def _build(args):
             ]
         )
 
+    # ビルドしたライブラリを SoraUnitySdkExamples 以下のプロジェクトにコピーする
+    plugins_dir = os.path.join(
+        BASE_DIR, "SoraUnitySdkExamples", "Assets", "Plugins", "SoraUnitySdk"
+    )
+    if platform in ("windows_x86_64",):
+        install_file(
+            os.path.join(unity_build_dir, configuration, "SoraUnitySdk.dll"),
+            os.path.join(plugins_dir, "windows", "x86_64", "SoraUnitySdk.dll"),
+        )
+    if platform in ("macos_x86_64",):
+        install_file(
+            os.path.join(unity_build_dir, "SoraUnitySdk.bundle"),
+            os.path.join(plugins_dir, "macos", "x86_64", "SoraUnitySdk.bundle"),
+        )
+    if platform in ("macos_arm64"):
+        install_file(
+            os.path.join(unity_build_dir, "SoraUnitySdk.bundle"),
+            os.path.join(plugins_dir, "macos", "arm64", "SoraUnitySdk.bundle"),
+        )
+    if platform in ("ubuntu-22.04_x86_64",):
+        install_file(
+            os.path.join(unity_build_dir, "libSoraUnitySdk.so"),
+            os.path.join(plugins_dir, "ubuntu-22.04", "x86_64", "libSoraUnitySdk.so"),
+        )
+    if platform in ("ubuntu-24.04_x86_64",):
+        install_file(
+            os.path.join(unity_build_dir, "libSoraUnitySdk.so"),
+            os.path.join(plugins_dir, "ubuntu-24.04", "x86_64", "libSoraUnitySdk.so"),
+        )
+    if platform in ("ios",):
+        install_file(
+            os.path.join(unity_build_dir, "libSoraUnitySdk.a"),
+            os.path.join(plugins_dir, "ios", "libSoraUnitySdk.a"),
+        )
+        install_file(
+            os.path.join(webrtc_info.webrtc_library_dir, "libwebrtc.a"),
+            os.path.join(plugins_dir, "ios", "libwebrtc.a"),
+        )
+        install_file(
+            os.path.join(sora_info.boost_install_dir, "lib", "libboost_json.a"),
+            os.path.join(plugins_dir, "ios", "libboost_json.a"),
+        )
+        install_file(
+            os.path.join(sora_info.boost_install_dir, "lib", "libboost_filesystem.a"),
+            os.path.join(plugins_dir, "ios", "libboost_filesystem.a"),
+        )
+        install_file(
+            os.path.join(sora_info.sora_install_dir, "lib", "libsora.a"),
+            os.path.join(plugins_dir, "ios", "libsora.a"),
+        )
+    if platform in ("android",):
+        install_file(
+            os.path.join(unity_build_dir, "libSoraUnitySdk.so"),
+            os.path.join(plugins_dir, "android", "arm64-v8a", "libSoraUnitySdk.so"),
+        )
+        install_file(
+            os.path.join(webrtc_info.webrtc_jar_file),
+            os.path.join(plugins_dir, "android", "webrtc.jar"),
+        )
+        install_file(
+            os.path.join(sora_info.sora_install_dir, "lib", "Sora.aar"),
+            os.path.join(plugins_dir, "android", "Sora.aar"),
+        )
+
+
+def _package():
+    assets_dir = os.path.join(BASE_DIR, "SoraUnitySdkExamples", "Assets", "SoraUnitySdk")
+    plugins_dir = os.path.join(
+        BASE_DIR, "SoraUnitySdkExamples", "Assets", "Plugins", "SoraUnitySdk"
+    )
+    package_dir = os.path.join(BASE_DIR, "_package", "SoraUnitySdk")
+    rm_rf(package_dir)
+    package_assets_dir = os.path.join(package_dir, "SoraUnitySdk")
+    package_plugins_dir = os.path.join(package_dir, "Plugins", "SoraUnitySdk")
+    # これらは必ず存在してるので無条件でコピーする
+    assets_files = [
+        ("Sora.cs",),
+        ("Generated", "Jsonif.cs"),
+        ("Generated", "SoraConf.cs"),
+        ("Generated", "SoraConfInternal.cs"),
+        ("Editor", "SoraUnitySdkPostProcessor.cs"),
+    ]
+    for assets_file in assets_files:
+        install_file(
+            os.path.join(assets_dir, *assets_file),
+            os.path.join(package_assets_dir, *assets_file),
+        )
+
+    # これらは存在していればコピーする
+    plugin_files = [
+        ("windows", "x86_64", "SoraUnitySdk.dll"),
+        ("macos", "x86_64", "SoraUnitySdk.bundle"),
+        ("macos", "arm64", "SoraUnitySdk.bundle"),
+        ("ubuntu-22.04", "x86_64", "libSoraUnitySdk.so"),
+        ("ubuntu-24.04", "x86_64", "libSoraUnitySdk.so"),
+        ("android", "arm64-v8a", "libSoraUnitySdk.so"),
+        ("android", "webrtc.jar"),
+        ("android", "Sora.aar"),
+        ("ios", "libSoraUnitySdk.a"),
+        ("ios", "libwebrtc.a"),
+        ("ios", "libboost_json.a"),
+        ("ios", "libboost_filesystem.a"),
+        ("ios", "libsora.a"),
+    ]
+    for plugin_file in plugin_files:
+        install_file_ifexists(
+            os.path.join(plugins_dir, *plugin_file),
+            os.path.join(package_plugins_dir, *plugin_file),
+        )
+
+    # LICENSE と NOTICE.md
+    install_file(os.path.join(BASE_DIR, "LICENSE"), os.path.join(package_assets_dir, "LICENSE"))
+    install_file(os.path.join(BASE_DIR, "NOTICE.md"), os.path.join(package_assets_dir, "NOTICE.md"))
+
+
+def _install(version: Optional[str], sdk_path: Optional[str]):
+    if version is None:
+        version = read_version_file(os.path.join(BASE_DIR, "VERSION"))["SORA_UNITY_SDK_VERSION"]
+
+    if sdk_path is None:
+        rm_rf("SoraUnitySdk.zip")
+        rm_rf("SoraUnitySdk")
+        url = f"https://github.com/shiguredo/sora-unity-sdk/releases/download/{version}/SoraUnitySdk.zip"
+        path = download(url, ".")
+        extract(path, ".", "SoraUnitySdk")
+    else:
+        if not os.path.isdir(sdk_path):
+            raise Exception(f"sdk_path {sdk_path} is not a directory")
+        if not os.path.exists(os.path.join(sdk_path, "SoraUnitySdk", "Sora.cs")):
+            raise Exception(f"sdk_path {sdk_path} does not look like Sora Unity SDK directory")
+
+    # 既存のファイル（特にメタデータ系）が残ってる可能性があるので
+    # １個１個ファイルをコピーしていく
+    sdk_path = "SoraUnitySdk" if sdk_path is None else sdk_path
+    for file in enum_all_files(sdk_path, sdk_path):
+        dst_base = os.path.join(BASE_DIR, "SoraUnitySdkExamples", "Assets")
+        # このディレクトリだけは全部置き換える
+        if "SoraUnitySdk.bundle" in file:
+            continue
+        srcfile = os.path.join(sdk_path, file)
+        dstfile = os.path.join(dst_base, file)
+        install_file(srcfile, dstfile)
+    # .bundle ディレクトリの置き換え
+    for root, dirs, _ in os.walk(sdk_path):
+        dst_base = os.path.join(BASE_DIR, "SoraUnitySdkExamples", "Assets")
+        for dir in dirs:
+            if dir == "SoraUnitySdk.bundle":
+                bundle_dir = os.path.relpath(os.path.join(root, dir), sdk_path)
+                src_bundle_dir = os.path.join(sdk_path, bundle_dir)
+                dst_bundle_dir = os.path.join(dst_base, bundle_dir)
+                rm_rf(dst_bundle_dir)
+                install_file(src_bundle_dir, dst_bundle_dir)
+
+    if sdk_path is None:
+        rm_rf("SoraUnitySdk.zip")
+        rm_rf("SoraUnitySdk")
+
 
 def main():
     parser = argparse.ArgumentParser()
@@ -467,6 +629,18 @@ def main():
     bp.add_argument("--local-sora-cpp-sdk-dir", type=os.path.abspath)
     bp.add_argument("--local-sora-cpp-sdk-args", default="", type=shlex.split)
 
+    # package コマンド
+    _pp = sp.add_parser("package")
+
+    # install コマンド
+    ip = sp.add_parser("install", help="Install Sora Unity SDK into SoraUnitySdkExamples")
+    # SoraUnitySdkExamples にインストールする Sora Unity SDK のバージョン
+    # 省略した場合は VERSION ファイルのバージョンを使う
+    ip.add_argument("--version")
+    # これを指定している場合、Sora Unity SDK のダウンロードをせず、このディレクトリの内容をコピーする
+    # GitHub Actions からバイナリをダウンロードしてきたものを反映させる時用のフラグ
+    ip.add_argument("--sdk-path")
+
     # format コマンド
     fp = sp.add_parser("format")
     fp.add_argument("--clang-format-path", type=str, default=None)
@@ -475,6 +649,10 @@ def main():
 
     if args.command == "build":
         _build(args)
+    elif args.command == "package":
+        _package()
+    elif args.command == "install":
+        _install(args.version, args.sdk_path)
     elif args.command == "format":
         _format(clang_format_path=args.clang_format_path)
     else:
