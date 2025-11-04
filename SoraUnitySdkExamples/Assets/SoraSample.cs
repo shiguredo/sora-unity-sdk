@@ -589,6 +589,7 @@ public class SoraSample : MonoBehaviour
 
                 var info = new ConnectionInfo(scrollViewContent.transform, baseContent);
                 info.InitVideo(videoSinkId);
+                info.InitAudio((AudioTrackSink)sora.SenderAudioSink);
                 connectionInfos.Add(connectionId, info);
             };
             sora.OnRemoveTrack = (videoSinkId, connectionId) =>
@@ -711,6 +712,7 @@ public class SoraSample : MonoBehaviour
             //     Marshal.Copy((IntPtr)vfb.i420_data_v, data_v, 0, size_v);
             // }
         };
+        sora.SenderAudioSink = new AudioTrackSink();
 
         if (unityAudioOutput)
         {

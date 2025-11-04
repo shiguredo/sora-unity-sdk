@@ -100,6 +100,7 @@ typedef void (*handle_audio_cb_t)(const int16_t* buf,
 UNITY_INTERFACE_EXPORT void sora_set_on_handle_audio(void* p,
                                                      handle_audio_cb_t f,
                                                      void* userdata);
+UNITY_INTERFACE_EXPORT void sora_set_sender_audio_sink(void* p, void* sink);
 
 UNITY_INTERFACE_EXPORT void sora_get_stats(void* p,
                                            stats_cb_t f,
@@ -188,7 +189,7 @@ typedef void (*audio_track_sink_on_data_cb_t)(
     int sample_rate,
     int number_of_channels,
     int number_of_frames,
-    const long* absolute_capture_timestamp_ms,
+    const int64_t* absolute_capture_timestamp_ms,
     void* userdata);
 typedef int (*audio_track_sink_num_preferred_channels_cb_t)(void* userdata);
 UNITY_INTERFACE_EXPORT void* sora_audio_track_sink_create(

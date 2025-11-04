@@ -272,6 +272,11 @@ void sora_set_on_handle_audio(void* p, handle_audio_cb_t f, void* userdata) {
         f(buf, samples, channels, userdata);
       });
 }
+void sora_set_sender_audio_sink(void* p, void* sink) {
+  auto wsora = (SoraWrapper*)p;
+  wsora->sora->SetSenderAudioSink(
+      static_cast<webrtc::AudioTrackSinkInterface*>(sink));
+}
 
 void sora_get_stats(void* p, stats_cb_t f, void* userdata) {
   auto wsora = (SoraWrapper*)p;
@@ -524,13 +529,26 @@ class AudioTrackSinkImpl : public webrtc::AudioTrackSinkInterface {
               int bits_per_sample,
               int sample_rate,
               size_t number_of_channels,
+              size_t number_of_frames) override {
+    OnData(audio_data, bits_per_sample, sample_rate, number_of_channels,
+           number_of_frames, std::nullopt);
+  }
+  void OnData(const void* audio_data,
+              int bits_per_sample,
+              int sample_rate,
+              size_t number_of_channels,
               size_t number_of_frames,
               std::optional<int64_t> absolute_capture_timestamp_ms) override {
+    // RTC_LOG(LS_INFO) << "AudioTrackSinkImpl::OnData: bits_per_sample="
+    //                  << bits_per_sample << " sample_rate=" << sample_rate
+    //                  << " number_of_channels=" << number_of_channels
+    //                  << " number_of_frames=" << number_of_frames;
     const short* data = static_cast<const short*>(audio_data);
-    long timestamp =
-        absolute_capture_timestamp_ms ? *absolute_capture_timestamp_ms : 0;
+    const int64_t* timestamp = absolute_capture_timestamp_ms
+                                   ? &*absolute_capture_timestamp_ms
+                                   : nullptr;
     on_data_(data, bits_per_sample, sample_rate, (int)number_of_channels,
-             (int)number_of_frames, &timestamp, userdata_);
+             (int)number_of_frames, timestamp, userdata_);
   }
   int NumPreferredChannels() const override {
     return num_preferred_channels_(userdata_);
