@@ -546,7 +546,7 @@ def _package():
         ("windows", "x86_64", "SoraUnitySdk.dll"),
         ("macos", "x86_64", "SoraUnitySdk.bundle"),
         ("macos", "arm64", "SoraUnitySdk.bundle"),
-        ("ubuntu-22.04", "x86_64", "libSoraUnity.so"),
+        ("ubuntu-22.04", "x86_64", "libSoraUnitySdk.so"),
         ("ubuntu-24.04", "x86_64", "libSoraUnitySdk.so"),
         ("android", "arm64-v8a", "libSoraUnitySdk.so"),
         ("android", "webrtc.jar"),
@@ -563,6 +563,10 @@ def _package():
             os.path.join(package_plugins_dir, *plugin_file),
         )
 
+    # LICENSE と NOTICE.md
+    install_file(os.path.join(BASE_DIR, "LICENSE"), os.path.join(package_assets_dir, "LICENSE"))
+    install_file(os.path.join(BASE_DIR, "NOTICE.md"), os.path.join(package_assets_dir, "NOTICE.md"))
+
 
 def _install(version: Optional[str], sdk_path: Optional[str]):
     if version is None:
@@ -574,6 +578,11 @@ def _install(version: Optional[str], sdk_path: Optional[str]):
         url = f"https://github.com/shiguredo/sora-unity-sdk/releases/download/{version}/SoraUnitySdk.zip"
         path = download(url, ".")
         extract(path, ".", "SoraUnitySdk")
+    else:
+        if not os.path.isdir(sdk_path):
+            raise Exception(f"sdk_path {sdk_path} is not a directory")
+        if not os.path.exists(os.path.join(sdk_path, "SoraUnitySdk", "Sora.cs")):
+            raise Exception(f"sdk_path {sdk_path} does not look like Sora Unity SDK directory")
 
     # 既存のファイル（特にメタデータ系）が残ってる可能性があるので
     # １個１個ファイルをコピーしていく
