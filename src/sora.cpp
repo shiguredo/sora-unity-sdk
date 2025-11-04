@@ -282,11 +282,11 @@ void Sora::DoConnect(const sora_conf::internal::ConnectConfig& cc,
         void* worker_context = nullptr;
 #endif
 
-        unity_adm_ =
-            CreateADM(webrtc_env, cc.no_audio_device, cc.unity_audio_input,
-                      cc.unity_audio_output, on_handle_audio_,
-                      cc.audio_recording_device, cc.audio_playout_device,
-                      dependencies.worker_thread, worker_env, worker_context);
+        unity_adm_ = CreateADM(
+            webrtc_env, cc.no_audio_device, cc.unity_audio_input,
+            cc.unity_audio_output, on_handle_audio_, sender_audio_track_sink_,
+            cc.audio_recording_device, cc.audio_playout_device,
+            dependencies.worker_thread, worker_env, worker_context);
         dependencies.worker_thread->BlockingCall(
             [&] { dependencies.adm = unity_adm_; });
 
@@ -690,6 +690,9 @@ void Sora::ProcessAudio(const void* p, int offset, int samples) {
 void Sora::SetOnHandleAudio(std::function<void(const int16_t*, int, int)> f) {
   on_handle_audio_ = f;
 }
+void Sora::SetSenderAudioTrackSink(webrtc::AudioTrackSinkInterface* sink) {
+  sender_audio_track_sink_ = sink;
+}
 
 webrtc::scoped_refptr<UnityAudioDevice> Sora::CreateADM(
     webrtc::Environment env,
@@ -697,6 +700,7 @@ webrtc::scoped_refptr<UnityAudioDevice> Sora::CreateADM(
     bool unity_audio_input,
     bool unity_audio_output,
     std::function<void(const int16_t*, int, int)> on_handle_audio,
+    webrtc::AudioTrackSinkInterface* sink,
     std::string audio_recording_device,
     std::string audio_playout_device,
     webrtc::Thread* worker_thread,
@@ -720,8 +724,8 @@ webrtc::scoped_refptr<UnityAudioDevice> Sora::CreateADM(
   }
 
   return worker_thread->BlockingCall([&] {
-    return UnityAudioDevice::Create(adm, !unity_audio_input,
-                                    !unity_audio_output, on_handle_audio, env);
+    return UnityAudioDevice::Create(env, adm, !unity_audio_input,
+                                    !unity_audio_output, on_handle_audio, sink);
   });
 }
 
