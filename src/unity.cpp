@@ -277,6 +277,14 @@ void sora_set_sender_audio_track_sink(void* p, void* sink) {
   wsora->sora->SetSenderAudioTrackSink(
       static_cast<webrtc::AudioTrackSinkInterface*>(sink));
 }
+unity_bool_t sora_set_speaker_volume(void* p, double volume) {
+  auto wsora = (SoraWrapper*)p;
+  return wsora->sora->SetSpeakerVolume(volume) ? 1 : 0;
+}
+unity_bool_t sora_set_microphone_volume(void* p, double volume) {
+  auto wsora = (SoraWrapper*)p;
+  return wsora->sora->SetMicrophoneVolume(volume) ? 1 : 0;
+}
 
 void sora_get_stats(void* p, stats_cb_t f, void* userdata) {
   auto wsora = (SoraWrapper*)p;
@@ -579,6 +587,10 @@ void sora_audio_track_remove_sink(void* track, void* sink) {
   auto audio_track = static_cast<webrtc::AudioTrackInterface*>(track);
   auto audio_sink = static_cast<webrtc::AudioTrackSinkInterface*>(sink);
   audio_track->RemoveSink(audio_sink);
+}
+void sora_audio_track_set_volume(void* track, double volume) {
+  auto audio_track = static_cast<webrtc::AudioTrackInterface*>(track);
+  audio_track->GetSource()->SetVolume(volume);
 }
 
 // RtpTransceiver

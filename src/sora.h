@@ -78,6 +78,11 @@ class Sora : public std::enable_shared_from_this<Sora>,
   void ProcessAudio(const void* p, int offset, int samples);
   void SetOnHandleAudio(std::function<void(const int16_t*, int, int)> f);
   void SetSenderAudioTrackSink(webrtc::AudioTrackSinkInterface* sink);
+  static bool SetADMVolume(webrtc::scoped_refptr<webrtc::AudioDeviceModule> adm,
+                           bool is_speaker,
+                           double volume);
+  bool SetSpeakerVolume(double volume);
+  bool SetMicrophoneVolume(double volume);
 
   void GetStats(std::function<void(std::string)> on_get_stats);
 
@@ -129,7 +134,9 @@ class Sora : public std::enable_shared_from_this<Sora>,
       void* android_context);
   static bool InitADM(webrtc::scoped_refptr<webrtc::AudioDeviceModule> adm,
                       std::string audio_recording_device,
-                      std::string audio_playout_device);
+                      std::string audio_playout_device,
+                      std::optional<double> speaker_volume,
+                      std::optional<double> microphone_volume);
 
   static webrtc::scoped_refptr<webrtc::VideoTrackSourceInterface>
   CreateVideoCapturer(

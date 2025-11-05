@@ -102,6 +102,10 @@ UNITY_INTERFACE_EXPORT void sora_set_on_handle_audio(void* p,
                                                      void* userdata);
 UNITY_INTERFACE_EXPORT void sora_set_sender_audio_track_sink(void* p,
                                                              void* sink);
+UNITY_INTERFACE_EXPORT unity_bool_t sora_set_speaker_volume(void* p,
+                                                            double volume);
+UNITY_INTERFACE_EXPORT unity_bool_t sora_set_microphone_volume(void* p,
+                                                               double volume);
 
 UNITY_INTERFACE_EXPORT void sora_get_stats(void* p,
                                            stats_cb_t f,
@@ -203,6 +207,8 @@ UNITY_INTERFACE_EXPORT void sora_audio_track_sink_destroy(void* p);
 UNITY_INTERFACE_EXPORT void sora_audio_track_add_sink(void* track, void* sink);
 UNITY_INTERFACE_EXPORT void sora_audio_track_remove_sink(void* track,
                                                          void* sink);
+UNITY_INTERFACE_EXPORT void sora_audio_track_set_volume(void* track,
+                                                        double volume);
 
 // RtpTransceiver
 UNITY_INTERFACE_EXPORT void* sora_rtp_transceiver_get_receiver(void* p);
