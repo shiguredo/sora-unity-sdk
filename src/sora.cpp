@@ -306,8 +306,13 @@ void Sora::DoConnect(const sora_conf::internal::ConnectConfig& cc,
     return;
   }
 
-  if (!InitADM(unity_adm_, cc.audio_recording_device,
-               cc.audio_playout_device)) {
+  if (!InitADM(unity_adm_, cc.audio_recording_device, cc.audio_playout_device,
+               cc.has_audio_speaker_volume()
+                   ? std::make_optional(cc.audio_speaker_volume)
+                   : std::nullopt,
+               cc.has_audio_microphone_volume()
+                   ? std::make_optional(cc.audio_microphone_volume)
+                   : std::nullopt)) {
     on_disconnect((int)sora_conf::ErrorCode::INTERNAL_ERROR,
                   "Failed to InitADM");
     return;
@@ -693,6 +698,81 @@ void Sora::SetOnHandleAudio(std::function<void(const int16_t*, int, int)> f) {
 void Sora::SetSenderAudioTrackSink(webrtc::AudioTrackSinkInterface* sink) {
   sender_audio_track_sink_ = sink;
 }
+bool Sora::SetADMVolume(webrtc::scoped_refptr<webrtc::AudioDeviceModule> adm,
+                        bool is_speaker,
+                        double volume) {
+  bool available = false;
+  uint32_t r = 0;
+  r = is_speaker ? adm->SpeakerVolumeIsAvailable(&available)
+                 : adm->MicrophoneVolumeIsAvailable(&available);
+  if (r != 0) {
+    RTC_LOG(LS_WARNING) << "Failed to "
+                        << (is_speaker ? "SpeakerVolumeIsAvailable"
+                                       : "MicrophoneVolumeIsAvailable");
+    return false;
+  }
+  if (!available) {
+    RTC_LOG(LS_INFO) << (is_speaker ? "Speaker" : "Microphone")
+                     << " volume is not available";
+    return false;
+  }
+  uint32_t min_volume = 0;
+  uint32_t max_volume = 0;
+  r = is_speaker ? adm->MinSpeakerVolume(&min_volume)
+                 : adm->MinMicrophoneVolume(&min_volume);
+  if (r != 0) {
+    RTC_LOG(LS_WARNING) << "Failed to "
+                        << (is_speaker ? "MinSpeakerVolume"
+                                       : "MinMicrophoneVolume");
+    return false;
+  }
+  r = is_speaker ? adm->MaxSpeakerVolume(&max_volume)
+                 : adm->MaxMicrophoneVolume(&max_volume);
+  if (r != 0) {
+    RTC_LOG(LS_WARNING) << "Failed to "
+                        << (is_speaker ? "MaxSpeakerVolume"
+                                       : "MaxMicrophoneVolume");
+    return false;
+  }
+  if (min_volume >= max_volume) {
+    RTC_LOG(LS_WARNING) << "Invalid " << (is_speaker ? "speaker" : "microphone")
+                        << " volume range: min=" << min_volume
+                        << " max=" << max_volume;
+    return false;
+  }
+  uint32_t device_volume =
+      static_cast<uint32_t>(min_volume + (volume * (max_volume - min_volume)));
+  r = is_speaker ? adm->SetSpeakerVolume(device_volume)
+                 : adm->SetMicrophoneVolume(device_volume);
+  if (r != 0) {
+    RTC_LOG(LS_WARNING) << "Failed to "
+                        << (is_speaker ? "SetSpeakerVolume"
+                                       : "SetMicrophoneVolume")
+                        << ": volume=" << volume;
+    return false;
+  }
+
+  RTC_LOG(LS_INFO) << "Succeeded to set "
+                   << (is_speaker ? "speaker" : "microphone")
+                   << " volume: volume=" << volume;
+  return true;
+}
+bool Sora::SetSpeakerVolume(double volume) {
+  return sora_context_->worker_thread()->BlockingCall([this, volume] {
+    if (!unity_adm_) {
+      return false;
+    }
+    return SetADMVolume(unity_adm_, true, volume);
+  });
+}
+bool Sora::SetMicrophoneVolume(double volume) {
+  return sora_context_->worker_thread()->BlockingCall([this, volume] {
+    if (!unity_adm_) {
+      return false;
+    }
+    return SetADMVolume(unity_adm_, false, volume);
+  });
+}
 
 webrtc::scoped_refptr<UnityAudioDevice> Sora::CreateADM(
     webrtc::Environment env,
@@ -731,7 +811,9 @@ webrtc::scoped_refptr<UnityAudioDevice> Sora::CreateADM(
 
 bool Sora::InitADM(webrtc::scoped_refptr<webrtc::AudioDeviceModule> adm,
                    std::string audio_recording_device,
-                   std::string audio_playout_device) {
+                   std::string audio_playout_device,
+                   std::optional<double> speaker_volume,
+                   std::optional<double> microphone_volume) {
   // デフォルトデバイスを設定しておく
   if (adm->RecordingDevices() > 0) {
     adm->SetRecordingDevice(0);
@@ -813,6 +895,14 @@ bool Sora::InitADM(webrtc::scoped_refptr<webrtc::AudioDeviceModule> adm,
                         << audio_playout_device;
       return false;
     }
+  }
+
+  // 音量を設定する
+  if (speaker_volume) {
+    SetADMVolume(adm, true, *speaker_volume);
+  }
+  if (microphone_volume) {
+    SetADMVolume(adm, false, *microphone_volume);
   }
 
   return true;

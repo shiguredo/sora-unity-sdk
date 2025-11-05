@@ -47,6 +47,12 @@
   - @melpon
 - [UPDATE] 各種コールバックを nullable にする
   - @melpon
+- [ADD] ADM の音量を設定する関数 `Sora.SetSpeakerVolume()`, `Sora.SetMicrophoneVolume()` を追加する
+  - @melpon
+- [ADD] ADM の初期音量の設定として `Sora.Config.AudioSpeakerVolume`, `Sora.Config.AudioMicrophoneVolume` を追加する
+  - @melpon
+- [ADD] オーディオトラックの音量を設定する関数 `Sora.AudioTrack.SetVolume()` を追加する
+  - @melpon
 - [ADD] オーディオやビデオが追加/削除された時に呼ばれるコールバック `OnMediaStreamTrack` と `OnRemoveMediaStreamTrack` を追加する
   - C++ の `webrtc::PeerConnectionObserver` の `OnTrack()` と `OnRemoveTrack()` に相当する
   - @melpon

@@ -114,6 +114,8 @@ message ConnectConfig {
     bool unity_audio_output = 28;
     string audio_recording_device = 29;
     string audio_playout_device = 30;
+    optional double audio_speaker_volume = 300;
+    optional double audio_microphone_volume = 301;
     string audio_codec_type = 31;
     int32 audio_bit_rate = 34;
     optional DegradationPreference degradation_preference = 35;

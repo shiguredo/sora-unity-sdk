@@ -424,6 +424,8 @@ public class Sora : IDisposable
         /// 指定したデバイスのスピーカーを利用することが出来ます。
         /// </remarks>
         public string AudioPlayoutDevice = "";
+        public double? AudioSpeakerVolume = null;
+        public double? AudioMicrophoneVolume = null;
         public AudioCodecType? AudioCodecType;
         public int AudioBitRate = 0;
         public string AudioStreamingLanguageCode = "";
@@ -633,6 +635,14 @@ public class Sora : IDisposable
         cc.unity_audio_output = config.UnityAudioOutput;
         cc.audio_recording_device = config.AudioRecordingDevice;
         cc.audio_playout_device = config.AudioPlayoutDevice;
+        if (config.AudioSpeakerVolume.HasValue)
+        {
+            cc.SetAudioSpeakerVolume(config.AudioSpeakerVolume.Value);
+        }
+        if (config.AudioMicrophoneVolume.HasValue)
+        {
+            cc.SetAudioMicrophoneVolume(config.AudioMicrophoneVolume.Value);
+        }
         cc.audio_codec_type = config.AudioCodecType == null ? "" : config.AudioCodecType.ToString();
         cc.audio_bit_rate = config.AudioBitRate;
         cc.audio_streaming_language_code = config.AudioStreamingLanguageCode;
@@ -1505,6 +1515,10 @@ public class Sora : IDisposable
     [DllImport(DllName)]
     private static extern void sora_set_sender_audio_track_sink(IntPtr p, IntPtr sink);
     [DllImport(DllName)]
+    private static extern int sora_set_speaker_volume(IntPtr p, double volume);
+    [DllImport(DllName)]
+    private static extern int sora_set_microphone_volume(IntPtr p, double volume);
+    [DllImport(DllName)]
     private static extern void sora_set_on_capturer_frame(IntPtr p, CapturerFrameCallbackDelegate? on_capturer_frame, IntPtr userdata);
     [DllImport(DllName)]
     private static extern void sora_get_stats(IntPtr p, StatsCallbackDelegate on_get_stats, IntPtr userdata);
@@ -1575,6 +1589,8 @@ public class Sora : IDisposable
     private static extern void sora_audio_track_add_sink(IntPtr track, IntPtr sink);
     [DllImport(DllName)]
     private static extern void sora_audio_track_remove_sink(IntPtr track, IntPtr sink);
+    [DllImport(DllName)]
+    private static extern void sora_audio_track_set_volume(IntPtr track, double volume);
 
     [DllImport(DllName)]
     private static extern IntPtr sora_get_video_track_from_video_sink_id(IntPtr p, uint videoSinkId);
@@ -1906,6 +1922,21 @@ public class Sora : IDisposable
             adapter.Dispose();
             sora.audioTrackSinks.Remove(sink);
         }
+
+        /// <summary>
+        /// このトラックの音量を設定します。
+        /// </summary>
+        /// <remarks>
+        /// 音量は 0.0 から 10.0 の範囲で設定できます。
+        /// 0.0 は無音になります。
+        /// 1.0 が受信したオーディオデータをそのまま出力する音量になります。
+        /// 1.0 より大きい場合、オーディオデータが増幅された上で出力されます。
+        /// </remarks>
+        /// <param name="volume">音量。[0.0, 10.0] の範囲で設定して下さい。</param>
+        public void SetVolume(double volume)
+        {
+            sora_audio_track_set_volume(this.p, volume);
+        }
     }
 
     /// <summary>
@@ -1941,6 +1972,40 @@ public class Sora : IDisposable
             this.senderAudioTrackSink = value;
             this.senderAudioTrackSinkAdapter = adapter;
         }
+    }
+
+    /// <summary>
+    /// スピーカーの音量を設定します。
+    /// </summary>
+    /// <remarks>
+    /// この関数は接続が確立した後のみ有効です。
+    /// 接続が確立する前に呼び出した場合、この関数は false を返します。
+    /// 
+    /// プラットフォームによっては、スピーカーの音量を設定できない場合があります。
+    /// その場合、この関数は false を返します。
+    /// </remarks>
+    /// <param name="volume">音量。[0.0, 1.0] の範囲で設定して下さい。</param>
+    /// <returns>設定に成功した場合は true を返します。</returns>
+    public bool SetSpeakerVolume(double volume)
+    {
+        return sora_set_speaker_volume(this.p, volume) != 0;
+    }
+
+    /// <summary>
+    /// マイクの音量を設定します。
+    /// </summary>
+    /// <remarks>
+    /// この関数は接続が確立した後のみ有効です。
+    /// 接続が確立する前に呼び出した場合、この関数は false を返します。
+    /// 
+    /// プラットフォームによっては、マイクの音量を設定できない場合があります。
+    /// その場合、この関数は false を返します。
+    /// </remarks>
+    /// <param name="volume">音量。[0.0, 1.0] の範囲で設定して下さい。</param>
+    /// <returns>設定に成功した場合は true を返します。</returns>
+    public bool SetMicrophoneVolume(double volume)
+    {
+        return sora_set_microphone_volume(this.p, volume) != 0;
     }
 
     /// <summary>
