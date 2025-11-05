@@ -93,6 +93,8 @@
   - @melpon
 - [ADD] examples で `Sora.SenderAudioTrackSink` を使って送信側のマイク音量を取れるようにする
   - @melpon
+- [ADD] クライアントごとに別々で音量を調整できるようにする
+  - @melpon
 
 ## 2025.2.0
 

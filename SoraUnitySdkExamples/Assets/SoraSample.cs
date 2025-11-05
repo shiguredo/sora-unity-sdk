@@ -310,7 +310,7 @@ public class SoraSample : MonoBehaviour
             return false;
         }
 
-        public void InitAudio(AudioTrackSink audioTrackSink)
+        public void InitAudio(AudioTrackSink audioTrackSink, Sora.AudioTrack track)
         {
             var texture = new Texture2D(240, 20, TextureFormat.RGBA32, false);
             var pixels = new Color32[240 * 20];
@@ -326,6 +326,17 @@ public class SoraSample : MonoBehaviour
             levelObj.gameObject.SetActive(true);
             var audioImage = levelObj.GetComponent<UnityEngine.UI.RawImage>();
             audioImage.texture = texture;
+
+            if (track != null)
+            {
+                var sliderObj = trackObject.transform.Find("AudioSlider");
+                sliderObj.gameObject.SetActive(true);
+                var slider = sliderObj.GetComponent<UnityEngine.UI.Slider>();
+                slider.onValueChanged.AddListener((value) =>
+                {
+                    track.SetVolume(value);
+                });
+            }
 
             this.audioEnabled = true;
             this.audioTrackSink = audioTrackSink;
@@ -589,7 +600,7 @@ public class SoraSample : MonoBehaviour
 
                 var info = new ConnectionInfo(scrollViewContent.transform, baseContent);
                 info.InitVideo(videoSinkId);
-                info.InitAudio((AudioTrackSink)sora.SenderAudioTrackSink);
+                info.InitAudio((AudioTrackSink)sora.SenderAudioTrackSink, null);
                 connectionInfos.Add(connectionId, info);
             };
             sora.OnRemoveTrack = (videoSinkId, connectionId) =>
@@ -620,7 +631,7 @@ public class SoraSample : MonoBehaviour
                     var audioTrack = track as Sora.AudioTrack;
                     var audioTrackSink = new AudioTrackSink();
                     audioTrack.AddSink(sora, audioTrackSink);
-                    info.InitAudio(audioTrackSink);
+                    info.InitAudio(audioTrackSink, audioTrack);
                 }
                 else
                 {
