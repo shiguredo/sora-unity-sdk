@@ -21,7 +21,7 @@
 
 ## Sora Unity SDK サンプル集を使ってみる
 
-Sora Unity SDK 直下の run.py を使用することで、サンプル実行のための準備が簡単に行えます。以下のコマンドを実行して、Sora Unity SDK サンプル集のセットアップを行ってください。
+Sora Unity SDK 直下の run.py を使用することで、サンプル実行のための準備が簡単に行えます。以下のコマンドを実行して、Sora Unity SDK サンプル集のセットアップを行ってください。セットアップ完了後に Unity でサンプルプロジェクトを開くことができます。
 
 ```bash
 python3 run.py install
