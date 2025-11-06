@@ -13,14 +13,14 @@ webrtc::ScopedJavaLocalRef<jobject> GetAndroidApplicationContext(JNIEnv* env) {
       webrtc::GetClass(env, "com/unity3d/player/UnityPlayer");
   jfieldID actid = env->GetStaticFieldID(upcls.obj(), "currentActivity",
                                          "Landroid/app/Activity;");
-  webrtc::ScopedJavaLocalRef<jobject> activity(
+  auto activity = webrtc::ScopedJavaLocalRef<jobject>::Adopt(
       env, env->GetStaticObjectField(upcls.obj(), actid));
 
-  webrtc::ScopedJavaLocalRef<jclass> actcls(
+  auto actcls = webrtc::ScopedJavaLocalRef<jclass>::Adopt(
       env, env->GetObjectClass(activity.obj()));
   jmethodID ctxid = env->GetMethodID(actcls.obj(), "getApplicationContext",
                                      "()Landroid/content/Context;");
-  webrtc::ScopedJavaLocalRef<jobject> context(
+  auto context = webrtc::ScopedJavaLocalRef<jobject>::Adopt(
       env, env->CallObjectMethod(activity.obj(), ctxid));
 
   // org.webrtc.ContextUtils.initialize(context)
