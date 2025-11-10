@@ -36,7 +36,7 @@
   - CreateWindowsCoreAudioAudioDeviceModule の引数を `&env.task_queue_factory()` から `env` に変更する
   - libwebrtc m142 の変更に追従し、ScopedJavaLocalRef のコンストラクタ呼び出しを Adopt() 経由に変更する
   - @melpon @torikizi
-- [UPDATE] Sora C++ SDK を `2025.6.0-canary.10` に上げる
+- [UPDATE] Sora C++ SDK を `2025.6.0-canary.12` に上げる
   - `BOOST_VERSION` を `1.89.0` にアップデート
   - `CMAKE_VERSION` を `4.1.2` にアップデート
   - @melpon @torikizi
