@@ -264,6 +264,12 @@ void Sora::DoConnect(const sora_conf::internal::ConnectConfig& cc,
     client_config.video_codec_factory_config.preference =
         ConvertToVideoCodecPreference(cc.video_codec_preference);
   }
+  if (!cc.audio_playout_device.empty()) {
+    client_config.audio_playout_device = cc.audio_playout_device;
+  }
+  if (!cc.audio_recording_device.empty()) {
+    client_config.audio_recording_device = cc.audio_recording_device;
+  }
   client_config.configure_dependencies =
       [&, this](webrtc::PeerConnectionFactoryDependencies& dependencies) {
         auto webrtc_env = webrtc::CreateEnvironment();
@@ -306,7 +312,7 @@ void Sora::DoConnect(const sora_conf::internal::ConnectConfig& cc,
     return;
   }
 
-  if (!InitADM(unity_adm_, cc.audio_recording_device, cc.audio_playout_device,
+  if (!InitADM(unity_adm_,
                cc.has_audio_speaker_volume()
                    ? std::make_optional(cc.audio_speaker_volume)
                    : std::nullopt,
@@ -810,93 +816,8 @@ webrtc::scoped_refptr<UnityAudioDevice> Sora::CreateADM(
 }
 
 bool Sora::InitADM(webrtc::scoped_refptr<webrtc::AudioDeviceModule> adm,
-                   std::string audio_recording_device,
-                   std::string audio_playout_device,
                    std::optional<double> speaker_volume,
                    std::optional<double> microphone_volume) {
-  // デフォルトデバイスを設定しておく
-  if (adm->RecordingDevices() > 0) {
-    adm->SetRecordingDevice(0);
-  }
-  if (adm->PlayoutDevices() > 0) {
-    adm->SetPlayoutDevice(0);
-  }
-
-  // 録音デバイスと再生デバイスを指定する
-  if (!audio_recording_device.empty()) {
-    bool succeeded = false;
-    int devices = adm->RecordingDevices();
-    for (int i = 0; i < devices; i++) {
-      char name[webrtc::kAdmMaxDeviceNameSize];
-      char guid[webrtc::kAdmMaxGuidSize];
-      if (adm->SetRecordingDevice(i) != 0) {
-        RTC_LOG(LS_WARNING) << "Failed to SetRecordingDevice: index=" << i;
-        continue;
-      }
-      bool available = false;
-      if (adm->RecordingIsAvailable(&available) != 0) {
-        RTC_LOG(LS_WARNING) << "Failed to RecordingIsAvailable: index=" << i;
-        continue;
-      }
-
-      if (!available) {
-        continue;
-      }
-      if (adm->RecordingDeviceName(i, name, guid) != 0) {
-        RTC_LOG(LS_WARNING) << "Failed to RecordingDeviceName: index=" << i;
-        continue;
-      }
-      if (audio_recording_device == name || audio_recording_device == guid) {
-        RTC_LOG(LS_INFO) << "Succeeded SetRecordingDevice: index=" << i
-                         << " device_name=" << name << " unique_name=" << guid;
-        succeeded = true;
-        break;
-      }
-    }
-    if (!succeeded) {
-      RTC_LOG(LS_ERROR) << "No recording device found: name="
-                        << audio_recording_device;
-      return false;
-    }
-  }
-
-  if (!audio_playout_device.empty()) {
-    bool succeeded = false;
-    int devices = adm->PlayoutDevices();
-    for (int i = 0; i < devices; i++) {
-      char name[webrtc::kAdmMaxDeviceNameSize];
-      char guid[webrtc::kAdmMaxGuidSize];
-      if (adm->SetPlayoutDevice(i) != 0) {
-        RTC_LOG(LS_WARNING) << "Failed to SetPlayoutDevice: index=" << i;
-        continue;
-      }
-      bool available = false;
-      if (adm->PlayoutIsAvailable(&available) != 0) {
-        RTC_LOG(LS_WARNING) << "Failed to PlayoutIsAvailable: index=" << i;
-        continue;
-      }
-
-      if (!available) {
-        continue;
-      }
-      if (adm->PlayoutDeviceName(i, name, guid) != 0) {
-        RTC_LOG(LS_WARNING) << "Failed to PlayoutDeviceName: index=" << i;
-        continue;
-      }
-      if (audio_playout_device == name || audio_playout_device == guid) {
-        RTC_LOG(LS_INFO) << "Succeeded SetPlayoutDevice: index=" << i
-                         << " device_name=" << name << " unique_name=" << guid;
-        succeeded = true;
-        break;
-      }
-    }
-    if (!succeeded) {
-      RTC_LOG(LS_ERROR) << "No playout device found: name="
-                        << audio_playout_device;
-      return false;
-    }
-  }
-
   // 音量を設定する
   if (speaker_volume) {
     SetADMVolume(adm, true, *speaker_volume);

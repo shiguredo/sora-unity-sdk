@@ -133,8 +133,6 @@ class Sora : public std::enable_shared_from_this<Sora>,
       void* jni_env,
       void* android_context);
   static bool InitADM(webrtc::scoped_refptr<webrtc::AudioDeviceModule> adm,
-                      std::string audio_recording_device,
-                      std::string audio_playout_device,
                       std::optional<double> speaker_volume,
                       std::optional<double> microphone_volume);
 

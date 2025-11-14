@@ -30,13 +30,13 @@
       - `null` を指定した場合はコールバック未設定として安全に動作する
       - AndroidAudioOutputHelper に disposed フラグを追加し、Dispose 後の操作を安全化する
   - @torikizi
-- [UPDATE] libwebrtc を `m142.7444.2.0` に上げる
+- [UPDATE] libwebrtc を `m143.7499.1.0` に上げる
   - macOS, iOS が Apple clang ではなく libwebrtc の clang を使うようになったので、その対応を入れている
   - unity_audio_device.h の Init() 関数内で AudioDeviceBuffer の生成に env_ を渡すようにする
   - CreateWindowsCoreAudioAudioDeviceModule の引数を `&env.task_queue_factory()` から `env` に変更する
   - libwebrtc m142 の変更に追従し、ScopedJavaLocalRef のコンストラクタ呼び出しを Adopt() 経由に変更する
   - @melpon @torikizi
-- [UPDATE] Sora C++ SDK を `2025.6.0-canary.12` に上げる
+- [UPDATE] Sora C++ SDK を `2025.6.0-canary.18` に上げる
   - `BOOST_VERSION` を `1.89.0` にアップデート
   - `CMAKE_VERSION` を `4.1.2` にアップデート
   - @melpon @torikizi
