@@ -30,6 +30,11 @@
       - `null` を指定した場合はコールバック未設定として安全に動作する
       - AndroidAudioOutputHelper に disposed フラグを追加し、Dispose 後の操作を安全化する
   - @torikizi
+- [CHANGE] AMD AMF ハードウェアエンコーダーを非推奨化する
+  - AMD AMF は現在非推奨であるため、ハードウェアエンコーダーの優先リストから除外する
+  - `GetHardwareAcceleratorPreference()` で AMD AMF を優先リストから除外
+  - 将来的にはまた利用可能にするため、コードは残してコメントアウト
+  - @torikizi
 - [UPDATE] libwebrtc を `m143.7499.1.0` に上げる
   - macOS, iOS が Apple clang ではなく libwebrtc の clang を使うようになったので、その対応を入れている
   - unity_audio_device.h の Init() 関数内で AudioDeviceBuffer の生成に env_ を渡すようにする

@@ -347,7 +347,8 @@ public class Sora : IDisposable
             var preference = new VideoCodecPreference();
             preference.Merge(CreateFromImplementation(capability, VideoCodecImplementation.Internal));
             preference.Merge(CreateFromImplementation(capability, VideoCodecImplementation.NvidiaVideoCodec));
-            preference.Merge(CreateFromImplementation(capability, VideoCodecImplementation.AmdAmf));
+            // AMD AMF は現在非推奨のためコメントアウトする
+            // preference.Merge(CreateFromImplementation(capability, VideoCodecImplementation.AmdAmf));
             preference.Merge(CreateFromImplementation(capability, VideoCodecImplementation.IntelVpl));
             return preference;
         }
