@@ -95,6 +95,8 @@
   - @melpon
 - [UPDATE] GitHub Actions のワークフローやパッケージング処理の見直し
   - @melpon
+- [UPDATE] Sora Unity SDK Examples の Unity バージョンを `6000.3.0f1` に上げる
+  - @torikizi
 - [ADD] `run.py` に `package` コマンドと `install` コマンドを追加
   - @melpon
 - [ADD] examples で `Sora.SenderAudioTrackSink` を使って送信側のマイク音量を取れるようにする
