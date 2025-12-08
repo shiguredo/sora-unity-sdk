@@ -4,7 +4,7 @@
 
 ## 対応 Unity バージョン
 
-- Unity 6000.0 (LTS)
+- Unity 6000.3 (LTS)
 
 ## 対応 Sora バージョン
 
