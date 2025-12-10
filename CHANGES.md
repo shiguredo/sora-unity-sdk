@@ -30,8 +30,8 @@
       - `null` を指定した場合はコールバック未設定として安全に動作する
       - AndroidAudioOutputHelper に disposed フラグを追加し、Dispose 後の操作を安全化する
   - @torikizi
-- [CHANGE] AMD AMF ハードウェアエンコーダーを非推奨化する
-  - AMD AMF は現在非推奨であるため、ハードウェアエンコーダーの優先リストから除外する
+- [CHANGE] AMD AMF ハードウェアアクセラレーターを非推奨化する
+  - AMD AMF は現在非推奨であるため、ハードウェアエンコーダー・デコーダーの優先リストから除外する
   - `GetHardwareAcceleratorPreference()` で AMD AMF を優先リストから除外
   - 将来的にはまた利用可能にするため、コードは残してコメントアウト
   - @torikizi
