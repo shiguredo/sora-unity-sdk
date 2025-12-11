@@ -25,6 +25,7 @@
 # limitations under the License.
 import filecmp
 import glob
+import hashlib
 import logging
 import multiprocessing
 import os
@@ -143,7 +144,12 @@ def add_path(path: str, is_after=False):
         os.environ["PATH"] = path + PATH_SEPARATOR + os.environ["PATH"]
 
 
-def download(url: str, output_dir: Optional[str] = None, filename: Optional[str] = None) -> str:
+def download(
+    url: str,
+    output_dir: Optional[str] = None,
+    filename: Optional[str] = None,
+    expected_sha256: Optional[str] = None,
+) -> str:
     if filename is None:
         output_path = urllib.parse.urlparse(url).path.split("/")[-1]
     else:
@@ -153,20 +159,65 @@ def download(url: str, output_dir: Optional[str] = None, filename: Optional[str]
         output_path = os.path.join(output_dir, output_path)
 
     if os.path.exists(output_path):
-        return output_path
+        # ファイルが既に存在する場合でもハッシュチェックを行う
+        if expected_sha256 is not None:
+            try:
+                verify_sha256(output_path, expected_sha256)
+            except ValueError:
+                # ハッシュ不一致の場合はファイルを削除して再ダウンロードを試みる
+                logging.warning(f"Existing file has invalid hash, removing: {output_path}")
+                os.remove(output_path)
+                # 再ダウンロードを試みる
+                return download(url, output_dir, filename, expected_sha256)
+        else:
+            return output_path
 
     try:
+        logging.info(f"Downloading {url} to {output_path}")
         if shutil.which("curl") is not None:
             cmd(["curl", "-fLo", output_path, url])
         else:
             cmd(["wget", "-cO", output_path, url])
+
+        # ダウンロード後にハッシュチェック
+        if expected_sha256 is not None:
+            try:
+                verify_sha256(output_path, expected_sha256)
+            except ValueError as e:
+                logging.error(f"Hash verification failed. {e}")
+                raise
+
     except Exception:
         # ゴミを残さないようにする
         if os.path.exists(output_path):
+            logging.error(f"Removing incomplete/invalid file: {output_path}")
             os.remove(output_path)
         raise
 
     return output_path
+
+
+def verify_sha256(file_path: str, expected_sha256: str):
+    """ファイルの SHA256 ハッシュを検証する"""
+    logging.info(f"Verifying SHA256 hash for {file_path}")
+    sha256_hash = hashlib.sha256()
+    with open(file_path, "rb") as f:
+        # メモリ効率のため、チャンクごとに読み込む
+        for byte_block in iter(lambda: f.read(4096), b""):
+            sha256_hash.update(byte_block)
+
+    actual_sha256 = sha256_hash.hexdigest()
+    if actual_sha256 != expected_sha256.lower():
+        error_msg = (
+            f"SHA256 hash mismatch for {file_path}:\n"
+            f"  Expected: {expected_sha256.lower()}\n"
+            f"  Actual:   {actual_sha256}"
+        )
+        logging.error(error_msg)
+        logging.error("Aborting due to hash verification failure")
+        raise ValueError(error_msg)
+    else:
+        logging.info(f"SHA256 hash verified successfully for {file_path}")
 
 
 def read_version_file(path: str) -> Dict[str, str]:
@@ -302,7 +353,12 @@ def _extractzip(z: zipfile.ZipFile, path: str):
 def extract(file: str, output_dir: str, output_dirname: str, filetype: Optional[str] = None):
     path = os.path.join(output_dir, output_dirname)
     logging.info(f"Extract {file} to {path}")
-    if filetype == "gzip" or file.endswith(".tar.gz"):
+    if (
+        filetype == "gzip"
+        or file.endswith(".tar.gz")
+        or filetype == "lzma"
+        or file.endswith(".tar.xz")
+    ):
         rm_rf(path)
         with tarfile.open(file) as t:
             dir = is_single_dir_tar(t)
@@ -451,6 +507,48 @@ def git_get_url_and_revision(dir):
         return url, rev
 
 
+def install_file(src: str, dst: str):
+    """
+    src から dst へディレクトリまたはファイルをコピーする
+
+    1. dst が存在していたら（ファイルでもディレクトリでも）削除する
+    2. dst の親ディレクトリが存在しなかったら作成する
+    3. src を dst にコピーする
+    """
+    # 1. dst が存在していたら削除する
+    if os.path.exists(dst):
+        if os.path.isdir(dst):
+            logging.debug(f"Remove dir: {dst}")
+            shutil.rmtree(dst)
+        else:
+            logging.debug(f"Remove file: {dst}")
+            os.remove(dst)
+
+    # 2. dst の親ディレクトリが存在しなかったら作成する
+    dst_parent = os.path.dirname(dst)
+    if dst_parent and not os.path.exists(dst_parent):
+        logging.debug(f"Make dir: {dst_parent}")
+        os.makedirs(dst_parent)
+
+    # 3. src を dst にコピーする
+    if os.path.isdir(src):
+        logging.info(f"Copy dir: {src} -> {dst}")
+        shutil.copytree(src, dst)
+    else:
+        logging.info(f"Copy file: {src} -> {dst}")
+        shutil.copy2(src, dst)
+
+
+def install_file_ifexists(src: str, dst: str):
+    """
+    src ファイルが存在してたら install_file を呼び出す
+    """
+    if not os.path.exists(src):
+        logging.info(f"Source file does not exist: {src}")
+        return
+    install_file(src, dst)
+
+
 def replace_vcproj_static_runtime(project_file: str):
     # なぜか MSVC_STATIC_RUNTIME が効かずに DLL ランタイムを使ってしまうので
     # 生成されたプロジェクトに対して静的ランタイムを使うように変更する
@@ -475,7 +573,7 @@ def install_webrtc(version, source_dir, install_dir, platform: str):
 
 def build_webrtc(platform, local_webrtc_build_dir, local_webrtc_build_args, debug):
     with cd(local_webrtc_build_dir):
-        args = ["--webrtc-nobuild-ios-framework", "--webrtc-nobuild-android-aar"]
+        args = []
         if debug:
             args += ["--debug"]
 
@@ -521,6 +619,7 @@ class WebrtcInfo(NamedTuple):
     webrtc_include_dir: str
     webrtc_source_dir: Optional[str]
     webrtc_library_dir: str
+    webrtc_jar_file: str
     clang_dir: str
     libcxx_dir: str
     libcxxabi_dir: str
@@ -538,6 +637,7 @@ def get_webrtc_info(
             webrtc_include_dir=os.path.join(webrtc_install_dir, "include"),
             webrtc_source_dir=None,
             webrtc_library_dir=os.path.join(webrtc_install_dir, "lib"),
+            webrtc_jar_file=os.path.join(webrtc_install_dir, "jar", "webrtc.jar"),
             clang_dir=os.path.join(install_dir, "llvm", "clang"),
             libcxx_dir=os.path.join(install_dir, "llvm", "libcxx"),
             libcxxabi_dir=os.path.join(
@@ -559,6 +659,9 @@ def get_webrtc_info(
             webrtc_include_dir=os.path.join(webrtc_build_source_dir, "src"),
             webrtc_source_dir=os.path.join(webrtc_build_source_dir, "src"),
             webrtc_library_dir=webrtc_build_build_dir,
+            webrtc_jar_file=os.path.join(
+                webrtc_build_build_dir, "arm64-v8a", "lib.java", "sdk", "android", "libwebrtc.jar"
+            ),
             clang_dir=os.path.join(
                 webrtc_build_source_dir, "src", "third_party", "llvm-build", "Release+Asserts"
             ),
@@ -570,7 +673,14 @@ def get_webrtc_info(
 
 
 @versioned
-def install_boost(version, source_dir, install_dir, sora_version, platform: str):
+def install_boost(
+    version,
+    source_dir,
+    install_dir,
+    sora_version,
+    platform: str,
+    expected_sha256: Optional[str] = None,
+):
     win = platform.startswith("windows_")
     filename = (
         f"boost-{version}_sora-cpp-sdk-{sora_version}_{platform}.{'zip' if win else 'tar.gz'}"
@@ -579,6 +689,7 @@ def install_boost(version, source_dir, install_dir, sora_version, platform: str)
     archive = download(
         f"https://github.com/shiguredo/sora-cpp-sdk/releases/download/{sora_version}/{filename}",
         output_dir=source_dir,
+        expected_sha256=expected_sha256,
     )
     rm_rf(os.path.join(install_dir, "boost"))
     extract(archive, output_dir=install_dir, output_dirname="boost")
@@ -699,14 +810,17 @@ def build_and_install_boost(
     address_model="64",
     runtime_link=None,
     android_build_platform="linux-x86_64",
+    expected_sha256: Optional[str] = None,
 ):
     version_underscore = version.replace(".", "_")
+
     archive = download(
         # 公式サイトに負荷をかけないための時雨堂によるミラー
         f"https://oss-mirrors.shiguredo.jp/boost_{version_underscore}.tar.gz",
         # Boost 公式のミラー
         # f"https://archives.boost.io/release/{version}/source/boost_{version_underscore}.tar.gz",
         source_dir,
+        expected_sha256=expected_sha256,
     )
     extract(archive, output_dir=build_dir, output_dirname="boost")
     with cd(os.path.join(build_dir, "boost")):
@@ -733,7 +847,9 @@ def build_and_install_boost(
         if target_os == "iphone":
             IOS_BUILD_TARGETS = [("arm64", "iphoneos")]
             for arch, sdk in IOS_BUILD_TARGETS:
-                clangpp = cmdcap(["xcodebuild", "-find", "clang++"])
+                # xcode の clang++ を利用する
+                # ただし cxx が指定されてた場合はそちらを優先する
+                clangpp = cmdcap(["xcodebuild", "-find", "clang++"]) if len(cxx) == 0 else cxx
                 sysroot = cmdcap(["xcrun", "--sdk", sdk, "--show-sdk-path"])
                 boost_arch = "x86" if arch == "x86_64" else "arm"
                 with open("project-config.jam", "w", encoding="utf-8") as f:
@@ -934,7 +1050,7 @@ def build_sora(
         ]
 
     with cd(local_sora_cpp_sdk_dir):
-        cmd(["python3", "run.py", platform, *local_sora_cpp_sdk_args])
+        cmd(["python3", "run.py", "build", platform, *local_sora_cpp_sdk_args])
 
 
 class SoraInfo(NamedTuple):
@@ -1050,6 +1166,21 @@ def install_android_sdk_cmdline_tools(version, install_dir, source_dir):
     sdkmanager = os.path.join(tools_dir, "cmdline-tools", "bin", "sdkmanager")
     # ライセンスを許諾する
     cmd(["/bin/bash", "-c", f"yes | {sdkmanager} --sdk_root={tools_dir} --licenses"])
+
+
+@versioned
+def install_android_sdk_platform_tools(version, install_dir, source_dir, platform):
+    if version not in ("latest",):
+        raise Exception(f"Supports only 'latest' version, but got: {version}")
+    if platform not in ("windows", "darwin", "linux"):
+        raise Exception(f"Not supported platform: {platform}")
+    archive = download(
+        f"https://dl.google.com/android/repository/platform-tools-{version}-{platform}.zip",
+        source_dir,
+    )
+    tools_dir = os.path.join(install_dir, "android-sdk-platform-tools")
+    rm_rf(tools_dir)
+    extract(archive, output_dir=tools_dir, output_dirname="platform-tools")
 
 
 @versioned
@@ -1229,6 +1360,93 @@ def install_sdl2(
 
 
 @versioned
+def install_sdl3(
+    version, source_dir, build_dir, install_dir, debug: bool, platform: str, cmake_args: List[str]
+):
+    url = f"https://github.com/libsdl-org/SDL/releases/download/release-{version}/SDL3-{version}.tar.gz"
+    path = download(url, source_dir)
+    sdl3_source_dir = os.path.join(source_dir, "sdl3")
+    sdl3_build_dir = os.path.join(build_dir, "sdl3")
+    sdl3_install_dir = os.path.join(install_dir, "sdl3")
+    rm_rf(sdl3_source_dir)
+    rm_rf(sdl3_build_dir)
+    rm_rf(sdl3_install_dir)
+    extract(path, source_dir, "sdl3")
+
+    mkdir_p(sdl3_build_dir)
+    with cd(sdl3_build_dir):
+        configuration = "Debug" if debug else "Release"
+        cmake_args = cmake_args[:]
+        cmake_args += [
+            sdl3_source_dir,
+            f"-DCMAKE_BUILD_TYPE={configuration}",
+            f"-DCMAKE_INSTALL_PREFIX={cmake_path(sdl3_install_dir)}",
+            "-DBUILD_SHARED_LIBS=OFF",
+            "-DSDL_STATIC=ON",
+            "-DSDL_SHARED=OFF",
+        ]
+        if platform == "windows":
+            cmake_args += [
+                f"-DCMAKE_MSVC_RUNTIME_LIBRARY={'MultiThreaded' if not debug else 'MultiThreadedDebug'}",
+                "-DSDL_AUDIO=OFF",
+                "-DSDL_JOYSTICK=OFF",
+                "-DSDL_HAPTIC=OFF",
+                # GitHub Actions 上で gameinput.h が存在しないのに
+                # なぜか  check_c_source_compiles() が成功してしまうので
+                # HAVE_GAMEINPUT_H=0 で強制的に無効化する
+                "-DHAVE_GAMEINPUT_H=0",
+            ]
+        elif platform == "macos":
+            # どの環境でも同じようにインストールされるようにするため全部 ON/OFF を明示的に指定する
+            cmake_args += [
+                "-DSDL_AUDIO=OFF",
+                "-DSDL_VIDEO=ON",
+                "-DSDL_RENDER=ON",
+                "-DSDL_HAPTIC=ON",
+                "-DSDL_POWER=ON",
+                "-DSDL_JOYSTICK=ON",
+                "-DSDL_SENSOR=ON",
+                "-DSDL_OPENGL=ON",
+                "-DSDL_OPENGLES=ON",
+                "-DSDL_METAL=ON",
+                "-DSDL_VULKAN=OFF",
+            ]
+        elif platform == "linux":
+            # どの環境でも同じようにインストールされるようにするため全部 ON/OFF を明示的に指定する
+            cmake_args += [
+                "-DSDL_AUDIO=OFF",
+                "-DSDL_VIDEO=ON",
+                "-DSDL_RENDER=ON",
+                "-DSDL_HAPTIC=ON",
+                "-DSDL_POWER=ON",
+                "-DSDL_JOYSTICK=ON",
+                "-DSDL_SENSOR=ON",
+                "-DSDL_OPENGL=ON",
+                "-DSDL_OPENGLES=ON",
+                "-DSDL_X11=ON",
+                "-DSDL_X11_SHARED=OFF",
+                "-DSDL_X11_XCURSOR=OFF",
+                "-DSDL_X11_XDBE=OFF",
+                "-DSDL_X11_XFIXES=OFF",
+                "-DSDL_X11_XINPUT=OFF",
+                "-DSDL_X11_XRANDR=OFF",
+                "-DSDL_X11_XSCRNSAVER=OFF",
+                "-DSDL_X11_XSHAPE=OFF",
+                "-DSDL_X11_XSYNC=OFF",
+                "-DSDL_WAYLAND=OFF",
+                "-DSDL_VULKAN=OFF",
+                "-DSDL_KMSDRM=OFF",
+                "-DSDL_RPI=OFF",
+            ]
+        cmd(["cmake"] + cmake_args)
+
+        cmd(
+            ["cmake", "--build", ".", "--config", configuration, f"-j{multiprocessing.cpu_count()}"]
+        )
+        cmd(["cmake", "--install", ".", "--config", configuration])
+
+
+@versioned
 def install_cli11(version, install_dir):
     cli11_install_dir = os.path.join(install_dir, "cli11")
     rm_rf(cli11_install_dir)
@@ -1254,6 +1472,12 @@ def install_cuda_windows(version, source_dir, build_dir, install_dir):
         url = "http://developer.download.nvidia.com/compute/cuda/10.2/Prod/local_installers/cuda_10.2.89_441.22_win10.exe"  # noqa: E501
     elif version == "11.8.0-1":
         url = "https://developer.download.nvidia.com/compute/cuda/11.8.0/local_installers/cuda_11.8.0_522.06_windows.exe"  # noqa: E501
+    elif version == "12.6.3-1":
+        url = "https://developer.download.nvidia.com/compute/cuda/12.6.3/local_installers/cuda_12.6.3_561.17_windows.exe"  # noqa: E501
+    elif version == "12.9.1-1":
+        url = "https://developer.download.nvidia.com/compute/cuda/12.9.1/local_installers/cuda_12.9.1_576.57_windows.exe"  # noqa: E501
+    elif version == "13.0.1-1":
+        url = "https://developer.download.nvidia.com/compute/cuda/13.0.1/local_installers/cuda_13.0.1_windows.exe"  # noqa: E501
     else:
         raise Exception(f"Unknown CUDA version {version}")
     file = download(url, source_dir)
@@ -1310,6 +1534,35 @@ def install_vpl(version, configuration, source_dir, build_dir, install_dir, cmak
 
 
 @versioned
+def install_blend2d_official(
+    version,
+    configuration,
+    source_dir,
+    build_dir,
+    install_dir,
+    cmake_args,
+    expected_sha256: Optional[str] = None,
+):
+    rm_rf(os.path.join(source_dir, "blend2d"))
+    rm_rf(os.path.join(build_dir, "blend2d"))
+    rm_rf(os.path.join(install_dir, "blend2d"))
+
+    # 公式サイトに負荷をかけないための時雨堂によるミラー
+    url = f"https://oss-mirrors.shiguredo.jp/blend2d-{version}.tar.gz"
+    # Blend2d 公式
+    # url = f"https://blend2d.com/download/blend2d-{version}.tar.gz"
+    path = download(url, source_dir, expected_sha256=expected_sha256)
+    extract(path, source_dir, "blend2d")
+    _build_blend2d(
+        configuration=configuration,
+        source_dir=source_dir,
+        build_dir=build_dir,
+        install_dir=install_dir,
+        cmake_args=cmake_args,
+    )
+
+
+@versioned
 def install_blend2d(
     version,
     configuration,
@@ -1318,7 +1571,6 @@ def install_blend2d(
     install_dir,
     blend2d_version,
     asmjit_version,
-    ios,
     cmake_args,
 ):
     rm_rf(os.path.join(source_dir, "blend2d"))
@@ -1334,7 +1586,16 @@ def install_blend2d(
         asmjit_version,
         os.path.join(source_dir, "blend2d", "3rdparty", "asmjit"),
     )
+    _build_blend2d(
+        configuration=configuration,
+        source_dir=source_dir,
+        build_dir=build_dir,
+        install_dir=install_dir,
+        cmake_args=cmake_args,
+    )
 
+
+def _build_blend2d(configuration, source_dir, build_dir, install_dir, cmake_args):
     mkdir_p(os.path.join(build_dir, "blend2d"))
     with cd(os.path.join(build_dir, "blend2d")):
         cmd(
@@ -1352,37 +1613,17 @@ def install_blend2d(
         if os.path.exists(project_path):
             replace_vcproj_static_runtime(project_path)
 
-        if ios:
-            cmd(
-                [
-                    "cmake",
-                    "--build",
-                    ".",
-                    f"-j{multiprocessing.cpu_count()}",
-                    "--config",
-                    configuration,
-                    "--target",
-                    "blend2d",
-                    "--",
-                    "-arch",
-                    "arm64",
-                    "-sdk",
-                    "iphoneos",
-                ]
-            )
-            cmd(["cmake", "--build", ".", "--target", "install", "--config", configuration])
-        else:
-            cmd(
-                [
-                    "cmake",
-                    "--build",
-                    ".",
-                    f"-j{multiprocessing.cpu_count()}",
-                    "--config",
-                    configuration,
-                ]
-            )
-            cmd(["cmake", "--build", ".", "--target", "install", "--config", configuration])
+        cmd(
+            [
+                "cmake",
+                "--build",
+                ".",
+                f"-j{multiprocessing.cpu_count()}",
+                "--config",
+                configuration,
+            ]
+        )
+        cmd(["cmake", "--build", ".", "--target", "install", "--config", configuration])
 
 
 @versioned
@@ -2094,21 +2335,33 @@ def fix_clang_version(clang_dir, clang_version):
 
 
 class Platform(object):
-    def _check(self, flag):
+    def _check(self, flag, error_message):
         if not flag:
-            raise Exception("Not supported")
+            raise Exception(error_message)
 
     def _check_platform_target(self, p: PlatformTarget):
         if p.os == "raspberry-pi-os":
-            self._check(p.arch in ("armv6", "armv7", "armv8"))
+            self._check(
+                p.arch in ("armv6", "armv7", "armv8"),
+                f"Architecture {p.arch} is not supported for {p.os}. Supported: armv6, armv7, armv8",
+            )
         elif p.os == "jetson":
-            self._check(p.arch == "armv8")
+            self._check(
+                p.arch == "armv8",
+                f"Architecture {p.arch} is not supported for {p.os}. Only armv8 is supported",
+            )
         elif p.os in ("ios", "android"):
-            self._check(p.arch is None)
+            self._check(p.arch is None, f"Architecture should be None for {p.os}, but got {p.arch}")
         elif p.os == "ubuntu":
-            self._check(p.arch in ("x86_64", "armv8"))
+            self._check(
+                p.arch in ("x86_64", "armv8"),
+                f"Architecture {p.arch} is not supported for {p.os}. Supported: x86_64, armv8",
+            )
         else:
-            self._check(p.arch in ("x86_64", "arm64", "hololens2"))
+            self._check(
+                p.arch in ("x86_64", "arm64", "hololens2"),
+                f"Architecture {p.arch} is not supported for {p.os}. Supported: x86_64, arm64, hololens2",
+            )
 
     def __init__(self, target_os, target_osver, target_arch, target_extra=None):
         build = get_build_platform()
@@ -2118,32 +2371,83 @@ class Platform(object):
         self._check_platform_target(target)
 
         if target.os == "windows":
-            self._check(target.arch in ("x86_64", "arm64", "hololens2"))
-            self._check(build.os == "windows")
-            self._check(build.arch == "x86_64")
+            self._check(
+                target.arch in ("x86_64", "arm64", "hololens2"),
+                f"Target architecture {target.arch} is not supported for Windows",
+            )
+            self._check(
+                build.os == "windows",
+                f"Windows target requires Windows build platform, but got {build.os}",
+            )
+            self._check(
+                build.arch == "x86_64",
+                f"Windows build requires x86_64 architecture, but got {build.arch}",
+            )
         if target.os == "macos":
-            self._check(build.os == "macos")
-            self._check(build.arch in ("x86_64", "arm64"))
+            self._check(
+                build.os == "macos",
+                f"macOS target requires macOS build platform, but got {build.os}",
+            )
+            self._check(
+                build.arch in ("x86_64", "arm64"),
+                f"macOS build requires x86_64 or arm64, but got {build.arch}",
+            )
         if target.os == "ios":
-            self._check(build.os == "macos")
-            self._check(build.arch in ("x86_64", "arm64"))
+            self._check(
+                build.os == "macos", f"iOS target requires macOS build platform, but got {build.os}"
+            )
+            self._check(
+                build.arch in ("x86_64", "arm64"),
+                f"iOS build requires x86_64 or arm64, but got {build.arch}",
+            )
         if target.os == "android":
-            self._check(build.os in ("ubuntu", "macos"))
+            self._check(
+                build.os in ("ubuntu", "macos"),
+                f"Android target requires Ubuntu or macOS build platform, but got {build.os}",
+            )
             if build.os == "ubuntu":
-                self._check(build.arch == "x86_64")
+                self._check(
+                    build.arch == "x86_64",
+                    f"Android build on Ubuntu requires x86_64, but got {build.arch}",
+                )
             elif build.os == "macos":
-                self._check(build.arch in ("x86_64", "arm64"))
+                self._check(
+                    build.arch in ("x86_64", "arm64"),
+                    f"Android build on macOS requires x86_64 or arm64, but got {build.arch}",
+                )
         if target.os == "ubuntu":
-            self._check(build.os == "ubuntu")
-            self._check(build.arch in ("x86_64", "armv8"))
+            self._check(
+                build.os == "ubuntu",
+                f"Ubuntu target requires Ubuntu build platform, but got {build.os}",
+            )
+            self._check(
+                build.arch in ("x86_64", "armv8"),
+                f"Ubuntu build requires x86_64 or armv8, but got {build.arch}",
+            )
             if build.arch == target.arch:
-                self._check(build.osver == target.osver)
+                self._check(
+                    build.osver == target.osver,
+                    f"When building for the same architecture ({build.arch}), OS versions must match. "
+                    f"Build OS: Ubuntu {build.osver}, Target OS: Ubuntu {target.osver}. "
+                    f"This typically happens when GitHub Actions runner OS version doesn't match the target.",
+                )
         if target.os == "raspberry-pi-os":
-            self._check(build.os == "ubuntu")
-            self._check(build.arch == "x86_64")
+            self._check(
+                build.os == "ubuntu",
+                f"Raspberry Pi OS target requires Ubuntu build platform, but got {build.os}",
+            )
+            self._check(
+                build.arch == "x86_64",
+                f"Raspberry Pi OS build requires x86_64, but got {build.arch}",
+            )
         if target.os == "jetson":
-            self._check(build.os == "ubuntu")
-            self._check(build.arch == "x86_64")
+            self._check(
+                build.os == "ubuntu",
+                f"Jetson target requires Ubuntu build platform, but got {build.os}",
+            )
+            self._check(
+                build.arch == "x86_64", f"Jetson build requires x86_64, but got {build.arch}"
+            )
 
         self.build = build
         self.target = target

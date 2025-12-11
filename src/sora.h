@@ -44,6 +44,14 @@ class Sora : public std::enable_shared_from_this<Sora>,
   void SetOnAddTrack(std::function<void(ptrid_t, std::string)> on_add_track);
   void SetOnRemoveTrack(
       std::function<void(ptrid_t, std::string)> on_remove_track);
+  void SetOnMediaStreamTrack(
+      std::function<void(webrtc::RtpTransceiverInterface*,
+                         webrtc::MediaStreamTrackInterface*,
+                         const std::string&)> on_media_stream_track);
+  void SetOnRemoveMediaStreamTrack(
+      std::function<void(webrtc::RtpReceiverInterface*,
+                         webrtc::MediaStreamTrackInterface*,
+                         const std::string&)> on_remove_media_stream_track);
   void SetOnSetOffer(std::function<void(std::string)> on_set_offer);
   void SetOnNotify(std::function<void(std::string)> on_notify);
   void SetOnPush(std::function<void(std::string)> on_push);
@@ -62,8 +70,19 @@ class Sora : public std::enable_shared_from_this<Sora>,
 
   void RenderCallback();
 
+  webrtc::VideoTrackInterface* GetVideoTrackFromVideoSinkId(
+      ptrid_t video_sink_id) const;
+  ptrid_t GetVideoSinkIdFromVideoTrack(
+      webrtc::VideoTrackInterface* video_track) const;
+
   void ProcessAudio(const void* p, int offset, int samples);
   void SetOnHandleAudio(std::function<void(const int16_t*, int, int)> f);
+  void SetSenderAudioTrackSink(webrtc::AudioTrackSinkInterface* sink);
+  static bool SetADMVolume(webrtc::scoped_refptr<webrtc::AudioDeviceModule> adm,
+                           bool is_speaker,
+                           double volume);
+  bool SetSpeakerVolume(double volume);
+  bool SetMicrophoneVolume(double volume);
 
   void GetStats(std::function<void(std::string)> on_get_stats);
 
@@ -107,14 +126,15 @@ class Sora : public std::enable_shared_from_this<Sora>,
       bool unity_audio_input,
       bool unity_audio_output,
       std::function<void(const int16_t*, int, int)> on_handle_audio,
+      webrtc::AudioTrackSinkInterface* sink,
       std::string audio_recording_device,
       std::string audio_playout_device,
       webrtc::Thread* worker_thread,
       void* jni_env,
       void* android_context);
   static bool InitADM(webrtc::scoped_refptr<webrtc::AudioDeviceModule> adm,
-                      std::string audio_recording_device,
-                      std::string audio_playout_device);
+                      std::optional<double> speaker_volume,
+                      std::optional<double> microphone_volume);
 
   static webrtc::scoped_refptr<webrtc::VideoTrackSourceInterface>
   CreateVideoCapturer(
@@ -155,6 +175,14 @@ class Sora : public std::enable_shared_from_this<Sora>,
   webrtc::scoped_refptr<webrtc::RtpSenderInterface> video_sender_;
   std::function<void(ptrid_t, std::string)> on_add_track_;
   std::function<void(ptrid_t, std::string)> on_remove_track_;
+  std::function<void(webrtc::RtpTransceiverInterface*,
+                     webrtc::MediaStreamTrackInterface*,
+                     const std::string&)>
+      on_media_stream_track_;
+  std::function<void(webrtc::RtpReceiverInterface*,
+                     webrtc::MediaStreamTrackInterface*,
+                     const std::string&)>
+      on_remove_media_stream_track_;
   std::function<void(std::string)> on_set_offer_;
   std::function<void(std::string)> on_notify_;
   std::function<void(std::string)> on_push_;
@@ -164,6 +192,8 @@ class Sora : public std::enable_shared_from_this<Sora>,
   std::function<void(const int16_t*, int, int)> on_handle_audio_;
   std::function<void(std::string)> on_capturer_frame_;
 
+  webrtc::AudioTrackSinkInterface* sender_audio_track_sink_ = nullptr;
+
   std::shared_ptr<sora::SoraClientContext> sora_context_;
   std::unique_ptr<webrtc::Thread> io_thread_;
 
@@ -172,7 +202,7 @@ class Sora : public std::enable_shared_from_this<Sora>,
 
   ptrid_t ptrid_;
 
-  std::map<ptrid_t, std::string> connection_ids_;
+  std::map<std::string, std::string> connection_ids_;
 
   std::string stream_id_;
 

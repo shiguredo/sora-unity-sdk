@@ -9,220 +9,87 @@ on:
   - cron: "0 0 * * *"
 
 jobs:
-  build-windows:
-    strategy:
-      fail-fast: false
-      matrix:
-        name:
-          - windows_x86_64
-    runs-on: windows-2022
-    steps:
-    - uses: actions/checkout@v5
-    - name: Cache
-      id: cache
-      uses: actions/cache@v4
-      with:
-        path: _install
-        key: ${{ matrix.name }}-v3-${{ hashFiles('VERSIONS') }}
-        restore-keys: |
-          ${{ matrix.name }}-v3-
-    - run: python3 run.py build ${{ matrix.name }}
-    - name: Copy ${{ matrix.name }} files
-      run: |
-        mkdir ${{ matrix.name }}
-        Copy-Item _build\windows_x86_64\release\sora_unity_sdk\Release\SoraUnitySdk.dll ${{ matrix.name }}
-        # ソースコード（生成した分も含む）も一緒に入れておく
-        Copy-Item -Recurse Sora ${{ matrix.name }}\Sora
-    - name: Upload ${{ matrix.name }} Artifact
-      uses: actions/upload-artifact@v4
-      with:
-        name: ${{ matrix.name }}
-        path: ${{ matrix.name }}
-  build-macos:
-    strategy:
-      fail-fast: false
-      matrix:
-        name:
-          - macos_arm64
-          - ios
-    runs-on: macos-14
-    steps:
-    - uses: actions/checkout@v5
-    - name: Cache
-      id: cache
-      uses: actions/cache@v4
-      with:
-        path: _install
-        key: ${{ matrix.name }}-v7-${{ hashFiles('VERSIONS') }}
-        restore-keys: |
-          ${{ matrix.name }}-v7-
-    - run: python3 run.py build ${{ matrix.name }}
-    # macOS 用
-    - name: Copy macOS arm64 files
-      if: matrix.name == 'macos_arm64'
-      run: |
-        mkdir macos_arm64/
-        cp -r _build/macos_arm64/release/sora_unity_sdk/SoraUnitySdk.bundle/ macos_arm64/SoraUnitySdk.bundle/
-    - name: Upload macOS arm64 Artifact
-      if: matrix.name == 'macos_arm64'
-      uses: actions/upload-artifact@v4
-      with:
-        name: macos_arm64
-        path: macos_arm64/
-    # iOS 用
-    - name: Copy iOS files
-      if: matrix.name == 'ios'
-      run: |
-        mkdir ios/
-        cp _install/ios/release/webrtc/lib/libwebrtc.a ios/
-        cp _install/ios/release/boost/lib/libboost_json.a ios/
-        cp _install/ios/release/boost/lib/libboost_filesystem.a ios/
-        cp _install/ios/release/sora/lib/libsora.a ios/
-        cp _build/ios/release/sora_unity_sdk/libSoraUnitySdk.a ios/
-    - name: Upload iOS Artifact
-      if: matrix.name == 'ios'
-      uses: actions/upload-artifact@v4
-      with:
-        name: ios
-        path: ios/
-  build-ubuntu:
+  build:
     strategy:
       fail-fast: false
       matrix:
         include:
-          - name: android
+          - target: windows_x86_64
+            runs-on: windows-2022
+          - target: macos_arm64
+            runs-on: macos-15
+          - target: ios
+            runs-on: macos-15
+          - target: ubuntu-22.04_x86_64
             runs-on: ubuntu-22.04
-          - name: ubuntu-22.04_x86_64
-            runs-on: ubuntu-22.04
-          - name: ubuntu-24.04_x86_64
+          - target: ubuntu-24.04_x86_64
+            runs-on: ubuntu-24.04
+          - target: android
             runs-on: ubuntu-24.04
     runs-on: ${{ matrix.runs-on }}
     steps:
-    - uses: actions/checkout@v5
-    - name: Cache
-      id: cache
-      uses: actions/cache@v4
-      with:
-        path: _install
-        key: ${{ matrix.name }}-v1-${{ hashFiles('VERSIONS') }}
-        restore-keys: |
-          ${{ matrix.name }}-v1-
-    - name: Prepare Ubuntu x86_64
-      if: matrix.name == 'ubuntu-22.04_x86_64' || matrix.name == 'ubuntu-24.04_x86_64'
-      run: |
-        sudo apt install libgl-dev
-    - run: python3 run.py build ${{ matrix.name }}
-    # Android 用
-    - name: Copy Android files
-      if: matrix.name == 'android'
-      run: |
-        mkdir android/
-        cp _install/android/release/webrtc/jar/webrtc.jar android/
-        cp _install/android/release/sora/lib/Sora.aar android/
-        cp _build/android/release/sora_unity_sdk/libSoraUnitySdk.so android/
-    - name: Upload Android Artifact
-      if: matrix.name == 'android'
-      uses: actions/upload-artifact@v4
-      with:
-        name: android
-        path: android/
-    # Ubuntu 用
-    - name: Copy Ubuntu 22.04 x86_64 files
-      if: matrix.name == 'ubuntu-22.04_x86_64'
-      run: |
-        mkdir ubuntu-22.04_x86_64/
-        cp _build/ubuntu-22.04_x86_64/release/sora_unity_sdk/libSoraUnitySdk.so ubuntu-22.04_x86_64/
-    - name: Upload Ubuntu x86_64 Artifact
-      if: matrix.name == 'ubuntu-22.04_x86_64'
-      uses: actions/upload-artifact@v4
-      with:
-        name: ubuntu-22.04_x86_64
-        path: ubuntu-22.04_x86_64/
-    - name: Copy Ubuntu 24.04 x86_64 files
-      if: matrix.name == 'ubuntu-24.04_x86_64'
-      run: |
-        mkdir ubuntu-24.04_x86_64/
-        cp _build/ubuntu-24.04_x86_64/release/sora_unity_sdk/libSoraUnitySdk.so ubuntu-24.04_x86_64/
-    - name: Upload Ubuntu 24.04 x86_64 Artifact
-      if: matrix.name == 'ubuntu-24.04_x86_64'
-      uses: actions/upload-artifact@v4
-      with:
-        name: ubuntu-24.04_x86_64
-        path: ubuntu-24.04_x86_64/
-  package:
-    runs-on: ubuntu-24.04
-    needs:
-      - build-windows
-      - build-macos
-      - build-ubuntu
-    steps:
-    - uses: actions/checkout@v5
-    - name: Download artifacts
-      uses: actions/download-artifact@v5
-    - name: Packaging
-      run: |
-        set -ex
-        mkdir -p SoraUnitySdk/Plugins/SoraUnitySdk/windows/x86_64
-        mkdir -p SoraUnitySdk/Plugins/SoraUnitySdk/macos/arm64
-        mkdir -p SoraUnitySdk/Plugins/SoraUnitySdk/ios
-        mkdir -p SoraUnitySdk/Plugins/SoraUnitySdk/android/arm64-v8a
-        mkdir -p SoraUnitySdk/Plugins/SoraUnitySdk/ubuntu-22.04/x86_64
-        mkdir -p SoraUnitySdk/Plugins/SoraUnitySdk/ubuntu-24.04/x86_64
-        mkdir -p SoraUnitySdk/StreamingAssets/SoraUnitySdk
-        cp windows_x86_64/SoraUnitySdk.dll SoraUnitySdk/Plugins/SoraUnitySdk/windows/x86_64/
-        cp -r windows_x86_64/Sora/ SoraUnitySdk/SoraUnitySdk/
-        cp -r macos_arm64/SoraUnitySdk.bundle SoraUnitySdk/Plugins/SoraUnitySdk/macos/arm64/SoraUnitySdk.bundle
-        cp android/libSoraUnitySdk.so SoraUnitySdk/Plugins/SoraUnitySdk/android/arm64-v8a/
-        cp android/webrtc.jar SoraUnitySdk/Plugins/SoraUnitySdk/android/
-        cp android/Sora.aar SoraUnitySdk/Plugins/SoraUnitySdk/android/
-        cp ios/libSoraUnitySdk.a SoraUnitySdk/Plugins/SoraUnitySdk/ios/
-        cp ios/libwebrtc.a SoraUnitySdk/Plugins/SoraUnitySdk/ios/
-        cp ios/libboost_json.a SoraUnitySdk/Plugins/SoraUnitySdk/ios/
-        cp ios/libsora.a SoraUnitySdk/Plugins/SoraUnitySdk/ios/
-        cp ios/libboost_filesystem.a SoraUnitySdk/Plugins/SoraUnitySdk/ios/
-        cp ubuntu-22.04_x86_64/libSoraUnitySdk.so SoraUnitySdk/Plugins/SoraUnitySdk/ubuntu-22.04/x86_64/
-        cp ubuntu-24.04_x86_64/libSoraUnitySdk.so SoraUnitySdk/Plugins/SoraUnitySdk/ubuntu-24.04/x86_64/
-        cp LICENSE SoraUnitySdk/SoraUnitySdk/
-        cp NOTICE.md SoraUnitySdk/SoraUnitySdk/
+      - uses: actions/checkout@v5
+      - name: Cache
+        id: cache
+        uses: actions/cache@v4
+        with:
+          path: _install
+          key: ${{ matrix.target }}-v1-${{ hashFiles('VERSION') }}
+          restore-keys: |
+            ${{ matrix.name }}-v1-
+      - name: Prepare Ubuntu x86_64
+        if: matrix.target == 'ubuntu-22.04_x86_64' || matrix.target == 'ubuntu-24.04_x86_64'
+        run: |
+          sudo apt install libgl-dev
+      - run: python3 run.py build ${{ matrix.target }}
+      - run: python3 run.py package
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: package-${{ matrix.target }}
+          path: _package/
 
-    - name: Upload SoraUnitySdk
-      uses: actions/upload-artifact@v4
-      with:
-        name: SoraUnitySdk
-        path: SoraUnitySdk
+  package:
+    name: Package SoraUnitySdk
+    needs: [build]
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download Artifact
+        uses: actions/download-artifact@v4
+        with:
+          path: _dist/
+          pattern: package-*
+          merge-multiple: true
+      - name: Create Package
+        run: |
+          cd _dist
+          zip -r ../SoraUnitySdk.zip .
+      - name: Upload Package
+        uses: actions/upload-artifact@v4
+        with:
+          name: SoraUnitySdk.zip
+          path: SoraUnitySdk.zip
+
   release:
-    name: Upload Release Asset
-    if: contains(github.ref, 'tags/202')
+    name: Create Release
+    if: contains(github.ref, 'tags/20')
     needs: [package]
     runs-on: ubuntu-24.04
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v5
-    - name: Download SoraUnitySdk
-      uses: actions/download-artifact@v5
-      with:
-        name: SoraUnitySdk
-        path: SoraUnitySdk
-    - name: Archive to zip SoraUnitySdk
-      run: |
-        zip -r SoraUnitySdk SoraUnitySdk
-    - name: Create Release
-      id: create_release
-      uses: actions/create-release@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        tag_name: ${{ github.ref }}
-        release_name: Release ${{ github.ref }}
-        draft: false
-        prerelease: ${{ contains(github.ref, 'canary') }}
-    - name: Upload Release Asset
-      id: upload-release-asset 
-      uses: actions/upload-release-asset@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ./SoraUnitySdk.zip
-        asset_name: SoraUnitySdk.zip
-        asset_content_type: application/zip
+      - uses: actions/checkout@v5
+      - name: Download Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: SoraUnitySdk.zip
+      - name: Release
+        run: |
+          if [[ "${{ github.ref }}" == *canary* ]]; then
+            prerelease="--prerelease"
+          fi
+          gh release create "${{ github.ref_name }}" \
+            $prerelease \
+            --title "${{ github.ref_name }}" \
+            SoraUnitySdk.zip
+        env:
+          GH_TOKEN: ${{ github.token }}

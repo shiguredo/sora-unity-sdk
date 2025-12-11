@@ -77,7 +77,7 @@ target_sources(SoraUnitySdk
 
 file(MAKE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/proto")
 file(MAKE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/proto/cpp")
-file(MAKE_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/Sora/Generated")
+file(MAKE_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/SoraUnitySdkExamples/Assets/SoraUnitySdk/Generated")
 if (WIN32)
   set(EXE_EXT ".exe")
 endif()
@@ -85,14 +85,14 @@ add_custom_command(
   OUTPUT
     "${CMAKE_CURRENT_BINARY_DIR}/proto/cpp/sora_conf.json.h"
     "${CMAKE_CURRENT_BINARY_DIR}/proto/cpp/sora_conf_internal.json.h"
-    "${CMAKE_CURRENT_SOURCE_DIR}/Sora/Generated/SoraConf.cs"
-    "${CMAKE_CURRENT_SOURCE_DIR}/Sora/Generated/SoraConfInternal.cs"
-    "${CMAKE_CURRENT_SOURCE_DIR}/Sora/Generated/Jsonif.cs"
+    "${CMAKE_CURRENT_SOURCE_DIR}/SoraUnitySdkExamples/Assets/SoraUnitySdk/Generated/SoraConf.cs"
+    "${CMAKE_CURRENT_SOURCE_DIR}/SoraUnitySdkExamples/Assets/SoraUnitySdk/Generated/SoraConfInternal.cs"
+    "${CMAKE_CURRENT_SOURCE_DIR}/SoraUnitySdkExamples/Assets/SoraUnitySdk/Generated/Jsonif.cs"
   COMMAND
     "${PROTOBUF_DIR}/bin/protoc${EXE_EXT}"
   ARGS
     --jsonif-cpp_out "${CMAKE_CURRENT_BINARY_DIR}/proto/cpp"
-    --jsonif-unity_out "${CMAKE_CURRENT_SOURCE_DIR}/Sora/Generated"
+    --jsonif-unity_out "${CMAKE_CURRENT_SOURCE_DIR}/SoraUnitySdkExamples/Assets/SoraUnitySdk/Generated"
     --plugin=protoc-gen-jsonif-cpp="${PROTOC_GEN_JSONIF_DIR}/bin/protoc-gen-jsonif-cpp${EXE_EXT}"
     --plugin=protoc-gen-jsonif-unity="${PROTOC_GEN_JSONIF_DIR}/bin/protoc-gen-jsonif-unity${EXE_EXT}"
     -I "${CMAKE_CURRENT_SOURCE_DIR}/proto/"
@@ -131,7 +131,11 @@ if (SORA_UNITY_SDK_PACKAGE STREQUAL "windows_x86_64")
       MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
   )
 
-  target_sources(SoraUnitySdk PRIVATE src/unity_camera_capturer_d3d11.cpp)
+  target_sources(SoraUnitySdk
+    PRIVATE
+      src/unity_camera_capturer_d3d11.cpp
+      src/unity_camera_capturer_d3d12.cpp
+  )
 
   #target_link_libraries(SoraUnitySdk
   #  PRIVATE
@@ -196,6 +200,8 @@ elseif (SORA_UNITY_SDK_PACKAGE STREQUAL "macos_x86_64" OR SORA_UNITY_SDK_PACKAGE
     PRIVATE
       SORA_UNITY_SDK_MACOS
   )
+  target_compile_options(SoraUnitySdk PRIVATE "-nostdinc++")
+  target_include_directories(SoraUnitySdk PRIVATE ${LIBCXX_INCLUDE_DIR})
 
 elseif (SORA_UNITY_SDK_PACKAGE STREQUAL "ios")
   enable_language(OBJCXX)
@@ -210,6 +216,8 @@ elseif (SORA_UNITY_SDK_PACKAGE STREQUAL "ios")
     PRIVATE
       SORA_UNITY_SDK_IOS
   )
+  target_compile_options(SoraUnitySdk PRIVATE "-nostdinc++")
+  target_include_directories(SoraUnitySdk PRIVATE ${LIBCXX_INCLUDE_DIR})
   install(TARGETS SoraUnitySdk DESTINATION lib)
 
 elseif (SORA_UNITY_SDK_PACKAGE STREQUAL "android")

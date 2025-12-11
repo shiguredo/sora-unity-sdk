@@ -1,6 +1,8 @@
 #include "sora.h"
 #include "sora_version.h"
 
+#include <future>
+
 // WebRTC
 #include <api/audio/create_audio_device_module.h>
 #include <api/audio_codecs/builtin_audio_decoder_factory.h>
@@ -9,6 +11,7 @@
 #include <api/environment/environment.h>
 #include <api/environment/environment_factory.h>
 #include <api/rtc_event_log/rtc_event_log_factory.h>
+#include <api/rtp_parameters.h>
 #include <media/engine/webrtc_media_engine.h>
 #include <modules/audio_device/include/audio_device.h>
 #include <modules/audio_device/include/audio_device_factory.h>
@@ -106,6 +109,18 @@ void Sora::SetOnAddTrack(
 void Sora::SetOnRemoveTrack(
     std::function<void(ptrid_t, std::string)> on_remove_track) {
   on_remove_track_ = on_remove_track;
+}
+void Sora::SetOnMediaStreamTrack(
+    std::function<void(webrtc::RtpTransceiverInterface*,
+                       webrtc::MediaStreamTrackInterface*,
+                       const std::string&)> on_media_stream_track) {
+  on_media_stream_track_ = on_media_stream_track;
+}
+void Sora::SetOnRemoveMediaStreamTrack(
+    std::function<void(webrtc::RtpReceiverInterface*,
+                       webrtc::MediaStreamTrackInterface*,
+                       const std::string&)> on_remove_media_stream_track) {
+  on_remove_media_stream_track_ = on_remove_media_stream_track;
 }
 void Sora::SetOnSetOffer(std::function<void(std::string)> on_set_offer) {
   on_set_offer_ = std::move(on_set_offer);
@@ -249,6 +264,12 @@ void Sora::DoConnect(const sora_conf::internal::ConnectConfig& cc,
     client_config.video_codec_factory_config.preference =
         ConvertToVideoCodecPreference(cc.video_codec_preference);
   }
+  if (!cc.audio_playout_device.empty()) {
+    client_config.audio_playout_device = cc.audio_playout_device;
+  }
+  if (!cc.audio_recording_device.empty()) {
+    client_config.audio_recording_device = cc.audio_recording_device;
+  }
   client_config.configure_dependencies =
       [&, this](webrtc::PeerConnectionFactoryDependencies& dependencies) {
         auto webrtc_env = webrtc::CreateEnvironment();
@@ -267,11 +288,11 @@ void Sora::DoConnect(const sora_conf::internal::ConnectConfig& cc,
         void* worker_context = nullptr;
 #endif
 
-        unity_adm_ =
-            CreateADM(webrtc_env, cc.no_audio_device, cc.unity_audio_input,
-                      cc.unity_audio_output, on_handle_audio_,
-                      cc.audio_recording_device, cc.audio_playout_device,
-                      dependencies.worker_thread, worker_env, worker_context);
+        unity_adm_ = CreateADM(
+            webrtc_env, cc.no_audio_device, cc.unity_audio_input,
+            cc.unity_audio_output, on_handle_audio_, sender_audio_track_sink_,
+            cc.audio_recording_device, cc.audio_playout_device,
+            dependencies.worker_thread, worker_env, worker_context);
         dependencies.worker_thread->BlockingCall(
             [&] { dependencies.adm = unity_adm_; });
 
@@ -291,8 +312,13 @@ void Sora::DoConnect(const sora_conf::internal::ConnectConfig& cc,
     return;
   }
 
-  if (!InitADM(unity_adm_, cc.audio_recording_device,
-               cc.audio_playout_device)) {
+  if (!InitADM(unity_adm_,
+               cc.has_audio_speaker_volume()
+                   ? std::make_optional(cc.audio_speaker_volume)
+                   : std::nullopt,
+               cc.has_audio_microphone_volume()
+                   ? std::make_optional(cc.audio_microphone_volume)
+                   : std::nullopt)) {
     on_disconnect((int)sora_conf::ErrorCode::INTERNAL_ERROR,
                   "Failed to InitADM");
     return;
@@ -401,6 +427,26 @@ void Sora::DoConnect(const sora_conf::internal::ConnectConfig& cc,
     config.video_bit_rate = cc.video_bit_rate;
     config.audio_codec_type = cc.audio_codec_type;
     config.audio_bit_rate = cc.audio_bit_rate;
+    if (cc.has_degradation_preference()) {
+      switch (cc.degradation_preference) {
+        case sora_conf::internal::DegradationPreference::DISABLED:
+          config.degradation_preference =
+              webrtc::DegradationPreference::DISABLED;
+          break;
+        case sora_conf::internal::DegradationPreference::MAINTAIN_FRAMERATE:
+          config.degradation_preference =
+              webrtc::DegradationPreference::MAINTAIN_FRAMERATE;
+          break;
+        case sora_conf::internal::DegradationPreference::MAINTAIN_RESOLUTION:
+          config.degradation_preference =
+              webrtc::DegradationPreference::MAINTAIN_RESOLUTION;
+          break;
+        case sora_conf::internal::DegradationPreference::BALANCED:
+          config.degradation_preference =
+              webrtc::DegradationPreference::BALANCED;
+          break;
+      }
+    }
     if (cc.has_data_channel_signaling()) {
       config.data_channel_signaling = cc.data_channel_signaling;
     }
@@ -606,10 +652,10 @@ void Sora::DoSwitchCamera(
                                                                  {stream_id_});
     video_sender_ = video_result.value();
 
-    auto track_id = renderer_->AddTrack(video_track.get());
-    PushEvent([this, track_id]() {
+    auto video_sink_id = renderer_->AddTrack(video_track.get());
+    PushEvent([this, video_sink_id]() {
       if (on_add_track_) {
-        on_add_track_(track_id, "");
+        on_add_track_(video_sink_id, "");
       }
     });
   } else {
@@ -635,6 +681,16 @@ void Sora::RenderCallback() {
     static_cast<UnityCameraCapturer*>(capturer_.get())->OnRender();
   }
 }
+
+webrtc::VideoTrackInterface* Sora::GetVideoTrackFromVideoSinkId(
+    ptrid_t video_sink_id) const {
+  return renderer_->GetVideoTrackFromVideoSinkId(video_sink_id);
+}
+ptrid_t Sora::GetVideoSinkIdFromVideoTrack(
+    webrtc::VideoTrackInterface* video_track) const {
+  return renderer_->GetVideoSinkId(video_track);
+}
+
 void Sora::ProcessAudio(const void* p, int offset, int samples) {
   if (!unity_adm_) {
     return;
@@ -645,6 +701,84 @@ void Sora::ProcessAudio(const void* p, int offset, int samples) {
 void Sora::SetOnHandleAudio(std::function<void(const int16_t*, int, int)> f) {
   on_handle_audio_ = f;
 }
+void Sora::SetSenderAudioTrackSink(webrtc::AudioTrackSinkInterface* sink) {
+  sender_audio_track_sink_ = sink;
+}
+bool Sora::SetADMVolume(webrtc::scoped_refptr<webrtc::AudioDeviceModule> adm,
+                        bool is_speaker,
+                        double volume) {
+  bool available = false;
+  uint32_t r = 0;
+  r = is_speaker ? adm->SpeakerVolumeIsAvailable(&available)
+                 : adm->MicrophoneVolumeIsAvailable(&available);
+  if (r != 0) {
+    RTC_LOG(LS_WARNING) << "Failed to "
+                        << (is_speaker ? "SpeakerVolumeIsAvailable"
+                                       : "MicrophoneVolumeIsAvailable");
+    return false;
+  }
+  if (!available) {
+    RTC_LOG(LS_INFO) << (is_speaker ? "Speaker" : "Microphone")
+                     << " volume is not available";
+    return false;
+  }
+  uint32_t min_volume = 0;
+  uint32_t max_volume = 0;
+  r = is_speaker ? adm->MinSpeakerVolume(&min_volume)
+                 : adm->MinMicrophoneVolume(&min_volume);
+  if (r != 0) {
+    RTC_LOG(LS_WARNING) << "Failed to "
+                        << (is_speaker ? "MinSpeakerVolume"
+                                       : "MinMicrophoneVolume");
+    return false;
+  }
+  r = is_speaker ? adm->MaxSpeakerVolume(&max_volume)
+                 : adm->MaxMicrophoneVolume(&max_volume);
+  if (r != 0) {
+    RTC_LOG(LS_WARNING) << "Failed to "
+                        << (is_speaker ? "MaxSpeakerVolume"
+                                       : "MaxMicrophoneVolume");
+    return false;
+  }
+  if (min_volume >= max_volume) {
+    RTC_LOG(LS_WARNING) << "Invalid " << (is_speaker ? "speaker" : "microphone")
+                        << " volume range: min=" << min_volume
+                        << " max=" << max_volume;
+    return false;
+  }
+  uint32_t device_volume =
+      static_cast<uint32_t>(min_volume + (volume * (max_volume - min_volume)));
+  r = is_speaker ? adm->SetSpeakerVolume(device_volume)
+                 : adm->SetMicrophoneVolume(device_volume);
+  if (r != 0) {
+    RTC_LOG(LS_WARNING) << "Failed to "
+                        << (is_speaker ? "SetSpeakerVolume"
+                                       : "SetMicrophoneVolume")
+                        << ": volume=" << volume;
+    return false;
+  }
+
+  RTC_LOG(LS_INFO) << "Succeeded to set "
+                   << (is_speaker ? "speaker" : "microphone")
+                   << " volume: volume=" << volume;
+  return true;
+}
+bool Sora::SetSpeakerVolume(double volume) {
+  return sora_context_->worker_thread()->BlockingCall([this, volume] {
+    if (!unity_adm_) {
+      return false;
+    }
+    return SetADMVolume(unity_adm_, true, volume);
+  });
+}
+bool Sora::SetMicrophoneVolume(double volume) {
+  return sora_context_->worker_thread()->BlockingCall([this, volume] {
+    if (!unity_adm_) {
+      return false;
+    }
+    return SetADMVolume(unity_adm_, false, volume);
+  });
+}
 
 webrtc::scoped_refptr<UnityAudioDevice> Sora::CreateADM(
     webrtc::Environment env,
@@ -652,6 +786,7 @@ webrtc::scoped_refptr<UnityAudioDevice> Sora::CreateADM(
     bool unity_audio_input,
     bool unity_audio_output,
     std::function<void(const int16_t*, int, int)> on_handle_audio,
+    webrtc::AudioTrackSinkInterface* sink,
     std::string audio_recording_device,
     std::string audio_playout_device,
     webrtc::Thread* worker_thread,
@@ -675,87 +810,20 @@ webrtc::scoped_refptr<UnityAudioDevice> Sora::CreateADM(
   }
 
   return worker_thread->BlockingCall([&] {
-    return UnityAudioDevice::Create(adm, !unity_audio_input,
-                                    !unity_audio_output, on_handle_audio, env);
+    return UnityAudioDevice::Create(env, adm, !unity_audio_input,
+                                    !unity_audio_output, on_handle_audio, sink);
   });
 }
 
 bool Sora::InitADM(webrtc::scoped_refptr<webrtc::AudioDeviceModule> adm,
-                   std::string audio_recording_device,
-                   std::string audio_playout_device) {
-  // 録音デバイスと再生デバイスを指定する
-  if (!audio_recording_device.empty()) {
-    bool succeeded = false;
-    int devices = adm->RecordingDevices();
-    for (int i = 0; i < devices; i++) {
-      char name[webrtc::kAdmMaxDeviceNameSize];
-      char guid[webrtc::kAdmMaxGuidSize];
-      if (adm->SetRecordingDevice(i) != 0) {
-        RTC_LOG(LS_WARNING) << "Failed to SetRecordingDevice: index=" << i;
-        continue;
-      }
-      bool available = false;
-      if (adm->RecordingIsAvailable(&available) != 0) {
-        RTC_LOG(LS_WARNING) << "Failed to RecordingIsAvailable: index=" << i;
-        continue;
-      }
-
-      if (!available) {
-        continue;
-      }
-      if (adm->RecordingDeviceName(i, name, guid) != 0) {
-        RTC_LOG(LS_WARNING) << "Failed to RecordingDeviceName: index=" << i;
-        continue;
-      }
-      if (audio_recording_device == name || audio_recording_device == guid) {
-        RTC_LOG(LS_INFO) << "Succeeded SetRecordingDevice: index=" << i
-                         << " device_name=" << name << " unique_name=" << guid;
-        succeeded = true;
-        break;
-      }
-    }
-    if (!succeeded) {
-      RTC_LOG(LS_ERROR) << "No recording device found: name="
-                        << audio_recording_device;
-      return false;
-    }
+                   std::optional<double> speaker_volume,
+                   std::optional<double> microphone_volume) {
+  // 音量を設定する
+  if (speaker_volume) {
+    SetADMVolume(adm, true, *speaker_volume);
   }
-
-  if (!audio_playout_device.empty()) {
-    bool succeeded = false;
-    int devices = adm->PlayoutDevices();
-    for (int i = 0; i < devices; i++) {
-      char name[webrtc::kAdmMaxDeviceNameSize];
-      char guid[webrtc::kAdmMaxGuidSize];
-      if (adm->SetPlayoutDevice(i) != 0) {
-        RTC_LOG(LS_WARNING) << "Failed to SetPlayoutDevice: index=" << i;
-        continue;
-      }
-      bool available = false;
-      if (adm->PlayoutIsAvailable(&available) != 0) {
-        RTC_LOG(LS_WARNING) << "Failed to PlayoutIsAvailable: index=" << i;
-        continue;
-      }
-
-      if (!available) {
-        continue;
-      }
-      if (adm->PlayoutDeviceName(i, name, guid) != 0) {
-        RTC_LOG(LS_WARNING) << "Failed to PlayoutDeviceName: index=" << i;
-        continue;
-      }
-      if (audio_playout_device == name || audio_playout_device == guid) {
-        RTC_LOG(LS_INFO) << "Succeeded SetPlayoutDevice: index=" << i
-                         << " device_name=" << name << " unique_name=" << guid;
-        succeeded = true;
-        break;
-      }
-    }
-    if (!succeeded) {
-      RTC_LOG(LS_ERROR) << "No playout device found: name="
-                        << audio_playout_device;
-      return false;
-    }
+  if (microphone_volume) {
+    SetADMVolume(adm, false, *microphone_volume);
   }
 
   return true;
@@ -890,10 +958,10 @@ void Sora::OnSetOffer(std::string offer) {
   }
 
   if (video_track_ != nullptr) {
-    auto track_id = renderer_->AddTrack(video_track_.get());
-    PushEvent([this, track_id]() {
+    auto video_sink_id = renderer_->AddTrack(video_track_.get());
+    PushEvent([this, video_sink_id]() {
       if (on_add_track_) {
-        on_add_track_(track_id, "");
+        on_add_track_(video_sink_id, "");
       }
     });
   }
@@ -933,36 +1001,46 @@ void Sora::OnMessage(std::string label, std::string data) {
 }
 void Sora::OnTrack(
     webrtc::scoped_refptr<webrtc::RtpTransceiverInterface> transceiver) {
-  auto track = transceiver->receiver()->track();
-  if (track->kind() == webrtc::MediaStreamTrackInterface::kVideoKind) {
+  PushEvent([this, transceiver]() {
+    auto track = transceiver->receiver()->track();
     auto connection_id = transceiver->receiver()->stream_ids()[0];
-    auto track_id = renderer_->AddTrack(
-        static_cast<webrtc::VideoTrackInterface*>(track.get()));
-    connection_ids_.insert(std::make_pair(track_id, connection_id));
-    PushEvent([this, track_id, connection_id]() {
+    connection_ids_.insert(std::make_pair(track->id(), connection_id));
+    if (track->kind() == webrtc::MediaStreamTrackInterface::kVideoKind) {
+      auto video_sink_id = renderer_->AddTrack(
+          static_cast<webrtc::VideoTrackInterface*>(track.get()));
       if (on_add_track_) {
-        on_add_track_(track_id, connection_id);
+        on_add_track_(video_sink_id, connection_id);
       }
-    });
-  }
+    }
+    if (on_media_stream_track_) {
+      on_media_stream_track_(transceiver.get(), track.get(), connection_id);
+    }
+  });
 }
 void Sora::OnRemoveTrack(
     webrtc::scoped_refptr<webrtc::RtpReceiverInterface> receiver) {
-  auto track = receiver->track();
-  if (track->kind() == webrtc::MediaStreamTrackInterface::kVideoKind) {
-    auto track_id = renderer_->RemoveTrack(
-        static_cast<webrtc::VideoTrackInterface*>(track.get()));
-    auto connection_id = connection_ids_[track_id];
-    connection_ids_.erase(track_id);
-
-    if (track_id != 0) {
-      PushEvent([this, track_id, connection_id]() {
-        if (on_remove_track_) {
-          on_remove_track_(track_id, connection_id);
-        }
-      });
+  PushEvent([this, receiver]() {
+    auto track = receiver->track();
+    auto connection_id = connection_ids_[track->id()];
+    if (on_remove_media_stream_track_) {
+      on_remove_media_stream_track_(receiver.get(), track.get(), connection_id);
     }
-  }
+
+    if (track->kind() == webrtc::MediaStreamTrackInterface::kVideoKind) {
+      auto video_track = static_cast<webrtc::VideoTrackInterface*>(track.get());
+      auto video_sink_id = renderer_->GetVideoSinkId(video_track);
+
+      if (video_sink_id != 0) {
+        if (on_remove_track_) {
+          on_remove_track_(video_sink_id, connection_id);
+        }
+      }
+
+      renderer_->RemoveTrack(video_track);
+    }
+
+    connection_ids_.erase(track->id());
+  });
 }
 
 void Sora::OnDataChannel(std::string label) {

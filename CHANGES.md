@@ -11,6 +11,103 @@
 
 ## develop
 
+## 2025.3.0
+
+**リリース日**: 2025-12-11
+
+- [CHANGE] VideoCodecImplementation の NvidiaVideoCodecSdk を NvidiaVideoCodec に変更する
+  - @torikizi
+- [CHANGE] Sora.cs を Nullable 対応にする
+  - `#nullable enable` を追加する
+  - nullable が有効になったことで以下の変更を実施し、Unity Editor でのワーニングを修正する
+    - コールバック呼び出しを `callback!(...)` に統一する
+      - GCHandle から取得するコールバックは絶対に null にならないため、`?.` ではなく `!` を使用
+    - nullable 型の適切な使用
+      - `CameraConfig.UnityCamera` を `UnityEngine.Camera?` に変更し、使用時にガードを追加する
+      - `Config.ForwardingFilter` と `Config.ForwardingFilters` を nullable に変更する
+      - `ForwardingFilter.Rule.Field` と `Operator` に空文字の初期値を設定する
+      - `SwitchCamera()` で Unity カメラ指定時の null チェックを追加する
+    - GetVideoCapturerDevices, GetAudioRecordingDevices, GetAudioPlayoutDevices が null を返す可能性があるように変更する
+    - AudioOutputHelper の null 安全性向上
+      - コンストラクタおよび `AudioOutputHelperFactory.Create` の引数を `Action?` に変更する
+      - Android 実装の内部 `onChangeRoute` を `event Action` から `Action?` に変更する
+      - `null` を指定した場合はコールバック未設定として安全に動作する
+      - AndroidAudioOutputHelper に disposed フラグを追加し、Dispose 後の操作を安全化する
+  - @torikizi
+- [CHANGE] AMD AMF ハードウェアアクセラレーターを非推奨化する
+  - AMD AMF は現在非推奨であるため、ハードウェアエンコーダー・デコーダーの優先リストから除外する
+  - `GetHardwareAcceleratorPreference()` で AMD AMF を優先リストから除外
+  - 将来的にはまた利用可能にするため、コードは残してコメントアウト
+  - @torikizi
+- [UPDATE] libwebrtc を `m143.7499.1.0` に上げる
+  - macOS, iOS が Apple clang ではなく libwebrtc の clang を使うようになったので、その対応を入れている
+  - unity_audio_device.h の Init() 関数内で AudioDeviceBuffer の生成に env_ を渡すようにする
+  - CreateWindowsCoreAudioAudioDeviceModule の引数を `&env.task_queue_factory()` から `env` に変更する
+  - libwebrtc m142 の変更に追従し、ScopedJavaLocalRef のコンストラクタ呼び出しを Adopt() 経由に変更する
+  - @melpon @torikizi
+- [UPDATE] Sora C++ SDK を `2025.6.1` に上げる
+  - `BOOST_VERSION` を `1.89.0` にアップデート
+  - `CMAKE_VERSION` を `4.1.3` にアップデート
+  - @melpon @torikizi
+- [UPDATE] Unity が提供しているヘッダーを `6000.0.38f1` のヘッダーファイルにする
+  - @melpon
+- [UPDATE] selfHandle を使ってコード整理
+  - @melpon
+- [UPDATE] [sora-unity-sdk-samples](https://github.com/shiguredo/sora-unity-sdk-samples) のプロジェクトと統合
+  - @melpon
+- [UPDATE] 各種コールバックを nullable にする
+  - @melpon
+- [ADD] ADM の音量を設定する関数 `Sora.SetSpeakerVolume()`, `Sora.SetMicrophoneVolume()` を追加する
+  - @melpon
+- [ADD] ADM の初期音量の設定として `Sora.Config.AudioSpeakerVolume`, `Sora.Config.AudioMicrophoneVolume` を追加する
+  - @melpon
+- [ADD] オーディオトラックの音量を設定する関数 `Sora.AudioTrack.SetVolume()` を追加する
+  - @melpon
+- [ADD] オーディオやビデオが追加/削除された時に呼ばれるコールバック `OnMediaStreamTrack` と `OnRemoveMediaStreamTrack` を追加する
+  - C++ の `webrtc::PeerConnectionObserver` の `OnTrack()` と `OnRemoveTrack()` に相当する
+  - @melpon
+- [ADD] `MediaStreamTrack`, `VideoTrack`, `AudioTrack`, `RtpTransceiver`, `RtpReceiver` クラスを追加する
+  - これらは `OnMediaStreamTrack` と `OnRemoveMediaStreamTrack` の引数として渡される
+  - @melpon
+- [ADD] trackId という名前を videoSinkId に変更し、videoSinkId から `VideoTrack` を取得する関数 `GetVideoTrackFromVideoSinkId()` を追加する
+  - 既存の仕様から破壊的変更せずに `VideoTrack` を利用可能にするための仕組み
+  - @melpon
+- [ADD] DegradationPreference を追加し、エンコード時の劣化の優先順位を指定できるようにする
+  - `enum DegradationPreference` を追加
+    - `Disabled`: 無効
+    - `MaintainFramerate`: フレームレート優先
+    - `MaintainResolution`: 解像度優先
+    - `Balanced`: バランス優先
+  - `Config.DegradationPreference` を追加
+  - `sora_conf_internal.proto` に `degradation_preference` を追加
+  - @torikizi
+- [ADD] テクスチャキャプチャの機能を追加する
+  - `CameraConfig.FromTexture()` を利用することで、指定したテクスチャを使ってキャプチャが出来るようになります
+  - @melpon
+- [ADD] Unity カメラキャプチャで DirectX 12 をサポートする
+  - @melpon
+- [ADD] `Sora.SenderAudioTrackSink` を使って送信するオーディオデータを取得可能にする
+  - @melpon
+- [FIX] Unity カメラキャプチャがサポートしていないグラフィックエンジンを利用すると SDK 全体が動作しないのを修正し、Unity カメラキャプチャを利用しない場合は正常に動作するようにする
+  - @melpon
+
+### misc
+
+- [CHANGE] `actions/create-release` と `actions/upload-release-asset` を `gh release create` に変更する
+  - @torikizi
+- [UPDATE] ライブラリの C# 側のソースを SoraUnitySdkExamples 以下に移動する
+  - @melpon
+- [UPDATE] GitHub Actions のワークフローやパッケージング処理の見直し
+  - @melpon
+- [UPDATE] Sora Unity SDK Examples の Unity バージョンを `6000.3.0f1` に上げる
+  - @torikizi
+- [ADD] `run.py` に `package` コマンドと `install` コマンドを追加
+  - @melpon
+- [ADD] examples で `Sora.SenderAudioTrackSink` を使って送信側のマイク音量を取れるようにする
+  - @melpon
+- [ADD] クライアントごとに別々で音量を調整できるようにする
+  - @melpon
+
 ## 2025.2.0
 
 **リリース日**: 2025-08-26

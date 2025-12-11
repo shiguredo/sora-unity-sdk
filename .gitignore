@@ -1,7 +1,6 @@
+/__pycache__
 /_source
 /_build
 /_install
+/_package
 *.swp
-/Sora/Generated
-
-/__pycache__
