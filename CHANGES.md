@@ -11,6 +11,10 @@
 
 ## develop
 
+## 2025.3.0
+
+**リリース日**: 2025-12-11
+
 - [CHANGE] VideoCodecImplementation の NvidiaVideoCodecSdk を NvidiaVideoCodec に変更する
   - @torikizi
 - [CHANGE] Sora.cs を Nullable 対応にする
