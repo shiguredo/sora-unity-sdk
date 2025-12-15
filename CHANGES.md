@@ -11,6 +11,10 @@
 
 ## develop
 
+- [UPDATE] Sora C++ SDK を `2025.7.0-canary.0` に上げる
+  - libwebrtc を `m144.7559.0.0` に上げる
+  - @torikizi
+
 ## 2025.3.0
 
 **リリース日**: 2025-12-11
