@@ -100,6 +100,8 @@ public class SoraSample : MonoBehaviour
     public bool simulcast = false;
     public bool enableSimulcastRid = false;
     public Sora.SimulcastRidType simulcastRid = Sora.SimulcastRidType.R0;
+    public bool enableSimulcastRequestRid = false;
+    public Sora.SimulcastRequestRidType simulcastRequestRid = Sora.SimulcastRequestRidType.R0;
 
     public int videoBitRate = 0;
     public int videoFps = 30;
@@ -1044,6 +1046,10 @@ public class SoraSample : MonoBehaviour
         if (enableSimulcastRid)
         {
             config.SimulcastRid = simulcastRid;
+        }
+        if (enableSimulcastRequestRid)
+        {
+            config.SimulcastRequestRid = simulcastRequestRid;
         }
         if (dataChannels != null)
         {
