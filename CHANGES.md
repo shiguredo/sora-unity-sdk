@@ -14,6 +14,11 @@
 - [UPDATE] Sora C++ SDK を `2025.7.0-canary.0` に上げる
   - libwebrtc を `m144.7559.0.0` に上げる
   - @torikizi
+- [ADD] `simulcast_request_rid` に対応する
+  - Sora 2025.2 以降で利用可能な simulcast_request_rid に対応する
+  - `Sora.Config.SimulcastRequestRid` プロパティを追加する
+  - `Sora.Config.SimulcastRid` を非推奨化する
+  - @torikizi
 
 ## 2025.3.0
 

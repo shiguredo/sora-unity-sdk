@@ -82,6 +82,15 @@ public class Sora : IDisposable
         R2,
     }
 
+    // シグナリング connect の simulcast_request_rid のためのパラメータ
+    public enum SimulcastRequestRidType
+    {
+        None,
+        R0,
+        R1,
+        R2,
+    }
+
     // SpotlightFocusRid と SpotlightUnfocusRid のためのパラメータ
     public enum SpotlightFocusRidType
     {
@@ -386,7 +395,9 @@ public class Sora : IDisposable
         public SpotlightFocusRidType? SpotlightFocusRid;
         public SpotlightFocusRidType? SpotlightUnfocusRid;
         public bool? Simulcast;
+        [System.Obsolete("SimulcastRid は非推奨です。代わりに SimulcastRequestRid を使用してください")]
         public SimulcastRidType? SimulcastRid = null;
+        public SimulcastRequestRidType? SimulcastRequestRid = null;
         // NoVideoDevice と NoAudioDevice を true にすると、ビデオデバイスまたはオーディオデバイスを掴まなくなります。
         // Video, Audio を false にすると、ビデオやオーディオデータの送信は行わなくなりますが、依然としてデバイスそのものは掴んでしまうので、
         // もしデバイスを掴まないようにしたい場合はこれらのフィールドを true にしてください。
@@ -598,6 +609,7 @@ public class Sora : IDisposable
             cc.SetSimulcast(config.Simulcast.Value);
         }
         cc.simulcast_rid = config.SimulcastRid == null ? "" : config.SimulcastRid.Value.ToString().ToLower();
+        cc.simulcast_request_rid = config.SimulcastRequestRid == null ? "" : config.SimulcastRequestRid.Value.ToString().ToLower();
         cc.insecure = config.Insecure;
         cc.no_video_device = config.NoVideoDevice;
         cc.no_audio_device = config.NoAudioDevice;
