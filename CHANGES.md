@@ -11,6 +11,11 @@
 
 ## develop
 
+- [CHANGE] VERSION ファイルと DEPS ファイルを分離する
+  - VERSION ファイルには Sora Unity SDK のバージョンのみを記載する
+  - DEPS ファイルには Sora C++ SDK や libwebrtc のバージョンを記載する
+  - build.yml や run.py でのバージョン参照を DEPS ファイルに変更する
+  - @torikizi
 - [UPDATE] Sora C++ SDK を `2025.7.0-canary.0` に上げる
   - libwebrtc を `m144.7559.0.0` に上げる
   - @torikizi
@@ -19,6 +24,7 @@
   - `Sora.Config.SimulcastRequestRid` プロパティを追加する
   - `Sora.Config.SimulcastRid` を非推奨化する
   - @torikizi
+
 
 ## 2025.3.0
 
