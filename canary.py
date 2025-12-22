@@ -6,36 +6,22 @@ VERSION_FILE = "VERSION"
 
 
 def update_sdk_version(version_content):
-    updated_content = []
-    sdk_version_updated = False
-    new_version = None
+    version_line = version_content[0].strip()
 
-    for line in version_content:
-        line = line.strip()  # 前後の余分なスペースや改行を削除
-        if line.startswith("SORA_UNITY_SDK_VERSION="):
-            version_match = re.match(
-                r"SORA_UNITY_SDK_VERSION=(\d{4}\.\d+\.\d+)(-canary\.(\d+))?", line
-            )
-            if version_match:
-                major_minor_patch = version_match.group(1)
-                canary_suffix = version_match.group(2)
-                if canary_suffix is None:
-                    new_version = f"{major_minor_patch}-canary.0"
-                else:
-                    canary_number = int(version_match.group(3))
-                    new_version = f"{major_minor_patch}-canary.{canary_number + 1}"
+    version_match = re.match(r"(\d{4}\.\d+\.\d+)(-canary\.(\d+))?", version_line)
+    if not version_match:
+        raise ValueError("Invalid version format in VERSION file.")
 
-                updated_content.append(f"SORA_UNITY_SDK_VERSION={new_version}")
-                sdk_version_updated = True
-            else:
-                updated_content.append(line)
-        else:
-            updated_content.append(line)
+    major_minor_patch = version_match.group(1)
+    canary_suffix = version_match.group(2)
 
-    if not sdk_version_updated:
-        raise ValueError("SORA_UNITY_SDK_VERSION not found in VERSION file.")
+    if canary_suffix is None:
+        new_version = f"{major_minor_patch}-canary.0"
+    else:
+        canary_number = int(version_match.group(3))
+        new_version = f"{major_minor_patch}-canary.{canary_number + 1}"
 
-    return updated_content, new_version
+    return [new_version], new_version
 
 
 def write_version_file(filename, updated_content, dry_run):
@@ -72,9 +58,7 @@ def git_operations(new_version, dry_run):
 
 
 def main():
-    parser = argparse.ArgumentParser(
-        description="Update VERSION file and push changes with git."
-    )
+    parser = argparse.ArgumentParser(description="Update VERSION file and push changes with git.")
     parser.add_argument(
         "--dry-run", action="store_true", help="Perform a dry run without making any changes."
     )
