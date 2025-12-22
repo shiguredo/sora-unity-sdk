@@ -27,7 +27,6 @@
   - `Sora.Config.SimulcastRid` を非推奨化する
   - @torikizi
 
-
 ## 2025.3.0
 
 **リリース日**: 2025-12-11
