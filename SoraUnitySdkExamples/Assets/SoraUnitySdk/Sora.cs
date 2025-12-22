@@ -395,7 +395,7 @@ public class Sora : IDisposable
         public SpotlightFocusRidType? SpotlightFocusRid;
         public SpotlightFocusRidType? SpotlightUnfocusRid;
         public bool? Simulcast;
-        [System.Obsolete("SimulcastRid は非推奨です。代わりに SimulcastRequestRid を使用してください。")]
+        [System.Obsolete("SimulcastRid は非推奨です。代わりに SimulcastRequestRid を使用してください")]
         public SimulcastRidType? SimulcastRid = null;
         public SimulcastRequestRidType? SimulcastRequestRid = null;
         // NoVideoDevice と NoAudioDevice を true にすると、ビデオデバイスまたはオーディオデバイスを掴まなくなります。
