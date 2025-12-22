@@ -13,6 +13,8 @@
 
 - [CHANGE] VERSION ファイルと DEPS ファイルを分離する
   - VERSION ファイルには Sora Unity SDK のバージョンのみを記載する
+  - canary.py は Sora Unity SDK のバージョンのみとなった VERSION ファイルを参照するように変更する
+    - バージョン取得時にプレフィックスを除去していた処理を削除する
   - DEPS ファイルには Sora C++ SDK や libwebrtc のバージョンを記載する
   - build.yml や run.py でのバージョン参照を DEPS ファイルに変更する
   - @torikizi
