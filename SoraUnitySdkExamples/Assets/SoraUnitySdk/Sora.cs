@@ -609,7 +609,10 @@ public class Sora : IDisposable
             cc.SetSimulcast(config.Simulcast.Value);
         }
         cc.simulcast_rid = config.SimulcastRid == null ? "" : config.SimulcastRid.Value.ToString().ToLower();
-        cc.simulcast_request_rid = config.SimulcastRequestRid == null ? "" : config.SimulcastRequestRid.Value.ToString().ToLower();
+        if (config.SimulcastRequestRid != null)
+        {
+            cc.SetSimulcastRequestRid(config.SimulcastRequestRid.Value.ToString().ToLower());
+        }
         cc.insecure = config.Insecure;
         cc.no_video_device = config.NoVideoDevice;
         cc.no_audio_device = config.NoAudioDevice;
