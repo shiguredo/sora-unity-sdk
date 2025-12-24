@@ -25,6 +25,7 @@
   - Sora 2025.2 以降で利用可能な simulcast_request_rid に対応する
   - `Sora.Config.SimulcastRequestRid` プロパティを追加する
   - `Sora.Config.SimulcastRid` を非推奨化する
+  - `simulcast_request_rid` は未指定の場合、項目も含めないようにする
   - @torikizi
 
 ## 2025.3.0

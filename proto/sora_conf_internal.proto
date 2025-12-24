@@ -100,7 +100,7 @@ message ConnectConfig {
     string spotlight_unfocus_rid = 13;
     optional bool simulcast = 15;
     string simulcast_rid = 16;
-    string simulcast_request_rid = 50;
+    optional string simulcast_request_rid = 50;
     bool no_video_device = 160;
     bool no_audio_device = 161;
     CameraConfig camera_config = 17;

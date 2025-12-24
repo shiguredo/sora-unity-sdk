@@ -387,7 +387,9 @@ void Sora::DoConnect(const sora_conf::internal::ConnectConfig& cc,
       config.simulcast = cc.simulcast;
     }
     config.simulcast_rid = cc.simulcast_rid;
-    config.simulcast_request_rid = cc.simulcast_request_rid;
+    if (cc.has_simulcast_request_rid()) {
+      config.simulcast_request_rid = cc.simulcast_request_rid;
+    }
     config.signaling_urls = cc.signaling_url;
     config.channel_id = cc.channel_id;
     config.client_id = cc.client_id;
