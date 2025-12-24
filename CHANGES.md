@@ -28,6 +28,12 @@
   - `simulcast_request_rid` は未指定の場合、項目も含めないようにする
   - @torikizi
 
+### misc
+
+- [CHANGE] SoraUnitySdkExamples の SoraSample.cs から `forwardingFilter` 関連のコードを削除する
+  - Sora 2025.2 以降で ForwardingFilter は利用できなくなったため
+  - @torikizi
+
 ## 2025.3.0
 
 **リリース日**: 2025-12-11
