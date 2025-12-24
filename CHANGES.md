@@ -30,7 +30,7 @@
 
 ### misc
 
-- [CHANGE] SoraUnitySdkExamples の SoraSample.cs から `forwardingFilter` 関連のコードを削除する
+- [CHANGE] SoraUnitySdkExamples の SoraSample.cs から `forwardingFilter` のコードを削除する
   - Sora 2025.2 以降で ForwardingFilter は利用できなくなったため
   - @torikizi
 
