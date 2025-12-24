@@ -171,7 +171,7 @@ Please read <https://github.com/shiguredo/oss/blob/master/README.en.md> before u
 
 - サイマルキャスト rid 指定対応
 - iOS, Android 以外の音声出力先変更機能
-- x86_64 対応
+- Android の x86_64 対応
 
 ## ライセンス
 
