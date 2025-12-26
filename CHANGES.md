@@ -18,8 +18,9 @@
   - DEPS ファイルには Sora C++ SDK や libwebrtc のバージョンを記載する
   - build.yml や run.py でのバージョン参照を DEPS ファイルに変更する
   - @torikizi
-- [UPDATE] Sora C++ SDK を `2025.7.0-canary.0` に上げる
+- [UPDATE] Sora C++ SDK を `2025.7.0-canary.2` に上げる
   - libwebrtc を `m144.7559.0.0` に上げる
+  - CMAKE_VERSION を `4.2.1` にアップデート
   - @torikizi
 - [ADD] `simulcast_request_rid` に対応する
   - Sora 2025.2 以降で利用可能な simulcast_request_rid に対応する
