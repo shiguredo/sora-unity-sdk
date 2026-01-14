@@ -135,6 +135,9 @@ void Sora::SetOnMessage(
     std::function<void(std::string, std::string)> on_message) {
   on_message_ = std::move(on_message);
 }
+void Sora::SetOnRpc(std::function<void(std::string)> on_rpc) {
+  on_rpc_ = std::move(on_rpc);
+}
 void Sora::SetOnDisconnect(
     std::function<void(int, std::string)> on_disconnect) {
   on_disconnect_ = std::move(on_disconnect);
@@ -908,6 +911,13 @@ void Sora::SendMessage(const std::string& label, const std::string& data) {
   signaling_->SendDataChannel(label, data);
 }
 
+void Sora::SendRpc(const std::string& json) {
+  if (signaling_ == nullptr) {
+    return;
+  }
+  signaling_->SendDataChannel("rpc", json);
+}
+
 void* Sora::GetAndroidApplicationContext(void* env) {
 #ifdef SORA_UNITY_SDK_ANDROID
   return android_context_.obj();
@@ -996,9 +1006,20 @@ void Sora::OnPush(std::string text) {
   });
 }
 void Sora::OnMessage(std::string label, std::string data) {
+  if (label == "rpc") {
+    OnRpc(std::move(data));
+    return;
+  }
   PushEvent([this, label = std::move(label), data = std::move(data)]() {
     if (on_message_) {
       on_message_(std::move(label), std::move(data));
+    }
+  });
+}
+void Sora::OnRpc(std::string json) {
+  PushEvent([this, json = std::move(json)]() {
+    if (on_rpc_) {
+      on_rpc_(std::move(json));
     }
   });
 }

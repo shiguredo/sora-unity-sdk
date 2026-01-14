@@ -56,6 +56,7 @@ class Sora : public std::enable_shared_from_this<Sora>,
   void SetOnNotify(std::function<void(std::string)> on_notify);
   void SetOnPush(std::function<void(std::string)> on_push);
   void SetOnMessage(std::function<void(std::string, std::string)> on_message);
+  void SetOnRpc(std::function<void(std::string)> on_rpc);
   void SetOnDisconnect(std::function<void(int, std::string)> on_disconnect);
   void SetOnDataChannel(std::function<void(std::string)> on_data_channel);
   void SetOnCapturerFrame(std::function<void(std::string)> on_capturer_frame);
@@ -87,6 +88,7 @@ class Sora : public std::enable_shared_from_this<Sora>,
   void GetStats(std::function<void(std::string)> on_get_stats);
 
   void SendMessage(const std::string& label, const std::string& data);
+  void SendRpc(const std::string& json);
 
   bool GetAudioEnabled() const;
   void SetAudioEnabled(bool enabled);
@@ -107,6 +109,7 @@ class Sora : public std::enable_shared_from_this<Sora>,
   void OnNotify(std::string text) override;
   void OnPush(std::string text) override;
   void OnMessage(std::string label, std::string data) override;
+  void OnRpc(std::string json) override;
   void OnTrack(webrtc::scoped_refptr<webrtc::RtpTransceiverInterface>
                    transceiver) override;
   void OnRemoveTrack(
@@ -187,6 +190,7 @@ class Sora : public std::enable_shared_from_this<Sora>,
   std::function<void(std::string)> on_notify_;
   std::function<void(std::string)> on_push_;
   std::function<void(std::string, std::string)> on_message_;
+  std::function<void(std::string)> on_rpc_;
   std::function<void(int, std::string)> on_disconnect_;
   std::function<void(std::string)> on_data_channel_;
   std::function<void(const int16_t*, int, int)> on_handle_audio_;

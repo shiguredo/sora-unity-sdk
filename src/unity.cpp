@@ -193,6 +193,19 @@ void sora_set_on_data_channel(void* p,
   });
 }
 
+void sora_set_on_rpc(void* p,
+                              rpc_cb_t on_rpc,
+                              void* userdata) {
+  auto wsora = (SoraWrapper*)p;
+  if (on_rpc == nullptr) {
+    wsora->sora->SetOnRpc(nullptr);
+    return;
+  }
+  wsora->sora->SetOnRpc([on_rpc, userdata](std::string json) {
+    on_rpc(json.c_str(), userdata);
+  });
+}
+
 void sora_set_on_capturer_frame(void* p,
                                 capturer_frame_cb_t on_capturer_frame,
                                 void* userdata) {
@@ -296,6 +309,11 @@ void sora_send_message(void* p, const char* label, void* buf, int size) {
   auto wsora = (SoraWrapper*)p;
   const char* s = (const char*)buf;
   wsora->sora->SendMessage(label, std::string(s, s + size));
+}
+
+void sora_send_rpc(void* p, const char* json) {
+  auto wsora = (SoraWrapper*)p;
+  wsora->sora->SendRpc(json);
 }
 
 unity_bool_t sora_device_enum_video_capturer(device_enum_cb_t f,
