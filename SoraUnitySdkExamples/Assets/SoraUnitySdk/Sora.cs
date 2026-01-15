@@ -492,7 +492,7 @@ public class Sora : IDisposable
     Action<string>? onPush;
     Action<string, byte[]>? onMessage;
     Action<string>? onRpc;
-    int rpcCRequestIdCounter;
+    int rpcRequestIdCounter;
     public bool RpcNotificationDefaultEnabled = false;
     Action<SoraConf.ErrorCode, string>? onDisconnect;
     Action<string>? onDataChannel;
@@ -1412,7 +1412,7 @@ public class Sora : IDisposable
             paramsJson = $"{{\"sender_connection_id\":\"{EscapeJsonString(senderConnectionId)}\",\"rid\":\"{EscapeJsonString(rid)}\"}}";
         }
 
-        bool useNotification = notification ?? RpcNotificationDefault;
+        bool useNotification = notification ?? RpcNotificationDefaultEnabled;
         SendRpcMessage("2025.2.0/RequestSimulcastRid", paramsJson, useNotification);
     }
 
@@ -1438,7 +1438,7 @@ public class Sora : IDisposable
         {
             paramsJson = $"{{\"send_connection_id\":\"{EscapeJsonString(sendConnectionId)}\",\"spotlight_focus_rid\":\"{EscapeJsonString(spotlightFocusRid)}\",\"spotlight_unfocus_rid\":\"{EscapeJsonString(spotlightUnfocusRid)}\"}}";
         }
-        bool useNotification = notification ?? RpcNotificationDefault;
+        bool useNotification = notification ?? RpcNotificationDefaultEnabled;
         SendRpcMessage("2025.2.0/RequestSpotlightRid", paramsJson, useNotification);
     }
 
@@ -1455,7 +1455,7 @@ public class Sora : IDisposable
         string paramsJson = string.IsNullOrEmpty(sendConnectionId)
             ? "{}"
             : $"{{\"send_connection_id\":\"{EscapeJsonString(sendConnectionId)}\"}}";
-        bool useNotification = notification ?? RpcNotificationDefault;
+        bool useNotification = notification ?? RpcNotificationDefaultEnabled;
         SendRpcMessage("2025.2.0/ResetSpotlightRid", paramsJson, useNotification);
     }
 
@@ -1481,7 +1481,7 @@ public class Sora : IDisposable
         {
             paramsJson = $"{{\"metadata\":{metadataJson}}}";
         }
-        bool useNotification = notification ?? RpcNotificationDefault;
+        bool useNotification = notification ?? RpcNotificationDefaultEnabled;
         SendRpcMessage("2025.2.0/PutSignalingNotifyMetadata", paramsJson, useNotification);
     }
 
@@ -1507,8 +1507,9 @@ public class Sora : IDisposable
         {
             paramsJson = $"{{\"key\":\"{EscapeJsonString(key)}\",\"value\":{valueJson}}}";
         }
-        bool useNotification = notification ?? RpcNotificationDefault;
+        bool useNotification = notification ?? RpcNotificationDefaultEnabled;
         SendRpcMessage("2025.2.0/PutSignalingNotifyMetadataItem", paramsJson, useNotification);
+        return 0;
     }
 
     private delegate void DeviceEnumCallbackDelegate(string device_name, string unique_name, IntPtr userdata);
