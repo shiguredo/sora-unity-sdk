@@ -1183,6 +1183,24 @@ public class Sora : IDisposable
         }
     }
 
+    private delegate void RpcCallbackDelegate(string json, IntPtr userdata);
+
+    [AOT.MonoPInvokeCallback(typeof(RpcCallbackDelegate))]
+    static private void RpcCallback(string json, IntPtr userdata)
+    {
+        var sora = GCHandle.FromIntPtr(userdata).Target as Sora;
+        sora!.onRpc!(json);
+    }
+
+    public Action<string>? OnRpc
+    {
+        set
+        {
+            onRpc = value;
+            sora_set_on_rpc(p, value == null ? null : RpcCallback, GCHandle.ToIntPtr(selfHandle));
+        }
+    }
+
     private delegate void DisconnectCallbackDelegate(int errorCode, string message, IntPtr userdata);
 
     [AOT.MonoPInvokeCallback(typeof(DisconnectCallbackDelegate))]
