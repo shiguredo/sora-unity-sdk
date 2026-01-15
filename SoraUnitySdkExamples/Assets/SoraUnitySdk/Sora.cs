@@ -491,6 +491,9 @@ public class Sora : IDisposable
     Action<string>? onNotify;
     Action<string>? onPush;
     Action<string, byte[]>? onMessage;
+    Action<string>? onRpc;
+    int rpcCRequestIdCounter;
+    public bool RpcNotificationDefaultEnabled = false;
     Action<SoraConf.ErrorCode, string>? onDisconnect;
     Action<string>? onDataChannel;
     Action<short[], int, int>? onHandleAudio;
@@ -1329,6 +1332,167 @@ public class Sora : IDisposable
         sora_send_message(p, label, buf, buf.Length);
     }
 
+    /// <summary>
+    ///  Sora に RPC メッセージを送信します。
+    /// </summary>
+    public void SendRpc(string json)
+    {
+        sora_send_rpc(p, json);
+    }
+
+    /// <summary>
+    /// RPC メッセージを送信します。
+    /// </summary>
+    /// <remarks>
+    /// isNotification が true の場合は、応答を待たずに即座に送信され、リクエスト ID は付与されません。
+    /// isNotification が false の場合は、リクエスト ID を自動生成し、JSON メッセージに付与してから送信し、サーバーからの応答を待ちます。
+    /// </remarks>
+    /// <param name="method">呼び出すメソッド名</param>
+    /// <param name="paramsJson">メソッドのパラメータを表す JSON 文字列</param>
+    /// <param name="isNotification">Notification として送信するかどうか</param>
+    void SendRpcMessage(string method, string paramsJson, bool isNotification)
+    {
+        string rpcMessage;
+        if (isNotification)
+        {
+            rpcMessage = $"{{\"jsonrpc\":\"2.0\",\"method\":\"{method}\",\"params\":{paramsJson}}}";
+            Debug.LogFormat("SendRpc (notification): {0}", rpcMessage);
+        }
+        else
+        {
+            int rpcRequestId = ++rpcRequestIdCounter;
+            rpcMessage = $"{{\"jsonrpc\":\"2.0\",\"method\":\"{method}\",\"params\":{paramsJson},\"id\":{rpcRequestId}}}";
+            Debug.LogFormat("SendRpc: {0}", rpcMessage);
+        }
+        SendRpc(rpcMessage);
+    }
+
+    static string EscapeJsonString(string value)
+    {
+        return value.Replace("\\", "\\\\").Replace("\"", "\\\"");
+    }
+
+    /// <summary>
+    /// Simulcast Rid をリクエストします。
+    /// </summary>
+    /// <remarks>
+    /// リクエストパラメータの JSON を構築して Simulcast の rid をリクエストします。
+    /// notification パラメータで Notification または RPC モードを指定します。
+    /// </remarks>
+    /// <param name="rid">リクエストする Rid</param>
+    /// <param name="senderConnectionId">オプション: sender_connection_id</param>
+    /// <param name="notification">Notification として送信するかどうか (null の場合は RpcNotificationDefault を利用)</param>
+    public void SendRequestSimulcastRid(string rid, string? senderConnectionId = null, bool? notification = null)
+    {
+        string paramsJson;
+        if (string.IsNullOrEmpty(senderConnectionId))
+        {
+            paramsJson = $"{{\"rid\":\"{EscapeJsonString(rid)}\"}}";
+        }
+        else
+        {
+            paramsJson = $"{{\"sender_connection_id\":\"{EscapeJsonString(senderConnectionId)}\",\"rid\":\"{EscapeJsonString(rid)}\"}}";
+        }
+
+        bool useNotification = notification ?? RpcNotificationDefault;
+        SendRpcMessage("2025.2.0/RequestSimulcastRid", paramsJson, useNotification);
+    }
+
+    /// <summary>
+    /// Spotlight の Rid をリクエストします。
+    /// </summary>
+    /// <remarks>
+    /// リクエストパラメータの JSON を構築して Spotlight の rid をリクエストします。
+    /// notification パラメータで Notification または RPC モードを指定します。
+    /// </remarks>
+    /// <param name="spotlightFocusRid">フォーカス時の rid ("r0", "r1", "r2", "none")</param>
+    /// <param name="spotlightUnfocusRid">非フォーカス時の rid ("r0", "r1", "r2", "none")</param>
+    /// <param name="sendConnectionId">オプション: send_connection_id</param>
+    /// <param name="notification">Notification として送信するかどうか (null の場合は RpcNotificationDefault を利用)</param>
+    public void SendRequestSpotlightRid(string spotlightFocusRid, string spotlightUnfocusRid, string? sendConnectionId = null, bool? notification = null)
+    {
+        string paramsJson;
+        if (string.IsNullOrEmpty(sendConnectionId))
+        {
+            paramsJson = $"{{\"spotlight_focus_rid\":\"{EscapeJsonString(spotlightFocusRid)}\",\"spotlight_unfocus_rid\":\"{EscapeJsonString(spotlightUnfocusRid)}\"}}";
+        }
+        else
+        {
+            paramsJson = $"{{\"send_connection_id\":\"{EscapeJsonString(sendConnectionId)}\",\"spotlight_focus_rid\":\"{EscapeJsonString(spotlightFocusRid)}\",\"spotlight_unfocus_rid\":\"{EscapeJsonString(spotlightUnfocusRid)}\"}}";
+        }
+        bool useNotification = notification ?? RpcNotificationDefault;
+        SendRpcMessage("2025.2.0/RequestSpotlightRid", paramsJson, useNotification);
+    }
+
+    /// <summary>
+    /// Spotlight の Rid をリセットします。
+    /// </summary>
+    /// <remarks>
+    /// notification パラメータで Notification または RPC モードを指定します。
+    /// </remarks>
+    /// <param name="sendConnectionId">オプション: send_connection_id</param>
+    /// <param name="notification">Notification として送信するかどうか (null の場合は RpcNotificationDefault を利用)</param>
+    public void SendResetSpotlightRid(string? sendConnectionId = null, bool? notification = null)
+    {
+        string paramsJson = string.IsNullOrEmpty(sendConnectionId)
+            ? "{}"
+            : $"{{\"send_connection_id\":\"{EscapeJsonString(sendConnectionId)}\"}}";
+        bool useNotification = notification ?? RpcNotificationDefault;
+        SendRpcMessage("2025.2.0/ResetSpotlightRid", paramsJson, useNotification);
+    }
+
+    /// <summary>
+    /// signaling_notify_metadata を更新します。
+    /// </summary>
+    /// <remarks>
+    /// metadataJson は JSON オブジェクト文字列を渡してください。push は省略可能です。
+    /// notification パラメータで Notification または RPC モードを指定します。
+    /// </remarks>
+    /// <param name="metadataJson">更新するメタデータの JSON 文字列</param>
+    /// <param name="push">オプション: push を有効にするかどうか</param>
+    /// <param name="notification">Notification として送信するかどうか (null の場合は RpcNotificationDefault を利用)</param>
+    public void SendPutSignalingNotifyMetadata(string metadataJson, bool? push = null, bool? notification = null)
+    {
+        // metadata は JSON をそのまま埋め込む
+        string paramsJson;
+        if (push.HasValue)
+        {
+            paramsJson = $"{{\"push\":{(push.Value ? "true" : "false")},\"metadata\":{metadataJson}}}";
+        }
+        else
+        {
+            paramsJson = $"{{\"metadata\":{metadataJson}}}";
+        }
+        bool useNotification = notification ?? RpcNotificationDefault;
+        SendRpcMessage("2025.2.0/PutSignalingNotifyMetadata", paramsJson, useNotification);
+    }
+
+    /// <summary>
+    /// signaling_notify_metadata の単一項目を更新します。
+    /// </summary>
+    /// <remarks>
+    /// valueJson は JSON 値を渡してください。push は省略可能です。
+    /// notification パラメータで Notification または RPC モードを指定します。
+    /// </remarks>
+    /// <param name="key">更新するキー</param>
+    /// <param name="valueJson">更新する値の JSON 文字列</param>
+    /// <param name="push">オプション: push を有効にするかどうか</param>
+    /// <param name="notification">Notification として送信するかどうか (null の場合は RpcNotificationDefault を利用)</param>
+    public int SendPutSignalingNotifyMetadataItem(string key, string valueJson, bool? push = null, bool? notification = null)
+    {
+        string paramsJson;
+        if (push.HasValue)
+        {
+            paramsJson = $"{{\"push\":{(push.Value ? "true" : "false")},\"key\":\"{EscapeJsonString(key)}\",\"value\":{valueJson}}}";
+        }
+        else
+        {
+            paramsJson = $"{{\"key\":\"{EscapeJsonString(key)}\",\"value\":{valueJson}}}";
+        }
+        bool useNotification = notification ?? RpcNotificationDefault;
+        SendRpcMessage("2025.2.0/PutSignalingNotifyMetadataItem", paramsJson, useNotification);
+    }
+
     private delegate void DeviceEnumCallbackDelegate(string device_name, string unique_name, IntPtr userdata);
 
     [AOT.MonoPInvokeCallback(typeof(DeviceEnumCallbackDelegate))]
@@ -1505,6 +1669,8 @@ public class Sora : IDisposable
     [DllImport(DllName)]
     private static extern void sora_set_on_message(IntPtr p, MessageCallbackDelegate? on_message, IntPtr userdata);
     [DllImport(DllName)]
+    private static extern void sora_set_on_rpc(IntPtr p, RpcCallbackDelegate? on_rpc, IntPtr userdata);
+    [DllImport(DllName)]
     private static extern void sora_set_on_disconnect(IntPtr p, DisconnectCallbackDelegate? on_disconnect, IntPtr userdata);
     [DllImport(DllName)]
     private static extern void sora_set_on_data_channel(IntPtr p, DataChannelCallbackDelegate? on_data_channel, IntPtr userdata);
@@ -1540,6 +1706,8 @@ public class Sora : IDisposable
     private static extern void sora_get_stats(IntPtr p, StatsCallbackDelegate on_get_stats, IntPtr userdata);
     [DllImport(DllName)]
     private static extern void sora_send_message(IntPtr p, string label, [In] byte[] buf, int size);
+    [DllImport(DllName)]
+    private static extern void sora_send_rpc(IntPtr p, string json);
     [DllImport(DllName)]
     private static extern int sora_device_enum_video_capturer(DeviceEnumCallbackDelegate f, IntPtr userdata);
     [DllImport(DllName)]
