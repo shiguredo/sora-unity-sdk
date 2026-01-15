@@ -211,6 +211,28 @@ public class SoraSample : MonoBehaviour
     public DataChannel[] dataChannels;
     string[] fixedDataChannelLabels;
 
+    [Header("RPC メッセージの設定")]
+    public bool enableSendRequestSimulcastRid = false;
+    public string sendRequestSimulcastRid = "r0";
+    public string sendRequestSimulcastRidConnectionId = "";
+
+    public bool enableSendRequestSpotlightRid = false;
+    public string sendRequestSpotlightFocusRid = "r1";
+    public string sendRequestSpotlightUnfocusRid = "none";
+    public string sendRequestSpotlightRidConnectionId = "";
+
+    public bool enableSendResetSpotlightRid = false;
+    public string sendResetSpotlightRidConnectionId = "";
+
+    public bool enableSendPutSignalingNotifyMetadata = false;
+    public string sendPutSignalingNotifyMetadataJson = "{\"key\":\"value\"}";
+    public bool sendPutSignalingNotifyMetadataPush = false;
+
+    public bool enableSendPutSignalingNotifyMetadataItem = false;
+    public string sendPutSignalingNotifyMetadataItemKey = "status";
+    public string sendPutSignalingNotifyMetadataItemValue = "\"active\"";
+    public bool sendPutSignalingNotifyMetadataItemPush = false;
+
     [Header("HTTP Proxy の設定")]
     public string proxyUrl;
     public string proxyUsername;
@@ -1123,6 +1145,52 @@ public class SoraSample : MonoBehaviour
         {
             string message = "aaa";
             sora.SendMessage(label, System.Text.Encoding.UTF8.GetBytes(message));
+        }
+    }
+
+    public void OnClickRpc()
+    {
+        if (sora == null)
+        {
+            return;
+        }
+
+        // RPC メッセージを選択に応じて送信
+        Debug.Log("Sending RPC messages...");
+
+        if (enableSendRequestSimulcastRid)
+        {
+            Debug.LogFormat("SendRequestSimulcastRid: rid={0}", sendRequestSimulcastRid);
+            sora.SendRequestSimulcastRid(sendRequestSimulcastRid,
+                string.IsNullOrEmpty(sendRequestSimulcastRidConnectionId) ? null : sendRequestSimulcastRidConnectionId);
+        }
+
+        if (enableSendRequestSpotlightRid)
+        {
+            Debug.LogFormat("SendRequestSpotlightRid: focus={0}, unfocus={1}", sendRequestSpotlightFocusRid, sendRequestSpotlightUnfocusRid);
+            sora.SendRequestSpotlightRid(sendRequestSpotlightFocusRid, sendRequestSpotlightUnfocusRid,
+                string.IsNullOrEmpty(sendRequestSpotlightRidConnectionId) ? null : sendRequestSpotlightRidConnectionId);
+        }
+
+        if (enableSendResetSpotlightRid)
+        {
+            Debug.Log("SendResetSpotlightRid");
+            sora.SendResetSpotlightRid(
+                string.IsNullOrEmpty(sendResetSpotlightRidConnectionId) ? null : sendResetSpotlightRidConnectionId);
+        }
+
+        if (enableSendPutSignalingNotifyMetadata)
+        {
+            Debug.LogFormat("SendPutSignalingNotifyMetadata: {0}", sendPutSignalingNotifyMetadataJson);
+            sora.SendPutSignalingNotifyMetadata(sendPutSignalingNotifyMetadataJson,
+                sendPutSignalingNotifyMetadataPush ? (bool?)true : null);
+        }
+
+        if (enableSendPutSignalingNotifyMetadataItem)
+        {
+            Debug.LogFormat("SendPutSignalingNotifyMetadataItem: key={0}, value={1}", sendPutSignalingNotifyMetadataItemKey, sendPutSignalingNotifyMetadataItemValue);
+            sora.SendPutSignalingNotifyMetadataItem(sendPutSignalingNotifyMetadataItemKey, sendPutSignalingNotifyMetadataItemValue,
+                sendPutSignalingNotifyMetadataItemPush ? (bool?)true : null);
         }
     }
 
