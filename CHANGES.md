@@ -28,12 +28,29 @@
   - `Sora.Config.SimulcastRid` を非推奨化する
   - `simulcast_request_rid` は未指定の場合、項目も含めないようにする
   - @torikizi
+- [ADD] RPC 機能を追加する
+  - Sora 2025.2 以降で利用可能な RPC 機能に対応する
+  - `Sora.OnRpc` を追加する
+  - `Sora.SendRpc()` メソッドを追加する
+    - JSON-RPC 2.0 形式のメッセージを Sora に送信する
+  - `Sora.RpcNotificationDefaultEnabled` プロパティを追加する
+    - RPC メソッド呼び出し時のデフォルト動作を設定する (Notification または Request)
+  - 以下の RPC メソッドのラッパー関数を追加する
+    - `Sora.SendRequestSimulcastRid()`
+    - `Sora.SendRequestSpotlightRid()`
+    - `Sora.SendResetSpotlightRid()`
+    - `Sora.SendPutSignalingNotifyMetadata()`
+    - `Sora.SendPutSignalingNotifyMetadataItem()`
+  - @torikizi
 
 ### misc
 
 - [CHANGE] SoraUnitySdkExamples の SoraSample.cs から `forwardingFilter` のコードを削除する
   - Sora 2025.2 以降で ForwardingFilter は利用できなくなったため
   - SoraUnitySdkExamples のシーンからも ForwardingFilter を削除する
+  - @torikizi
+- [ADD] RPC 機能を SoraUnitySdkExamples の SoraSample.cs に追加する
+  - ボタンから RPC メソッドを呼び出せるように `OnClickRpc()` メソッドを追加する
   - @torikizi
 
 ## 2025.3.0
