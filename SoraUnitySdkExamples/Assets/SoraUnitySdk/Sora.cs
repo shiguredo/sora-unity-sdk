@@ -1374,20 +1374,13 @@ public class Sora : IDisposable
         if (isNotification)
         {
             rpcMessage = $"{{\"jsonrpc\":\"2.0\",\"method\":\"{method}\",\"params\":{paramsJson}}}";
-            Debug.LogFormat("SendRpc (notification): {0}", rpcMessage);
         }
         else
         {
             int rpcRequestId = ++rpcRequestIdCounter;
             rpcMessage = $"{{\"jsonrpc\":\"2.0\",\"method\":\"{method}\",\"params\":{paramsJson},\"id\":{rpcRequestId}}}";
-            Debug.LogFormat("SendRpc: {0}", rpcMessage);
         }
         SendRpc(rpcMessage);
-    }
-
-    static string EscapeJsonString(string value)
-    {
-        return value.Replace("\\", "\\\\").Replace("\"", "\\\"");
     }
 
     /// <summary>
@@ -1405,11 +1398,11 @@ public class Sora : IDisposable
         string paramsJson;
         if (string.IsNullOrEmpty(senderConnectionId))
         {
-            paramsJson = $"{{\"rid\":\"{EscapeJsonString(rid)}\"}}";
+            paramsJson = $"{{\"rid\":\"{rid}\"}}";
         }
         else
         {
-            paramsJson = $"{{\"sender_connection_id\":\"{EscapeJsonString(senderConnectionId)}\",\"rid\":\"{EscapeJsonString(rid)}\"}}";
+            paramsJson = $"{{\"sender_connection_id\":\"{senderConnectionId}\",\"rid\":\"{rid}\"}}";
         }
 
         bool useNotification = notification ?? RpcNotificationDefaultEnabled;
@@ -1432,11 +1425,11 @@ public class Sora : IDisposable
         string paramsJson;
         if (string.IsNullOrEmpty(sendConnectionId))
         {
-            paramsJson = $"{{\"spotlight_focus_rid\":\"{EscapeJsonString(spotlightFocusRid)}\",\"spotlight_unfocus_rid\":\"{EscapeJsonString(spotlightUnfocusRid)}\"}}";
+            paramsJson = $"{{\"spotlight_focus_rid\":\"{spotlightFocusRid}\",\"spotlight_unfocus_rid\":\"{spotlightUnfocusRid}\"}}";
         }
         else
         {
-            paramsJson = $"{{\"send_connection_id\":\"{EscapeJsonString(sendConnectionId)}\",\"spotlight_focus_rid\":\"{EscapeJsonString(spotlightFocusRid)}\",\"spotlight_unfocus_rid\":\"{EscapeJsonString(spotlightUnfocusRid)}\"}}";
+            paramsJson = $"{{\"send_connection_id\":\"{sendConnectionId}\",\"spotlight_focus_rid\":\"{spotlightFocusRid}\",\"spotlight_unfocus_rid\":\"{spotlightUnfocusRid}\"}}";
         }
         bool useNotification = notification ?? RpcNotificationDefaultEnabled;
         SendRpcMessage("2025.2.0/RequestSpotlightRid", paramsJson, useNotification);
@@ -1454,7 +1447,7 @@ public class Sora : IDisposable
     {
         string paramsJson = string.IsNullOrEmpty(sendConnectionId)
             ? "{}"
-            : $"{{\"send_connection_id\":\"{EscapeJsonString(sendConnectionId)}\"}}";
+            : $"{{\"send_connection_id\":\"{sendConnectionId}\"}}";
         bool useNotification = notification ?? RpcNotificationDefaultEnabled;
         SendRpcMessage("2025.2.0/ResetSpotlightRid", paramsJson, useNotification);
     }
@@ -1496,20 +1489,19 @@ public class Sora : IDisposable
     /// <param name="valueJson">更新する値の JSON 文字列</param>
     /// <param name="push">オプション: push を有効にするかどうか</param>
     /// <param name="notification">Notification として送信するかどうか (null の場合は RpcNotificationDefault を利用)</param>
-    public int SendPutSignalingNotifyMetadataItem(string key, string valueJson, bool? push = null, bool? notification = null)
+    public void SendPutSignalingNotifyMetadataItem(string key, string valueJson, bool? push = null, bool? notification = null)
     {
         string paramsJson;
         if (push.HasValue)
         {
-            paramsJson = $"{{\"push\":{(push.Value ? "true" : "false")},\"key\":\"{EscapeJsonString(key)}\",\"value\":{valueJson}}}";
+            paramsJson = $"{{\"push\":{(push.Value ? "true" : "false")},\"key\":\"{key}\",\"value\":{valueJson}}}";
         }
         else
         {
-            paramsJson = $"{{\"key\":\"{EscapeJsonString(key)}\",\"value\":{valueJson}}}";
+            paramsJson = $"{{\"key\":\"{key}\",\"value\":{valueJson}}}";
         }
         bool useNotification = notification ?? RpcNotificationDefaultEnabled;
         SendRpcMessage("2025.2.0/PutSignalingNotifyMetadataItem", paramsJson, useNotification);
-        return 0;
     }
 
     private delegate void DeviceEnumCallbackDelegate(string device_name, string unique_name, IntPtr userdata);
