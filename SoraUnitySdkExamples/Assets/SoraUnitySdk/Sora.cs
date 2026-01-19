@@ -1350,9 +1350,9 @@ public class Sora : IDisposable
     }
 
     /// <summary>
-    ///  Sora に RPC メッセージを送信します。
+    /// Sora に RPC メッセージを送信します。
     /// </summary>
-    public void SendRpc(string json)
+    void SendRpc(string json)
     {
         sora_send_rpc(p, json);
     }
@@ -1366,8 +1366,8 @@ public class Sora : IDisposable
     /// </remarks>
     /// <param name="method">呼び出すメソッド名</param>
     /// <param name="paramsJson">メソッドのパラメータを表す JSON 文字列</param>
-    /// <param name="isNotification">true の場合、送信後に Sora からのレスポンスがありません</param>
-    void SendRpcMessage(string method, string paramsJson, bool isNotification)
+    /// <param name="isNotification">true の場合、送信後に Sora からのレスポンスがありません。デフォルトは false</param>
+    public void SendRpcMessage(string method, string paramsJson, bool isNotification = false)
     {
         string rpcMessage;
         if (isNotification)
@@ -1380,115 +1380,6 @@ public class Sora : IDisposable
             rpcMessage = $"{{\"jsonrpc\":\"2.0\",\"method\":\"{method}\",\"params\":{paramsJson},\"id\":{rpcRequestId}}}";
         }
         SendRpc(rpcMessage);
-    }
-
-    /// <summary>
-    /// Simulcast Rid をリクエストします。
-    /// </summary>
-    /// <remarks>
-    /// リクエストパラメータの JSON を構築して Simulcast の rid をリクエストします。
-    /// </remarks>
-    /// <param name="rid">リクエストする Rid</param>
-    /// <param name="senderConnectionId">オプション: sender_connection_id</param>
-    /// <param name="notification">true の場合、送信後に Sora からのレスポンスがありません。デフォルトは false</param>
-    public void SendRequestSimulcastRid(string rid, string? senderConnectionId = null, bool notification = false)
-    {
-        string paramsJson;
-        if (string.IsNullOrEmpty(senderConnectionId))
-        {
-            paramsJson = $"{{\"rid\":\"{rid}\"}}";
-        }
-        else
-        {
-            paramsJson = $"{{\"sender_connection_id\":\"{senderConnectionId}\",\"rid\":\"{rid}\"}}";
-        }
-
-        SendRpcMessage("2025.2.0/RequestSimulcastRid", paramsJson, notification);
-    }
-
-    /// <summary>
-    /// Spotlight の Rid をリクエストします。
-    /// </summary>
-    /// <remarks>
-    /// リクエストパラメータの JSON を構築して Spotlight の rid をリクエストします。
-    /// </remarks>
-    /// <param name="spotlightFocusRid">フォーカス時の rid ("r0", "r1", "r2", "none")</param>
-    /// <param name="spotlightUnfocusRid">非フォーカス時の rid ("r0", "r1", "r2", "none")</param>
-    /// <param name="sendConnectionId">オプション: send_connection_id</param>
-    /// <param name="notification">true の場合、送信後に Sora からのレスポンスがありません。デフォルトは false</param>
-    public void SendRequestSpotlightRid(string spotlightFocusRid, string spotlightUnfocusRid, string? sendConnectionId = null, bool notification = false)
-    {
-        string paramsJson;
-        if (string.IsNullOrEmpty(sendConnectionId))
-        {
-            paramsJson = $"{{\"spotlight_focus_rid\":\"{spotlightFocusRid}\",\"spotlight_unfocus_rid\":\"{spotlightUnfocusRid}\"}}";
-        }
-        else
-        {
-            paramsJson = $"{{\"send_connection_id\":\"{sendConnectionId}\",\"spotlight_focus_rid\":\"{spotlightFocusRid}\",\"spotlight_unfocus_rid\":\"{spotlightUnfocusRid}\"}}";
-        }
-        SendRpcMessage("2025.2.0/RequestSpotlightRid", paramsJson, notification);
-    }
-
-    /// <summary>
-    /// Spotlight の Rid をリセットします。
-    /// </summary>
-    /// <param name="sendConnectionId">オプション: send_connection_id</param>
-    /// <param name="notification">true の場合、送信後に Sora からのレスポンスがありません。デフォルトは false</param>
-    public void SendResetSpotlightRid(string? sendConnectionId = null, bool notification = false)
-    {
-        string paramsJson = string.IsNullOrEmpty(sendConnectionId)
-            ? "{}"
-            : $"{{\"send_connection_id\":\"{sendConnectionId}\"}}";
-        SendRpcMessage("2025.2.0/ResetSpotlightRid", paramsJson, notification);
-    }
-
-    /// <summary>
-    /// signaling_notify_metadata を更新します。
-    /// </summary>
-    /// <remarks>
-    /// metadataJson は JSON オブジェクト文字列を渡してください。push は省略可能です。
-    /// </remarks>
-    /// <param name="metadataJson">更新するメタデータの JSON 文字列</param>
-    /// <param name="push">オプション: push を有効にするかどうか</param>
-    /// <param name="notification">true の場合、送信後に Sora からのレスポンスがありません。デフォルトは false</param>
-    public void SendPutSignalingNotifyMetadata(string metadataJson, bool? push = null, bool notification = false)
-    {
-        // metadata は JSON をそのまま埋め込む
-        string paramsJson;
-        if (push.HasValue)
-        {
-            paramsJson = $"{{\"push\":{(push.Value ? "true" : "false")},\"metadata\":{metadataJson}}}";
-        }
-        else
-        {
-            paramsJson = $"{{\"metadata\":{metadataJson}}}";
-        }
-        SendRpcMessage("2025.2.0/PutSignalingNotifyMetadata", paramsJson, notification);
-    }
-
-    /// <summary>
-    /// signaling_notify_metadata の単一項目を更新します。
-    /// </summary>
-    /// <remarks>
-    /// valueJson は JSON 値を渡してください。push は省略可能です。
-    /// </remarks>
-    /// <param name="key">更新するキー</param>
-    /// <param name="valueJson">更新する値の JSON 文字列</param>
-    /// <param name="push">オプション: push を有効にするかどうか</param>
-    /// <param name="notification">true の場合、送信後に Sora からのレスポンスがありません。デフォルトは false</param>
-    public void SendPutSignalingNotifyMetadataItem(string key, string valueJson, bool? push = null, bool notification = false)
-    {
-        string paramsJson;
-        if (push.HasValue)
-        {
-            paramsJson = $"{{\"push\":{(push.Value ? "true" : "false")},\"key\":\"{key}\",\"value\":{valueJson}}}";
-        }
-        else
-        {
-            paramsJson = $"{{\"key\":\"{key}\",\"value\":{valueJson}}}";
-        }
-        SendRpcMessage("2025.2.0/PutSignalingNotifyMetadataItem", paramsJson, notification);
     }
 
     private delegate void DeviceEnumCallbackDelegate(string device_name, string unique_name, IntPtr userdata);

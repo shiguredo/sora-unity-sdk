@@ -30,16 +30,10 @@
   - @torikizi
 - [ADD] RPC 機能を追加する
   - Sora 2025.2 以降で利用可能な RPC 機能に対応する
-  - `Sora.OnRpc` を追加する
-  - `Sora.SendRpc()` メソッドを追加する
+  - `Sora.OnRpc` コールバックを追加する
+  - `Sora.SendRpcMessage()` メソッドを追加する
     - JSON-RPC 2.0 形式のメッセージを Sora に送信する
-    - RPC メソッド呼び出し時のデフォルト動作を設定する (Notification または Request)
-  - 以下の RPC メソッドのラッパー関数を追加する
-    - `Sora.SendRequestSimulcastRid()`
-    - `Sora.SendRequestSpotlightRid()`
-    - `Sora.SendResetSpotlightRid()`
-    - `Sora.SendPutSignalingNotifyMetadata()`
-    - `Sora.SendPutSignalingNotifyMetadataItem()`
+    - `isNotification` パラメータで Notification または Request を指定する
   - @torikizi
 
 ### misc

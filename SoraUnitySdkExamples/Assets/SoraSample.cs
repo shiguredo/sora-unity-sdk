@@ -1161,36 +1161,46 @@ public class SoraSample : MonoBehaviour
         if (enableSendRequestSimulcastRid)
         {
             Debug.LogFormat("SendRequestSimulcastRid: rid={0}", sendRequestSimulcastRid);
-            sora.SendRequestSimulcastRid(sendRequestSimulcastRid,
-                string.IsNullOrEmpty(sendRequestSimulcastRidConnectionId) ? null : sendRequestSimulcastRidConnectionId);
+            string paramsJson = string.IsNullOrEmpty(sendRequestSimulcastRidConnectionId)
+                ? $"{{\"rid\":\"{sendRequestSimulcastRid}\"}}"
+                : $"{{\"sender_connection_id\":\"{sendRequestSimulcastRidConnectionId}\",\"rid\":\"{sendRequestSimulcastRid}\"}}";
+            sora.SendRpcMessage("2025.2.0/RequestSimulcastRid", paramsJson);
         }
 
         if (enableSendRequestSpotlightRid)
         {
             Debug.LogFormat("SendRequestSpotlightRid: focus={0}, unfocus={1}", sendRequestSpotlightFocusRid, sendRequestSpotlightUnfocusRid);
-            sora.SendRequestSpotlightRid(sendRequestSpotlightFocusRid, sendRequestSpotlightUnfocusRid,
-                string.IsNullOrEmpty(sendRequestSpotlightRidConnectionId) ? null : sendRequestSpotlightRidConnectionId);
+            string paramsJson = string.IsNullOrEmpty(sendRequestSpotlightRidConnectionId)
+                ? $"{{\"spotlight_focus_rid\":\"{sendRequestSpotlightFocusRid}\",\"spotlight_unfocus_rid\":\"{sendRequestSpotlightUnfocusRid}\"}}"
+                : $"{{\"send_connection_id\":\"{sendRequestSpotlightRidConnectionId}\",\"spotlight_focus_rid\":\"{sendRequestSpotlightFocusRid}\",\"spotlight_unfocus_rid\":\"{sendRequestSpotlightUnfocusRid}\"}}";
+            sora.SendRpcMessage("2025.2.0/RequestSpotlightRid", paramsJson);
         }
 
         if (enableSendResetSpotlightRid)
         {
             Debug.Log("SendResetSpotlightRid");
-            sora.SendResetSpotlightRid(
-                string.IsNullOrEmpty(sendResetSpotlightRidConnectionId) ? null : sendResetSpotlightRidConnectionId);
+            string paramsJson = string.IsNullOrEmpty(sendResetSpotlightRidConnectionId)
+                ? "{}"
+                : $"{{\"send_connection_id\":\"{sendResetSpotlightRidConnectionId}\"}}";
+            sora.SendRpcMessage("2025.2.0/ResetSpotlightRid", paramsJson);
         }
 
         if (enableSendPutSignalingNotifyMetadata)
         {
             Debug.LogFormat("SendPutSignalingNotifyMetadata: {0}", sendPutSignalingNotifyMetadataJson);
-            sora.SendPutSignalingNotifyMetadata(sendPutSignalingNotifyMetadataJson,
-                sendPutSignalingNotifyMetadataPush ? (bool?)true : null);
+            string paramsJson = sendPutSignalingNotifyMetadataPush
+                ? $"{{\"push\":true,\"metadata\":{sendPutSignalingNotifyMetadataJson}}}"
+                : $"{{\"metadata\":{sendPutSignalingNotifyMetadataJson}}}";
+            sora.SendRpcMessage("2025.2.0/PutSignalingNotifyMetadata", paramsJson);
         }
 
         if (enableSendPutSignalingNotifyMetadataItem)
         {
             Debug.LogFormat("SendPutSignalingNotifyMetadataItem: key={0}, value={1}", sendPutSignalingNotifyMetadataItemKey, sendPutSignalingNotifyMetadataItemValue);
-            sora.SendPutSignalingNotifyMetadataItem(sendPutSignalingNotifyMetadataItemKey, sendPutSignalingNotifyMetadataItemValue,
-                sendPutSignalingNotifyMetadataItemPush ? (bool?)true : null);
+            string paramsJson = sendPutSignalingNotifyMetadataItemPush
+                ? $"{{\"push\":true,\"key\":\"{sendPutSignalingNotifyMetadataItemKey}\",\"value\":{sendPutSignalingNotifyMetadataItemValue}}}"
+                : $"{{\"key\":\"{sendPutSignalingNotifyMetadataItemKey}\",\"value\":{sendPutSignalingNotifyMetadataItemValue}}}";
+            sora.SendRpcMessage("2025.2.0/PutSignalingNotifyMetadataItem", paramsJson);
         }
     }
 
