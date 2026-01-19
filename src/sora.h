@@ -109,7 +109,7 @@ class Sora : public std::enable_shared_from_this<Sora>,
   void OnNotify(std::string text) override;
   void OnPush(std::string text) override;
   void OnMessage(std::string label, std::string data) override;
-  void OnRpc(std::string json) override;
+  void OnRpc(std::string data) override;
   void OnTrack(webrtc::scoped_refptr<webrtc::RtpTransceiverInterface>
                    transceiver) override;
   void OnRemoveTrack(
