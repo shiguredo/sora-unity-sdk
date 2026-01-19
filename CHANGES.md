@@ -33,7 +33,7 @@
   - `Sora.OnRpc` コールバックを追加する
   - `Sora.SendRpcMessage()` メソッドを追加する
     - JSON-RPC 2.0 形式のメッセージを Sora に送信する
-    - `isNotification` が true の場合、送信後に Sora からのレスポンスがありません。デフォルトは false
+    - `isNotification` が true の場合は Notification として送信し、Sora からのレスポンスはなし（デフォルトは false）
   - @torikizi
 
 ### misc
