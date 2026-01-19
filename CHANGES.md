@@ -33,7 +33,6 @@
   - `Sora.OnRpc` を追加する
   - `Sora.SendRpc()` メソッドを追加する
     - JSON-RPC 2.0 形式のメッセージを Sora に送信する
-  - `Sora.RpcNotificationDefaultEnabled` プロパティを追加する
     - RPC メソッド呼び出し時のデフォルト動作を設定する (Notification または Request)
   - 以下の RPC メソッドのラッパー関数を追加する
     - `Sora.SendRequestSimulcastRid()`
