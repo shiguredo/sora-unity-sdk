@@ -1366,7 +1366,7 @@ public class Sora : IDisposable
     /// </remarks>
     /// <param name="method">呼び出すメソッド名</param>
     /// <param name="paramsJson">メソッドのパラメータを表す JSON 文字列</param>
-    /// <param name="isNotification">Notification として送信するかどうか</param>
+    /// <param name="isNotification">true の場合、送信後に Sora からのレスポンスがありません</param>
     void SendRpcMessage(string method, string paramsJson, bool isNotification)
     {
         string rpcMessage;
@@ -1387,11 +1387,10 @@ public class Sora : IDisposable
     /// </summary>
     /// <remarks>
     /// リクエストパラメータの JSON を構築して Simulcast の rid をリクエストします。
-    /// notification パラメータで Notification または RPC モードを指定します。
     /// </remarks>
     /// <param name="rid">リクエストする Rid</param>
     /// <param name="senderConnectionId">オプション: sender_connection_id</param>
-    /// <param name="notification">Notification として送信するかどうか</param>
+    /// <param name="notification">true の場合、送信後に Sora からのレスポンスがありません。デフォルトは false</param>
     public void SendRequestSimulcastRid(string rid, string? senderConnectionId = null, bool notification = false)
     {
         string paramsJson;
@@ -1412,12 +1411,11 @@ public class Sora : IDisposable
     /// </summary>
     /// <remarks>
     /// リクエストパラメータの JSON を構築して Spotlight の rid をリクエストします。
-    /// notification パラメータで Notification または RPC モードを指定します。
     /// </remarks>
     /// <param name="spotlightFocusRid">フォーカス時の rid ("r0", "r1", "r2", "none")</param>
     /// <param name="spotlightUnfocusRid">非フォーカス時の rid ("r0", "r1", "r2", "none")</param>
     /// <param name="sendConnectionId">オプション: send_connection_id</param>
-    /// <param name="notification">Notification として送信するかどうか</param>
+    /// <param name="notification">true の場合、送信後に Sora からのレスポンスがありません。デフォルトは false</param>
     public void SendRequestSpotlightRid(string spotlightFocusRid, string spotlightUnfocusRid, string? sendConnectionId = null, bool notification = false)
     {
         string paramsJson;
@@ -1435,11 +1433,8 @@ public class Sora : IDisposable
     /// <summary>
     /// Spotlight の Rid をリセットします。
     /// </summary>
-    /// <remarks>
-    /// notification パラメータで Notification または RPC モードを指定します。
-    /// </remarks>
     /// <param name="sendConnectionId">オプション: send_connection_id</param>
-    /// <param name="notification">Notification として送信するかどうか</param>
+    /// <param name="notification">true の場合、送信後に Sora からのレスポンスがありません。デフォルトは false</param>
     public void SendResetSpotlightRid(string? sendConnectionId = null, bool notification = false)
     {
         string paramsJson = string.IsNullOrEmpty(sendConnectionId)
@@ -1453,11 +1448,10 @@ public class Sora : IDisposable
     /// </summary>
     /// <remarks>
     /// metadataJson は JSON オブジェクト文字列を渡してください。push は省略可能です。
-    /// notification パラメータで Notification または RPC モードを指定します。
     /// </remarks>
     /// <param name="metadataJson">更新するメタデータの JSON 文字列</param>
     /// <param name="push">オプション: push を有効にするかどうか</param>
-    /// <param name="notification">Notification として送信するかどうか</param>
+    /// <param name="notification">true の場合、送信後に Sora からのレスポンスがありません。デフォルトは false</param>
     public void SendPutSignalingNotifyMetadata(string metadataJson, bool? push = null, bool notification = false)
     {
         // metadata は JSON をそのまま埋め込む
@@ -1478,12 +1472,11 @@ public class Sora : IDisposable
     /// </summary>
     /// <remarks>
     /// valueJson は JSON 値を渡してください。push は省略可能です。
-    /// notification パラメータで Notification または RPC モードを指定します。
     /// </remarks>
     /// <param name="key">更新するキー</param>
     /// <param name="valueJson">更新する値の JSON 文字列</param>
     /// <param name="push">オプション: push を有効にするかどうか</param>
-    /// <param name="notification">Notification として送信するかどうか</param>
+    /// <param name="notification">true の場合、送信後に Sora からのレスポンスがありません。デフォルトは false</param>
     public void SendPutSignalingNotifyMetadataItem(string key, string valueJson, bool? push = null, bool notification = false)
     {
         string paramsJson;
