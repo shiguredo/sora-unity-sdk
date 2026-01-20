@@ -1353,15 +1353,15 @@ public class Sora : IDisposable
     /// JSON-RPC リクエストオブジェクトを送信します。
     /// </summary>
     /// <remarks>
-    /// isNotification が true の場合は、ID が付与されない JSON-RPC 通知として送信され、Sora からのレスポンスはありません。
-    /// isNotification が false の場合は、ID を付与した JSON-RPC リクエストとして送信され、
-    /// Sora からのレスポンスは OnRpc に設定した関数に JSON-RPC レスポンスオブジェクトの形式でコールバックされます。
+    /// isNotification が true の場合は、ID が付与されない JSON-RPC 2.0 通知 (Notification) として送信され、Sora からのレスポンスはありません。
+    /// isNotification が false の場合は、ID を付与した JSON-RPC 2.0 リクエスト (Request) として送信され、
+    /// Sora からのレスポンスは OnRpc に設定した関数に JSON-RPC 2.0 レスポンスオブジェクトの形式でコールバックされます。
     /// id が指定されていない場合は、自動的にインクリメントされる数値 ID が生成されます。
     /// </remarks>
     /// <param name="method">呼び出すメソッド名</param>
-    /// <param name="paramsJson">メソッドのパラメータを表す JSON 文字列</param>
-    /// <param name="isNotification">true の場合、JSON-RPC 通知として送信され、Sora からのレスポンスがありません。デフォルトは false</param>
-    /// <param name="id">JSON-RPC リクエスト ID。数値または文字列を指定可能。指定しない場合は自動生成されます</param>
+    /// <param name="paramsJson">メソッドのパラメータを表す JSON 文字列。オブジェクト形式 (例: {"key":"value"}) または配列形式 (例: [1,2,3]) で指定します。パラメータがない場合は "{}" を指定してください</param>
+    /// <param name="isNotification">true の場合、JSON-RPC 2.0 通知として送信され、Sora からのレスポンスがありません。デフォルトは false</param>
+    /// <param name="id">JSON-RPC 2.0 リクエスト ID。数値または文字列を指定可能。指定しない場合は自動生成されます</param>
     public void SendRpcMessage(string method, string paramsJson, bool isNotification = false, object? id = null)
     {
         string rpcMessage;
