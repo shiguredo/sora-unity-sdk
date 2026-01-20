@@ -1350,24 +1350,19 @@ public class Sora : IDisposable
     }
 
     /// <summary>
-    /// Sora に RPC メッセージを送信します。
-    /// </summary>
-    void SendRpc(string json)
-    {
-        sora_send_rpc(p, json);
-    }
-
-    /// <summary>
-    /// RPC メッセージを送信します。
+    /// JSON-RPC リクエストオブジェクトを送信します。
     /// </summary>
     /// <remarks>
-    /// isNotification が true の場合は、応答を待たずに即座に送信され、リクエスト ID は付与されません。
-    /// isNotification が false の場合は、リクエスト ID を自動生成し、JSON メッセージに付与してから送信し、サーバーからの応答を待ちます。
+    /// isNotification が true の場合は、ID が付与されない JSON-RPC 通知として送信され、Sora からのレスポンスはありません。
+    /// isNotification が false の場合は、ID を付与した JSON-RPC リクエストとして送信され、
+    /// Sora からのレスポンスは OnRpc に設定した関数に JSON-RPC レスポンスオブジェクトの形式でコールバックされます。
+    /// id が指定されていない場合は、自動的にインクリメントされる数値 ID が生成されます。
     /// </remarks>
     /// <param name="method">呼び出すメソッド名</param>
     /// <param name="paramsJson">メソッドのパラメータを表す JSON 文字列</param>
-    /// <param name="isNotification">true の場合、送信後に Sora からのレスポンスがありません。デフォルトは false</param>
-    public void SendRpcMessage(string method, string paramsJson, bool isNotification = false)
+    /// <param name="isNotification">true の場合、JSON-RPC 通知として送信され、Sora からのレスポンスがありません。デフォルトは false</param>
+    /// <param name="id">JSON-RPC リクエスト ID。数値または文字列を指定可能。指定しない場合は自動生成されます</param>
+    public void SendRpcMessage(string method, string paramsJson, bool isNotification = false, object? id = null)
     {
         string rpcMessage;
         if (isNotification)
@@ -1376,10 +1371,23 @@ public class Sora : IDisposable
         }
         else
         {
-            int rpcRequestId = ++rpcRequestIdCounter;
-            rpcMessage = $"{{\"jsonrpc\":\"2.0\",\"method\":\"{method}\",\"params\":{paramsJson},\"id\":{rpcRequestId}}}";
+            string idJson;
+            if (id == null)
+            {
+                int rpcRequestId = ++rpcRequestIdCounter;
+                idJson = rpcRequestId.ToString();
+            }
+            else if (id is string idStr)
+            {
+                idJson = $"\"{idStr}\"";
+            }
+            else
+            {
+                idJson = id.ToString()!;
+            }
+            rpcMessage = $"{{\"jsonrpc\":\"2.0\",\"method\":\"{method}\",\"params\":{paramsJson},\"id\":{idJson}}}";
         }
-        SendRpc(rpcMessage);
+        sora_send_rpc(p, rpcMessage);
     }
 
     private delegate void DeviceEnumCallbackDelegate(string device_name, string unique_name, IntPtr userdata);
