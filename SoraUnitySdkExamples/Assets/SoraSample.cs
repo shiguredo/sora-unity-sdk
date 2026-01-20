@@ -221,17 +221,9 @@ public class SoraSample : MonoBehaviour
         PutSignalingNotifyMetadataItem,
     }
 
-    public enum RpcIdType
-    {
-        None,
-        Number,
-        String
-    }
-
     [Header("RPC メッセージの設定")]
     public RpcMessageType rpcMessageType = RpcMessageType.None;
-    public RpcIdType rpcIdType = RpcIdType.None;
-    public string rpcId = "123";
+    int rpcRequestIdCounter = 0;
 
     [Header("RequestSimulcastRid の設定")]
     public string sendRequestSimulcastRid = "r0";
@@ -1200,87 +1192,54 @@ public class SoraSample : MonoBehaviour
         }
     }
 
-    string GetRpcId()
+    void SendRequestSimulcastRid()
     {
-        switch (rpcIdType)
-        {
-            case RpcIdType.Number:
-                return rpcId;
-            case RpcIdType.String:
-                return $"\"{rpcId}\"";
-            default:
-                return "";
-        }
-    }
-
-    public void SendRequestSimulcastRid(string id = "")
-    {
-        if (sora == null)
-        {
-            return;
-        }
-        string useId = string.IsNullOrEmpty(id) ? GetRpcId() : id;
-        Debug.LogFormat("SendRequestSimulcastRid: rid={0}, id={1}", sendRequestSimulcastRid, string.IsNullOrEmpty(useId) ? "(none)" : useId);
+        string idJson = (++rpcRequestIdCounter).ToString();
+        Debug.LogFormat("SendRequestSimulcastRid: rid={0}, id={1}", sendRequestSimulcastRid, idJson);
         string paramsJson = string.IsNullOrEmpty(sendRequestSimulcastRidConnectionId)
             ? $"{{\"rid\":\"{sendRequestSimulcastRid}\"}}"
             : $"{{\"sender_connection_id\":\"{sendRequestSimulcastRidConnectionId}\",\"rid\":\"{sendRequestSimulcastRid}\"}}";
-        sora.SendRpcMessage("2025.2.0/RequestSimulcastRid", paramsJson, useId);
+        sora.SendRpcMessage("2025.2.0/RequestSimulcastRid", paramsJson, idJson);
     }
 
-    public void SendRequestSpotlightRid(string id = "")
+    void SendRequestSpotlightRid()
     {
-        if (sora == null)
-        {
-            return;
-        }
-        string useId = string.IsNullOrEmpty(id) ? GetRpcId() : id;
-        Debug.LogFormat("SendRequestSpotlightRid: focus={0}, unfocus={1}, id={2}", sendRequestSpotlightFocusRid, sendRequestSpotlightUnfocusRid, string.IsNullOrEmpty(useId) ? "(none)" : useId);
+        string idJson = (++rpcRequestIdCounter).ToString();
+        Debug.LogFormat("SendRequestSpotlightRid: focus={0}, unfocus={1}, id={2}", sendRequestSpotlightFocusRid, sendRequestSpotlightUnfocusRid, idJson);
         string paramsJson = string.IsNullOrEmpty(sendRequestSpotlightRidConnectionId)
             ? $"{{\"spotlight_focus_rid\":\"{sendRequestSpotlightFocusRid}\",\"spotlight_unfocus_rid\":\"{sendRequestSpotlightUnfocusRid}\"}}"
             : $"{{\"send_connection_id\":\"{sendRequestSpotlightRidConnectionId}\",\"spotlight_focus_rid\":\"{sendRequestSpotlightFocusRid}\",\"spotlight_unfocus_rid\":\"{sendRequestSpotlightUnfocusRid}\"}}";
-        sora.SendRpcMessage("2025.2.0/RequestSpotlightRid", paramsJson, useId);
+        sora.SendRpcMessage("2025.2.0/RequestSpotlightRid", paramsJson, idJson);
     }
 
-    public void SendResetSpotlightRid(string id = "")
+    void SendResetSpotlightRid()
     {
-        if (sora == null)
-        {
-            return;
-        }
-        string useId = string.IsNullOrEmpty(id) ? GetRpcId() : id;
-        Debug.LogFormat("SendResetSpotlightRid: id={0}", string.IsNullOrEmpty(useId) ? "(none)" : useId);
+        string idJson = (++rpcRequestIdCounter).ToString();
+        Debug.LogFormat("SendResetSpotlightRid: id={0}", idJson);
         string paramsJson = string.IsNullOrEmpty(sendResetSpotlightRidConnectionId)
             ? "{}"
             : $"{{\"send_connection_id\":\"{sendResetSpotlightRidConnectionId}\"}}";
-        sora.SendRpcMessage("2025.2.0/ResetSpotlightRid", paramsJson, useId);
+        sora.SendRpcMessage("2025.2.0/ResetSpotlightRid", paramsJson, idJson);
     }
 
-    public void SendPutSignalingNotifyMetadata(string id = "")
+    void SendPutSignalingNotifyMetadata()
     {
-        if (sora == null)
-        {
-            return;
-        }
-        string useId = string.IsNullOrEmpty(id) ? GetRpcId() : id;
-        Debug.LogFormat("SendPutSignalingNotifyMetadata: {0}, id={1}", sendPutSignalingNotifyMetadataJson, string.IsNullOrEmpty(useId) ? "(none)" : useId);
+        string idJson = (++rpcRequestIdCounter).ToString();
+        Debug.LogFormat("SendPutSignalingNotifyMetadata: {0}, id={1}", sendPutSignalingNotifyMetadataJson, idJson);
         string paramsJson = sendPutSignalingNotifyMetadataPush
             ? $"{{\"push\":true,\"metadata\":{sendPutSignalingNotifyMetadataJson}}}"
             : $"{{\"metadata\":{sendPutSignalingNotifyMetadataJson}}}";
-        sora.SendRpcMessage("2025.2.0/PutSignalingNotifyMetadata", paramsJson, useId);
+        sora.SendRpcMessage("2025.2.0/PutSignalingNotifyMetadata", paramsJson, idJson);
     }
 
-    public void SendPutSignalingNotifyMetadataItem(string id = "")
+    void SendPutSignalingNotifyMetadataItem()
     {
-        if (sora == null)
-        {
-            return;
-        }
-        string useId = string.IsNullOrEmpty(id) ? GetRpcId() : id;
-        Debug.LogFormat("SendPutSignalingNotifyMetadataItem: key={0}, value={1}, id={2}", sendPutSignalingNotifyMetadataItemKey, sendPutSignalingNotifyMetadataItemValue, string.IsNullOrEmpty(useId) ? "(none)" : useId);
+        string idJson = (++rpcRequestIdCounter).ToString();
+        Debug.LogFormat("SendPutSignalingNotifyMetadataItem: key={0}, value={1}, id={2}", sendPutSignalingNotifyMetadataItemKey, sendPutSignalingNotifyMetadataItemValue, idJson);
         string paramsJson = sendPutSignalingNotifyMetadataItemPush
             ? $"{{\"push\":true,\"key\":\"{sendPutSignalingNotifyMetadataItemKey}\",\"value\":{sendPutSignalingNotifyMetadataItemValue}}}"
             : $"{{\"key\":\"{sendPutSignalingNotifyMetadataItemKey}\",\"value\":{sendPutSignalingNotifyMetadataItemValue}}}";
-        sora.SendRpcMessage("2025.2.0/PutSignalingNotifyMetadataItem", paramsJson, useId);
+        sora.SendRpcMessage("2025.2.0/PutSignalingNotifyMetadataItem", paramsJson, idJson);
     }
 
     public void OnClickVideoMute()
