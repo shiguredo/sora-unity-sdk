@@ -135,9 +135,9 @@ public class Sora : IDisposable
     /// <summary>
     /// JSON-RPC 2.0 リクエストの ID を表す構造体
     /// </summary>
-    public readonly struct RpcId
+    public struct RpcId
     {
-        readonly string jsonValue;
+        string jsonValue;
 
         RpcId(string jsonValue)
         {
