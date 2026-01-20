@@ -132,41 +132,6 @@ public class Sora : IDisposable
     public const string OperatorIsIn = "is_in";
     public const string OperatorIsNotIn = "is_not_in";
 
-    /// <summary>
-    /// JSON-RPC 2.0 リクエストの ID を表す構造体
-    /// </summary>
-    public struct RpcId
-    {
-        string jsonValue;
-
-        RpcId(string jsonValue)
-        {
-            this.jsonValue = jsonValue;
-        }
-
-        /// <summary>
-        /// 整数を ID として使用する
-        /// </summary>
-        public static RpcId FromInt(int value) => new RpcId(value.ToString());
-
-        /// <summary>
-        /// 文字列を ID として使用する
-        /// </summary>
-        public static RpcId FromString(string value) => new RpcId(System.Text.Json.JsonSerializer.Serialize(value));
-
-        /// <summary>
-        /// 整数から変換
-        /// </summary>
-        public static implicit operator RpcId(int value) => FromInt(value);
-
-        /// <summary>
-        /// 文字列から変換
-        /// </summary>
-        public static implicit operator RpcId(string value) => FromString(value);
-
-        internal string ToJson() => jsonValue;
-    }
-
     public class ForwardingFilter
     {
         public string? Action;
@@ -1389,24 +1354,24 @@ public class Sora : IDisposable
     /// JSON-RPC リクエストオブジェクトを送信します。
     /// </summary>
     /// <remarks>
-    /// isNotification が true の場合は、ID が付与されない JSON-RPC 2.0 通知 (Notification) として送信され、Sora からのレスポンスはありません。
-    /// isNotification が false の場合は、ID を付与した JSON-RPC 2.0 リクエスト (Request) として送信され、
+    /// isNotification が true の場合、または idJson が空文字の場合は、ID が付与されない JSON-RPC 2.0 通知 (Notification) として送信され、Sora からのレスポンスはありません。
+    /// それ以外の場合は、ID を付与した JSON-RPC 2.0 リクエスト (Request) として送信され、
     /// Sora からのレスポンスは OnRpc に設定した関数に JSON-RPC 2.0 レスポンスオブジェクトの形式でコールバックされます。
     /// </remarks>
     /// <param name="method">呼び出すメソッド名</param>
     /// <param name="paramsJson">メソッドのパラメータを表す JSON 文字列。オブジェクト形式 (例: {"key":"value"}) または配列形式 (例: [1,2,3]) で指定します。パラメータがない場合は "{}" を指定してください</param>
-    /// <param name="id">JSON-RPC 2.0 リクエスト ID。int または string を直接指定できます。isNotification が true の場合は無視されます</param>
+    /// <param name="idJson">JSON-RPC 2.0 リクエスト ID を JSON 形式で指定します。数値の場合は "123"、文字列の場合は "\"req-001\"" のように指定してください。空文字の場合は Notification として送信されます</param>
     /// <param name="isNotification">true の場合、JSON-RPC 2.0 通知として送信され、Sora からのレスポンスがありません。デフォルトは false</param>
-    public void SendRpcMessage(string method, string paramsJson, RpcId id = default, bool isNotification = false)
+    public void SendRpcMessage(string method, string paramsJson, string idJson = "", bool isNotification = false)
     {
-        if (isNotification)
+        if (isNotification || string.IsNullOrEmpty(idJson))
         {
             var rpcMessage = $"{{\"jsonrpc\":\"2.0\",\"method\":\"{method}\",\"params\":{paramsJson}}}";
             sora_send_rpc(p, rpcMessage);
         }
         else
         {
-            var rpcMessage = $"{{\"jsonrpc\":\"2.0\",\"method\":\"{method}\",\"params\":{paramsJson},\"id\":{id.ToJson()}}}";
+            var rpcMessage = $"{{\"jsonrpc\":\"2.0\",\"method\":\"{method}\",\"params\":{paramsJson},\"id\":{idJson}}}";
             sora_send_rpc(p, rpcMessage);
         }
     }

@@ -221,8 +221,17 @@ public class SoraSample : MonoBehaviour
         PutSignalingNotifyMetadataItem,
     }
 
+    public enum RpcIdType
+    {
+        None,
+        Number,
+        String
+    }
+
     [Header("RPC メッセージの設定")]
     public RpcMessageType rpcMessageType = RpcMessageType.None;
+    public RpcIdType rpcIdType = RpcIdType.None;
+    public string rpcId = "123";
 
     [Header("RequestSimulcastRid の設定")]
     public string sendRequestSimulcastRid = "r0";
@@ -1191,69 +1200,87 @@ public class SoraSample : MonoBehaviour
         }
     }
 
-    public void SendRequestSimulcastRid()
+    string GetRpcId()
+    {
+        switch (rpcIdType)
+        {
+            case RpcIdType.Number:
+                return rpcId;
+            case RpcIdType.String:
+                return $"\"{rpcId}\"";
+            default:
+                return "";
+        }
+    }
+
+    public void SendRequestSimulcastRid(string id = "")
     {
         if (sora == null)
         {
             return;
         }
-        Debug.LogFormat("SendRequestSimulcastRid: rid={0}", sendRequestSimulcastRid);
+        string useId = string.IsNullOrEmpty(id) ? GetRpcId() : id;
+        Debug.LogFormat("SendRequestSimulcastRid: rid={0}, id={1}", sendRequestSimulcastRid, string.IsNullOrEmpty(useId) ? "(none)" : useId);
         string paramsJson = string.IsNullOrEmpty(sendRequestSimulcastRidConnectionId)
             ? $"{{\"rid\":\"{sendRequestSimulcastRid}\"}}"
             : $"{{\"sender_connection_id\":\"{sendRequestSimulcastRidConnectionId}\",\"rid\":\"{sendRequestSimulcastRid}\"}}";
-        sora.SendRpcMessage("2025.2.0/RequestSimulcastRid", paramsJson);
+        sora.SendRpcMessage("2025.2.0/RequestSimulcastRid", paramsJson, useId);
     }
 
-    public void SendRequestSpotlightRid()
+    public void SendRequestSpotlightRid(string id = "")
     {
         if (sora == null)
         {
             return;
         }
-        Debug.LogFormat("SendRequestSpotlightRid: focus={0}, unfocus={1}", sendRequestSpotlightFocusRid, sendRequestSpotlightUnfocusRid);
+        string useId = string.IsNullOrEmpty(id) ? GetRpcId() : id;
+        Debug.LogFormat("SendRequestSpotlightRid: focus={0}, unfocus={1}, id={2}", sendRequestSpotlightFocusRid, sendRequestSpotlightUnfocusRid, string.IsNullOrEmpty(useId) ? "(none)" : useId);
         string paramsJson = string.IsNullOrEmpty(sendRequestSpotlightRidConnectionId)
             ? $"{{\"spotlight_focus_rid\":\"{sendRequestSpotlightFocusRid}\",\"spotlight_unfocus_rid\":\"{sendRequestSpotlightUnfocusRid}\"}}"
             : $"{{\"send_connection_id\":\"{sendRequestSpotlightRidConnectionId}\",\"spotlight_focus_rid\":\"{sendRequestSpotlightFocusRid}\",\"spotlight_unfocus_rid\":\"{sendRequestSpotlightUnfocusRid}\"}}";
-        sora.SendRpcMessage("2025.2.0/RequestSpotlightRid", paramsJson);
+        sora.SendRpcMessage("2025.2.0/RequestSpotlightRid", paramsJson, useId);
     }
 
-    public void SendResetSpotlightRid()
+    public void SendResetSpotlightRid(string id = "")
     {
         if (sora == null)
         {
             return;
         }
-        Debug.Log("SendResetSpotlightRid");
+        string useId = string.IsNullOrEmpty(id) ? GetRpcId() : id;
+        Debug.LogFormat("SendResetSpotlightRid: id={0}", string.IsNullOrEmpty(useId) ? "(none)" : useId);
         string paramsJson = string.IsNullOrEmpty(sendResetSpotlightRidConnectionId)
             ? "{}"
             : $"{{\"send_connection_id\":\"{sendResetSpotlightRidConnectionId}\"}}";
-        sora.SendRpcMessage("2025.2.0/ResetSpotlightRid", paramsJson);
+        sora.SendRpcMessage("2025.2.0/ResetSpotlightRid", paramsJson, useId);
     }
 
-    public void SendPutSignalingNotifyMetadata()
+    public void SendPutSignalingNotifyMetadata(string id = "")
     {
         if (sora == null)
         {
             return;
         }
-        Debug.LogFormat("SendPutSignalingNotifyMetadata: {0}", sendPutSignalingNotifyMetadataJson);
+        string useId = string.IsNullOrEmpty(id) ? GetRpcId() : id;
+        Debug.LogFormat("SendPutSignalingNotifyMetadata: {0}, id={1}", sendPutSignalingNotifyMetadataJson, string.IsNullOrEmpty(useId) ? "(none)" : useId);
         string paramsJson = sendPutSignalingNotifyMetadataPush
             ? $"{{\"push\":true,\"metadata\":{sendPutSignalingNotifyMetadataJson}}}"
             : $"{{\"metadata\":{sendPutSignalingNotifyMetadataJson}}}";
-        sora.SendRpcMessage("2025.2.0/PutSignalingNotifyMetadata", paramsJson);
+        sora.SendRpcMessage("2025.2.0/PutSignalingNotifyMetadata", paramsJson, useId);
     }
 
-    public void SendPutSignalingNotifyMetadataItem()
+    public void SendPutSignalingNotifyMetadataItem(string id = "")
     {
         if (sora == null)
         {
             return;
         }
-        Debug.LogFormat("SendPutSignalingNotifyMetadataItem: key={0}, value={1}", sendPutSignalingNotifyMetadataItemKey, sendPutSignalingNotifyMetadataItemValue);
+        string useId = string.IsNullOrEmpty(id) ? GetRpcId() : id;
+        Debug.LogFormat("SendPutSignalingNotifyMetadataItem: key={0}, value={1}, id={2}", sendPutSignalingNotifyMetadataItemKey, sendPutSignalingNotifyMetadataItemValue, string.IsNullOrEmpty(useId) ? "(none)" : useId);
         string paramsJson = sendPutSignalingNotifyMetadataItemPush
             ? $"{{\"push\":true,\"key\":\"{sendPutSignalingNotifyMetadataItemKey}\",\"value\":{sendPutSignalingNotifyMetadataItemValue}}}"
             : $"{{\"key\":\"{sendPutSignalingNotifyMetadataItemKey}\",\"value\":{sendPutSignalingNotifyMetadataItemValue}}}";
-        sora.SendRpcMessage("2025.2.0/PutSignalingNotifyMetadataItem", paramsJson);
+        sora.SendRpcMessage("2025.2.0/PutSignalingNotifyMetadataItem", paramsJson, useId);
     }
 
     public void OnClickVideoMute()
