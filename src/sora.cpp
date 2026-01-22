@@ -911,13 +911,6 @@ void Sora::SendMessage(const std::string& label, const std::string& data) {
   signaling_->SendDataChannel(label, data);
 }
 
-void Sora::SendRpc(const std::string& json) {
-  if (signaling_ == nullptr) {
-    return;
-  }
-  signaling_->SendDataChannel("rpc", json);
-}
-
 void* Sora::GetAndroidApplicationContext(void* env) {
 #ifdef SORA_UNITY_SDK_ANDROID
   return android_context_.obj();

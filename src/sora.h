@@ -88,7 +88,6 @@ class Sora : public std::enable_shared_from_this<Sora>,
   void GetStats(std::function<void(std::string)> on_get_stats);
 
   void SendMessage(const std::string& label, const std::string& data);
-  void SendRpc(const std::string& json);
 
   bool GetAudioEnabled() const;
   void SetAudioEnabled(bool enabled);
