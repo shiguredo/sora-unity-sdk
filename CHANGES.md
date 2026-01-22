@@ -32,8 +32,9 @@
   - Sora 2025.2 以降で利用可能な RPC 機能に対応する
   - `Sora.OnRpc` コールバックを追加する
   - `Sora.SendRpcMessage()` メソッドを追加する
-    - JSON-RPC 2.0 形式のメッセージを Sora に送信する
-    - `isNotification` が true の場合は Notification として送信し、Sora からのレスポンスはなし（デフォルトは false）
+    - JSON-RPC 2.0 のメッセージを送信する
+    - `id` が null の場合は通知 (Notification) として送信され、Sora からのレスポンスは返らない
+    - `id` に数値または文字列を指定した場合はリクエスト (Request) として送信され、Sora からのレスポンスは `OnRpc` コールバックで受け取る
   - @torikizi
 
 ### misc
