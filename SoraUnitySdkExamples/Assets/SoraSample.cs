@@ -223,7 +223,6 @@ public class SoraSample : MonoBehaviour
 
     [Header("RPC メッセージの設定")]
     public RpcMessageType rpcMessageType = RpcMessageType.None;
-    public bool enableRpcId = true;
     int rpcRequestIdCounter = 0;
 
     [Header("RequestSimulcastRid の設定")]
@@ -1210,49 +1209,34 @@ public class SoraSample : MonoBehaviour
         }
     }
 
-    string GenerateRpcId()
-    {
-        if (enableRpcId)
-        {
-            return (++rpcRequestIdCounter).ToString();
-        }
-        return null;
-    }
-
     void SendRequestSimulcastRid()
     {
-        string idJson = GenerateRpcId();
-        Debug.LogFormat("SendRequestSimulcastRid: rid={0}, id={1}", sendRequestSimulcastRid, idJson ?? "null");
-        string paramsJson = string.IsNullOrEmpty(sendRequestSimulcastRidConnectionId)
-            ? $"{{\"rid\":\"{sendRequestSimulcastRid}\"}}"
-            : $"{{\"sender_connection_id\":\"{sendRequestSimulcastRidConnectionId}\",\"rid\":\"{sendRequestSimulcastRid}\"}}";
+        string idJson = (++rpcRequestIdCounter).ToString();
+        Debug.LogFormat("SendRequestSimulcastRid: rid={0}, id={1}", sendRequestSimulcastRid, idJson);
+        string paramsJson = $"{{\"sender_connection_id\":\"{sendRequestSimulcastRidConnectionId}\",\"rid\":\"{sendRequestSimulcastRid}\"}}";
         sora.SendRpcMessage("2025.2.0/RequestSimulcastRid", paramsJson, idJson);
     }
 
     void SendRequestSpotlightRid()
     {
-        string idJson = GenerateRpcId();
-        Debug.LogFormat("SendRequestSpotlightRid: focus={0}, unfocus={1}, id={2}", sendRequestSpotlightFocusRid, sendRequestSpotlightUnfocusRid, idJson ?? "null");
-        string paramsJson = string.IsNullOrEmpty(sendRequestSpotlightRidConnectionId)
-            ? $"{{\"spotlight_focus_rid\":\"{sendRequestSpotlightFocusRid}\",\"spotlight_unfocus_rid\":\"{sendRequestSpotlightUnfocusRid}\"}}"
-            : $"{{\"send_connection_id\":\"{sendRequestSpotlightRidConnectionId}\",\"spotlight_focus_rid\":\"{sendRequestSpotlightFocusRid}\",\"spotlight_unfocus_rid\":\"{sendRequestSpotlightUnfocusRid}\"}}";
+        string idJson = (++rpcRequestIdCounter).ToString();
+        Debug.LogFormat("SendRequestSpotlightRid: focus={0}, unfocus={1}, id={2}", sendRequestSpotlightFocusRid, sendRequestSpotlightUnfocusRid, idJson);
+        string paramsJson = $"{{\"send_connection_id\":\"{sendRequestSpotlightRidConnectionId}\",\"spotlight_focus_rid\":\"{sendRequestSpotlightFocusRid}\",\"spotlight_unfocus_rid\":\"{sendRequestSpotlightUnfocusRid}\"}}";
         sora.SendRpcMessage("2025.2.0/RequestSpotlightRid", paramsJson, idJson);
     }
 
     void SendResetSpotlightRid()
     {
-        string idJson = GenerateRpcId();
-        Debug.LogFormat("SendResetSpotlightRid: id={0}", idJson ?? "null");
-        string paramsJson = string.IsNullOrEmpty(sendResetSpotlightRidConnectionId)
-            ? "{}"
-            : $"{{\"send_connection_id\":\"{sendResetSpotlightRidConnectionId}\"}}";
+        string idJson = (++rpcRequestIdCounter).ToString();
+        Debug.LogFormat("SendResetSpotlightRid: id={0}", idJson);
+        string paramsJson = $"{{\"send_connection_id\":\"{sendResetSpotlightRidConnectionId}\"}}";
         sora.SendRpcMessage("2025.2.0/ResetSpotlightRid", paramsJson, idJson);
     }
 
     void SendPutSignalingNotifyMetadata()
     {
-        string idJson = GenerateRpcId();
-        Debug.LogFormat("SendPutSignalingNotifyMetadata: {0}, id={1}", sendPutSignalingNotifyMetadataJson, idJson ?? "null");
+        string idJson = (++rpcRequestIdCounter).ToString();
+        Debug.LogFormat("SendPutSignalingNotifyMetadata: {0}, id={1}", sendPutSignalingNotifyMetadataJson, idJson);
         string paramsJson = sendPutSignalingNotifyMetadataPush
             ? $"{{\"push\":true,\"metadata\":{sendPutSignalingNotifyMetadataJson}}}"
             : $"{{\"metadata\":{sendPutSignalingNotifyMetadataJson}}}";
@@ -1261,8 +1245,8 @@ public class SoraSample : MonoBehaviour
 
     void SendPutSignalingNotifyMetadataItem()
     {
-        string idJson = GenerateRpcId();
-        Debug.LogFormat("SendPutSignalingNotifyMetadataItem: key={0}, value={1}, id={2}", sendPutSignalingNotifyMetadataItemKey, sendPutSignalingNotifyMetadataItemValue, idJson ?? "null");
+        string idJson = (++rpcRequestIdCounter).ToString();
+        Debug.LogFormat("SendPutSignalingNotifyMetadataItem: key={0}, value={1}, id={2}", sendPutSignalingNotifyMetadataItemKey, sendPutSignalingNotifyMetadataItemValue, idJson);
         string paramsJson = sendPutSignalingNotifyMetadataItemPush
             ? $"{{\"push\":true,\"key\":\"{sendPutSignalingNotifyMetadataItemKey}\",\"value\":{sendPutSignalingNotifyMetadataItemValue}}}"
             : $"{{\"key\":\"{sendPutSignalingNotifyMetadataItemKey}\",\"value\":{sendPutSignalingNotifyMetadataItemValue}}}";
