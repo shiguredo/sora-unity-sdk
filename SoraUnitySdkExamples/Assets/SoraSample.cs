@@ -227,7 +227,7 @@ public class SoraSample : MonoBehaviour
 
     [Header("RequestSimulcastRid の設定")]
     public string sendRequestSimulcastRid = "r0";
-    public string sendRequestSimulcastRidConnectionId = "";
+    public string sendRequestSimulcastRidSenderConnectionId = "";
 
     [Header("RequestSpotlightRid の設定")]
     public string sendRequestSpotlightFocusRid = "r1";
@@ -1212,24 +1212,48 @@ public class SoraSample : MonoBehaviour
     void SendRequestSimulcastRid()
     {
         int id = ++rpcRequestIdCounter;
-        Debug.LogFormat("SendRequestSimulcastRid: rid={0}, id={1}", sendRequestSimulcastRid, id);
-        string paramsJson = $"{{\"sender_connection_id\":\"{sendRequestSimulcastRidConnectionId}\",\"rid\":\"{sendRequestSimulcastRid}\"}}";
+        Debug.LogFormat("SendRequestSimulcastRid: rid={0}, sender_connection_id={1}, id={2}", sendRequestSimulcastRid, sendRequestSimulcastRidSenderConnectionId, id);
+        string paramsJson;
+        if (string.IsNullOrEmpty(sendRequestSimulcastRidSenderConnectionId))
+        {
+            paramsJson = $"{{\"rid\":\"{sendRequestSimulcastRid}\"}}";
+        }
+        else
+        {
+            paramsJson = $"{{\"sender_connection_id\":\"{sendRequestSimulcastRidSenderConnectionId}\",\"rid\":\"{sendRequestSimulcastRid}\"}}";
+        }
         sora.RequestRpcMessage("2025.2.0/RequestSimulcastRid", paramsJson, id);
     }
 
     void SendRequestSpotlightRid()
     {
         int id = ++rpcRequestIdCounter;
-        Debug.LogFormat("SendRequestSpotlightRid: focus={0}, unfocus={1}, id={2}", sendRequestSpotlightFocusRid, sendRequestSpotlightUnfocusRid, id);
-        string paramsJson = $"{{\"send_connection_id\":\"{sendRequestSpotlightRidConnectionId}\",\"spotlight_focus_rid\":\"{sendRequestSpotlightFocusRid}\",\"spotlight_unfocus_rid\":\"{sendRequestSpotlightUnfocusRid}\"}}";
+        Debug.LogFormat("SendRequestSpotlightRid: focus={0}, unfocus={1}, send_connection_id={2}, id={3}", sendRequestSpotlightFocusRid, sendRequestSpotlightUnfocusRid, sendRequestSpotlightRidConnectionId, id);
+        string paramsJson;
+        if (string.IsNullOrEmpty(sendRequestSpotlightRidConnectionId))
+        {
+            paramsJson = $"{{\"spotlight_focus_rid\":\"{sendRequestSpotlightFocusRid}\",\"spotlight_unfocus_rid\":\"{sendRequestSpotlightUnfocusRid}\"}}";
+        }
+        else
+        {
+            paramsJson = $"{{\"send_connection_id\":\"{sendRequestSpotlightRidConnectionId}\",\"spotlight_focus_rid\":\"{sendRequestSpotlightFocusRid}\",\"spotlight_unfocus_rid\":\"{sendRequestSpotlightUnfocusRid}\"}}";
+        }
         sora.RequestRpcMessage("2025.2.0/RequestSpotlightRid", paramsJson, id);
     }
 
     void SendResetSpotlightRid()
     {
         int id = ++rpcRequestIdCounter;
-        Debug.LogFormat("SendResetSpotlightRid: id={0}", id);
-        string paramsJson = $"{{\"send_connection_id\":\"{sendResetSpotlightRidConnectionId}\"}}";
+        Debug.LogFormat("SendResetSpotlightRid: send_connection_id={0}, id={1}", sendResetSpotlightRidConnectionId, id);
+        string paramsJson;
+        if (string.IsNullOrEmpty(sendResetSpotlightRidConnectionId))
+        {
+            paramsJson = "{}";
+        }
+        else
+        {
+            paramsJson = $"{{\"send_connection_id\":\"{sendResetSpotlightRidConnectionId}\"}}";
+        }
         sora.RequestRpcMessage("2025.2.0/ResetSpotlightRid", paramsJson, id);
     }
 
