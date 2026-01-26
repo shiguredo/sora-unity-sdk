@@ -1349,18 +1349,15 @@ public class Sora : IDisposable
         sora_send_message(p, label, buf, buf.Length);
     }
 
-    /// <summary>
-    /// JSON-RPC 2.0 メッセージを送信します。
-    /// </summary>
+    // JSON-RPC 2.0 メッセージを送信します。
     void SendRpcMessage(string rpcMessage)
     {
         var bytes = System.Text.Encoding.UTF8.GetBytes(rpcMessage);
         sora_send_message(p, "rpc", bytes, bytes.Length);
     }
 
-    /// <summary>
-    /// JSON 文字列をエスケープします。
-    /// </summary>
+    // RFC 8259 の文字列エスケープ仕様に準拠して JSON 文字列をエスケープします。
+    // Unity に統一された汎用的な JSON ライブラリが無いため、自前で実装しています。
     static string EscapeJsonString(string value)
     {
         var sb = new System.Text.StringBuilder(value.Length + 2);
@@ -1421,6 +1418,13 @@ public class Sora : IDisposable
         SendRpcMessage(rpcMessage);
     }
 
+    void RequestRpcMessageInternal(string method, string paramsJson, string idJson)
+    {
+        var methodJson = EscapeJsonString(method);
+        var rpcMessage = $"{{\"jsonrpc\":\"2.0\",\"method\":{methodJson},\"params\":{paramsJson},\"id\":{idJson}}}";
+        SendRpcMessage(rpcMessage);
+    }
+
     /// <summary>
     /// JSON-RPC 2.0 リクエスト (Request) を送信します。
     /// </summary>
@@ -1430,21 +1434,10 @@ public class Sora : IDisposable
     /// </remarks>
     /// <param name="method">呼び出すメソッド名</param>
     /// <param name="paramsJson">メソッドのパラメータを表す JSON 文字列。オブジェクト形式 (例: {"key":"value"}) または配列形式 (例: [1,2,3]) で指定します。パラメータがない場合は "{}" を指定してください</param>
-    /// <param name="id">JSON-RPC 2.0 リクエスト ID (文字列)。null も許容されます</param>
-    public void RequestRpcMessage(string method, string paramsJson, string? id)
+    /// <param name="id">JSON-RPC 2.0 リクエスト ID (文字列)</param>
+    public void RequestRpcMessage(string method, string paramsJson, string id)
     {
-        var methodJson = EscapeJsonString(method);
-        string idJson;
-        if (id == null)
-        {
-            idJson = "null";
-        }
-        else
-        {
-            idJson = EscapeJsonString(id);
-        }
-        var rpcMessage = $"{{\"jsonrpc\":\"2.0\",\"method\":{methodJson},\"params\":{paramsJson},\"id\":{idJson}}}";
-        SendRpcMessage(rpcMessage);
+        RequestRpcMessageInternal(method, paramsJson, EscapeJsonString(id));
     }
 
     /// <summary>
@@ -1459,10 +1452,7 @@ public class Sora : IDisposable
     /// <param name="id">JSON-RPC 2.0 リクエスト ID (数値)</param>
     public void RequestRpcMessage(string method, string paramsJson, int id)
     {
-        var methodJson = EscapeJsonString(method);
-        var idJson = string.Format(System.Globalization.CultureInfo.InvariantCulture, "{0}", id);
-        var rpcMessage = $"{{\"jsonrpc\":\"2.0\",\"method\":{methodJson},\"params\":{paramsJson},\"id\":{idJson}}}";
-        SendRpcMessage(rpcMessage);
+        RequestRpcMessageInternal(method, paramsJson, id.ToString());
     }
 
     private delegate void DeviceEnumCallbackDelegate(string device_name, string unique_name, IntPtr userdata);
