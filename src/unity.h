@@ -119,8 +119,6 @@ UNITY_INTERFACE_EXPORT void sora_send_message(void* p,
                                               void* buf,
                                               int size);
 
-UNITY_INTERFACE_EXPORT void sora_send_rpc(void* p, const char* json);
-
 typedef void (*device_enum_cb_t)(const char* device_name,
                                  const char* unique_name,
                                  void* userdata);

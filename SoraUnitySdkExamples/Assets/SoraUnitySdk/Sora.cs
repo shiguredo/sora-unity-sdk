@@ -1351,6 +1351,15 @@ public class Sora : IDisposable
     }
 
     /// <summary>
+    /// JSON-RPC 2.0 メッセージを送信します。
+    /// </summary>
+    void SendRpcMessage(string rpcMessage)
+    {
+        var bytes = System.Text.Encoding.UTF8.GetBytes(rpcMessage);
+        sora_send_message(p, "rpc", bytes, bytes.Length);
+    }
+
+    /// <summary>
     /// JSON-RPC 2.0 通知 (Notification) を送信します。
     /// </summary>
     /// <remarks>
@@ -1362,7 +1371,7 @@ public class Sora : IDisposable
     {
         var methodJson = "\"" + method.Replace("\\", "\\\\").Replace("\"", "\\\"").Replace("\n", "\\n").Replace("\r", "\\r").Replace("\t", "\\t") + "\"";
         var rpcMessage = $"{{\"jsonrpc\":\"2.0\",\"method\":{methodJson},\"params\":{paramsJson}}}";
-        sora_send_rpc(p, rpcMessage);
+        SendRpcMessage(rpcMessage);
     }
 
     /// <summary>
@@ -1389,7 +1398,7 @@ public class Sora : IDisposable
         }
 
         var rpcMessage = $"{{\"jsonrpc\":\"2.0\",\"method\":{methodJson},\"params\":{paramsJson},\"id\":{idJson}}}";
-        sora_send_rpc(p, rpcMessage);
+        SendRpcMessage(rpcMessage);
     }
 
     private delegate void DeviceEnumCallbackDelegate(string device_name, string unique_name, IntPtr userdata);
@@ -1605,8 +1614,6 @@ public class Sora : IDisposable
     private static extern void sora_get_stats(IntPtr p, StatsCallbackDelegate on_get_stats, IntPtr userdata);
     [DllImport(DllName)]
     private static extern void sora_send_message(IntPtr p, string label, [In] byte[] buf, int size);
-    [DllImport(DllName)]
-    private static extern void sora_send_rpc(IntPtr p, string json);
     [DllImport(DllName)]
     private static extern int sora_device_enum_video_capturer(DeviceEnumCallbackDelegate f, IntPtr userdata);
     [DllImport(DllName)]

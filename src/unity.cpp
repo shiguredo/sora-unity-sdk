@@ -311,11 +311,6 @@ void sora_send_message(void* p, const char* label, void* buf, int size) {
   wsora->sora->SendMessage(label, std::string(s, s + size));
 }
 
-void sora_send_rpc(void* p, const char* json) {
-  auto wsora = (SoraWrapper*)p;
-  wsora->sora->SendMessage("rpc", json);
-}
-
 unity_bool_t sora_device_enum_video_capturer(device_enum_cb_t f,
                                              void* userdata) {
   return sora_unity_sdk::DeviceList::EnumVideoCapturer(
