@@ -1178,7 +1178,7 @@ public class SoraSample : MonoBehaviour
         }
     }
 
-    public void OnClickRpc()
+    public void OnClickSendRpc()
     {
         if (sora == null)
         {
