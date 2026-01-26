@@ -493,7 +493,6 @@ public class Sora : IDisposable
     Action<string>? onPush;
     Action<string, byte[]>? onMessage;
     Action<string>? onRpc;
-    int rpcRequestIdCounter;
     Action<SoraConf.ErrorCode, string>? onDisconnect;
     Action<string>? onDataChannel;
     Action<short[], int, int>? onHandleAudio;
