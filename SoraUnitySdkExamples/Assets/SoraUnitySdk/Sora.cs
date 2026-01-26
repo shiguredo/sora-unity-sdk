@@ -1360,6 +1360,14 @@ public class Sora : IDisposable
     }
 
     /// <summary>
+    /// JSON 文字列をエスケープします。
+    /// </summary>
+    static string EscapeJsonString(string value)
+    {
+        return "\"" + value.Replace("\\", "\\\\").Replace("\"", "\\\"").Replace("\b", "\\b").Replace("\f", "\\f").Replace("\n", "\\n").Replace("\r", "\\r").Replace("\t", "\\t") + "\"";
+    }
+
+    /// <summary>
     /// JSON-RPC 2.0 通知 (Notification) を送信します。
     /// </summary>
     /// <remarks>
@@ -1369,7 +1377,7 @@ public class Sora : IDisposable
     /// <param name="paramsJson">メソッドのパラメータを表す JSON 文字列。オブジェクト形式 (例: {"key":"value"}) または配列形式 (例: [1,2,3]) で指定します。パラメータがない場合は "{}" を指定してください</param>
     public void NotifyRpcMessage(string method, string paramsJson)
     {
-        var methodJson = "\"" + method.Replace("\\", "\\\\").Replace("\"", "\\\"").Replace("\n", "\\n").Replace("\r", "\\r").Replace("\t", "\\t") + "\"";
+        var methodJson = EscapeJsonString(method);
         var rpcMessage = $"{{\"jsonrpc\":\"2.0\",\"method\":{methodJson},\"params\":{paramsJson}}}";
         SendRpcMessage(rpcMessage);
     }
@@ -1383,20 +1391,37 @@ public class Sora : IDisposable
     /// </remarks>
     /// <param name="method">呼び出すメソッド名</param>
     /// <param name="paramsJson">メソッドのパラメータを表す JSON 文字列。オブジェクト形式 (例: {"key":"value"}) または配列形式 (例: [1,2,3]) で指定します。パラメータがない場合は "{}" を指定してください</param>
-    /// <param name="id">JSON-RPC 2.0 リクエスト ID。数値 (例: 123) または文字列 (例: "req-001") を指定してください</param>
-    public void RequestRpcMessage(string method, string paramsJson, object id)
+    /// <param name="id">JSON-RPC 2.0 リクエスト ID (文字列)。null も許容されます</param>
+    public void RequestRpcMessage(string method, string paramsJson, string? id)
     {
-        var methodJson = "\"" + method.Replace("\\", "\\\\").Replace("\"", "\\\"").Replace("\n", "\\n").Replace("\r", "\\r").Replace("\t", "\\t") + "\"";
+        var methodJson = EscapeJsonString(method);
         string idJson;
-        if (id is string idStr)
+        if (id == null)
         {
-            idJson = "\"" + idStr.Replace("\\", "\\\\").Replace("\"", "\\\"").Replace("\n", "\\n").Replace("\r", "\\r").Replace("\t", "\\t") + "\"";
+            idJson = "null";
         }
         else
         {
-            idJson = string.Format(System.Globalization.CultureInfo.InvariantCulture, "{0}", id);
+            idJson = EscapeJsonString(id);
         }
+        var rpcMessage = $"{{\"jsonrpc\":\"2.0\",\"method\":{methodJson},\"params\":{paramsJson},\"id\":{idJson}}}";
+        SendRpcMessage(rpcMessage);
+    }
 
+    /// <summary>
+    /// JSON-RPC 2.0 リクエスト (Request) を送信します。
+    /// </summary>
+    /// <remarks>
+    /// ID を付与した JSON-RPC 2.0 リクエストとして送信され、
+    /// Sora からのレスポンスは OnRpc に設定した関数に JSON-RPC 2.0 レスポンスオブジェクトの形式でコールバックされます。
+    /// </remarks>
+    /// <param name="method">呼び出すメソッド名</param>
+    /// <param name="paramsJson">メソッドのパラメータを表す JSON 文字列。オブジェクト形式 (例: {"key":"value"}) または配列形式 (例: [1,2,3]) で指定します。パラメータがない場合は "{}" を指定してください</param>
+    /// <param name="id">JSON-RPC 2.0 リクエスト ID (数値)</param>
+    public void RequestRpcMessage(string method, string paramsJson, int id)
+    {
+        var methodJson = EscapeJsonString(method);
+        var idJson = string.Format(System.Globalization.CultureInfo.InvariantCulture, "{0}", id);
         var rpcMessage = $"{{\"jsonrpc\":\"2.0\",\"method\":{methodJson},\"params\":{paramsJson},\"id\":{idJson}}}";
         SendRpcMessage(rpcMessage);
     }
