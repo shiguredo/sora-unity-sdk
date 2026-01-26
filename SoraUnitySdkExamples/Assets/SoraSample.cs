@@ -1209,9 +1209,15 @@ public class SoraSample : MonoBehaviour
         }
     }
 
+    // RPC リクエストごとに一意な ID を生成する
+    int GenerateRpcId()
+    {
+        return ++rpcRequestIdCounter;
+    }
+
     void SendRequestSimulcastRid()
     {
-        int id = ++rpcRequestIdCounter;
+        int id = GenerateRpcId();
         Debug.LogFormat("SendRequestSimulcastRid: rid={0}, sender_connection_id={1}, id={2}", sendRequestSimulcastRid, sendRequestSimulcastRidSenderConnectionId, id);
         string paramsJson;
         if (string.IsNullOrEmpty(sendRequestSimulcastRidSenderConnectionId))
@@ -1227,7 +1233,7 @@ public class SoraSample : MonoBehaviour
 
     void SendRequestSpotlightRid()
     {
-        int id = ++rpcRequestIdCounter;
+        int id = GenerateRpcId();
         Debug.LogFormat("SendRequestSpotlightRid: focus={0}, unfocus={1}, send_connection_id={2}, id={3}", sendRequestSpotlightFocusRid, sendRequestSpotlightUnfocusRid, sendRequestSpotlightRidConnectionId, id);
         string paramsJson;
         if (string.IsNullOrEmpty(sendRequestSpotlightRidConnectionId))
@@ -1243,7 +1249,7 @@ public class SoraSample : MonoBehaviour
 
     void SendResetSpotlightRid()
     {
-        int id = ++rpcRequestIdCounter;
+        int id = GenerateRpcId();
         Debug.LogFormat("SendResetSpotlightRid: send_connection_id={0}, id={1}", sendResetSpotlightRidConnectionId, id);
         string paramsJson;
         if (string.IsNullOrEmpty(sendResetSpotlightRidConnectionId))
@@ -1259,7 +1265,7 @@ public class SoraSample : MonoBehaviour
 
     void SendPutSignalingNotifyMetadata()
     {
-        int id = ++rpcRequestIdCounter;
+        int id = GenerateRpcId();
         Debug.LogFormat("SendPutSignalingNotifyMetadata: {0}, id={1}", sendPutSignalingNotifyMetadataJson, id);
         string paramsJson = sendPutSignalingNotifyMetadataPush
             ? $"{{\"push\":true,\"metadata\":{sendPutSignalingNotifyMetadataJson}}}"
@@ -1269,7 +1275,7 @@ public class SoraSample : MonoBehaviour
 
     void SendPutSignalingNotifyMetadataItem()
     {
-        int id = ++rpcRequestIdCounter;
+        int id = GenerateRpcId();
         Debug.LogFormat("SendPutSignalingNotifyMetadataItem: key={0}, value={1}, id={2}", sendPutSignalingNotifyMetadataItemKey, sendPutSignalingNotifyMetadataItemValue, id);
         string paramsJson = sendPutSignalingNotifyMetadataItemPush
             ? $"{{\"push\":true,\"key\":\"{sendPutSignalingNotifyMetadataItemKey}\",\"value\":{sendPutSignalingNotifyMetadataItemValue}}}"
