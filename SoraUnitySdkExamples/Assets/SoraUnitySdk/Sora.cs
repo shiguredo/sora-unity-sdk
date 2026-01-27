@@ -1411,14 +1411,14 @@ public class Sora : IDisposable
     /// </remarks>
     /// <param name="method">呼び出すメソッド名</param>
     /// <param name="paramsJson">メソッドのパラメータを表す JSON 文字列。オブジェクト形式 (例: {"key":"value"}) または配列形式 (例: [1,2,3]) で指定します。パラメータがない場合は "{}" を指定してください</param>
-    public void NotifyRpcMessage(string method, string paramsJson)
+    public void RequestRpcNotification(string method, string paramsJson)
     {
         var methodJson = EscapeJsonString(method);
         var rpcMessage = $"{{\"jsonrpc\":\"2.0\",\"method\":{methodJson},\"params\":{paramsJson}}}";
         SendRpcMessage(rpcMessage);
     }
 
-    void RequestRpcMessageInternal(string method, string paramsJson, string idJson)
+    void RequestRpcInternal(string method, string paramsJson, string idJson)
     {
         var methodJson = EscapeJsonString(method);
         var rpcMessage = $"{{\"jsonrpc\":\"2.0\",\"method\":{methodJson},\"params\":{paramsJson},\"id\":{idJson}}}";
@@ -1435,9 +1435,9 @@ public class Sora : IDisposable
     /// <param name="method">呼び出すメソッド名</param>
     /// <param name="paramsJson">メソッドのパラメータを表す JSON 文字列。オブジェクト形式 (例: {"key":"value"}) または配列形式 (例: [1,2,3]) で指定します。パラメータがない場合は "{}" を指定してください</param>
     /// <param name="id">JSON-RPC 2.0 リクエスト ID (文字列)</param>
-    public void RequestRpcMessage(string method, string paramsJson, string id)
+    public void RequestRpc(string method, string paramsJson, string id)
     {
-        RequestRpcMessageInternal(method, paramsJson, EscapeJsonString(id));
+        RequestRpcInternal(method, paramsJson, EscapeJsonString(id));
     }
 
     /// <summary>
@@ -1450,9 +1450,9 @@ public class Sora : IDisposable
     /// <param name="method">呼び出すメソッド名</param>
     /// <param name="paramsJson">メソッドのパラメータを表す JSON 文字列。オブジェクト形式 (例: {"key":"value"}) または配列形式 (例: [1,2,3]) で指定します。パラメータがない場合は "{}" を指定してください</param>
     /// <param name="id">JSON-RPC 2.0 リクエスト ID (数値)</param>
-    public void RequestRpcMessage(string method, string paramsJson, int id)
+    public void RequestRpc(string method, string paramsJson, int id)
     {
-        RequestRpcMessageInternal(method, paramsJson, id.ToString());
+        RequestRpcInternal(method, paramsJson, id.ToString());
     }
 
     private delegate void DeviceEnumCallbackDelegate(string device_name, string unique_name, IntPtr userdata);

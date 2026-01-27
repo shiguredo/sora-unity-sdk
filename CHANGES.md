@@ -31,10 +31,10 @@
 - [ADD] RPC 機能を追加する
   - Sora 2025.2 以降で利用可能な RPC 機能に対応する
   - `Sora.OnRpc` コールバックを追加する
-  - `Sora.NotifyRpcMessage()` メソッドを追加する
+  - `Sora.RequestRpcNotification()` メソッドを追加する
     - JSON-RPC 2.0 の通知 (Notification) を送信する
     - Sora からのレスポンスは返らない
-  - `Sora.RequestRpcMessage()` メソッドを追加する
+  - `Sora.RequestRpc()` メソッドを追加する
     - JSON-RPC 2.0 のリクエスト (Request) を送信する
     - `id` に数値または文字列を指定する
     - Sora からのレスポンスは `OnRpc` コールバックで受け取る

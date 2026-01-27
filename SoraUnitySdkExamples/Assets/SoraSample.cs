@@ -1228,7 +1228,7 @@ public class SoraSample : MonoBehaviour
         {
             paramsJson = $"{{\"sender_connection_id\":\"{sendRequestSimulcastRidSenderConnectionId}\",\"rid\":\"{sendRequestSimulcastRid}\"}}";
         }
-        sora.RequestRpcMessage("2025.2.0/RequestSimulcastRid", paramsJson, id);
+        sora.RequestRpc("2025.2.0/RequestSimulcastRid", paramsJson, id);
     }
 
     void SendRequestSpotlightRid()
@@ -1244,7 +1244,7 @@ public class SoraSample : MonoBehaviour
         {
             paramsJson = $"{{\"send_connection_id\":\"{sendRequestSpotlightRidConnectionId}\",\"spotlight_focus_rid\":\"{sendRequestSpotlightFocusRid}\",\"spotlight_unfocus_rid\":\"{sendRequestSpotlightUnfocusRid}\"}}";
         }
-        sora.RequestRpcMessage("2025.2.0/RequestSpotlightRid", paramsJson, id);
+        sora.RequestRpc("2025.2.0/RequestSpotlightRid", paramsJson, id);
     }
 
     void SendResetSpotlightRid()
@@ -1260,7 +1260,7 @@ public class SoraSample : MonoBehaviour
         {
             paramsJson = $"{{\"send_connection_id\":\"{sendResetSpotlightRidConnectionId}\"}}";
         }
-        sora.RequestRpcMessage("2025.2.0/ResetSpotlightRid", paramsJson, id);
+        sora.RequestRpc("2025.2.0/ResetSpotlightRid", paramsJson, id);
     }
 
     void SendPutSignalingNotifyMetadata()
@@ -1270,7 +1270,7 @@ public class SoraSample : MonoBehaviour
         string paramsJson = sendPutSignalingNotifyMetadataPush
             ? $"{{\"push\":true,\"metadata\":{sendPutSignalingNotifyMetadataJson}}}"
             : $"{{\"metadata\":{sendPutSignalingNotifyMetadataJson}}}";
-        sora.RequestRpcMessage("2025.2.0/PutSignalingNotifyMetadata", paramsJson, id);
+        sora.RequestRpc("2025.2.0/PutSignalingNotifyMetadata", paramsJson, id);
     }
 
     void SendPutSignalingNotifyMetadataItem()
@@ -1280,7 +1280,7 @@ public class SoraSample : MonoBehaviour
         string paramsJson = sendPutSignalingNotifyMetadataItemPush
             ? $"{{\"push\":true,\"key\":\"{sendPutSignalingNotifyMetadataItemKey}\",\"value\":{sendPutSignalingNotifyMetadataItemValue}}}"
             : $"{{\"key\":\"{sendPutSignalingNotifyMetadataItemKey}\",\"value\":{sendPutSignalingNotifyMetadataItemValue}}}";
-        sora.RequestRpcMessage("2025.2.0/PutSignalingNotifyMetadataItem", paramsJson, id);
+        sora.RequestRpc("2025.2.0/PutSignalingNotifyMetadataItem", paramsJson, id);
     }
 
     public void OnClickVideoMute()
