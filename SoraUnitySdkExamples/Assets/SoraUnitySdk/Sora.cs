@@ -1356,8 +1356,9 @@ public class Sora : IDisposable
         sora_send_message(p, "rpc", bytes, bytes.Length);
     }
 
-    // RFC 8259 の文字列エスケープ仕様に準拠して JSON 文字列をエスケープします。
-    // Unity に統一された汎用的な JSON ライブラリが無いため、自前で実装しています。
+    // RFC 8259 準拠の JSON 文字列エスケープ処理。
+    // Unity 標準の JsonUtility は機能が限定的で、外部ライブラリへの依存も避けたいため、
+    // 必要最小限の JSON エスケープ機能を自前で実装しています。
     static string EscapeJsonString(string value)
     {
         var sb = new System.Text.StringBuilder(value.Length + 2);
