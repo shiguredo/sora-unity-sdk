@@ -31,6 +31,7 @@ typedef void (*message_cb_t)(const char* label,
                              const void* buf,
                              int size,
                              void* userdata);
+typedef void (*rpc_cb_t)(const char* json, void* userdata);
 typedef void (*disconnect_cb_t)(int error_code,
                                 const char* reason,
                                 void* userdata);
@@ -64,8 +65,10 @@ UNITY_INTERFACE_EXPORT void sora_set_on_push(void* p,
 UNITY_INTERFACE_EXPORT void sora_set_on_message(void* p,
                                                 message_cb_t on_message,
                                                 void* userdata);
-UNITY_INTERFACE_EXPORT void
-sora_set_on_disconnect(void* p, disconnect_cb_t on_disconnect, void* userdata);
+UNITY_INTERFACE_EXPORT void sora_set_on_rpc(void* p,
+                                            rpc_cb_t on_rpc,
+                                            void* userdata);
+UNITY_INTERFACE_EXPORT void sora_set_on_disconnect(void* p, disconnect_cb_t on_disconnect, void* userdata);
 UNITY_INTERFACE_EXPORT void sora_set_on_data_channel(
     void* p,
     data_channel_cb_t on_data_channel,

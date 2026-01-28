@@ -131,6 +131,7 @@ public class Sora : IDisposable
     public const string FieldKind = "kind";
     public const string OperatorIsIn = "is_in";
     public const string OperatorIsNotIn = "is_not_in";
+
     public class ForwardingFilter
     {
         public string? Action;
@@ -491,6 +492,7 @@ public class Sora : IDisposable
     Action<string>? onNotify;
     Action<string>? onPush;
     Action<string, byte[]>? onMessage;
+    Action<string>? onRpc;
     Action<SoraConf.ErrorCode, string>? onDisconnect;
     Action<string>? onDataChannel;
     Action<short[], int, int>? onHandleAudio;
@@ -1180,6 +1182,24 @@ public class Sora : IDisposable
         }
     }
 
+    private delegate void RpcCallbackDelegate(string json, IntPtr userdata);
+
+    [AOT.MonoPInvokeCallback(typeof(RpcCallbackDelegate))]
+    static private void RpcCallback(string json, IntPtr userdata)
+    {
+        var sora = GCHandle.FromIntPtr(userdata).Target as Sora;
+        sora!.onRpc!(json);
+    }
+
+    public Action<string>? OnRpc
+    {
+        set
+        {
+            onRpc = value;
+            sora_set_on_rpc(p, value == null ? null : RpcCallback, GCHandle.ToIntPtr(selfHandle));
+        }
+    }
+
     private delegate void DisconnectCallbackDelegate(int errorCode, string message, IntPtr userdata);
 
     [AOT.MonoPInvokeCallback(typeof(DisconnectCallbackDelegate))]
@@ -1327,6 +1347,113 @@ public class Sora : IDisposable
     public void SendMessage(string label, byte[] buf)
     {
         sora_send_message(p, label, buf, buf.Length);
+    }
+
+    // JSON-RPC 2.0 メッセージを送信します。
+    void SendRpcMessage(string rpcMessage)
+    {
+        var bytes = System.Text.Encoding.UTF8.GetBytes(rpcMessage);
+        sora_send_message(p, "rpc", bytes, bytes.Length);
+    }
+
+    // RFC 8259 準拠の JSON 文字列エスケープ処理。
+    // Unity 標準の JsonUtility は機能が限定的で、外部ライブラリへの依存も避けたいため、
+    // 必要最小限の JSON エスケープ機能を自前で実装しています。
+    static string EscapeJsonString(string value)
+    {
+        var sb = new System.Text.StringBuilder(value.Length + 2);
+        sb.Append('"');
+        foreach (char c in value)
+        {
+            switch (c)
+            {
+                case '\\':
+                    sb.Append("\\\\");
+                    break;
+                case '"':
+                    sb.Append("\\\"");
+                    break;
+                case '\b':
+                    sb.Append("\\b");
+                    break;
+                case '\f':
+                    sb.Append("\\f");
+                    break;
+                case '\n':
+                    sb.Append("\\n");
+                    break;
+                case '\r':
+                    sb.Append("\\r");
+                    break;
+                case '\t':
+                    sb.Append("\\t");
+                    break;
+                default:
+                    if (c < 0x20)
+                    {
+                        sb.AppendFormat("\\u{0:x4}", (int)c);
+                    }
+                    else
+                    {
+                        sb.Append(c);
+                    }
+                    break;
+            }
+        }
+        sb.Append('"');
+        return sb.ToString();
+    }
+
+    /// <summary>
+    /// JSON-RPC 2.0 通知 (Notification) を送信します。
+    /// </summary>
+    /// <remarks>
+    /// ID が付与されない JSON-RPC 2.0 通知として送信され、Sora からのレスポンスはありません。
+    /// </remarks>
+    /// <param name="method">呼び出すメソッド名</param>
+    /// <param name="paramsJson">メソッドのパラメータを表す JSON 文字列。オブジェクト形式 (例: {"key":"value"}) または配列形式 (例: [1,2,3]) で指定します。パラメータがない場合は "{}" を指定してください</param>
+    public void RequestRpcNotification(string method, string paramsJson)
+    {
+        var methodJson = EscapeJsonString(method);
+        var rpcMessage = $"{{\"jsonrpc\":\"2.0\",\"method\":{methodJson},\"params\":{paramsJson}}}";
+        SendRpcMessage(rpcMessage);
+    }
+
+    void RequestRpcInternal(string method, string paramsJson, string idJson)
+    {
+        var methodJson = EscapeJsonString(method);
+        var rpcMessage = $"{{\"jsonrpc\":\"2.0\",\"method\":{methodJson},\"params\":{paramsJson},\"id\":{idJson}}}";
+        SendRpcMessage(rpcMessage);
+    }
+
+    /// <summary>
+    /// JSON-RPC 2.0 リクエスト (Request) を送信します。
+    /// </summary>
+    /// <remarks>
+    /// ID を付与した JSON-RPC 2.0 リクエストとして送信され、
+    /// Sora からのレスポンスは OnRpc に設定した関数に JSON-RPC 2.0 レスポンスオブジェクトの形式でコールバックされます。
+    /// </remarks>
+    /// <param name="method">呼び出すメソッド名</param>
+    /// <param name="paramsJson">メソッドのパラメータを表す JSON 文字列。オブジェクト形式 (例: {"key":"value"}) または配列形式 (例: [1,2,3]) で指定します。パラメータがない場合は "{}" を指定してください</param>
+    /// <param name="id">JSON-RPC 2.0 リクエスト ID (文字列)</param>
+    public void RequestRpc(string method, string paramsJson, string id)
+    {
+        RequestRpcInternal(method, paramsJson, EscapeJsonString(id));
+    }
+
+    /// <summary>
+    /// JSON-RPC 2.0 リクエスト (Request) を送信します。
+    /// </summary>
+    /// <remarks>
+    /// ID を付与した JSON-RPC 2.0 リクエストとして送信され、
+    /// Sora からのレスポンスは OnRpc に設定した関数に JSON-RPC 2.0 レスポンスオブジェクトの形式でコールバックされます。
+    /// </remarks>
+    /// <param name="method">呼び出すメソッド名</param>
+    /// <param name="paramsJson">メソッドのパラメータを表す JSON 文字列。オブジェクト形式 (例: {"key":"value"}) または配列形式 (例: [1,2,3]) で指定します。パラメータがない場合は "{}" を指定してください</param>
+    /// <param name="id">JSON-RPC 2.0 リクエスト ID (数値)</param>
+    public void RequestRpc(string method, string paramsJson, int id)
+    {
+        RequestRpcInternal(method, paramsJson, id.ToString());
     }
 
     private delegate void DeviceEnumCallbackDelegate(string device_name, string unique_name, IntPtr userdata);
@@ -1504,6 +1631,8 @@ public class Sora : IDisposable
     private static extern void sora_set_on_push(IntPtr p, PushCallbackDelegate? on_push, IntPtr userdata);
     [DllImport(DllName)]
     private static extern void sora_set_on_message(IntPtr p, MessageCallbackDelegate? on_message, IntPtr userdata);
+    [DllImport(DllName)]
+    private static extern void sora_set_on_rpc(IntPtr p, RpcCallbackDelegate? on_rpc, IntPtr userdata);
     [DllImport(DllName)]
     private static extern void sora_set_on_disconnect(IntPtr p, DisconnectCallbackDelegate? on_disconnect, IntPtr userdata);
     [DllImport(DllName)]
