@@ -43,13 +43,14 @@ logging.basicConfig(level=logging.DEBUG)
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 
 
-def _replace_webrtc_jar_abi(webrtc_info, android_abi):
+def _replace_webrtc_jar_abi_for_x86_64(webrtc_info):
     """
-    Android x86_64 のローカルビルド時にwebrtc.jarのABIを置換する。
+    Android x86_64 ローカルビルド時に webrtc.jar のパスを arm64-v8a から x86_64 に置換する。
 
-    webrtc_infoと android_abi を受け取り、ABI に応じたパスを返す。
+    ローカルビルドの WebRTC では arm64-v8a ディレクトリに webrtc.jar が配置されているため、
+    x86_64 ビルド時にはパスを調整する必要がある。
     """
-    webrtc_jar_file = webrtc_info.webrtc_jar_file.replace("arm64-v8a", android_abi)
+    webrtc_jar_file = webrtc_info.webrtc_jar_file.replace("arm64-v8a", "x86_64")
     return webrtc_info._replace(webrtc_jar_file=webrtc_jar_file)
 
 
@@ -110,7 +111,7 @@ def install_deps(
         )
 
         if local_webrtc_build_dir is not None and platform == "android_x86_64":
-            webrtc_info = _replace_webrtc_jar_abi(webrtc_info, android_abi)
+            webrtc_info = _replace_webrtc_jar_abi_for_x86_64(webrtc_info)
 
         # Windows は MSVC を使うので不要
         # Android は libc++ のために必要
@@ -381,7 +382,7 @@ def _build(args):
         args.debug,
     )
     if args.local_webrtc_build_dir is not None and target == "android_x86_64":
-        webrtc_info = _replace_webrtc_jar_abi(webrtc_info, android_abi)
+        webrtc_info = _replace_webrtc_jar_abi_for_x86_64(webrtc_info)
     sora_info = get_sora_info(
         download_platform, args.local_sora_cpp_sdk_dir, install_dir, args.debug
     )
