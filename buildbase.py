@@ -626,10 +626,7 @@ class WebrtcInfo(NamedTuple):
 
 
 def get_webrtc_info(
-    platform: str,
-    local_webrtc_build_dir: Optional[str],
-    install_dir: str,
-    debug: bool,
+    platform: str, local_webrtc_build_dir: Optional[str], install_dir: str, debug: bool
 ) -> WebrtcInfo:
     webrtc_install_dir = os.path.join(install_dir, "webrtc")
 
