@@ -22,6 +22,12 @@
   - `WEBRTC_BUILD_VERSION_ANDROID_X86_64=m143.7499.1.0-android-x86_64.0`
   - WebRTC/Sora C++ SDK のダウンロード用 platform を `android_x86_64` に切り替える
 
+### misc
+
+- [CHANGE] GitHub Actions から android_x86_64 以外のターゲット向けのビルドを削除する
+  - support/android-x86_64 ブランチでは android_x86_64 のビルドを提供するためのブランチであるためその他のターゲットは不要
+  - @zztkm
+
 ## 2025.3.0
 
 **リリース日**: 2025-12-11
