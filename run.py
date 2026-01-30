@@ -85,6 +85,25 @@ def resolve_target_spec(target: str) -> TargetSpec:
     )
 
 
+def _adjust_webrtc_jar_path_for_android_abi(webrtc_info, android_abi):
+    """
+    Androidのローカルビルド時にwebrtc.jarのパスを補正する。
+
+    webrtc_infoと android_abi を受け取り、ABI に応じたパスを返す。
+    """
+    webrtc_jar_file = os.path.join(
+        os.path.dirname(
+            os.path.dirname(os.path.dirname(os.path.dirname(webrtc_info.webrtc_jar_file)))
+        ),
+        android_abi,
+        "lib.java",
+        "sdk",
+        "android",
+        "libwebrtc.jar",
+    )
+    return webrtc_info._replace(webrtc_jar_file=webrtc_jar_file)
+
+
 def install_deps(
     platform: str,
     build_platform: str,
@@ -142,18 +161,7 @@ def install_deps(
         )
 
         if local_webrtc_build_dir is not None and is_android:
-            # Android でローカルビルドを行う場合、webrtc.jar のパスが ABI によって変わるため補正する
-            webrtc_jar_file = os.path.join(
-                os.path.dirname(
-                    os.path.dirname(os.path.dirname(os.path.dirname(webrtc_info.webrtc_jar_file)))
-                ),
-                android_abi,
-                "lib.java",
-                "sdk",
-                "android",
-                "libwebrtc.jar",
-            )
-            webrtc_info = webrtc_info._replace(webrtc_jar_file=webrtc_jar_file)
+            webrtc_info = _adjust_webrtc_jar_path_for_android_abi(webrtc_info, android_abi)
 
         # Windows は MSVC を使うので不要
         # Android は libc++ のために必要
@@ -213,7 +221,7 @@ def install_deps(
             install_sora_and_deps(
                 version[sora_cpp_version_key],
                 version["BOOST_VERSION"],
-                platform,
+                download_platform,
                 source_dir,
                 install_dir,
             )
@@ -405,18 +413,7 @@ def _build(args):
         args.debug,
     )
     if args.local_webrtc_build_dir is not None and spec.is_android:
-        # Android でローカルビルドを行う場合、webrtc.jar のパスが ABI によって変わるため補正する
-        webrtc_jar_file = os.path.join(
-            os.path.dirname(
-                os.path.dirname(os.path.dirname(os.path.dirname(webrtc_info.webrtc_jar_file)))
-            ),
-            spec.android_abi,
-            "lib.java",
-            "sdk",
-            "android",
-            "libwebrtc.jar",
-        )
-        webrtc_info = webrtc_info._replace(webrtc_jar_file=webrtc_jar_file)
+        webrtc_info = _adjust_webrtc_jar_path_for_android_abi(webrtc_info, spec.android_abi)
     sora_info = get_sora_info(
         spec.download_platform, args.local_sora_cpp_sdk_dir, install_dir, args.debug
     )
