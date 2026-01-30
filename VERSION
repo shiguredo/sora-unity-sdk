@@ -2,10 +2,9 @@ SORA_UNITY_SDK_VERSION=2025.3.0
 SORA_CPP_SDK_VERSION=2025.6.1
 WEBRTC_BUILD_VERSION=m143.7499.1.0
 # Android x86_64 専用の変数
-# 現在、WebRTC-Build と C++ SDK で Android x86_64 は support/ ブランチ運用をしており
-# android-x86_64 付きのリリースでは android-x86_64 以外のバイナリを公開しておらず、
-# SORA_CPP_SDK_VERSION と WEBRTC_BUILD_VERSION を変更してしまうと android_x86_64 以外の
-# target がビルドできなくなてしまうため分けている。
+# 注意: このブランチ (support/android-x86_64) は Android x86_64 専用のビルドを提供するためのものです。
+# WebRTC-Build と Sora C++ SDK は Android x86_64 用に専用のリリース (-android-x86_64.0 suffix) を
+# 提供しており、それらを利用するために以下の変数を定義しています。
 SORA_CPP_SDK_VERSION_ANDROID_X86_64=2025.6.2-android-x86_64.0
 WEBRTC_BUILD_VERSION_ANDROID_X86_64=m143.7499.1.0-android-x86_64.0
 BOOST_VERSION=1.89.0

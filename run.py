@@ -43,7 +43,7 @@ logging.basicConfig(level=logging.DEBUG)
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 
 
-def _replace_webrtc_jar_abi_for_x86_64(webrtc_info, android_abi):
+def _replace_webrtc_jar_abi(webrtc_info, android_abi):
     """
     Android x86_64 のローカルビルド時にwebrtc.jarのABIを置換する。
 
@@ -110,7 +110,7 @@ def install_deps(
         )
 
         if local_webrtc_build_dir is not None and platform == "android_x86_64":
-            webrtc_info = _replace_webrtc_jar_abi_for_x86_64(webrtc_info, android_abi)
+            webrtc_info = _replace_webrtc_jar_abi(webrtc_info, android_abi)
 
         # Windows は MSVC を使うので不要
         # Android は libc++ のために必要
@@ -381,7 +381,7 @@ def _build(args):
         args.debug,
     )
     if args.local_webrtc_build_dir is not None and target == "android_x86_64":
-        webrtc_info = _replace_webrtc_jar_abi_for_x86_64(webrtc_info, android_abi)
+        webrtc_info = _replace_webrtc_jar_abi(webrtc_info, android_abi)
     sora_info = get_sora_info(
         download_platform, args.local_sora_cpp_sdk_dir, install_dir, args.debug
     )
