@@ -11,6 +11,23 @@
 
 ## develop
 
+- [ADD] Android x86_64 向けのビルドターゲット `android_x86_64` を追加
+  - `python3 run.py build android_x86_64` で x86_64 向けにビルド可能
+  - Android の CMake 設定で `ANDROID_ABI=x86_64` を指定する
+  - clang の lib パスを ABI に応じて切り替える（arm64-v8a/aarch64 と x86_64）
+  - パッケージング対象に `Plugins/SoraUnitySdk/android/x86_64/libSoraUnitySdk.so` を追加
+  - Unity 側の x86_64 用 PluginImporter メタファイルを追加
+- [UPDATE] Android x86_64 専用のバージョンキーを追加し、アーティファクト取得を分離
+  - `SORA_CPP_SDK_VERSION_ANDROID_X86_64=2025.6.2-android-x86_64.0`
+  - `WEBRTC_BUILD_VERSION_ANDROID_X86_64=m143.7499.1.0-android-x86_64.0`
+  - WebRTC/Sora C++ SDK のダウンロード用 platform を `android_x86_64` に切り替える
+
+### misc
+
+- [CHANGE] GitHub Actions から android_x86_64 以外のターゲット向けのビルドを削除する
+  - support/android-x86_64 ブランチでは android_x86_64 のビルドを提供するためのブランチであるためその他のターゲットは不要
+  - @zztkm
+
 ## 2025.3.0
 
 **リリース日**: 2025-12-11

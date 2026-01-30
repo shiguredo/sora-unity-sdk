@@ -43,6 +43,25 @@ logging.basicConfig(level=logging.DEBUG)
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 
 
+def _adjust_webrtc_jar_path_for_android_abi(webrtc_info, android_abi):
+    """
+    Androidのローカルビルド時にwebrtc.jarのパスを補正する。
+
+    webrtc_infoと android_abi を受け取り、ABI に応じたパスを返す。
+    """
+    webrtc_jar_file = os.path.join(
+        os.path.dirname(
+            os.path.dirname(os.path.dirname(os.path.dirname(webrtc_info.webrtc_jar_file)))
+        ),
+        android_abi,
+        "lib.java",
+        "sdk",
+        "android",
+        "libwebrtc.jar",
+    )
+    return webrtc_info._replace(webrtc_jar_file=webrtc_jar_file)
+
+
 def install_deps(
     platform: str,
     build_platform: str,
@@ -50,6 +69,11 @@ def install_deps(
     build_dir,
     install_dir,
     debug,
+    download_platform: str,
+    webrtc_version_key: str,
+    sora_cpp_version_key: str,
+    is_android: bool,
+    android_abi: str,
     local_webrtc_build_dir: Optional[str],
     local_webrtc_build_args: List[str],
     local_sora_cpp_sdk_dir: Optional[str],
@@ -59,7 +83,7 @@ def install_deps(
         version = read_version_file("VERSION")
 
         # Android NDK
-        if platform == "android":
+        if is_android:
             install_android_ndk_args = {
                 "version": version["ANDROID_NDK_VERSION"],
                 "version_file": os.path.join(install_dir, "android-ndk.version"),
@@ -71,23 +95,31 @@ def install_deps(
         # WebRTC
         if local_webrtc_build_dir is None:
             install_webrtc_args = {
-                "version": version["WEBRTC_BUILD_VERSION"],
+                "version": version[webrtc_version_key],
                 "version_file": os.path.join(install_dir, "webrtc.version"),
                 "source_dir": source_dir,
                 "install_dir": install_dir,
-                "platform": platform,
+                "platform": download_platform,
             }
             install_webrtc(**install_webrtc_args)
         else:
             build_webrtc_args = {
-                "platform": platform,
+                "platform": download_platform,
                 "local_webrtc_build_dir": local_webrtc_build_dir,
                 "local_webrtc_build_args": local_webrtc_build_args,
                 "debug": debug,
             }
             build_webrtc(**build_webrtc_args)
 
-        webrtc_info = get_webrtc_info(platform, local_webrtc_build_dir, install_dir, debug)
+        webrtc_info = get_webrtc_info(
+            download_platform,
+            local_webrtc_build_dir,
+            install_dir,
+            debug,
+        )
+
+        if local_webrtc_build_dir is not None and is_android:
+            webrtc_info = _adjust_webrtc_jar_path_for_android_abi(webrtc_info, android_abi)
 
         # Windows は MSVC を使うので不要
         # Android は libc++ のために必要
@@ -145,9 +177,9 @@ def install_deps(
         # Sora C++ SDK
         if local_sora_cpp_sdk_dir is None:
             install_sora_and_deps(
-                version["SORA_CPP_SDK_VERSION"],
+                version[sora_cpp_version_key],
                 version["BOOST_VERSION"],
-                platform,
+                download_platform,
                 source_dir,
                 install_dir,
             )
@@ -246,14 +278,15 @@ AVAILABLE_TARGETS = [
     "ubuntu-24.04_x86_64",
     "ios",
     "android",
+    "android_x86_64",
 ]
 
 BUILD_PLATFORM = {
     "windows_x86_64": ["windows_x86_64"],
     "macos_x86_64": ["macos_x86_64", "macos_arm64", "ios"],
     "macos_arm64": ["macos_x86_64", "macos_arm64", "ios"],
-    "ubuntu-22.04_x86_64": ["ubuntu-22.04_x86_64", "android"],
-    "ubuntu-24.04_x86_64": ["ubuntu-24.04_x86_64", "android"],
+    "ubuntu-22.04_x86_64": ["ubuntu-22.04_x86_64", "android", "android_x86_64"],
+    "ubuntu-24.04_x86_64": ["ubuntu-24.04_x86_64", "android", "android_x86_64"],
 }
 
 
@@ -287,8 +320,28 @@ def _format(
 
 def _build(args):
     target = args.target
-
     platform = target
+    if target == "android":
+        is_android = True
+        android_abi = "arm64-v8a"
+        download_platform = "android"
+        cmake_platform = "android"
+        webrtc_version_key = "WEBRTC_BUILD_VERSION"
+        sora_cpp_version_key = "SORA_CPP_SDK_VERSION"
+    elif target == "android_x86_64":
+        is_android = True
+        android_abi = "x86_64"
+        download_platform = "android_x86_64"
+        cmake_platform = "android"
+        webrtc_version_key = "WEBRTC_BUILD_VERSION_ANDROID_X86_64"
+        sora_cpp_version_key = "SORA_CPP_SDK_VERSION_ANDROID_X86_64"
+    else:
+        is_android = False
+        android_abi = ""
+        download_platform = target
+        cmake_platform = target
+        webrtc_version_key = "WEBRTC_BUILD_VERSION"
+        sora_cpp_version_key = "SORA_CPP_SDK_VERSION"
     build_platform = get_build_platform()
     if build_platform not in BUILD_PLATFORM:
         raise Exception(f"Build platform {build_platform} is not supported.")
@@ -312,6 +365,11 @@ def _build(args):
         build_dir,
         install_dir,
         args.debug,
+        download_platform,
+        webrtc_version_key,
+        sora_cpp_version_key,
+        is_android,
+        android_abi,
         args.local_webrtc_build_dir,
         args.local_webrtc_build_args,
         args.local_sora_cpp_sdk_dir,
@@ -325,8 +383,17 @@ def _build(args):
     else:
         configuration = "Release"
 
-    webrtc_info = get_webrtc_info(platform, args.local_webrtc_build_dir, install_dir, args.debug)
-    sora_info = get_sora_info(platform, args.local_sora_cpp_sdk_dir, install_dir, args.debug)
+    webrtc_info = get_webrtc_info(
+        download_platform,
+        args.local_webrtc_build_dir,
+        install_dir,
+        args.debug,
+    )
+    if args.local_webrtc_build_dir is not None and is_android:
+        webrtc_info = _adjust_webrtc_jar_path_for_android_abi(webrtc_info, android_abi)
+    sora_info = get_sora_info(
+        download_platform, args.local_sora_cpp_sdk_dir, install_dir, args.debug
+    )
 
     unity_build_dir = os.path.join(build_dir, "sora_unity_sdk")
     mkdir_p(unity_build_dir)
@@ -341,7 +408,7 @@ def _build(args):
 
         cmake_args = []
         cmake_args.append(f"-DCMAKE_BUILD_TYPE={configuration}")
-        cmake_args.append(f"-DSORA_UNITY_SDK_PACKAGE={platform}")
+        cmake_args.append(f"-DSORA_UNITY_SDK_PACKAGE={cmake_platform}")
         cmake_args.append(f"-DSORA_UNITY_SDK_VERSION={sora_unity_sdk_version}")
         cmake_args.append(f"-DSORA_UNITY_SDK_COMMIT={sora_unity_sdk_commit}")
         cmake_args.append(f"-DBOOST_ROOT={cmake_path(sora_info.boost_install_dir)}")
@@ -389,7 +456,7 @@ def _build(args):
             cmake_args.append("-DCMAKE_SYSTEM_NAME=iOS")
             cmake_args.append('-DCMAKE_OSX_ARCHITECTURES="arm64"')
             cmake_args.append("-DCMAKE_OSX_DEPLOYMENT_TARGET=13.0")
-        elif platform == "android":
+        elif is_android:
             toolchain_file = os.path.join(
                 sora_info.sora_install_dir, "share", "cmake", "android.toolchain.cmake"
             )
@@ -414,7 +481,7 @@ def _build(args):
             cmake_args.append(f"-DCMAKE_TOOLCHAIN_FILE={cmake_path(toolchain_file)}")
             cmake_args.append(f"-DANDROID_PLATFORM=android-{android_native_api_level}")
             cmake_args.append(f"-DANDROID_NATIVE_API_LEVEL={android_native_api_level}")
-            cmake_args.append("-DANDROID_ABI=arm64-v8a")
+            cmake_args.append(f"-DANDROID_ABI={android_abi}")
             cmake_args.append("-DANDROID_STL=none")
             cmake_args.append(
                 f"-DLIBCXX_INCLUDE_DIR={cmake_path(os.path.join(webrtc_info.libcxx_dir, 'include'))}"
@@ -427,8 +494,14 @@ def _build(args):
                 android_clang_dir,
                 get_clang_version(os.path.join(android_clang_dir, "bin", "clang++")),
             )
+            if android_abi == "arm64-v8a":
+                clang_lib_arch = "aarch64"
+            elif android_abi == "x86_64":
+                clang_lib_arch = "x86_64"
+            else:
+                raise Exception(f"Android ABI {android_abi} is not supported.")
             ldflags = [
-                f"-L{cmake_path(os.path.join(android_clang_dir, 'lib', 'clang', clang_version, 'lib', 'linux', 'aarch64'))}"
+                f"-L{cmake_path(os.path.join(android_clang_dir, 'lib', 'clang', clang_version, 'lib', 'linux', clang_lib_arch))}"
             ]
             cmake_args.append(f"-DCMAKE_EXE_LINKER_FLAGS={' '.join(ldflags)}")
             cmake_args.append(f"-DCMAKE_SHARED_LINKER_FLAGS={' '.join(ldflags)}")
@@ -507,10 +580,10 @@ def _build(args):
             os.path.join(sora_info.sora_install_dir, "lib", "libsora.a"),
             os.path.join(plugins_dir, "ios", "libsora.a"),
         )
-    if platform in ("android",):
+    if is_android:
         install_file(
             os.path.join(unity_build_dir, "libSoraUnitySdk.so"),
-            os.path.join(plugins_dir, "android", "arm64-v8a", "libSoraUnitySdk.so"),
+            os.path.join(plugins_dir, "android", android_abi, "libSoraUnitySdk.so"),
         )
         install_file(
             os.path.join(webrtc_info.webrtc_jar_file),
@@ -553,6 +626,7 @@ def _package():
         ("ubuntu-22.04", "x86_64", "libSoraUnitySdk.so"),
         ("ubuntu-24.04", "x86_64", "libSoraUnitySdk.so"),
         ("android", "arm64-v8a", "libSoraUnitySdk.so"),
+        ("android", "x86_64", "libSoraUnitySdk.so"),
         ("android", "webrtc.jar"),
         ("android", "Sora.aar"),
         ("ios", "libSoraUnitySdk.a"),
