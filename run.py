@@ -300,10 +300,10 @@ def _format(
 def _build(args):
     target = args.target
     platform = target
-    if target == "android":
+    if platform == "android":
         android_abi = "arm64-v8a"
         cmake_platform = "android"
-    elif target == "android_x86_64":
+    elif platform == "android_x86_64":
         android_abi = "x86_64"
         cmake_platform = "android"
     else:
