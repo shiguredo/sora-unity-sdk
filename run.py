@@ -43,17 +43,6 @@ logging.basicConfig(level=logging.DEBUG)
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 
 
-def _replace_webrtc_jar_abi_for_x86_64(webrtc_info):
-    """
-    Android x86_64 ローカルビルド時に webrtc.jar のパスを arm64-v8a から x86_64 に置換する。
-
-    ローカルビルドの WebRTC では arm64-v8a ディレクトリに webrtc.jar が配置されているため、
-    x86_64 ビルド時にはパスを調整する必要がある。
-    """
-    webrtc_jar_file = webrtc_info.webrtc_jar_file.replace("arm64-v8a", "x86_64")
-    return webrtc_info._replace(webrtc_jar_file=webrtc_jar_file)
-
-
 def install_deps(
     platform: str,
     build_platform: str,
@@ -61,11 +50,6 @@ def install_deps(
     build_dir,
     install_dir,
     debug,
-    download_platform: str,
-    webrtc_version_key: str,
-    sora_cpp_version_key: str,
-    is_android: bool,
-    android_abi: str,
     local_webrtc_build_dir: Optional[str],
     local_webrtc_build_args: List[str],
     local_sora_cpp_sdk_dir: Optional[str],
@@ -73,9 +57,15 @@ def install_deps(
 ):
     with cd(BASE_DIR):
         version = read_version_file("VERSION")
+        if platform == "android_x86_64":
+            webrtc_version_key = "WEBRTC_BUILD_VERSION_ANDROID_X86_64"
+            sora_cpp_version_key = "SORA_CPP_SDK_VERSION_ANDROID_X86_64"
+        else:
+            webrtc_version_key = "WEBRTC_BUILD_VERSION"
+            sora_cpp_version_key = "SORA_CPP_SDK_VERSION"
 
         # Android NDK
-        if is_android:
+        if platform in ("android", "android_x86_64"):
             install_android_ndk_args = {
                 "version": version["ANDROID_NDK_VERSION"],
                 "version_file": os.path.join(install_dir, "android-ndk.version"),
@@ -91,12 +81,12 @@ def install_deps(
                 "version_file": os.path.join(install_dir, "webrtc.version"),
                 "source_dir": source_dir,
                 "install_dir": install_dir,
-                "platform": download_platform,
+                "platform": platform,
             }
             install_webrtc(**install_webrtc_args)
         else:
             build_webrtc_args = {
-                "platform": download_platform,
+                "platform": platform,
                 "local_webrtc_build_dir": local_webrtc_build_dir,
                 "local_webrtc_build_args": local_webrtc_build_args,
                 "debug": debug,
@@ -104,14 +94,11 @@ def install_deps(
             build_webrtc(**build_webrtc_args)
 
         webrtc_info = get_webrtc_info(
-            download_platform,
+            platform,
             local_webrtc_build_dir,
             install_dir,
             debug,
         )
-
-        if local_webrtc_build_dir is not None and platform == "android_x86_64":
-            webrtc_info = _replace_webrtc_jar_abi_for_x86_64(webrtc_info)
 
         # Windows は MSVC を使うので不要
         # Android は libc++ のために必要
@@ -171,7 +158,7 @@ def install_deps(
             install_sora_and_deps(
                 version[sora_cpp_version_key],
                 version["BOOST_VERSION"],
-                download_platform,
+                platform,
                 source_dir,
                 install_dir,
             )
@@ -314,26 +301,14 @@ def _build(args):
     target = args.target
     platform = target
     if target == "android":
-        is_android = True
         android_abi = "arm64-v8a"
-        download_platform = "android"
         cmake_platform = "android"
-        webrtc_version_key = "WEBRTC_BUILD_VERSION"
-        sora_cpp_version_key = "SORA_CPP_SDK_VERSION"
     elif target == "android_x86_64":
-        is_android = True
         android_abi = "x86_64"
-        download_platform = "android_x86_64"
         cmake_platform = "android"
-        webrtc_version_key = "WEBRTC_BUILD_VERSION_ANDROID_X86_64"
-        sora_cpp_version_key = "SORA_CPP_SDK_VERSION_ANDROID_X86_64"
     else:
-        is_android = False
         android_abi = ""
-        download_platform = target
         cmake_platform = target
-        webrtc_version_key = "WEBRTC_BUILD_VERSION"
-        sora_cpp_version_key = "SORA_CPP_SDK_VERSION"
     build_platform = get_build_platform()
     if build_platform not in BUILD_PLATFORM:
         raise Exception(f"Build platform {build_platform} is not supported.")
@@ -357,11 +332,6 @@ def _build(args):
         build_dir,
         install_dir,
         args.debug,
-        download_platform,
-        webrtc_version_key,
-        sora_cpp_version_key,
-        is_android,
-        android_abi,
         args.local_webrtc_build_dir,
         args.local_webrtc_build_args,
         args.local_sora_cpp_sdk_dir,
@@ -376,15 +346,13 @@ def _build(args):
         configuration = "Release"
 
     webrtc_info = get_webrtc_info(
-        download_platform,
+        platform,
         args.local_webrtc_build_dir,
         install_dir,
         args.debug,
     )
-    if args.local_webrtc_build_dir is not None and target == "android_x86_64":
-        webrtc_info = _replace_webrtc_jar_abi_for_x86_64(webrtc_info)
     sora_info = get_sora_info(
-        download_platform, args.local_sora_cpp_sdk_dir, install_dir, args.debug
+        platform, args.local_sora_cpp_sdk_dir, install_dir, args.debug
     )
 
     unity_build_dir = os.path.join(build_dir, "sora_unity_sdk")
@@ -448,7 +416,7 @@ def _build(args):
             cmake_args.append("-DCMAKE_SYSTEM_NAME=iOS")
             cmake_args.append('-DCMAKE_OSX_ARCHITECTURES="arm64"')
             cmake_args.append("-DCMAKE_OSX_DEPLOYMENT_TARGET=13.0")
-        elif is_android:
+        elif platform in ("android", "android_x86_64"):
             toolchain_file = os.path.join(
                 sora_info.sora_install_dir, "share", "cmake", "android.toolchain.cmake"
             )
@@ -572,7 +540,7 @@ def _build(args):
             os.path.join(sora_info.sora_install_dir, "lib", "libsora.a"),
             os.path.join(plugins_dir, "ios", "libsora.a"),
         )
-    if is_android:
+    if platform in ("android", "android_x86_64"):
         install_file(
             os.path.join(unity_build_dir, "libSoraUnitySdk.so"),
             os.path.join(plugins_dir, "android", android_abi, "libSoraUnitySdk.so"),
