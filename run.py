@@ -92,13 +92,7 @@ def install_deps(
                 "debug": debug,
             }
             build_webrtc(**build_webrtc_args)
-
-        webrtc_info = get_webrtc_info(
-            platform,
-            local_webrtc_build_dir,
-            install_dir,
-            debug,
-        )
+        webrtc_info = get_webrtc_info(platform, local_webrtc_build_dir, install_dir, debug)
 
         # Windows は MSVC を使うので不要
         # Android は libc++ のために必要
@@ -344,16 +338,8 @@ def _build(args):
         configuration = "RelWithDebInfo"
     else:
         configuration = "Release"
-
-    webrtc_info = get_webrtc_info(
-        platform,
-        args.local_webrtc_build_dir,
-        install_dir,
-        args.debug,
-    )
-    sora_info = get_sora_info(
-        platform, args.local_sora_cpp_sdk_dir, install_dir, args.debug
-    )
+    webrtc_info = get_webrtc_info(platform, args.local_webrtc_build_dir, install_dir, args.debug)
+    sora_info = get_sora_info(platform, args.local_sora_cpp_sdk_dir, install_dir, args.debug)
 
     unity_build_dir = os.path.join(build_dir, "sora_unity_sdk")
     mkdir_p(unity_build_dir)
