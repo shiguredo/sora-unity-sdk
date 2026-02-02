@@ -653,6 +653,10 @@ def get_webrtc_info(
             local_webrtc_build_dir, "_build", platform, configuration, "webrtc"
         )
 
+        webrtc_jar_abi = "arm64-v8a"
+        if platform == "android_x86_64":
+            webrtc_jar_abi = "x86_64"
+
         return WebrtcInfo(
             version_file=os.path.join(local_webrtc_build_dir, "VERSION"),
             deps_file=os.path.join(local_webrtc_build_dir, "DEPS"),
@@ -660,7 +664,12 @@ def get_webrtc_info(
             webrtc_source_dir=os.path.join(webrtc_build_source_dir, "src"),
             webrtc_library_dir=webrtc_build_build_dir,
             webrtc_jar_file=os.path.join(
-                webrtc_build_build_dir, "arm64-v8a", "lib.java", "sdk", "android", "libwebrtc.jar"
+                webrtc_build_build_dir,
+                webrtc_jar_abi,
+                "lib.java",
+                "sdk",
+                "android",
+                "libwebrtc.jar",
             ),
             clang_dir=os.path.join(
                 webrtc_build_source_dir, "src", "third_party", "llvm-build", "Release+Asserts"

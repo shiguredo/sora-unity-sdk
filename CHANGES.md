@@ -11,6 +11,16 @@
 
 ## develop
 
+- [ADD] Android x86_64 向けのビルドターゲット `android_x86_64` を追加
+  - `python3 run.py build android_x86_64` で x86_64 向けにビルド可能
+  - @zztkm
+
+### misc
+
+- [CHANGE] GitHub Actions でのビルドを android_x86_64 target に限定する
+  - support/android-x86_64 ブランチでは android_x86_64 のビルドを提供するためのブランチであるためその他のターゲットは不要
+  - @zztkm
+
 ## 2025.3.0
 
 **リリース日**: 2025-12-11
