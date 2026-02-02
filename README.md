@@ -44,7 +44,8 @@ Please read <https://github.com/shiguredo/oss/blob/master/README.en.md> before u
 
 - Windows 10 22H2 x86_64 以降
 - macOS 13.4.1 M1 以降
-- Android 7 以降
+- Android 7 x86_64 以降
+- Android 7 arm64 以降
 - iOS 13 以降
 - Ubuntu 22.04 x86_64
 - Ubuntu 24.04 x86_64

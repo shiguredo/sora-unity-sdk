@@ -11,6 +11,8 @@
 
 ## develop
 
+## 2025.3.0-anrdoi-x86_64.0
+
 - [ADD] Android x86_64 向けのビルドターゲット `android_x86_64` を追加
   - `python3 run.py build android_x86_64` で x86_64 向けにビルド可能
   - @zztkm
