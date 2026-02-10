@@ -574,6 +574,7 @@ public class Sora : IDisposable
     /// </summary>
     /// <remarks>
     /// Unity スレッド上で実行するようにしてください。
+    /// onResult などのコールバック内から Dispose() を呼び出すと、破棄処理が再入するため避けてください。
     /// 既に Connect() を呼び出している場合、この関数を呼び出す前に、OnDisconnect コールバックが呼ばれていることを確認して下さい。
     /// OnDisconnect コールバックが呼ばれる前に Dispose() を呼び出した場合の動作は未定義です。
     /// </remarks>
