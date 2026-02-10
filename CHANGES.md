@@ -30,10 +30,10 @@
   - @torikizi
 - [ADD] RPC 機能を追加する
   - Sora 2025.2 以降で利用可能な RPC 機能に対応する
-  - `Sora.SendRpcNotification()` メソッドを追加する
+  - `Sora.RequestRpcNotification()` メソッドを追加する
     - JSON-RPC 2.0 の通知 (Notification) を送信する
     - Sora からのレスポンスは返らない
-  - `Sora.SendRpcMessage()` メソッドを追加する
+  - `Sora.RequestRpc()` メソッドを追加する
     - JSON-RPC 2.0 のリクエスト (Request) を送信する
     - レスポンスが返ってくるまでのタイムアウトを `timeoutMillis` でミリ秒単位で指定できる
       - 指定しない場合はデフォルトの 5,000ms となる
