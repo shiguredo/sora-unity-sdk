@@ -25,6 +25,12 @@ Please read <https://github.com/shiguredo/oss/blob/master/README.en.md> before u
 
 [WebRTC SFU Sora Unity SDK サンプル集](./SoraUnitySdkExamples)
 
+## ソースコードディレクトリ構成
+
+- `src/` : ネイティブプラグイン（Unity 向けラッパー）の SDK 実装です
+- `SoraUnitySdkExamples/` : Unity サンプルプロジェクトです
+- `SoraUnitySdkExamples/Assets/SoraUnitySdk/` : Unity 向けの C# での SDK 実装です
+
 ### サンプル動作例
 
 - [「こんな感じに Unity のカメラ映像を WebRTC で配信できるようになりました https://t\.co/R98ZmZTFOK」 / Twitter](https://twitter.com/melponn/status/1193406538494275592)
