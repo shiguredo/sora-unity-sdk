@@ -1472,6 +1472,10 @@ public class Sora : IDisposable
     /// OnAddTrack や OnRemoveTrack, OnDisconnect といったコールバックは、一部を除き、この関数を呼び出すことで発生します。
     /// そのため、この関数は Update() などの定期的に実行される場所で呼び出すようにして下さい。
     ///
+    /// RPC のレスポンス受信もこの関数の呼び出しで処理されます。
+    /// ネイティブからの RPC レスポンス到達自体は Unity スレッドとは別のスレッドで発生する可能性がありますが、
+    /// 内部でキューに積み、DispatchEvents() 内で Unity スレッド上の処理に寄せています。
+    ///
     /// 例外として、OnHandleAudio と OnCapturerFrame はこの関数を呼ばなくても発生しますが、
     /// Unity スレッドとは別のスレッドから呼び出されるため同期に注意する必要があります。
     /// </remarks>
