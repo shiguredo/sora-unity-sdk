@@ -1584,7 +1584,7 @@ public class Sora : IDisposable
     }
 
     // JSON-RPC 2.0 メッセージを送信します。
-    void SendRpcRawMessage(string rpcMessage)
+    void SendRpcMessage(string rpcMessage)
     {
         var bytes = System.Text.Encoding.UTF8.GetBytes(rpcMessage);
         sora_send_message(p, "rpc", bytes, bytes.Length);
@@ -1659,7 +1659,7 @@ public class Sora : IDisposable
 
         var methodJson = EscapeJsonString(method);
         var rpcMessage = $"{{\"jsonrpc\":\"2.0\",\"method\":{methodJson},\"params\":{paramsJson}}}";
-        SendRpcRawMessage(rpcMessage);
+        SendRpcMessage(rpcMessage);
     }
 
     /// <summary>
@@ -1725,7 +1725,7 @@ public class Sora : IDisposable
 
         var methodJson = EscapeJsonString(method);
         var rpcMessage = $"{{\"jsonrpc\":\"2.0\",\"method\":{methodJson},\"params\":{paramsJson},\"id\":{id}}}";
-        SendRpcRawMessage(rpcMessage);
+        SendRpcMessage(rpcMessage);
     }
 
     private delegate void DeviceEnumCallbackDelegate(string device_name, string unique_name, IntPtr userdata);
