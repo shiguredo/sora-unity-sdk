@@ -1646,7 +1646,7 @@ public class Sora : IDisposable
     /// </remarks>
     /// <param name="method">呼び出すメソッド名</param>
     /// <param name="paramsJson">メソッドのパラメータを表す JSON 文字列。オブジェクト形式 (例: {"key":"value"}) または配列形式 (例: [1,2,3]) で指定します。パラメータがない場合は "{}" を指定してください</param>
-    public void SendRpcNotification(string method, string paramsJson)
+    public void RequestRpcNotification(string method, string paramsJson)
     {
         if (method == null)
         {
@@ -1663,7 +1663,7 @@ public class Sora : IDisposable
     }
 
     /// <summary>
-    /// JSON-RPC 2.0 メッセージを送信します。
+    /// JSON-RPC 2.0 リクエスト (Request) を送信します。
     /// </summary>
     /// <remarks>
     /// Sora への送信後、レスポンスが返ってくるまでのタイムアウト時間は 5,000 ms です。
@@ -1674,13 +1674,13 @@ public class Sora : IDisposable
     /// <param name="method">呼び出すメソッド名</param>
     /// <param name="paramsJson">メソッドのパラメータを表す JSON 文字列。オブジェクト形式 (例: {"key":"value"}) または配列形式 (例: [1,2,3]) で指定します。パラメータがない場合は "{}" を指定してください</param>
     /// <param name="onResult">Sora レスポンス用のコールバック</param>
-    public void SendRpcMessage(string method, string paramsJson, Action<RpcResult> onResult)
+    public void RequestRpc(string method, string paramsJson, Action<RpcResult> onResult)
     {
-        SendRpcMessage(method, paramsJson, onResult, DefaultRpcTimeoutMillis);
+        RequestRpc(method, paramsJson, onResult, DefaultRpcTimeoutMillis);
     }
 
     /// <summary>
-    /// JSON-RPC 2.0 メッセージを送信します。
+    /// JSON-RPC 2.0 リクエスト (Request) を送信します。
     /// </summary>
     /// <remarks>
     /// レスポンス受信とタイムアウト判定は DispatchEvents() の呼び出しで処理されます。
@@ -1691,7 +1691,7 @@ public class Sora : IDisposable
     /// <param name="paramsJson">メソッドのパラメータを表す JSON 文字列。オブジェクト形式 (例: {"key":"value"}) または配列形式 (例: [1,2,3]) で指定します。パラメータがない場合は "{}" を指定してください</param>
     /// <param name="onResult">Sora レスポンス用のコールバック</param>
     /// <param name="timeoutMillis">Sora レスポンスのタイムアウト時間 (ミリ秒)。0 より大きな値を指定してください</param>
-    public void SendRpcMessage(string method, string paramsJson, Action<RpcResult> onResult, long timeoutMillis)
+    public void RequestRpc(string method, string paramsJson, Action<RpcResult> onResult, long timeoutMillis)
     {
         if (method == null)
         {

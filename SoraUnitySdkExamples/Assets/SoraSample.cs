@@ -1218,7 +1218,7 @@ public class SoraSample : MonoBehaviour
         }
     }
 
-    void SendRpcMessage(string method, string paramsJson)
+    void RequestRpc(string method, string paramsJson)
     {
         if (sora == null)
         {
@@ -1227,7 +1227,7 @@ public class SoraSample : MonoBehaviour
 
         if (string.IsNullOrWhiteSpace(rpcTimeoutMillis))
         {
-            sora.SendRpcMessage(method, paramsJson, HandleRpcResult);
+            sora.RequestRpc(method, paramsJson, HandleRpcResult);
             return;
         }
 
@@ -1243,7 +1243,7 @@ public class SoraSample : MonoBehaviour
             return;
         }
 
-        sora.SendRpcMessage(method, paramsJson, HandleRpcResult, timeoutMillis);
+        sora.RequestRpc(method, paramsJson, HandleRpcResult, timeoutMillis);
     }
 
     void SendRequestSimulcastRid()
@@ -1258,7 +1258,7 @@ public class SoraSample : MonoBehaviour
         {
             paramsJson = $"{{\"sender_connection_id\":\"{sendRequestSimulcastRidSenderConnectionId}\",\"rid\":\"{sendRequestSimulcastRid}\"}}";
         }
-        SendRpcMessage("2025.2.0/RequestSimulcastRid", paramsJson);
+        RequestRpc("2025.2.0/RequestSimulcastRid", paramsJson);
     }
 
     void SendRequestSpotlightRid()
@@ -1273,7 +1273,7 @@ public class SoraSample : MonoBehaviour
         {
             paramsJson = $"{{\"send_connection_id\":\"{sendRequestSpotlightRidConnectionId}\",\"spotlight_focus_rid\":\"{sendRequestSpotlightFocusRid}\",\"spotlight_unfocus_rid\":\"{sendRequestSpotlightUnfocusRid}\"}}";
         }
-        SendRpcMessage("2025.2.0/RequestSpotlightRid", paramsJson);
+        RequestRpc("2025.2.0/RequestSpotlightRid", paramsJson);
     }
 
     void SendResetSpotlightRid()
@@ -1288,7 +1288,7 @@ public class SoraSample : MonoBehaviour
         {
             paramsJson = $"{{\"send_connection_id\":\"{sendResetSpotlightRidConnectionId}\"}}";
         }
-        SendRpcMessage("2025.2.0/ResetSpotlightRid", paramsJson);
+        RequestRpc("2025.2.0/ResetSpotlightRid", paramsJson);
     }
 
     void SendPutSignalingNotifyMetadata()
@@ -1297,7 +1297,7 @@ public class SoraSample : MonoBehaviour
         string paramsJson = sendPutSignalingNotifyMetadataPush
             ? $"{{\"push\":true,\"metadata\":{sendPutSignalingNotifyMetadataJson}}}"
             : $"{{\"metadata\":{sendPutSignalingNotifyMetadataJson}}}";
-        SendRpcMessage("2025.2.0/PutSignalingNotifyMetadata", paramsJson);
+        RequestRpc("2025.2.0/PutSignalingNotifyMetadata", paramsJson);
     }
 
     void SendPutSignalingNotifyMetadataItem()
@@ -1306,7 +1306,7 @@ public class SoraSample : MonoBehaviour
         string paramsJson = sendPutSignalingNotifyMetadataItemPush
             ? $"{{\"push\":true,\"key\":\"{sendPutSignalingNotifyMetadataItemKey}\",\"value\":{sendPutSignalingNotifyMetadataItemValue}}}"
             : $"{{\"key\":\"{sendPutSignalingNotifyMetadataItemKey}\",\"value\":{sendPutSignalingNotifyMetadataItemValue}}}";
-        SendRpcMessage("2025.2.0/PutSignalingNotifyMetadataItem", paramsJson);
+        RequestRpc("2025.2.0/PutSignalingNotifyMetadataItem", paramsJson);
     }
 
     public void OnClickVideoMute()
