@@ -546,7 +546,7 @@ public class Sora : IDisposable
         public string Method;
         // リクエストパラメータ Json 文字列
         public string ParamsJson;
-        // RPC レスポンス用のコードバック
+        // RPC レスポンス用のコールバック
         public Action<RpcResult> OnResult;
 
         public PendingRpc(long deadlineMillis, string method, string paramsJson, Action<RpcResult> onResult)
@@ -1375,7 +1375,7 @@ public class Sora : IDisposable
                 var timeoutIds = new List<long>();
                 foreach (var kv in pendingRpcRequests)
                 {
-                    // タイムアウト時間を過ぎていか判定し、タイムアウト対象IDリストに追加します
+                    // タイムアウト時間を過ぎているか判定し、タイムアウト対象IDリストに追加します
                     if (nowMillis >= kv.Value.DeadlineMillis)
                     {
                         timeoutIds.Add(kv.Key);
