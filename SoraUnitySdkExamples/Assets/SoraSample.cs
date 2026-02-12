@@ -1224,7 +1224,7 @@ public class SoraSample : MonoBehaviour
 
         if (string.IsNullOrWhiteSpace(rpcTimeoutMillis))
         {
-            sora.RequestRpc(method, paramsJson, HandleRpcResult);
+            sora.RequestRpc(method, paramsJson, HandleRpcResult, Sora.DefaultRpcTimeoutMillis);
             return;
         }
 

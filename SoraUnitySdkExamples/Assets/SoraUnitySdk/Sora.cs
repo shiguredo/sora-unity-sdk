@@ -500,12 +500,12 @@ public class Sora : IDisposable
     UnityEngine.Rendering.CommandBuffer commandBuffer;
     UnityEngine.Camera? unityCamera;
 
-    // RPC リクエスト結果 Enum
+    // RPC リクエストの結果の種類
     public enum RpcResultKind
     {
-        // レスポンスを受信しました（result と error の判別は行いません）
+        // レスポンス（result と error の判別は行わない）
         Response,
-        // タイムアウトしました
+        // タイムアウト
         Timeout,
     }
     // RPC レスポンスの構造体
@@ -516,7 +516,8 @@ public class Sora : IDisposable
         public readonly string Method;
         // リクエストパラメータ Json 文字列
         public readonly string ParamsJson;
-        // レスポンス Json 文字列。データ内容のパースは SDK の利用者側の責務となります
+        // レスポンス Json 文字列。データ内容のパースは SDK の利用者側の責務となる
+        // ResultKind が Timeout の場合は null になり、Response の場合は非 null になる
         public readonly string? ResponseJson;
 
         public RpcResult(
@@ -533,7 +534,7 @@ public class Sora : IDisposable
     }
 
     // RPC リクエスト後にレスポンスを待つタイムアウト時間のデフォルト
-    const long DefaultRpcTimeoutMillis = 5000;
+    public const long DefaultRpcTimeoutMillis = 5000;
 
     // 非同期で実行された RPC リクエストがレスポンスを待っている間に保持される情報の構造体
     struct PendingRpc
@@ -556,15 +557,12 @@ public class Sora : IDisposable
         }
     }
 
-    // RPC レスポンスキュー、ID 採番等の RPC に関する共有データを排他制御するためのロック
-    readonly object rpcLock = new object();
     // RPC レスポンスを Unity スレッド上で順番に処理するためのキュー
     readonly Queue<string> rpcResponseJsonQueue = new Queue<string>();
     // RPC リクエスト送信済みでレスポンス待ちになっているリクエストを保持する辞書。リクエスト ID をキーとします
     readonly Dictionary<long, PendingRpc> pendingRpcRequests = new Dictionary<long, PendingRpc>();
     // RPC リクエスト ID
-    // リクエストとレスポンスコンテキストの紐付けに利用されますが、 
-    // `pendingRpcRequests` のキーとしても利用されます。重複を防ぐため自動採番としています。
+    // RPC リクエストとレスポンスの紐付けに利用する
     long nextRpcRequestId = 1;
 
     /// <summary>
@@ -583,6 +581,12 @@ public class Sora : IDisposable
             sora_destroy(p);
             p = IntPtr.Zero;
         }
+
+        lock (rpcResponseJsonQueue)
+        {
+            rpcResponseJsonQueue.Clear();
+        }
+        pendingRpcRequests.Clear();
 
         foreach (var adapter in audioTrackSinks.Values)
         {
@@ -1258,7 +1262,10 @@ public class Sora : IDisposable
     static private void RpcCallback(string json, IntPtr userdata)
     {
         var sora = GCHandle.FromIntPtr(userdata).Target as Sora;
-        sora!.EnqueueRpcResponseJson(json);
+        lock (sora!.rpcResponseJsonQueue)
+        {
+            sora.rpcResponseJsonQueue.Enqueue(json);
+        }
     }
 
     // RPC リクエストタイムアウト時間算出のための基準時間を生成
@@ -1271,56 +1278,43 @@ public class Sora : IDisposable
         return nowStopwatch.ElapsedMilliseconds;
     }
 
-    void EnqueueRpcResponseJson(string json)
-    {
-        lock (rpcLock)
-        {
-            rpcResponseJsonQueue.Enqueue(json);
-        }
-    }
-
-    // RPC レスポンスハンドリング
+    // RPC レスポンスのハンドリング
     // DispatchEvents() から呼ばれる前提で、必ず Unity スレッドで実行されます。
-    // ネイティブから RPC レスポンスが別スレッドで来た場合は、キューに積まれたものをここで処理します。
+    // キューに積まれたものをここで処理します。
     void HandleRpcInternal()
     {
         while (true)
         {
             string? responseJson = null;
-            lock (rpcLock)
+            lock (rpcResponseJsonQueue)
             {
-                // キューから1つずつ取り出して処理します
-                if (rpcResponseJsonQueue.Count != 0)
+                if (rpcResponseJsonQueue.Count == 0)
                 {
-                    responseJson = rpcResponseJsonQueue.Dequeue();
+                    break;
                 }
-            }
-
-            // Dequeue できなかった場合はキューが空となっているため抜けます
-            if (responseJson == null)
-            {
-                break;
+                responseJson = rpcResponseJsonQueue.Dequeue();
             }
 
             // レスポンスデータの JSON 文字列から、リクエスト ID のみを抜き出します。
-            // ID が取得できない場合はレスポンス待ちと紐付けできないため捨てます。
-            var id = JsonRpcUtil.ParseId(responseJson);
-            if (id == 0)
+            // ID が取得できない場合や JSON 文字列が不正な場合はレスポンス待ちと紐付けできないため捨てます。
+            long id;
+            try
+            {
+                id = JsonUtility.FromJson<JsonRpcResponseIdOnly>(responseJson).id;
+            }
+            catch (Exception)
             {
                 continue;
             }
 
             PendingRpc pending;
-            lock (rpcLock)
+            // レスポンス待ち辞書からリクエスト ID で抽出し、処理済みとして除去します。
+            // 辞書内に見つからない場合は既に（主にタイムアウトの）レスポンスを返しているとみなし何もしません。
+            if (!pendingRpcRequests.TryGetValue(id, out pending))
             {
-                // レスポンス待ち辞書からリクエスト ID で抽出し、処理済みとして除去します。
-                // 辞書内に見つからない場合は既にレスポンスを返しているとみなし何もしません。
-                if (!pendingRpcRequests.TryGetValue(id, out pending))
-                {
-                    continue;
-                }
-                pendingRpcRequests.Remove(id);
+                continue;
             }
+            pendingRpcRequests.Remove(id);
 
             // RPC 結果をコールバックで返します
             pending.OnResult(new RpcResult(
@@ -1330,38 +1324,23 @@ public class Sora : IDisposable
                 responseJson));
         }
 
-        // レスポンス待ちリクエストがなければ抜けます
-        lock (rpcLock)
-        {
-            if (pendingRpcRequests.Count == 0)
-            {
-                return;
-            }
-        }
-
         // レスポンス待ちリクエストのタイムアウト処理を行います
         List<PendingRpc> timeoutTargets = new List<PendingRpc>();
         var nowMillis = GetNowMillis();
-        lock (rpcLock)
+        var timeoutIds = new List<long>();
+        foreach (var kv in pendingRpcRequests)
         {
-            if (pendingRpcRequests.Count != 0)
+            // タイムアウト時間を過ぎている場合、タイムアウト対象リストに追加します
+            if (nowMillis >= kv.Value.DeadlineMillis)
             {
-                var timeoutIds = new List<long>();
-                foreach (var kv in pendingRpcRequests)
-                {
-                    // タイムアウト時間を過ぎているか判定し、タイムアウト対象IDリストに追加します
-                    if (nowMillis >= kv.Value.DeadlineMillis)
-                    {
-                        timeoutIds.Add(kv.Key);
-                    }
-                }
-                // タイムアウトターゲットリストの作成とレスポンス待ちリクエストリストからの除去を行います
-                foreach (var id in timeoutIds)
-                {
-                    timeoutTargets.Add(pendingRpcRequests[id]);
-                    pendingRpcRequests.Remove(id);
-                }
+                timeoutIds.Add(kv.Key);
+                timeoutTargets.Add(kv.Value);
             }
+        }
+        // レスポンス待ちリクエストからの除去を行います
+        foreach (var id in timeoutIds)
+        {
+            pendingRpcRequests.Remove(id);
         }
 
         // タイムアウトとなったリクエストを Timeout でコールバックとして返します
@@ -1382,24 +1361,6 @@ public class Sora : IDisposable
         public string jsonrpc = "";
         // サーバーが数値 id を返す前提
         public long id;
-    }
-
-    static class JsonRpcUtil
-    {
-        // JsonRpcUtil 経由での関数呼び出しとすることでデータ型にパース手段が生えない設計にしています。
-        // ID が取得できない場合はエラーを握りつぶし 0 を返します。
-        // レスポンス待ちと紐付けできないため呼び出し元で捨てられます。
-        public static long ParseId(string json)
-        {
-            try
-            {
-                return JsonUtility.FromJson<JsonRpcResponseIdOnly>(json).id;
-            }
-            catch (Exception)
-            {
-                return 0;
-            }
-        }
     }
 
     private delegate void DisconnectCallbackDelegate(int errorCode, string message, IntPtr userdata);
@@ -1445,9 +1406,7 @@ public class Sora : IDisposable
     /// OnAddTrack や OnRemoveTrack, OnDisconnect といったコールバックは、一部を除き、この関数を呼び出すことで発生します。
     /// そのため、この関数は Update() などの定期的に実行される場所で呼び出すようにして下さい。
     ///
-    /// RPC のレスポンス受信もこの関数の呼び出しで処理されます。
-    /// ネイティブからの RPC レスポンス到達自体は Unity スレッドとは別のスレッドで発生する可能性がありますが、
-    /// 内部でキューに積み、DispatchEvents() 内で Unity スレッド上の処理に寄せています。
+    /// RPC リクエストのレスポンス受信もこの関数の呼び出しで処理されます。
     ///
     /// 例外として、OnHandleAudio と OnCapturerFrame はこの関数を呼ばなくても発生しますが、
     /// Unity スレッドとは別のスレッドから呼び出されるため同期に注意する必要があります。
@@ -1639,26 +1598,19 @@ public class Sora : IDisposable
     /// JSON-RPC 2.0 リクエスト (Request) を送信します。
     /// </summary>
     /// <remarks>
-    /// Sora への送信後、レスポンスが返ってくるまでのタイムアウト時間は 5,000 ms です。
-    /// レスポンス受信とタイムアウト判定は DispatchEvents() の呼び出しで処理されます。
-    /// DispatchEvents() を定期的に呼び出さない場合、onResult は呼ばれず、タイムアウトも返りません。
-    /// ResultKind は成功 / 失敗を表しません。 ResponseJson の内容を利用者側で判定してください。
-    /// </remarks>
-    /// <param name="method">呼び出すメソッド名</param>
-    /// <param name="paramsJson">メソッドのパラメータを表す JSON 文字列。オブジェクト形式 (例: {"key":"value"}) または配列形式 (例: [1,2,3]) で指定します。パラメータがない場合は "{}" を指定してください</param>
-    /// <param name="onResult">Sora レスポンス用のコールバック</param>
-    public void RequestRpc(string method, string paramsJson, Action<RpcResult> onResult)
-    {
-        RequestRpc(method, paramsJson, onResult, DefaultRpcTimeoutMillis);
-    }
-
-    /// <summary>
-    /// JSON-RPC 2.0 リクエスト (Request) を送信します。
-    /// </summary>
-    /// <remarks>
-    /// レスポンス受信とタイムアウト判定は DispatchEvents() の呼び出しで処理されます。
-    /// DispatchEvents() を定期的に呼び出さない場合、onResult は呼ばれず、タイムアウトも返りません。
-    /// ResultKind は成功 / 失敗を表しません。 ResponseJson の内容を利用者側で判定してください。
+    /// レスポンス受信とタイムアウト判定の処理は DispatchEvents() の呼び出しで行われ、
+    /// onResult コールバックも DispatchEvents() 関数内からのみ発生します。
+    /// 
+    /// そのため DispatchEvents() を定期的に呼び出さない場合、
+    /// onResult コールバックが発生しなくなるので注意して下さい。
+    /// 
+    /// onResult の引数で渡される RpcResult 型の値には ResultKind メンバーが含まれており、
+    /// 
+    /// - ResultKind.Response は JSON-RPC レスポンスオブジェクトを受信したことを表します。
+    /// - ResultKind.Timeout は指定したタイムアウト時間内にレスポンスを受信できなかったことを表します。
+    /// 
+    /// JSON-RPC レスポンスオブジェクトが成功なのか失敗なのかに関しては、
+    /// 利用者側で ResponseJson の内容をパースして判定してください。
     /// </remarks>
     /// <param name="method">呼び出すメソッド名</param>
     /// <param name="paramsJson">メソッドのパラメータを表す JSON 文字列。オブジェクト形式 (例: {"key":"value"}) または配列形式 (例: [1,2,3]) で指定します。パラメータがない場合は "{}" を指定してください</param>
@@ -1689,12 +1641,9 @@ public class Sora : IDisposable
         long id;
         // レスポンスまでのタイムアウト時間を生成します
         var deadlineMillis = GetNowMillis() + timeoutMillis;
-        lock (rpcLock)
-        {
-            // リクエスト ID を自動採番で生成します
-            id = nextRpcRequestId++;
-            pendingRpcRequests[id] = new PendingRpc(deadlineMillis, method, paramsJson, onResult);
-        }
+        // リクエスト ID を自動採番で生成します
+        id = nextRpcRequestId++;
+        pendingRpcRequests[id] = new PendingRpc(deadlineMillis, method, paramsJson, onResult);
 
         var methodJson = EscapeJsonString(method);
         var rpcMessage = $"{{\"jsonrpc\":\"2.0\",\"method\":{methodJson},\"params\":{paramsJson},\"id\":{id}}}";
