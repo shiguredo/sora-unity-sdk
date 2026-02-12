@@ -1706,7 +1706,7 @@ public class Sora : IDisposable
     /// <param name="method">呼び出すメソッド名</param>
     /// <param name="paramsJson">メソッドのパラメータを表す JSON 文字列。オブジェクト形式 (例: {"key":"value"}) または配列形式 (例: [1,2,3]) で指定します。パラメータがない場合は "{}" を指定してください</param>
     /// <param name="onResult">Sora レスポンス用のコールバック</param>
-    /// <param name="timeoutMillis">Sora レスポンスのタイムアウト時間 (ミリ秒)。0 より大きな値を指定してください</param>
+    /// <param name="timeoutMillis">Sora レスポンスのタイムアウト時間 (ミリ秒)。0 以上の値を指定してください</param>
     public void RequestRpc(string method, string paramsJson, Action<RpcResult> onResult, long timeoutMillis)
     {
         if (method == null)
@@ -1721,12 +1721,12 @@ public class Sora : IDisposable
         {
             throw new ArgumentNullException(nameof(onResult));
         }
-        if (timeoutMillis <= 0)
+        if (timeoutMillis < 0)
         {
             throw new ArgumentOutOfRangeException(
                 nameof(timeoutMillis),
                 timeoutMillis,
-                "timeoutMillis は 0 より大きな値を指定してください。");
+                "timeoutMillis は 0 以上の値を指定してください。");
         }
 
         long id;
