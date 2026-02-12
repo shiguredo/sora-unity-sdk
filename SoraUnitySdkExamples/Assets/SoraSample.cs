@@ -1206,7 +1206,7 @@ public class SoraSample : MonoBehaviour
     {
         switch (result.ResultKind)
         {
-            case Sora.RpcResultKind.ResponseReceived:
+            case Sora.RpcResultKind.Response:
                 Debug.LogFormat("RPC response: method={0}, response={1}", result.Method, result.ResponseJson);
                 break;
             case Sora.RpcResultKind.Timeout:

@@ -504,7 +504,7 @@ public class Sora : IDisposable
     public enum RpcResultKind
     {
         // レスポンスを受信しました（result と error の判別は行いません）
-        ResponseReceived,
+        Response,
         // タイムアウトしました
         Timeout,
     }
@@ -1324,7 +1324,7 @@ public class Sora : IDisposable
 
             // RPC 結果をコールバックで返します
             pending.OnResult(new RpcResult(
-                RpcResultKind.ResponseReceived,
+                RpcResultKind.Response,
                 pending.Method,
                 pending.ParamsJson,
                 responseJson));
