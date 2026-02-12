@@ -1365,6 +1365,15 @@ public class Sora : IDisposable
                 responseJson));
         }
 
+        // レスポンス待ちリクエストがなければ抜けます
+        lock (rpcLock)
+        {
+            if (pendingRpcRequests.Count == 0)
+            {
+                return;
+            }
+        }
+
         // レスポンス待ちリクエストのタイムアウト処理を行います
         List<PendingRpc> timeoutTargets = new List<PendingRpc>();
         var nowMillis = GetNowMillis();
