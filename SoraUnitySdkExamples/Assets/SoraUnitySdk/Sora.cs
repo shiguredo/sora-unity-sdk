@@ -582,10 +582,7 @@ public class Sora : IDisposable
             p = IntPtr.Zero;
         }
 
-        lock (rpcResponseJsonQueue)
-        {
-            rpcResponseJsonQueue.Clear();
-        }
+        rpcResponseJsonQueue.Clear();
         pendingRpcRequests.Clear();
 
         foreach (var adapter in audioTrackSinks.Values)
@@ -1262,10 +1259,7 @@ public class Sora : IDisposable
     static private void RpcCallback(string json, IntPtr userdata)
     {
         var sora = GCHandle.FromIntPtr(userdata).Target as Sora;
-        lock (sora!.rpcResponseJsonQueue)
-        {
-            sora.rpcResponseJsonQueue.Enqueue(json);
-        }
+        sora!.rpcResponseJsonQueue.Enqueue(json);
     }
 
     // RPC リクエストタイムアウト時間算出のための基準時間を生成
@@ -1286,14 +1280,11 @@ public class Sora : IDisposable
         while (true)
         {
             string responseJson;
-            lock (rpcResponseJsonQueue)
+            if (rpcResponseJsonQueue.Count == 0)
             {
-                if (rpcResponseJsonQueue.Count == 0)
-                {
-                    break;
-                }
-                responseJson = rpcResponseJsonQueue.Dequeue();
+                break;
             }
+            responseJson = rpcResponseJsonQueue.Dequeue();
 
             // レスポンスデータの JSON 文字列をパースして、リクエスト ID のみを抜き出します。
             // ID が取得できない場合や JSON 文字列が不正な場合はレスポンス待ちと紐付けできないため捨てます。
