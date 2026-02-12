@@ -1234,11 +1234,6 @@ public class SoraSample : MonoBehaviour
             Debug.LogErrorFormat("RPC timeoutMillis の形式が不正です: timeoutMillis={0}", rpcTimeoutMillis);
             return;
         }
-        if (timeoutMillis <= 0)
-        {
-            Debug.LogErrorFormat("RPC timeoutMillis は 1 以上を指定してください: timeoutMillis={0}", timeoutMillis);
-            return;
-        }
 
         sora.RequestRpc(method, paramsJson, HandleRpcResult, timeoutMillis);
     }
