@@ -1218,7 +1218,7 @@ public class SoraSample : MonoBehaviour
         }
     }
 
-    void RequestRpc(string method, string paramsJson)
+    void RequestRpcWithInspectorSettings(string method, string paramsJson)
     {
         if (sora == null)
         {
@@ -1258,7 +1258,7 @@ public class SoraSample : MonoBehaviour
         {
             paramsJson = $"{{\"sender_connection_id\":\"{sendRequestSimulcastRidSenderConnectionId}\",\"rid\":\"{sendRequestSimulcastRid}\"}}";
         }
-        RequestRpc("2025.2.0/RequestSimulcastRid", paramsJson);
+        RequestRpcWithInspectorSettings("2025.2.0/RequestSimulcastRid", paramsJson);
     }
 
     void SendRequestSpotlightRid()
@@ -1273,7 +1273,7 @@ public class SoraSample : MonoBehaviour
         {
             paramsJson = $"{{\"send_connection_id\":\"{sendRequestSpotlightRidConnectionId}\",\"spotlight_focus_rid\":\"{sendRequestSpotlightFocusRid}\",\"spotlight_unfocus_rid\":\"{sendRequestSpotlightUnfocusRid}\"}}";
         }
-        RequestRpc("2025.2.0/RequestSpotlightRid", paramsJson);
+        RequestRpcWithInspectorSettings("2025.2.0/RequestSpotlightRid", paramsJson);
     }
 
     void SendResetSpotlightRid()
@@ -1288,7 +1288,7 @@ public class SoraSample : MonoBehaviour
         {
             paramsJson = $"{{\"send_connection_id\":\"{sendResetSpotlightRidConnectionId}\"}}";
         }
-        RequestRpc("2025.2.0/ResetSpotlightRid", paramsJson);
+        RequestRpcWithInspectorSettings("2025.2.0/ResetSpotlightRid", paramsJson);
     }
 
     void SendPutSignalingNotifyMetadata()
@@ -1297,7 +1297,7 @@ public class SoraSample : MonoBehaviour
         string paramsJson = sendPutSignalingNotifyMetadataPush
             ? $"{{\"push\":true,\"metadata\":{sendPutSignalingNotifyMetadataJson}}}"
             : $"{{\"metadata\":{sendPutSignalingNotifyMetadataJson}}}";
-        RequestRpc("2025.2.0/PutSignalingNotifyMetadata", paramsJson);
+        RequestRpcWithInspectorSettings("2025.2.0/PutSignalingNotifyMetadata", paramsJson);
     }
 
     void SendPutSignalingNotifyMetadataItem()
@@ -1306,7 +1306,7 @@ public class SoraSample : MonoBehaviour
         string paramsJson = sendPutSignalingNotifyMetadataItemPush
             ? $"{{\"push\":true,\"key\":\"{sendPutSignalingNotifyMetadataItemKey}\",\"value\":{sendPutSignalingNotifyMetadataItemValue}}}"
             : $"{{\"key\":\"{sendPutSignalingNotifyMetadataItemKey}\",\"value\":{sendPutSignalingNotifyMetadataItemValue}}}";
-        RequestRpc("2025.2.0/PutSignalingNotifyMetadataItem", paramsJson);
+        RequestRpcWithInspectorSettings("2025.2.0/PutSignalingNotifyMetadataItem", paramsJson);
     }
 
     public void OnClickVideoMute()
