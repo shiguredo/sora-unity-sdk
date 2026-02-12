@@ -1166,7 +1166,7 @@ public class SoraSample : MonoBehaviour
     }
 
     [ContextMenu("RPC を送信する")]
-    void SendRpcFromInspector()
+    void SendRpcFromContextMenu()
     {
         OnClickSendRpc();
     }
