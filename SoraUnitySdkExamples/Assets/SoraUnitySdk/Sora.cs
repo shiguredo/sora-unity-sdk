@@ -1289,7 +1289,7 @@ public class Sora : IDisposable
     }
 
     // レスポンス待ちの全ての RPC リクエストをキャンセルします。
-    // Dispose で呼び出されます。
+    // Dispose と切断時に呼び出されます。
     void CancelAllPendingRpc()
     {
         List<PendingRpc> cancelTargets;
@@ -1443,7 +1443,12 @@ public class Sora : IDisposable
     static private void DisconnectCallback(int errorCode, string message, IntPtr userdata)
     {
         var sora = GCHandle.FromIntPtr(userdata).Target as Sora;
+        // 切断が発生したら未完了 RPC はキャンセル扱いとします。
         sora!.CancelAllPendingRpc();
+        lock (sora!.rpcLock)
+        {
+            sora!.rpcResponseJsonQueue.Clear();
+        }
         sora!.onDisconnect!((SoraConf.ErrorCode)errorCode, message);
     }
 
@@ -1678,6 +1683,7 @@ public class Sora : IDisposable
     /// Sora への送信後、レスポンスが返ってくるまでのタイムアウト時間は 5,000 ms です。
     /// レスポンス受信とタイムアウト判定は DispatchEvents() の呼び出しで処理されます。
     /// DispatchEvents() を定期的に呼び出さない場合、onResult は呼ばれず、タイムアウトも返りません。
+    /// 切断が発生した場合、未完了の RPC は Canceled として返されます。
     /// ResultKind は成功 / 失敗を表しません。 ResponseJson の内容を利用者側で判定してください。
     /// </remarks>
     /// <param name="method">呼び出すメソッド名</param>
@@ -1694,6 +1700,7 @@ public class Sora : IDisposable
     /// <remarks>
     /// レスポンス受信とタイムアウト判定は DispatchEvents() の呼び出しで処理されます。
     /// DispatchEvents() を定期的に呼び出さない場合、onResult は呼ばれず、タイムアウトも返りません。
+    /// 切断が発生した場合、未完了の RPC は Canceled として返されます。
     /// ResultKind は成功 / 失敗を表しません。 ResponseJson の内容を利用者側で判定してください。
     /// </remarks>
     /// <param name="method">呼び出すメソッド名</param>
