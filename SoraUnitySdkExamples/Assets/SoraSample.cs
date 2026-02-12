@@ -1212,9 +1212,6 @@ public class SoraSample : MonoBehaviour
             case Sora.RpcResultKind.Timeout:
                 Debug.LogErrorFormat("RPC timeout: method={0}", result.Method);
                 break;
-            case Sora.RpcResultKind.Canceled:
-                Debug.LogWarningFormat("RPC canceled: method={0}", result.Method);
-                break;
         }
     }
 
