@@ -1285,7 +1285,7 @@ public class Sora : IDisposable
     {
         while (true)
         {
-            string? responseJson = null;
+            string responseJson;
             lock (rpcResponseJsonQueue)
             {
                 if (rpcResponseJsonQueue.Count == 0)
@@ -1295,7 +1295,7 @@ public class Sora : IDisposable
                 responseJson = rpcResponseJsonQueue.Dequeue();
             }
 
-            // レスポンスデータの JSON 文字列から、リクエスト ID のみを抜き出します。
+            // レスポンスデータの JSON 文字列をパースして、リクエスト ID のみを抜き出します。
             // ID が取得できない場合や JSON 文字列が不正な場合はレスポンス待ちと紐付けできないため捨てます。
             long id;
             try
@@ -1580,15 +1580,6 @@ public class Sora : IDisposable
     /// <param name="paramsJson">メソッドのパラメータを表す JSON 文字列。オブジェクト形式 (例: {"key":"value"}) または配列形式 (例: [1,2,3]) で指定します。パラメータがない場合は "{}" を指定してください</param>
     public void RequestRpcNotification(string method, string paramsJson)
     {
-        if (method == null)
-        {
-            throw new ArgumentNullException(nameof(method));
-        }
-        if (paramsJson == null)
-        {
-            throw new ArgumentNullException(nameof(paramsJson));
-        }
-
         var methodJson = EscapeJsonString(method);
         var rpcMessage = $"{{\"jsonrpc\":\"2.0\",\"method\":{methodJson},\"params\":{paramsJson}}}";
         SendRpcMessage(rpcMessage);
@@ -1618,18 +1609,6 @@ public class Sora : IDisposable
     /// <param name="timeoutMillis">Sora レスポンスのタイムアウト時間 (ミリ秒)。0 以上の値を指定してください</param>
     public void RequestRpc(string method, string paramsJson, Action<RpcResult> onResult, long timeoutMillis)
     {
-        if (method == null)
-        {
-            throw new ArgumentNullException(nameof(method));
-        }
-        if (paramsJson == null)
-        {
-            throw new ArgumentNullException(nameof(paramsJson));
-        }
-        if (onResult == null)
-        {
-            throw new ArgumentNullException(nameof(onResult));
-        }
         if (timeoutMillis < 0)
         {
             throw new ArgumentOutOfRangeException(
