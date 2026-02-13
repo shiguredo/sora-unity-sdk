@@ -1206,14 +1206,11 @@ public class SoraSample : MonoBehaviour
     {
         switch (result.ResultKind)
         {
-            case Sora.RpcResultKind.ResponseReceived:
+            case Sora.RpcResultKind.Response:
                 Debug.LogFormat("RPC response: method={0}, response={1}", result.Method, result.ResponseJson);
                 break;
             case Sora.RpcResultKind.Timeout:
                 Debug.LogErrorFormat("RPC timeout: method={0}", result.Method);
-                break;
-            case Sora.RpcResultKind.Canceled:
-                Debug.LogWarningFormat("RPC canceled: method={0}", result.Method);
                 break;
         }
     }
@@ -1227,7 +1224,7 @@ public class SoraSample : MonoBehaviour
 
         if (string.IsNullOrWhiteSpace(rpcTimeoutMillis))
         {
-            sora.RequestRpc(method, paramsJson, HandleRpcResult);
+            sora.RequestRpc(method, paramsJson, HandleRpcResult, Sora.DefaultRpcTimeoutMillis);
             return;
         }
 
@@ -1235,11 +1232,6 @@ public class SoraSample : MonoBehaviour
         if (!long.TryParse(timeoutMillisText, out var timeoutMillis))
         {
             Debug.LogErrorFormat("RPC timeoutMillis の形式が不正です: timeoutMillis={0}", rpcTimeoutMillis);
-            return;
-        }
-        if (timeoutMillis <= 0)
-        {
-            Debug.LogErrorFormat("RPC timeoutMillis は 1 以上を指定してください: timeoutMillis={0}", timeoutMillis);
             return;
         }
 
