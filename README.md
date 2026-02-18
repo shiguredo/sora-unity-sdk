@@ -1,6 +1,6 @@
 # Sora Unity SDK
 
-[![libwebrtc](https://img.shields.io/badge/libwebrtc-143.7499-blue.svg)](https://chromium.googlesource.com/external/webrtc/+/branch-heads/7499)
+[![libwebrtc](https://img.shields.io/badge/libwebrtc-144.7559-blue.svg)](https://chromium.googlesource.com/external/webrtc/+/branch-heads/7559)
 [![GitHub tag](https://img.shields.io/github/tag/shiguredo/sora-unity-sdk.svg)](https://github.com/shiguredo/sora-unity-sdk)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Actions Status](https://github.com/shiguredo/sora-unity-sdk/workflows/build/badge.svg)](https://github.com/shiguredo/sora-unity-sdk/actions)
@@ -24,6 +24,12 @@ Please read <https://github.com/shiguredo/oss/blob/master/README.en.md> before u
 ## サンプル
 
 [WebRTC SFU Sora Unity SDK サンプル集](./SoraUnitySdkExamples)
+
+## ソースコードディレクトリ構成
+
+- `src/` : ネイティブプラグイン（Unity 向けラッパー）の SDK 実装です
+- `SoraUnitySdkExamples/` : Unity サンプルプロジェクトです
+- `SoraUnitySdkExamples/Assets/SoraUnitySdk/` : Unity 向けの C# での SDK 実装です
 
 ### サンプル動作例
 
@@ -89,8 +95,8 @@ Please read <https://github.com/shiguredo/oss/blob/master/README.en.md> before u
 - Sora サイマルキャストへの対応
 - Sora スポットライトへの対応
 - Sora データチャネルへの対応
-- Sora データチャネルメッセージングへの対応
-  - 実験的機能
+- Sora リアルタイムメッセージングへの対応
+- Sora RPC 機能への対応
 - Apple VideoToolbox
   - H.265 ハードウェアエンコードへの対応
   - H.265 ハードウェアデコードへの対応
@@ -171,6 +177,7 @@ Please read <https://github.com/shiguredo/oss/blob/master/README.en.md> before u
 
 - サイマルキャスト rid 指定対応
 - iOS, Android 以外の音声出力先変更機能
+- Android の x86_64 対応
 
 ## ライセンス
 

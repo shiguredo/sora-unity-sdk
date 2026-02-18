@@ -4,3 +4,6 @@
 /_install
 /_package
 *.swp
+.DS_Store
+/SoraUnitySdk/
+/SoraUnitySdk.zip

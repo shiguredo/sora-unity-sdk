@@ -43,6 +43,12 @@ logging.basicConfig(level=logging.DEBUG)
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 
 
+def read_version(version_path):
+    """VERSION ファイルからバージョンを読み込む"""
+    with open(version_path, "r") as f:
+        return f.read().strip()
+
+
 def install_deps(
     platform: str,
     build_platform: str,
@@ -56,12 +62,12 @@ def install_deps(
     local_sora_cpp_sdk_args: List[str],
 ):
     with cd(BASE_DIR):
-        version = read_version_file("VERSION")
+        deps = read_version_file(os.path.join(BASE_DIR, "DEPS"))
 
         # Android NDK
         if platform == "android":
             install_android_ndk_args = {
-                "version": version["ANDROID_NDK_VERSION"],
+                "version": deps["ANDROID_NDK_VERSION"],
                 "version_file": os.path.join(install_dir, "android-ndk.version"),
                 "source_dir": source_dir,
                 "install_dir": install_dir,
@@ -71,7 +77,7 @@ def install_deps(
         # WebRTC
         if local_webrtc_build_dir is None:
             install_webrtc_args = {
-                "version": version["WEBRTC_BUILD_VERSION"],
+                "version": deps["WEBRTC_BUILD_VERSION"],
                 "version_file": os.path.join(install_dir, "webrtc.version"),
                 "source_dir": source_dir,
                 "install_dir": install_dir,
@@ -119,7 +125,7 @@ def install_deps(
 
         # CMake
         install_cmake_args = {
-            "version": version["CMAKE_VERSION"],
+            "version": deps["CMAKE_VERSION"],
             "version_file": os.path.join(install_dir, "cmake.version"),
             "source_dir": source_dir,
             "install_dir": install_dir,
@@ -145,8 +151,8 @@ def install_deps(
         # Sora C++ SDK
         if local_sora_cpp_sdk_dir is None:
             install_sora_and_deps(
-                version["SORA_CPP_SDK_VERSION"],
-                version["BOOST_VERSION"],
+                deps["SORA_CPP_SDK_VERSION"],
+                deps["BOOST_VERSION"],
                 platform,
                 source_dir,
                 install_dir,
@@ -162,7 +168,7 @@ def install_deps(
 
         # protobuf
         install_protobuf_args = {
-            "version": version["PROTOBUF_VERSION"],
+            "version": deps["PROTOBUF_VERSION"],
             "version_file": os.path.join(install_dir, "protobuf.version"),
             "source_dir": source_dir,
             "install_dir": install_dir,
@@ -180,7 +186,7 @@ def install_deps(
 
         # protoc-gen-jsonif
         install_jsonif_args = {
-            "version": version["PROTOC_GEN_JSONIF_VERSION"],
+            "version": deps["PROTOC_GEN_JSONIF_VERSION"],
             "version_file": os.path.join(install_dir, "protoc-gen-jsonif.version"),
             "source_dir": source_dir,
             "install_dir": install_dir,
@@ -334,10 +340,10 @@ def _build(args):
         webrtc_version = read_version_file(webrtc_info.version_file)
         webrtc_commit = webrtc_version["WEBRTC_COMMIT"]
         with cd(BASE_DIR):
-            version = read_version_file("VERSION")
-            sora_unity_sdk_version = version["SORA_UNITY_SDK_VERSION"]
+            sora_unity_sdk_version = read_version(os.path.join(BASE_DIR, "VERSION"))
+            deps = read_version_file(os.path.join(BASE_DIR, "DEPS"))
             sora_unity_sdk_commit = cmdcap(["git", "rev-parse", "HEAD"])
-            android_native_api_level = version["ANDROID_NATIVE_API_LEVEL"]
+            android_native_api_level = deps["ANDROID_NATIVE_API_LEVEL"]
 
         cmake_args = []
         cmake_args.append(f"-DCMAKE_BUILD_TYPE={configuration}")
@@ -574,7 +580,7 @@ def _package():
 
 def _install(version: Optional[str], sdk_path: Optional[str]):
     if version is None:
-        version = read_version_file(os.path.join(BASE_DIR, "VERSION"))["SORA_UNITY_SDK_VERSION"]
+        version = read_version(os.path.join(BASE_DIR, "VERSION"))
 
     if sdk_path is None:
         rm_rf("SoraUnitySdk.zip")

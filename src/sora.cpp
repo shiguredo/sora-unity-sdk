@@ -135,6 +135,9 @@ void Sora::SetOnMessage(
     std::function<void(std::string, std::string)> on_message) {
   on_message_ = std::move(on_message);
 }
+void Sora::SetOnRpc(std::function<void(std::string)> on_rpc) {
+  on_rpc_ = std::move(on_rpc);
+}
 void Sora::SetOnDisconnect(
     std::function<void(int, std::string)> on_disconnect) {
   on_disconnect_ = std::move(on_disconnect);
@@ -387,6 +390,9 @@ void Sora::DoConnect(const sora_conf::internal::ConnectConfig& cc,
       config.simulcast = cc.simulcast;
     }
     config.simulcast_rid = cc.simulcast_rid;
+    if (cc.has_simulcast_request_rid()) {
+      config.simulcast_request_rid = cc.simulcast_request_rid;
+    }
     config.signaling_urls = cc.signaling_url;
     config.channel_id = cc.channel_id;
     config.client_id = cc.client_id;
@@ -996,6 +1002,13 @@ void Sora::OnMessage(std::string label, std::string data) {
   PushEvent([this, label = std::move(label), data = std::move(data)]() {
     if (on_message_) {
       on_message_(std::move(label), std::move(data));
+    }
+  });
+}
+void Sora::OnRpc(std::string data) {
+  PushEvent([this, data = std::move(data)]() {
+    if (on_rpc_) {
+      on_rpc_(std::move(data));
     }
   });
 }
