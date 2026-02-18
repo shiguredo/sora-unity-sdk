@@ -95,8 +95,8 @@ Please read <https://github.com/shiguredo/oss/blob/master/README.en.md> before u
 - Sora サイマルキャストへの対応
 - Sora スポットライトへの対応
 - Sora データチャネルへの対応
-- Sora データチャネルメッセージングへの対応
-  - 実験的機能
+- Sora リアルタイムメッセージングへの対応
+- Sora RPC 機能への対応
 - Apple VideoToolbox
   - H.265 ハードウェアエンコードへの対応
   - H.265 ハードウェアデコードへの対応
