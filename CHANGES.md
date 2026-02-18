@@ -38,8 +38,7 @@
     - レスポンスが返ってくるまでのタイムアウトを `timeoutMillis` でミリ秒単位で指定できる
       - 指定しない場合はデフォルトの 5,000ms となる
     - Sora からのレスポンスは引数で渡す `RpcResult` コールバックで受け取る
-  - @torikizi
-  - @t-miya
+  - @torikizi @t-miya
 
 ### misc
 
