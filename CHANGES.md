@@ -11,6 +11,10 @@
 
 ## develop
 
+## 2026.1.0
+
+**リリース日**: 2026-02-18
+
 - [CHANGE] VERSION ファイルと DEPS ファイルを分離する
   - VERSION ファイルには Sora Unity SDK のバージョンのみを記載する
   - canary.py は Sora Unity SDK のバージョンのみとなった VERSION ファイルを参照するように変更する
