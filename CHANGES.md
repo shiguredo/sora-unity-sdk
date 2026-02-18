@@ -22,6 +22,10 @@
   - libwebrtc を `m144.7559.2.1` に上げる
   - CMAKE_VERSION を `4.2.1` にアップデート
   - @torikizi
+- [UPDATE] DataChannel メッセージングをリアルタイムメッセージングに名称変更する
+  - Sora.cs のコメントを修正する
+  - SoraSample.cs のラベルとコメントを修正する
+  - @torikizi
 - [ADD] `simulcast_request_rid` に対応する
   - Sora 2025.2 以降で利用可能な simulcast_request_rid に対応する
   - `Sora.Config.SimulcastRequestRid` プロパティを追加する

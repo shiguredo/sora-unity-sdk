@@ -207,7 +207,7 @@ public class SoraSample : MonoBehaviour
         public string[] header;
     }
 
-    [Header("DataChannel メッセージングの設定")]
+    [Header("リアルタイムメッセージングの設定")]
     public DataChannel[] dataChannels;
     string[] fixedDataChannelLabels;
 
@@ -1157,7 +1157,7 @@ public class SoraSample : MonoBehaviour
         {
             return;
         }
-        // DataChannel メッセージを使って全てのラベルに適当なデータを送る
+        // リアルタイムメッセージングを使って全てのラベルに適当なデータを送る
         foreach (var label in fixedDataChannelLabels)
         {
             string message = "aaa";

@@ -457,7 +457,7 @@ public class Sora : IDisposable
         // DataChannel を閉じる際に最大で何秒間待つか
         public int DisconnectWaitTimeout = 5;
 
-        // DataChannel メッセージング
+        // リアルタイムメッセージング
         public List<DataChannel> DataChannels = new List<DataChannel>();
 
         // true の場合は署名検証をしない
