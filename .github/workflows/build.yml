@@ -93,3 +93,16 @@ jobs:
             SoraUnitySdk.zip
         env:
           GH_TOKEN: ${{ github.token }}
+
+  slack-notify:
+    name: Slack Notify
+    if: always()
+    needs: [build, package, release]
+    runs-on: ubuntu-slim
+    permissions:
+      actions: read
+    steps:
+      - uses: shiguredo/github-actions/.github/actions/slack-notify@main
+        with:
+          status: ${{ job.status }}
+          slack_webhook: ${{ secrets.SLACK_WEBHOOK }}

@@ -11,6 +11,11 @@
 
 ## develop
 
+### misc
+
+- [ADD] shiguredo/github-actions の slack-notify を使って Slack 通知を追加する
+  - @voluntas
+
 ## 2026.1.0
 
 **リリース日**: 2026-02-18
