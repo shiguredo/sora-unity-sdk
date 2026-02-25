@@ -3,3 +3,5 @@
 /_install
 *.swp
 /Sora/Generated
+
+/__pycache__

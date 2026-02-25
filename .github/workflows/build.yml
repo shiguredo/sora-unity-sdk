@@ -17,7 +17,7 @@ jobs:
           - windows_x86_64
     runs-on: windows-2022
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
     - name: Cache
       id: cache
       uses: actions/cache@v4
@@ -26,7 +26,7 @@ jobs:
         key: ${{ matrix.name }}-v3-${{ hashFiles('VERSIONS') }}
         restore-keys: |
           ${{ matrix.name }}-v3-
-    - run: python3 run.py ${{ matrix.name }}
+    - run: python3 run.py build ${{ matrix.name }}
     - name: Copy ${{ matrix.name }} files
       run: |
         mkdir ${{ matrix.name }}
@@ -48,7 +48,7 @@ jobs:
           - visionos
     runs-on: macos-14
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
     - name: Cache
       id: cache
       uses: actions/cache@v4
@@ -57,7 +57,7 @@ jobs:
         key: ${{ matrix.name }}-v7-${{ hashFiles('VERSIONS') }}
         restore-keys: |
           ${{ matrix.name }}-v7-
-    - run: python3 run.py ${{ matrix.name }}
+    - run: python3 run.py build ${{ matrix.name }}
     # macOS 用
     - name: Copy macOS arm64 files
       if: matrix.name == 'macos_arm64'
@@ -115,7 +115,7 @@ jobs:
             runs-on: ubuntu-24.04
     runs-on: ${{ matrix.runs-on }}
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
     - name: Cache
       id: cache
       uses: actions/cache@v4
@@ -128,7 +128,7 @@ jobs:
       if: matrix.name == 'ubuntu-22.04_x86_64' || matrix.name == 'ubuntu-24.04_x86_64'
       run: |
         sudo apt install libgl-dev
-    - run: python3 run.py ${{ matrix.name }}
+    - run: python3 run.py build ${{ matrix.name }}
     # Android 用
     - name: Copy Android files
       if: matrix.name == 'android'
@@ -173,9 +173,9 @@ jobs:
       - build-macos
       - build-ubuntu
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
     - name: Download artifacts
-      uses: actions/download-artifact@v4
+      uses: actions/download-artifact@v5
     - name: Packaging
       run: |
         set -ex
@@ -220,9 +220,9 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
     - name: Checkout code
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5
     - name: Download SoraUnitySdk
-      uses: actions/download-artifact@v4
+      uses: actions/download-artifact@v5
       with:
         name: SoraUnitySdk
         path: SoraUnitySdk

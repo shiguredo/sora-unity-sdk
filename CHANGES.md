@@ -21,6 +21,14 @@
 
 ## develop
 
+## 2025.2.0
+
+**リリース日**: 2025-08-26
+
+- [CHANGE] run.py をサブコマンド形式に変更
+  - `python run.py <target>` から `python run.py build <target>` に変更
+  - format コマンドを追加し、clang-format によるコードフォーマットを可能にする
+  - @voluntas
 - [CHANGE] 対応プラットフォームから Ubuntu 20.04 を削除する
   - ビルドに関して ubuntu-20.04_x86_64 を指定していた部分を ubuntu-22.04_x86_64 に変更し、Ubuntu 20.04 のビルドを削除する
   - @miosakuma
@@ -56,7 +64,7 @@
   - `CreateADM` 関数のシグネチャを `webrtc::TaskQueueFactory*` から `webrtc::Environment` に変更する
   - `AudioDeviceModule` の新たな引数に対応するため `webrtc::CreateEnvironment()` を追加する
   - UnityAudioDevice のコンストラクタと Create 関数のシグネチャを変更
-    -  WebRTC の推奨事項に従うため、コンストラクタで `webrtc::Environment` を先頭引数に変更する
+    - WebRTC の推奨事項に従うため、コンストラクタで `webrtc::Environment` を先頭引数に変更する
       - [WebRTC の推奨事項が書いてあるコメントリンク](https://source.chromium.org/chromium/chromium/src/+/main:third_party/webrtc/api/environment/environment.h;l=38-41;drc=ee5ab349f3307fb53405b5b502a203539b431c2d)
   - devicelist.cpp に以下のヘッダーを追加する
     - api/audio/create_audio_device_module.h
@@ -99,6 +107,8 @@
 - [CHANGE] package タスクを実行する環境を `ubuntu-20.04` から `ubuntu-24.04` に変更する
   - @miosakuma
 - [UPDATE] 対応 Unity のバージョンに `6000.0` を追加する
+  - @torikizi
+- [UPDATE] actions/checkout@v4 と actions/download-artifact@v4 を @v5 に上げる
   - @torikizi
 - [ADD] .github ディレクトリに copilot-instructions.md を追加
   - @torikizi
