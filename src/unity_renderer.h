@@ -52,6 +52,9 @@ class UnityRenderer {
   ptrid_t RemoveTrack(webrtc::VideoTrackInterface* track);
   void ReplaceTrack(webrtc::VideoTrackInterface* oldTrack,
                     webrtc::VideoTrackInterface* newTrack);
+  webrtc::VideoTrackInterface* GetVideoTrackFromVideoSinkId(
+      ptrid_t video_sink_id) const;
+  ptrid_t GetVideoSinkId(webrtc::VideoTrackInterface* track) const;
 };
 
 }  // namespace sora_unity_sdk

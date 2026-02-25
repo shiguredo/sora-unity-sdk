@@ -2,6 +2,17 @@ syntax = "proto3";
 
 package sora_conf.internal;
 
+enum DegradationPreference {
+    // 自動劣化を無効化
+    DISABLED = 0;
+    // フレームレートを優先維持（解像度を下げる）
+    MAINTAIN_FRAMERATE = 1;
+    // 解像度を優先維持（フレームレートを下げる）
+    MAINTAIN_RESOLUTION = 2;
+    // バランスよく劣化
+    BALANCED = 3;
+}
+
 message DataChannel {
     string label = 1;
     string direction = 2;
@@ -103,8 +114,11 @@ message ConnectConfig {
     bool unity_audio_output = 28;
     string audio_recording_device = 29;
     string audio_playout_device = 30;
+    optional double audio_speaker_volume = 300;
+    optional double audio_microphone_volume = 301;
     string audio_codec_type = 31;
     int32 audio_bit_rate = 34;
+    optional DegradationPreference degradation_preference = 35;
     optional bool data_channel_signaling = 36;
     int32 data_channel_signaling_timeout = 37;
     optional bool ignore_disconnect_websocket = 39;
@@ -125,4 +139,9 @@ message ConnectConfig {
     optional string client_cert = 54;
     optional string client_key = 55;
     optional string ca_cert = 56;
+}
+
+message RtpReceiverInfo {
+    string id = 1;
+    repeated string stream_ids = 2;
 }
