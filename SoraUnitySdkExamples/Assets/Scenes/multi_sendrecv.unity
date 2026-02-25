@@ -3395,20 +3395,6 @@ MonoBehaviour:
   videoBitRate: 0
   videoFps: 30
   videoSize: 1
-  enableForwardingFilter: 0
-  forwardingFilter:
-    enableAction: 0
-    action: 
-    enableName: 0
-    name: 
-    enablePriority: 0
-    priority: 0
-    ruleLists: []
-    enableVersion: 0
-    version: 
-    enableMetadata: 0
-    metadata:
-      metadata: 
   enableForwardingFilters: 0
   forwardingFilters: []
   dataChannelSignaling: 0

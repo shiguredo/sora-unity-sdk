@@ -193,6 +193,19 @@ void sora_set_on_data_channel(void* p,
   });
 }
 
+void sora_set_on_rpc(void* p,
+                              rpc_cb_t on_rpc,
+                              void* userdata) {
+  auto wsora = (SoraWrapper*)p;
+  if (on_rpc == nullptr) {
+    wsora->sora->SetOnRpc(nullptr);
+    return;
+  }
+  wsora->sora->SetOnRpc([on_rpc, userdata](std::string json) {
+    on_rpc(json.c_str(), userdata);
+  });
+}
+
 void sora_set_on_capturer_frame(void* p,
                                 capturer_frame_cb_t on_capturer_frame,
                                 void* userdata) {

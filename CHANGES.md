@@ -21,6 +21,53 @@
 
 ## develop
 
+## 2026.1.0
+
+**リリース日**: 2026-02-18
+
+- [CHANGE] VERSION ファイルと DEPS ファイルを分離する
+  - VERSION ファイルには Sora Unity SDK のバージョンのみを記載する
+  - canary.py は Sora Unity SDK のバージョンのみとなった VERSION ファイルを参照するように変更する
+    - バージョン取得時にプレフィックスを除去していた処理を削除する
+  - DEPS ファイルには Sora C++ SDK や libwebrtc のバージョンを記載する
+  - build.yml や run.py でのバージョン参照を DEPS ファイルに変更する
+  - @torikizi
+- [UPDATE] Sora C++ SDK を `2026.1.0` に上げる
+  - libwebrtc を `m144.7559.2.1` に上げる
+  - CMAKE_VERSION を `4.2.1` にアップデート
+  - @torikizi
+- [UPDATE] DataChannel メッセージングをリアルタイムメッセージングに名称変更する
+  - Sora.cs のコメントを修正する
+  - SoraSample.cs のラベルとコメントを修正する
+  - @torikizi
+- [ADD] `simulcast_request_rid` に対応する
+  - Sora 2025.2 以降で利用可能な simulcast_request_rid に対応する
+  - `Sora.Config.SimulcastRequestRid` プロパティを追加する
+  - `Sora.Config.SimulcastRid` を非推奨化する
+  - `simulcast_request_rid` は未指定の場合、項目も含めないようにする
+  - @torikizi
+- [ADD] RPC 機能を追加する
+  - Sora 2025.2 以降で利用可能な RPC 機能に対応する
+  - `Sora.RequestRpcNotification()` メソッドを追加する
+    - JSON-RPC 2.0 の通知 (Notification) を送信する
+    - Sora からのレスポンスは返らない
+  - `Sora.RequestRpc()` メソッドを追加する
+    - JSON-RPC 2.0 のリクエスト (Request) を送信する
+    - レスポンスが返ってくるまでのタイムアウトを `timeoutMillis` でミリ秒単位で指定できる
+      - 指定しない場合はデフォルトの 5,000ms となる
+    - Sora からのレスポンスは引数で渡す `RpcResult` コールバックで受け取る
+  - @torikizi @t-miya
+
+### misc
+
+- [CHANGE] SoraUnitySdkExamples の SoraSample.cs から `forwardingFilter` のコードを削除する
+  - Sora 2025.2 以降で ForwardingFilter は利用できなくなったため
+  - SoraUnitySdkExamples のシーンからも ForwardingFilter を削除する
+  - @torikizi
+- [ADD] RPC 機能を SoraUnitySdkExamples の SoraSample.cs に追加する
+  - ボタンから RPC メソッドを呼び出せるように `OnClickRpc()` メソッドを追加する
+  - @torikizi
+
 ## 2025.3.0
 
 **リリース日**: 2025-12-11

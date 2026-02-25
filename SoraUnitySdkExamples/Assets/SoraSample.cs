@@ -100,6 +100,8 @@ public class SoraSample : MonoBehaviour
     public bool simulcast = false;
     public bool enableSimulcastRid = false;
     public Sora.SimulcastRidType simulcastRid = Sora.SimulcastRidType.R0;
+    public bool enableSimulcastRequestRid = false;
+    public Sora.SimulcastRequestRidType simulcastRequestRid = Sora.SimulcastRequestRidType.R0;
 
     public int videoBitRate = 0;
     public int videoFps = 30;
@@ -176,12 +178,6 @@ public class SoraSample : MonoBehaviour
         return filter;
     }
 
-    [Header("ForwardingFilter の設定")]
-    [System.Obsolete("forwardingFilter は非推奨です。代わりに forwardingFilters を使用してください。")]
-    public bool enableForwardingFilter = false;
-    [System.Obsolete("forwardingFilter は非推奨です。代わりに forwardingFilters を使用してください。")]
-    public ForwardingFilter forwardingFilter;
-
     [Header("ForwardingFilters の設定")]
     public bool enableForwardingFilters = false;
     public ForwardingFilter[] forwardingFilters;
@@ -211,9 +207,48 @@ public class SoraSample : MonoBehaviour
         public string[] header;
     }
 
-    [Header("DataChannel メッセージングの設定")]
+    [Header("リアルタイムメッセージングの設定")]
     public DataChannel[] dataChannels;
     string[] fixedDataChannelLabels;
+
+    public enum RpcMessageType
+    {
+        None,
+        RequestSimulcastRid,
+        RequestSpotlightRid,
+        ResetSpotlightRid,
+        PutSignalingNotifyMetadata,
+        PutSignalingNotifyMetadataItem,
+    }
+
+    [Header("RPC メッセージの設定")]
+    public RpcMessageType rpcMessageType = RpcMessageType.None;
+
+    [Header("RPC タイムアウトの設定")]
+    // 空欄の場合は SDK のデフォルトタイムアウトを利用する
+    // 指定する場合はミリ秒の数値を入れる
+    public string rpcTimeoutMillis = "";
+
+    [Header("RequestSimulcastRid の設定")]
+    public string sendRequestSimulcastRid = "r0";
+    public string sendRequestSimulcastRidSenderConnectionId = "";
+
+    [Header("RequestSpotlightRid の設定")]
+    public string sendRequestSpotlightFocusRid = "r1";
+    public string sendRequestSpotlightUnfocusRid = "none";
+    public string sendRequestSpotlightRidConnectionId = "";
+
+    [Header("ResetSpotlightRid の設定")]
+    public string sendResetSpotlightRidConnectionId = "";
+
+    [Header("PutSignalingNotifyMetadata の設定")]
+    public string sendPutSignalingNotifyMetadataJson = "{\"key\":\"value\"}";
+    public bool sendPutSignalingNotifyMetadataPush = false;
+
+    [Header("PutSignalingNotifyMetadataItem の設定")]
+    public string sendPutSignalingNotifyMetadataItemKey = "status";
+    public string sendPutSignalingNotifyMetadataItemValue = "\"active\"";
+    public bool sendPutSignalingNotifyMetadataItemPush = false;
 
     [Header("HTTP Proxy の設定")]
     public string proxyUrl;
@@ -1045,6 +1080,10 @@ public class SoraSample : MonoBehaviour
         {
             config.SimulcastRid = simulcastRid;
         }
+        if (enableSimulcastRequestRid)
+        {
+            config.SimulcastRequestRid = simulcastRequestRid;
+        }
         if (dataChannels != null)
         {
             foreach (var m in dataChannels)
@@ -1061,10 +1100,6 @@ public class SoraSample : MonoBehaviour
                 config.DataChannels.Add(c);
             }
             fixedDataChannelLabels = config.DataChannels.Select(x => x.Label).ToArray();
-        }
-        if (enableForwardingFilter)
-        {
-            config.ForwardingFilter = ConvertToSoraForwardingFilter(forwardingFilter);
         }
         if (enableForwardingFilters)
         {
@@ -1122,12 +1157,148 @@ public class SoraSample : MonoBehaviour
         {
             return;
         }
-        // DataChannel メッセージを使って全てのラベルに適当なデータを送る
+        // リアルタイムメッセージングを使って全てのラベルに適当なデータを送る
         foreach (var label in fixedDataChannelLabels)
         {
             string message = "aaa";
             sora.SendMessage(label, System.Text.Encoding.UTF8.GetBytes(message));
         }
+    }
+
+    [ContextMenu("RPC を送信する")]
+    void SendRpcFromContextMenu()
+    {
+        OnClickSendRpc();
+    }
+
+    public void OnClickSendRpc()
+    {
+        if (sora == null)
+        {
+            return;
+        }
+
+        // Inspector で選択された RPC メッセージの種類に応じて処理を分岐する
+        switch (rpcMessageType)
+        {
+            case RpcMessageType.None:
+                Debug.Log("RPC メッセージの種類が選択されていません");
+                break;
+            case RpcMessageType.RequestSimulcastRid:
+                SendRequestSimulcastRid();
+                break;
+            case RpcMessageType.RequestSpotlightRid:
+                SendRequestSpotlightRid();
+                break;
+            case RpcMessageType.ResetSpotlightRid:
+                SendResetSpotlightRid();
+                break;
+            case RpcMessageType.PutSignalingNotifyMetadata:
+                SendPutSignalingNotifyMetadata();
+                break;
+            case RpcMessageType.PutSignalingNotifyMetadataItem:
+                SendPutSignalingNotifyMetadataItem();
+                break;
+        }
+    }
+
+    void HandleRpcResult(Sora.RpcResult result)
+    {
+        switch (result.ResultKind)
+        {
+            case Sora.RpcResultKind.Response:
+                Debug.LogFormat("RPC response: method={0}, response={1}", result.Method, result.ResponseJson);
+                break;
+            case Sora.RpcResultKind.Timeout:
+                Debug.LogErrorFormat("RPC timeout: method={0}", result.Method);
+                break;
+        }
+    }
+
+    void RequestRpcWithInspectorSettings(string method, string paramsJson)
+    {
+        if (sora == null)
+        {
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(rpcTimeoutMillis))
+        {
+            sora.RequestRpc(method, paramsJson, HandleRpcResult, Sora.DefaultRpcTimeoutMillis);
+            return;
+        }
+
+        var timeoutMillisText = rpcTimeoutMillis.Trim();
+        if (!long.TryParse(timeoutMillisText, out var timeoutMillis))
+        {
+            Debug.LogErrorFormat("RPC timeoutMillis の形式が不正です: timeoutMillis={0}", rpcTimeoutMillis);
+            return;
+        }
+
+        sora.RequestRpc(method, paramsJson, HandleRpcResult, timeoutMillis);
+    }
+
+    void SendRequestSimulcastRid()
+    {
+        Debug.LogFormat("SendRequestSimulcastRid: rid={0}, sender_connection_id={1}", sendRequestSimulcastRid, sendRequestSimulcastRidSenderConnectionId);
+        string paramsJson;
+        if (string.IsNullOrEmpty(sendRequestSimulcastRidSenderConnectionId))
+        {
+            paramsJson = $"{{\"rid\":\"{sendRequestSimulcastRid}\"}}";
+        }
+        else
+        {
+            paramsJson = $"{{\"sender_connection_id\":\"{sendRequestSimulcastRidSenderConnectionId}\",\"rid\":\"{sendRequestSimulcastRid}\"}}";
+        }
+        RequestRpcWithInspectorSettings("2025.2.0/RequestSimulcastRid", paramsJson);
+    }
+
+    void SendRequestSpotlightRid()
+    {
+        Debug.LogFormat("SendRequestSpotlightRid: focus={0}, unfocus={1}, send_connection_id={2}", sendRequestSpotlightFocusRid, sendRequestSpotlightUnfocusRid, sendRequestSpotlightRidConnectionId);
+        string paramsJson;
+        if (string.IsNullOrEmpty(sendRequestSpotlightRidConnectionId))
+        {
+            paramsJson = $"{{\"spotlight_focus_rid\":\"{sendRequestSpotlightFocusRid}\",\"spotlight_unfocus_rid\":\"{sendRequestSpotlightUnfocusRid}\"}}";
+        }
+        else
+        {
+            paramsJson = $"{{\"send_connection_id\":\"{sendRequestSpotlightRidConnectionId}\",\"spotlight_focus_rid\":\"{sendRequestSpotlightFocusRid}\",\"spotlight_unfocus_rid\":\"{sendRequestSpotlightUnfocusRid}\"}}";
+        }
+        RequestRpcWithInspectorSettings("2025.2.0/RequestSpotlightRid", paramsJson);
+    }
+
+    void SendResetSpotlightRid()
+    {
+        Debug.LogFormat("SendResetSpotlightRid: send_connection_id={0}", sendResetSpotlightRidConnectionId);
+        string paramsJson;
+        if (string.IsNullOrEmpty(sendResetSpotlightRidConnectionId))
+        {
+            paramsJson = "{}";
+        }
+        else
+        {
+            paramsJson = $"{{\"send_connection_id\":\"{sendResetSpotlightRidConnectionId}\"}}";
+        }
+        RequestRpcWithInspectorSettings("2025.2.0/ResetSpotlightRid", paramsJson);
+    }
+
+    void SendPutSignalingNotifyMetadata()
+    {
+        Debug.LogFormat("SendPutSignalingNotifyMetadata: {0}", sendPutSignalingNotifyMetadataJson);
+        string paramsJson = sendPutSignalingNotifyMetadataPush
+            ? $"{{\"push\":true,\"metadata\":{sendPutSignalingNotifyMetadataJson}}}"
+            : $"{{\"metadata\":{sendPutSignalingNotifyMetadataJson}}}";
+        RequestRpcWithInspectorSettings("2025.2.0/PutSignalingNotifyMetadata", paramsJson);
+    }
+
+    void SendPutSignalingNotifyMetadataItem()
+    {
+        Debug.LogFormat("SendPutSignalingNotifyMetadataItem: key={0}, value={1}", sendPutSignalingNotifyMetadataItemKey, sendPutSignalingNotifyMetadataItemValue);
+        string paramsJson = sendPutSignalingNotifyMetadataItemPush
+            ? $"{{\"push\":true,\"key\":\"{sendPutSignalingNotifyMetadataItemKey}\",\"value\":{sendPutSignalingNotifyMetadataItemValue}}}"
+            : $"{{\"key\":\"{sendPutSignalingNotifyMetadataItemKey}\",\"value\":{sendPutSignalingNotifyMetadataItemValue}}}";
+        RequestRpcWithInspectorSettings("2025.2.0/PutSignalingNotifyMetadataItem", paramsJson);
     }
 
     public void OnClickVideoMute()
