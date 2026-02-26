@@ -9,6 +9,8 @@
 - FIX
   - バグ修正
 
+## develop
+
 ## 2025.4.0-apple-vision-pro.0
 
 - [ADD] visionOS に対応する
@@ -18,8 +20,6 @@
   - `SORA_UNITY_SDK_VISIONOS` を使用して iOS / macOS とのビルドを分岐する
   - 実機とシミュレータの両方に対応する
   - @torikizi
-
-## develop
 
 ## 2026.1.0
 
