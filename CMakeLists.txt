@@ -246,7 +246,7 @@ elseif (SORA_UNITY_SDK_PACKAGE STREQUAL "visionos")
       SORA_UNITY_SDK_VISIONOS
   )
   
-  # visionOSシミュレータの判別
+  # visionOS シミュレータの判別
   if(CMAKE_OSX_SYSROOT MATCHES "XRSimulator")
     target_compile_definitions(SoraUnitySdk
       PRIVATE
