@@ -105,6 +105,7 @@ bool UnityContext::IsInitialized() {
   // 未対応のレンダリングタイプだった場合は Unity カメラキャプチャが動作しないが
   // それ以外の機能は使えるので許容する。
   return true;
+#endif
 }
 
 void UnityContext::Init(IUnityInterfaces* ifs) {
