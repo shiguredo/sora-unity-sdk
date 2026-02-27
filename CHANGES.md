@@ -11,14 +11,14 @@
 
 ## develop
 
-## 2025.4.0-apple-vision-pro.0
+- [UPDATE] visionOS ブランチを m144 にアップデートする
+  - `2025.2.0` / `2025.3.0` / `2026.1.0` タグの変更を取り込み最新化する
+  - @torikizi
 
-- [ADD] visionOS に対応する
-  - 2025.2.0-canary.12 タグから作成
-  - visionOS のビルドを追加する
-  - 現時点では受信のみ対応で、映像の送信は未対応です
-  - `SORA_UNITY_SDK_VISIONOS` を使用して iOS / macOS とのビルドを分岐する
-  - 実機とシミュレータの両方に対応する
+### misc
+
+- [CHANGE] CI を Apple 系のみ実行するようにする
+  - GitHub Actions の `build.yml` で、macOS と iOS と visionOS のみ実行するように変更する
   - @torikizi
 
 ## 2026.1.0
@@ -66,6 +66,16 @@
   - @torikizi
 - [ADD] RPC 機能を SoraUnitySdkExamples の SoraSample.cs に追加する
   - ボタンから RPC メソッドを呼び出せるように `OnClickRpc()` メソッドを追加する
+  - @torikizi
+
+## 2025.4.0-apple-vision-pro.0
+
+- [ADD] visionOS に対応する
+  - 2025.2.0-canary.12 タグから作成
+  - visionOS のビルドを追加する
+  - 現時点では受信のみ対応で、映像の送信は未対応です
+  - `SORA_UNITY_SDK_VISIONOS` を使用して iOS / macOS とのビルドを分岐する
+  - 実機とシミュレータの両方に対応する
   - @torikizi
 
 ## 2025.3.0
