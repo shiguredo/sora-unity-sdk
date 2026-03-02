@@ -20,6 +20,8 @@
 - [CHANGE] CI を Apple 系のみ実行するようにする
   - GitHub Actions の `build.yml` で、macOS と iOS と visionOS のみ実行するように変更する
   - @torikizi
+- [UPDATE] Github Actions の `macos-15` を `macos-26` に変更する
+  - @torikizi
 
 ## 2026.1.0
 

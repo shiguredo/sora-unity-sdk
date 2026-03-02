@@ -15,11 +15,11 @@ jobs:
       matrix:
         include:
           - target: macos_arm64
-            runs-on: macos-15
+            runs-on: macos-26
           - target: ios
-            runs-on: macos-15
+            runs-on: macos-26
           - target: visionos
-            runs-on: macos-15
+            runs-on: macos-26
     runs-on: ${{ matrix.runs-on }}
     steps:
       - uses: actions/checkout@v5
