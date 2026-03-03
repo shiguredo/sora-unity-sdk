@@ -13,6 +13,12 @@
 
 ### misc
 
+- [UPDATE] GitHub Actions のバージョンをアップデートする
+  - actions/checkout@v6 にアップデート
+  - actions/cache@v5 にアップデート
+  - actions/upload-artifact@v7 にアップデート
+  - actions/download-artifact@v8 にアップデート
+  - @torikizi
 - [ADD] shiguredo/github-actions の slack-notify を使って Slack 通知を追加する
   - @voluntas
 
