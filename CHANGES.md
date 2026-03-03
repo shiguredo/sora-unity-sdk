@@ -22,6 +22,12 @@
   - @torikizi
 - [UPDATE] Github Actions の `macos-15` を `macos-26` に変更する
   - @torikizi
+- [UPDATE] GitHub Actions のバージョンをアップデートする
+  - actions/checkout@v6 にアップデート
+  - actions/cache@v5 にアップデート
+  - actions/upload-artifact@v7 にアップデート
+  - actions/download-artifact@v8 にアップデート
+  - @torikizi
 
 ## 2026.1.0
 
