@@ -13,6 +13,8 @@
 
 - [UPDATE] visionOS ブランチを m144 にアップデートする
   - `2025.2.0` / `2025.3.0` / `2026.1.0` タグの変更を取り込み最新化する
+  - SORA_CPP_SDK_VERSION を 2026.1.2-apple-vision-pro.0 にアップデート
+  - WEBRTC_BUILD_VERSION を m144.7559.2.1-apple-vision-pro.0 にアップデート
   - @torikizi
 
 ### misc
