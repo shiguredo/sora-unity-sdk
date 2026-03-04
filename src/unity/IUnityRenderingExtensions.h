@@ -1,3 +1,9 @@
+// Unity Native Plugin API copyright © 2015 Unity Technologies ApS
+//
+// Licensed under the Unity Companion License for Unity - dependent projects--see[Unity Companion License](http://www.unity3d.com/legal/licenses/Unity_Companion_License).
+//
+// Unless expressly provided otherwise, the Software under this license is made available strictly on an “AS IS” BASIS WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED.Please review the license for details on these and other terms and conditions.
+
 #pragma once
 
 
@@ -104,6 +110,7 @@ typedef enum UnityRenderingExtQueryType
                                                                             //      and it will clear the whole render target not just per-eye on demand.
     kUnityRenderingExtQueryKeepOriginalDoubleWideWidth_DEPRECATED  = 1 << 4,           // Instructs unity to keep the original double wide width. By default unity will try and have a power-of-two width for mip-mapping requirements.
     kUnityRenderingExtQueryRequestVRFlushCallback       = 1 << 5,           // Instructs unity to provide callbacks when the VR eye textures need flushing. Useful for multi GPU synchronization.
+    kUnityRenderingExtQueryOverridePresentFrame         = 1 << 6,           // The plugin handles it's own SwapChain Present. Unity will skip its internal Present calls
 } UnityRenderingExtQueryType;
 
 
@@ -226,8 +233,8 @@ typedef enum UnityRenderingExtTextureFormat
     kUnityRenderingExtFormatD24_UNorm,
     kUnityRenderingExtFormatD24_UNorm_S8_UInt,
     kUnityRenderingExtFormatD32_SFloat,
-    kUnityRenderingExtFormatD32_SFloat_S8_Uint,
-    kUnityRenderingExtFormatS8_Uint,
+    kUnityRenderingExtFormatD32_SFloat_S8_UInt,
+    kUnityRenderingExtFormatS8_UInt,
 
     // Compression formats
     kUnityRenderingExtFormatRGBA_DXT1_SRGB,
@@ -283,13 +290,13 @@ typedef enum UnityRenderingExtTextureFormat
     // Video formats
     kUnityRenderingExtFormatYUV2,
 
-    // Automatic formats, back-end decides
-    kUnityRenderingExtFormatDepthAuto,
-    kUnityRenderingExtFormatShadowAuto,
-    kUnityRenderingExtFormatVideoAuto,
+    // Obsoleted
+    //kUnityRenderingExtFormatDepthAuto_removed_donotuse = 142,
+    //kUnityRenderingExtFormatShadowAuto_removed_donotuse = 143,
+    //kUnityRenderingExtFormatVideoAuto_removed_donotuse = 144,
 
     // ASTC hdr profile
-    kUnityRenderingExtFormatRGBA_ASTC4X4_UFloat,
+    kUnityRenderingExtFormatRGBA_ASTC4X4_UFloat = 145,
     kUnityRenderingExtFormatRGBA_ASTC5X5_UFloat,
     kUnityRenderingExtFormatRGBA_ASTC6X6_UFloat,
     kUnityRenderingExtFormatRGBA_ASTC8X8_UFloat,

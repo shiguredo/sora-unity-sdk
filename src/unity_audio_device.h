@@ -23,12 +23,14 @@ class UnityAudioDevice : public webrtc::AudioDeviceModule {
       bool adm_recording,
       bool adm_playout,
       std::function<void(const int16_t* p, int samples, int channels)>
-          on_handle_audio)
+          on_handle_audio,
+      webrtc::AudioTrackSinkInterface* audio_sink)
       : env_(env),
         adm_(adm),
         adm_recording_(adm_recording),
         adm_playout_(adm_playout),
-        on_handle_audio_(on_handle_audio) {}
+        on_handle_audio_(on_handle_audio),
+        audio_transport_impl_(audio_sink) {}
 
   ~UnityAudioDevice() override {
     RTC_LOG(LS_INFO) << "~UnityAudioDevice";
@@ -36,14 +38,15 @@ class UnityAudioDevice : public webrtc::AudioDeviceModule {
   }
 
   static webrtc::scoped_refptr<UnityAudioDevice> Create(
+      const webrtc::Environment& env,
       webrtc::scoped_refptr<webrtc::AudioDeviceModule> adm,
       bool adm_recording,
       bool adm_playout,
       std::function<void(const int16_t* p, int samples, int channels)>
           on_handle_audio,
-      webrtc::Environment environment) {
+      webrtc::AudioTrackSinkInterface* audio_sink) {
     return webrtc::make_ref_counted<UnityAudioDevice>(
-        environment, adm, adm_recording, adm_playout, on_handle_audio);
+        env, adm, adm_recording, adm_playout, on_handle_audio, audio_sink);
   }
 
   void ProcessAudioData(const float* data, int32_t size) {
@@ -65,6 +68,65 @@ class UnityAudioDevice : public webrtc::AudioDeviceModule {
     }
   }
 
+  // 録音データをフックするための AudioTransport
+  struct AudioTransportImpl : public webrtc::AudioTransport {
+    AudioTransportImpl(webrtc::AudioTrackSinkInterface* audio_sink)
+        : audio_sink_(audio_sink) {}
+    void SetAudioTransport(webrtc::AudioTransport* audio_transport) {
+      audio_transport_ = audio_transport;
+    }
+    int32_t RecordedDataIsAvailable(const void* audioSamples,
+                                    size_t nSamples,
+                                    size_t nBytesPerSample,
+                                    size_t nChannels,
+                                    uint32_t samplesPerSec,
+                                    uint32_t totalDelayMS,
+                                    int32_t clockDrift,
+                                    uint32_t currentMicLevel,
+                                    bool keyPressed,
+                                    uint32_t& newMicLevel) override {
+      if (audio_sink_ != nullptr) {
+        // RTC_LOG(LS_INFO)
+        //     << "AudioTransportImpl::RecordedDataIsAvailable: nSamples="
+        //     << nSamples << " nBytesPerSample=" << nBytesPerSample
+        //     << " nChannels=" << nChannels << " samplesPerSec=" << samplesPerSec;
+        audio_sink_->OnData(audioSamples, nBytesPerSample * 8, samplesPerSec,
+                            nChannels, nSamples, std::nullopt);
+      }
+      return audio_transport_->RecordedDataIsAvailable(
+          audioSamples, nSamples, nBytesPerSample, nChannels, samplesPerSec,
+          totalDelayMS, clockDrift, currentMicLevel, keyPressed, newMicLevel);
+    }
+
+    int32_t NeedMorePlayData(size_t nSamples,
+                             size_t nBytesPerSample,
+                             size_t nChannels,
+                             uint32_t samplesPerSec,
+                             void* audioSamples,
+                             size_t& nSamplesOut,
+                             int64_t* elapsed_time_ms,
+                             int64_t* ntp_time_ms) override {
+      return audio_transport_->NeedMorePlayData(
+          nSamples, nBytesPerSample, nChannels, samplesPerSec, audioSamples,
+          nSamplesOut, elapsed_time_ms, ntp_time_ms);
+    }
+    void PullRenderData(int bits_per_sample,
+                        int sample_rate,
+                        size_t number_of_channels,
+                        size_t number_of_frames,
+                        void* audio_data,
+                        int64_t* elapsed_time_ms,
+                        int64_t* ntp_time_ms) override {
+      audio_transport_->PullRenderData(
+          bits_per_sample, sample_rate, number_of_channels, number_of_frames,
+          audio_data, elapsed_time_ms, ntp_time_ms);
+    }
+
+   private:
+    webrtc::AudioTransport* audio_transport_ = nullptr;
+    webrtc::AudioTrackSinkInterface* audio_sink_ = nullptr;
+  };
+
   //webrtc::AudioDeviceModule
   // Retrieve the currently utilized audio layer
   virtual int32_t ActiveAudioLayer(AudioLayer* audioLayer) const override {
@@ -76,17 +138,19 @@ class UnityAudioDevice : public webrtc::AudioDeviceModule {
   virtual int32_t RegisterAudioCallback(
       webrtc::AudioTransport* audioCallback) override {
     RTC_LOG(LS_INFO) << "RegisterAudioCallback";
+    audio_transport_impl_.SetAudioTransport(audioCallback);
     if (!adm_recording_ || !adm_playout_) {
-      device_buffer_->RegisterAudioCallback(audioCallback);
+      device_buffer_->RegisterAudioCallback(
+          audioCallback == nullptr ? nullptr : &audio_transport_impl_);
     }
-    return adm_->RegisterAudioCallback(audioCallback);
+    return adm_->RegisterAudioCallback(
+        audioCallback == nullptr ? nullptr : &audio_transport_impl_);
   }
 
   // Main initialization and termination
   virtual int32_t Init() override {
     RTC_LOG(LS_INFO) << "Init";
-    device_buffer_ =
-        std::make_unique<webrtc::AudioDeviceBuffer>(&env_.task_queue_factory());
+    device_buffer_ = std::make_unique<webrtc::AudioDeviceBuffer>(env_);
     initialized_ = true;
     return adm_->Init();
   }
@@ -432,6 +496,7 @@ class UnityAudioDevice : public webrtc::AudioDeviceModule {
   std::atomic_bool is_playing_ = {false};
   std::atomic_bool stereo_playout_ = {false};
   std::vector<int16_t> converted_audio_data_;
+  AudioTransportImpl audio_transport_impl_;
 };
 
 }  // namespace sora_unity_sdk

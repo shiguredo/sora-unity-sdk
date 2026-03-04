@@ -1,22 +1,29 @@
 name: Claude Assistant
 
 on:
-  pull_request_review_comment:
-    types: [created]
   issue_comment:
     types: [created]
+  pull_request_review_comment:
+    types: [created]
+
+permissions:
+  contents: read
+  issues: write
+  pull-requests: write
+  actions: read
+
+env:
+  CLAUDE_API_KEY: ${{ secrets.ANTHROPIC_API_KEY_SORA_OSS_SONNET }}
+  CLAUDE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN_VOLUNTAS }}
 
 jobs:
   claude-response:
     runs-on: ubuntu-24.04
-    timeout-minutes: 20
-    if: contains(fromJSON('["melpon", "zztkm", "torikizi", "miosakuma"]'), github.event.comment.user.login)
+    timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v4
-      - uses: anthropics/claude-code-action@beta
+      - uses: actions/checkout@v6
+      - uses: shiguredo/github-actions/.github/actions/claude-code-action@main
         with:
-          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY_SORA_OSS_SONNET }}
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          model: "claude-sonnet-4-20250514"
-          trigger_phrase: "!sonnet"
-          timeout_minutes: 15
+          api_key: ${{ env.CLAUDE_API_KEY }}
+          oauth_user: voluntas
+          oauth_token: ${{ env.CLAUDE_OAUTH_TOKEN }}

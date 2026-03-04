@@ -11,7 +11,7 @@ bool UnityCameraCapturer::D3D11Impl::Init(UnityContext* context,
   width_ = width;
   height_ = height;
 
-  auto device = context->GetDevice();
+  auto device = context->GetD3D11Device();
   if (device == nullptr) {
     return false;
   }
@@ -42,7 +42,7 @@ webrtc::scoped_refptr<webrtc::I420Buffer>
 UnityCameraCapturer::D3D11Impl::Capture() {
   D3D11_MAPPED_SUBRESOURCE resource;
 
-  auto dc = context_->GetDeviceContext();
+  auto dc = context_->GetD3D11DeviceContext();
   if (dc == nullptr) {
     RTC_LOG(LS_ERROR) << "ID3D11DeviceContext is null";
     return nullptr;

@@ -1,9 +1,11 @@
 import argparse
+import glob
 import logging
 import multiprocessing
 import os
 import platform
 import shlex
+import shutil
 from typing import List, Optional
 
 from buildbase import (
@@ -14,12 +16,17 @@ from buildbase import (
     cmake_path,
     cmd,
     cmdcap,
+    download,
+    enum_all_files,
+    extract,
     fix_clang_version,
     get_clang_version,
     get_sora_info,
     get_webrtc_info,
     install_android_ndk,
     install_cmake,
+    install_file,
+    install_file_ifexists,
     install_llvm,
     install_protobuf,
     install_protoc_gen_jsonif,
@@ -27,12 +34,19 @@ from buildbase import (
     install_webrtc,
     mkdir_p,
     read_version_file,
+    rm_rf,
 )
 
 logging.basicConfig(level=logging.DEBUG)
 
 
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
+
+
+def read_version(version_path):
+    """VERSION ファイルからバージョンを読み込む"""
+    with open(version_path, "r") as f:
+        return f.read().strip()
 
 
 def install_deps(
@@ -48,12 +62,12 @@ def install_deps(
     local_sora_cpp_sdk_args: List[str],
 ):
     with cd(BASE_DIR):
-        version = read_version_file("VERSION")
+        deps = read_version_file(os.path.join(BASE_DIR, "DEPS"))
 
         # Android NDK
         if platform == "android":
             install_android_ndk_args = {
-                "version": version["ANDROID_NDK_VERSION"],
+                "version": deps["ANDROID_NDK_VERSION"],
                 "version_file": os.path.join(install_dir, "android-ndk.version"),
                 "source_dir": source_dir,
                 "install_dir": install_dir,
@@ -63,7 +77,7 @@ def install_deps(
         # WebRTC
         if local_webrtc_build_dir is None:
             install_webrtc_args = {
-                "version": version["WEBRTC_BUILD_VERSION"],
+                "version": deps["WEBRTC_BUILD_VERSION"],
                 "version_file": os.path.join(install_dir, "webrtc.version"),
                 "source_dir": source_dir,
                 "install_dir": install_dir,
@@ -84,21 +98,9 @@ def install_deps(
         webrtc_info = get_webrtc_info(platform, local_webrtc_build_dir, install_dir, debug)
 
         # Windows は MSVC を使うので不要
-        # macOS と iOS と visionOS は Apple Clang を使うので不要
         # Android は libc++ のために必要
         # webrtc-build をソースビルドしてる場合は既にローカルにあるので不要
-        if (
-            platform
-            not in (
-                "windows_x86_64",
-                "macos_x86_64",
-                "macos_arm64",
-                "ios",
-                "visionos",
-                "visionos-simulator",
-            )
-            and local_webrtc_build_dir is None
-        ):
+        if platform not in ("windows_x86_64", "macos_x86_64") and local_webrtc_build_dir is None:
             webrtc_version = read_version_file(webrtc_info.version_file)
 
             # LLVM
@@ -125,7 +127,7 @@ def install_deps(
 
         # CMake
         install_cmake_args = {
-            "version": version["CMAKE_VERSION"],
+            "version": deps["CMAKE_VERSION"],
             "version_file": os.path.join(install_dir, "cmake.version"),
             "source_dir": source_dir,
             "install_dir": install_dir,
@@ -152,8 +154,8 @@ def install_deps(
         if local_sora_cpp_sdk_dir is None:
             sora_platform = platform if platform != "visionos-simulator" else "visionos"
             install_sora_and_deps(
-                version["SORA_CPP_SDK_VERSION"],
-                version["BOOST_VERSION"],
+                deps["SORA_CPP_SDK_VERSION"],
+                deps["BOOST_VERSION"],
                 platform,
                 source_dir,
                 install_dir,
@@ -170,7 +172,7 @@ def install_deps(
 
         # protobuf
         install_protobuf_args = {
-            "version": version["PROTOBUF_VERSION"],
+            "version": deps["PROTOBUF_VERSION"],
             "version_file": os.path.join(install_dir, "protobuf.version"),
             "source_dir": source_dir,
             "install_dir": install_dir,
@@ -188,7 +190,7 @@ def install_deps(
 
         # protoc-gen-jsonif
         install_jsonif_args = {
-            "version": version["PROTOC_GEN_JSONIF_VERSION"],
+            "version": deps["PROTOC_GEN_JSONIF_VERSION"],
             "version_file": os.path.join(install_dir, "protoc-gen-jsonif.version"),
             "source_dir": source_dir,
             "install_dir": install_dir,
@@ -267,19 +269,38 @@ BUILD_PLATFORM = {
 }
 
 
-def main():
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--debug", action="store_true")
-    parser.add_argument("--relwithdebinfo", action="store_true")
-    parser.add_argument("--local-webrtc-build-dir", type=os.path.abspath)
-    parser.add_argument("--local-webrtc-build-args", default="", type=shlex.split)
-    parser.add_argument("--local-sora-cpp-sdk-dir", type=os.path.abspath)
-    parser.add_argument("--local-sora-cpp-sdk-args", default="", type=shlex.split)
-    parser.add_argument("target", choices=AVAILABLE_TARGETS)
+def _find_clang_binary(name: str) -> Optional[str]:
+    if shutil.which(name) is not None:
+        return name
+    else:
+        for n in range(50, 14, -1):
+            if shutil.which(f"{name}-{n}") is not None:
+                return f"{name}-{n}"
+    return None
 
-    args = parser.parse_args()
 
-    platform = args.target
+def _format(
+    clang_format_path: Optional[str] = None,
+):
+    if clang_format_path is None:
+        clang_format_path = _find_clang_binary("clang-format")
+    if clang_format_path is None:
+        raise Exception("clang-format not found. Please install it or specify the path.")
+    patterns = [
+        "src/**/*.h",
+        "src/**/*.cpp",
+    ]
+    target_files = []
+    for pattern in patterns:
+        files = glob.glob(pattern, recursive=True)
+        target_files.extend(files)
+    cmd([clang_format_path, "-i"] + target_files)
+
+
+def _build(args):
+    target = args.target
+
+    platform = target
     build_platform = get_build_platform()
     if build_platform not in BUILD_PLATFORM:
         raise Exception(f"Build platform {build_platform} is not supported.")
@@ -316,22 +337,19 @@ def main():
     else:
         configuration = "Release"
 
+    webrtc_info = get_webrtc_info(platform, args.local_webrtc_build_dir, install_dir, args.debug)
+    sora_info = get_sora_info(platform, args.local_sora_cpp_sdk_dir, install_dir, args.debug)
+
     unity_build_dir = os.path.join(build_dir, "sora_unity_sdk")
     mkdir_p(unity_build_dir)
     with cd(unity_build_dir):
-        webrtc_platform = platform if platform != "visionos-simulator" else "visionos"
-        sora_platform = platform if platform != "visionos-simulator" else "visionos"
-        webrtc_info = get_webrtc_info(
-            platform, args.local_webrtc_build_dir, install_dir, args.debug
-        )
-        sora_info = get_sora_info(platform, args.local_sora_cpp_sdk_dir, install_dir, args.debug)
         webrtc_version = read_version_file(webrtc_info.version_file)
         webrtc_commit = webrtc_version["WEBRTC_COMMIT"]
         with cd(BASE_DIR):
-            version = read_version_file("VERSION")
-            sora_unity_sdk_version = version["SORA_UNITY_SDK_VERSION"]
+            sora_unity_sdk_version = read_version(os.path.join(BASE_DIR, "VERSION"))
+            deps = read_version_file(os.path.join(BASE_DIR, "DEPS"))
             sora_unity_sdk_commit = cmdcap(["git", "rev-parse", "HEAD"])
-            android_native_api_level = version["ANDROID_NATIVE_API_LEVEL"]
+            android_native_api_level = deps["ANDROID_NATIVE_API_LEVEL"]
 
         cmake_args = []
         cmake_args.append(f"-DCMAKE_BUILD_TYPE={configuration}")
@@ -361,24 +379,55 @@ def main():
             cmake_args.append(f"-DCMAKE_CXX_COMPILER_TARGET={target}")
             cmake_args.append(f"-DCMAKE_OBJCXX_COMPILER_TARGET={target}")
             cmake_args.append(f"-DCMAKE_SYSROOT={sysroot}")
+            cmake_args.append(
+                f"-DCMAKE_C_COMPILER={os.path.join(webrtc_info.clang_dir, 'bin', 'clang')}"
+            )
+            cmake_args.append(
+                f"-DCMAKE_CXX_COMPILER={os.path.join(webrtc_info.clang_dir, 'bin', 'clang++')}"
+            )
+            cmake_args.append(
+                f"-DLIBCXX_INCLUDE_DIR={cmake_path(os.path.join(webrtc_info.libcxx_dir, 'include'))}"
+            )
         elif platform == "ios":
-            cmake_args += ["-G", "Xcode"]
+            cmake_args.append(
+                f"-DCMAKE_C_COMPILER={os.path.join(webrtc_info.clang_dir, 'bin', 'clang')}"
+            )
+            cmake_args.append(
+                f"-DCMAKE_CXX_COMPILER={os.path.join(webrtc_info.clang_dir, 'bin', 'clang++')}"
+            )
+            cmake_args.append(
+                f"-DLIBCXX_INCLUDE_DIR={cmake_path(os.path.join(webrtc_info.libcxx_dir, 'include'))}"
+            )
             cmake_args.append("-DCMAKE_SYSTEM_NAME=iOS")
-            cmake_args.append('-DCMAKE_OSX_ARCHITECTURES="x86_64;arm64"')
+            cmake_args.append('-DCMAKE_OSX_ARCHITECTURES="arm64"')
             cmake_args.append("-DCMAKE_OSX_DEPLOYMENT_TARGET=13.0")
-            cmake_args.append("-DCMAKE_XCODE_ATTRIBUTE_ONLY_ACTIVE_ARCH=NO")
         elif platform == "visionos":
-            cmake_args += ["-G", "Xcode"]
+            cmake_args.append(
+                f"-DCMAKE_C_COMPILER={os.path.join(webrtc_info.clang_dir, 'bin', 'clang')}"
+            )
+            cmake_args.append(
+                f"-DCMAKE_CXX_COMPILER={os.path.join(webrtc_info.clang_dir, 'bin', 'clang++')}"
+            )
+            cmake_args.append(
+                f"-DLIBCXX_INCLUDE_DIR={cmake_path(os.path.join(webrtc_info.libcxx_dir, 'include'))}"
+            )
             cmake_args.append("-DCMAKE_SYSTEM_NAME=visionOS")
             cmake_args.append('-DCMAKE_OSX_ARCHITECTURES="arm64"')
             cmake_args.append("-DCMAKE_OSX_DEPLOYMENT_TARGET=2.0")
-            cmake_args.append("-DCMAKE_XCODE_ATTRIBUTE_ONLY_ACTIVE_ARCH=NO")
         elif platform == "visionos-simulator":
-            cmake_args += ["-G", "Xcode"]
+            cmake_args.append(
+                f"-DCMAKE_C_COMPILER={os.path.join(webrtc_info.clang_dir, 'bin', 'clang')}"
+            )
+            cmake_args.append(
+                f"-DCMAKE_CXX_COMPILER={os.path.join(webrtc_info.clang_dir, 'bin', 'clang++')}"
+            )
+            cmake_args.append(
+                f"-DLIBCXX_INCLUDE_DIR={cmake_path(os.path.join(webrtc_info.libcxx_dir, 'include'))}"
+            )
             cmake_args.append("-DCMAKE_SYSTEM_NAME=visionOS")
             cmake_args.append('-DCMAKE_OSX_ARCHITECTURES="arm64"')
             cmake_args.append("-DCMAKE_OSX_DEPLOYMENT_TARGET=2.0")
-            cmake_args.append("-DCMAKE_XCODE_ATTRIBUTE_ONLY_ACTIVE_ARCH=NO")
+            cmake_args.append("-DCMAKE_OSX_SYSROOT=xrsimulator")
         elif platform == "android":
             toolchain_file = os.path.join(
                 sora_info.sora_install_dir, "share", "cmake", "android.toolchain.cmake"
@@ -436,119 +485,269 @@ def main():
             raise Exception(f"Platform {platform} not supported.")
 
         cmd(["cmake", BASE_DIR, *cmake_args])
+        cmd(
+            [
+                "cmake",
+                "--build",
+                ".",
+                f"-j{multiprocessing.cpu_count()}",
+                "--config",
+                configuration,
+            ]
+        )
 
-        if platform == "ios":
-            cmd(
-                [
-                    "cmake",
-                    "--build",
-                    ".",
-                    f"-j{multiprocessing.cpu_count()}",
-                    "--config",
-                    configuration,
-                    "--target",
-                    "SoraUnitySdk",
-                    "--",
-                    "-arch",
-                    "x86_64",
-                    "-sdk",
-                    "iphonesimulator",
-                ]
-            )
-            cmd(
-                [
-                    "cmake",
-                    "--build",
-                    ".",
-                    f"-j{multiprocessing.cpu_count()}",
-                    "--config",
-                    configuration,
-                    "--target",
-                    "SoraUnitySdk",
-                    "--",
-                    "-arch",
-                    "arm64",
-                    "-sdk",
-                    "iphoneos",
-                ]
-            )
-            cmd(
-                [
-                    "lipo",
-                    "-create",
-                    "-output",
-                    os.path.join(unity_build_dir, "libSoraUnitySdk.a"),
-                    os.path.join(unity_build_dir, "Release-iphonesimulator", "libSoraUnitySdk.a"),
-                    os.path.join(unity_build_dir, "Release-iphoneos", "libSoraUnitySdk.a"),
-                ]
-            )
-        elif platform == "visionos":
-            # visionOS 実機向けビルド
-            cmd(
-                [
-                    "cmake",
-                    "--build",
-                    ".",
-                    f"-j{multiprocessing.cpu_count()}",
-                    "--config",
-                    configuration,
-                    "--target",
-                    "SoraUnitySdk",
-                    "--",
-                    "-arch",
-                    "arm64",
-                    "-sdk",
-                    "xros",
-                ]
-            )
-            # 実機用ライブラリをコピー
-            source_lib = os.path.join(unity_build_dir, "Release-xros", "libSoraUnitySdk.a")
-            dest_lib = os.path.join(unity_build_dir, "libSoraUnitySdk.a")
-            os.system(f"cp '{source_lib}' '{dest_lib}'")
-            # Unity プラグインディレクトリにもコピー
-            unity_plugin_lib = os.path.join(
-                BASE_DIR, "Sora", "Plugins", "visionOS", "libSoraUnitySdk.a"
-            )
-            os.system(f"cp '{source_lib}' '{unity_plugin_lib}'")
-        elif platform == "visionos-simulator":
-            # visionOS シミュレータ向けビルド
-            cmd(
-                [
-                    "cmake",
-                    "--build",
-                    ".",
-                    f"-j{multiprocessing.cpu_count()}",
-                    "--config",
-                    configuration,
-                    "--target",
-                    "SoraUnitySdk",
-                    "--",
-                    "-arch",
-                    "arm64",
-                    "-sdk",
-                    "xrsimulator",
-                ]
-            )
-            # シミュレータ用ライブラリをコピー
-            source_lib = os.path.join(unity_build_dir, "Release-xrsimulator", "libSoraUnitySdk.a")
-            dest_lib = os.path.join(unity_build_dir, "libSoraUnitySdk.a")
-            os.system(f"cp '{source_lib}' '{dest_lib}'")
-            # Unity プラグインディレクトリにもコピー
-            unity_plugin_lib = os.path.join(
-                BASE_DIR, "Sora", "Plugins", "visionOS-simulator", "libSoraUnitySdk.a"
-            )
-            os.system(f"cp '{source_lib}' '{unity_plugin_lib}'")
-        else:
-            cmd(
-                [
-                    "cmake",
-                    "--build",
-                    ".",
-                    f"-j{multiprocessing.cpu_count()}",
-                    "--config",
-                    configuration,
-                ]
-            )
+    # ビルドしたライブラリを SoraUnitySdkExamples 以下のプロジェクトにコピーする
+    plugins_dir = os.path.join(
+        BASE_DIR, "SoraUnitySdkExamples", "Assets", "Plugins", "SoraUnitySdk"
+    )
+    if platform in ("windows_x86_64",):
+        install_file(
+            os.path.join(unity_build_dir, configuration, "SoraUnitySdk.dll"),
+            os.path.join(plugins_dir, "windows", "x86_64", "SoraUnitySdk.dll"),
+        )
+    if platform in ("macos_x86_64",):
+        install_file(
+            os.path.join(unity_build_dir, "SoraUnitySdk.bundle"),
+            os.path.join(plugins_dir, "macos", "x86_64", "SoraUnitySdk.bundle"),
+        )
+    if platform in ("macos_arm64"):
+        install_file(
+            os.path.join(unity_build_dir, "SoraUnitySdk.bundle"),
+            os.path.join(plugins_dir, "macos", "arm64", "SoraUnitySdk.bundle"),
+        )
+    if platform in ("ubuntu-22.04_x86_64",):
+        install_file(
+            os.path.join(unity_build_dir, "libSoraUnitySdk.so"),
+            os.path.join(plugins_dir, "ubuntu-22.04", "x86_64", "libSoraUnitySdk.so"),
+        )
+    if platform in ("ubuntu-24.04_x86_64",):
+        install_file(
+            os.path.join(unity_build_dir, "libSoraUnitySdk.so"),
+            os.path.join(plugins_dir, "ubuntu-24.04", "x86_64", "libSoraUnitySdk.so"),
+        )
+    if platform in ("ios",):
+        install_file(
+            os.path.join(unity_build_dir, "libSoraUnitySdk.a"),
+            os.path.join(plugins_dir, "ios", "libSoraUnitySdk.a"),
+        )
+        install_file(
+            os.path.join(webrtc_info.webrtc_library_dir, "libwebrtc.a"),
+            os.path.join(plugins_dir, "ios", "libwebrtc.a"),
+        )
+        install_file(
+            os.path.join(sora_info.boost_install_dir, "lib", "libboost_json.a"),
+            os.path.join(plugins_dir, "ios", "libboost_json.a"),
+        )
+        install_file(
+            os.path.join(sora_info.boost_install_dir, "lib", "libboost_filesystem.a"),
+            os.path.join(plugins_dir, "ios", "libboost_filesystem.a"),
+        )
+        install_file(
+            os.path.join(sora_info.sora_install_dir, "lib", "libsora.a"),
+            os.path.join(plugins_dir, "ios", "libsora.a"),
+        )
+    if platform in ("visionos",):
+        install_file(
+            os.path.join(unity_build_dir, "libSoraUnitySdk.a"),
+            os.path.join(plugins_dir, "visionos", "libSoraUnitySdk.a"),
+        )
+        install_file(
+            os.path.join(webrtc_info.webrtc_library_dir, "libwebrtc.a"),
+            os.path.join(plugins_dir, "visionos", "libwebrtc.a"),
+        )
+        install_file(
+            os.path.join(sora_info.boost_install_dir, "lib", "libboost_json.a"),
+            os.path.join(plugins_dir, "visionos", "libboost_json.a"),
+        )
+        install_file(
+            os.path.join(sora_info.boost_install_dir, "lib", "libboost_filesystem.a"),
+            os.path.join(plugins_dir, "visionos", "libboost_filesystem.a"),
+        )
+        install_file(
+            os.path.join(sora_info.sora_install_dir, "lib", "libsora.a"),
+            os.path.join(plugins_dir, "visionos", "libsora.a"),
+        )
+    if platform in ("visionos-simulator",):
+        install_file(
+            os.path.join(unity_build_dir, "libSoraUnitySdk.a"),
+            os.path.join(plugins_dir, "visionos-simulator", "libSoraUnitySdk.a"),
+        )
+        install_file(
+            os.path.join(webrtc_info.webrtc_library_dir, "libwebrtc.a"),
+            os.path.join(plugins_dir, "visionos-simulator", "libwebrtc.a"),
+        )
+        install_file(
+            os.path.join(sora_info.boost_install_dir, "lib", "libboost_json.a"),
+            os.path.join(plugins_dir, "visionos-simulator", "libboost_json.a"),
+        )
+        install_file(
+            os.path.join(sora_info.boost_install_dir, "lib", "libboost_filesystem.a"),
+            os.path.join(plugins_dir, "visionos-simulator", "libboost_filesystem.a"),
+        )
+        install_file(
+            os.path.join(sora_info.sora_install_dir, "lib", "libsora.a"),
+            os.path.join(plugins_dir, "visionos-simulator", "libsora.a"),
+        )
+    if platform in ("android",):
+        install_file(
+            os.path.join(unity_build_dir, "libSoraUnitySdk.so"),
+            os.path.join(plugins_dir, "android", "arm64-v8a", "libSoraUnitySdk.so"),
+        )
+        install_file(
+            os.path.join(webrtc_info.webrtc_jar_file),
+            os.path.join(plugins_dir, "android", "webrtc.jar"),
+        )
+        install_file(
+            os.path.join(sora_info.sora_install_dir, "lib", "Sora.aar"),
+            os.path.join(plugins_dir, "android", "Sora.aar"),
+        )
+
+
+def _package():
+    assets_dir = os.path.join(BASE_DIR, "SoraUnitySdkExamples", "Assets", "SoraUnitySdk")
+    plugins_dir = os.path.join(
+        BASE_DIR, "SoraUnitySdkExamples", "Assets", "Plugins", "SoraUnitySdk"
+    )
+    package_dir = os.path.join(BASE_DIR, "_package", "SoraUnitySdk")
+    rm_rf(package_dir)
+    package_assets_dir = os.path.join(package_dir, "SoraUnitySdk")
+    package_plugins_dir = os.path.join(package_dir, "Plugins", "SoraUnitySdk")
+    # これらは必ず存在してるので無条件でコピーする
+    assets_files = [
+        ("Sora.cs",),
+        ("Generated", "Jsonif.cs"),
+        ("Generated", "SoraConf.cs"),
+        ("Generated", "SoraConfInternal.cs"),
+        ("Editor", "SoraUnitySdkPostProcessor.cs"),
+    ]
+    for assets_file in assets_files:
+        install_file(
+            os.path.join(assets_dir, *assets_file),
+            os.path.join(package_assets_dir, *assets_file),
+        )
+
+    # これらは存在していればコピーする
+    plugin_files = [
+        ("windows", "x86_64", "SoraUnitySdk.dll"),
+        ("macos", "x86_64", "SoraUnitySdk.bundle"),
+        ("macos", "arm64", "SoraUnitySdk.bundle"),
+        ("ubuntu-22.04", "x86_64", "libSoraUnitySdk.so"),
+        ("ubuntu-24.04", "x86_64", "libSoraUnitySdk.so"),
+        ("android", "arm64-v8a", "libSoraUnitySdk.so"),
+        ("android", "webrtc.jar"),
+        ("android", "Sora.aar"),
+        ("ios", "libSoraUnitySdk.a"),
+        ("ios", "libwebrtc.a"),
+        ("ios", "libboost_json.a"),
+        ("ios", "libboost_filesystem.a"),
+        ("ios", "libsora.a"),
+        ("visionos", "libSoraUnitySdk.a"),
+        ("visionos", "libwebrtc.a"),
+        ("visionos", "libboost_json.a"),
+        ("visionos", "libboost_filesystem.a"),
+        ("visionos", "libsora.a"),
+        ("visionos-simulator", "libSoraUnitySdk.a"),
+        ("visionos-simulator", "libwebrtc.a"),
+        ("visionos-simulator", "libboost_json.a"),
+        ("visionos-simulator", "libboost_filesystem.a"),
+        ("visionos-simulator", "libsora.a"),
+    ]
+    for plugin_file in plugin_files:
+        install_file_ifexists(
+            os.path.join(plugins_dir, *plugin_file),
+            os.path.join(package_plugins_dir, *plugin_file),
+        )
+
+    # LICENSE と NOTICE.md
+    install_file(os.path.join(BASE_DIR, "LICENSE"), os.path.join(package_assets_dir, "LICENSE"))
+    install_file(os.path.join(BASE_DIR, "NOTICE.md"), os.path.join(package_assets_dir, "NOTICE.md"))
+
+
+def _install(version: Optional[str], sdk_path: Optional[str]):
+    if version is None:
+        version = read_version(os.path.join(BASE_DIR, "VERSION"))
+
+    if sdk_path is None:
+        rm_rf("SoraUnitySdk.zip")
+        rm_rf("SoraUnitySdk")
+        url = f"https://github.com/shiguredo/sora-unity-sdk/releases/download/{version}/SoraUnitySdk.zip"
+        path = download(url, ".")
+        extract(path, ".", "SoraUnitySdk")
+    else:
+        if not os.path.isdir(sdk_path):
+            raise Exception(f"sdk_path {sdk_path} is not a directory")
+        if not os.path.exists(os.path.join(sdk_path, "SoraUnitySdk", "Sora.cs")):
+            raise Exception(f"sdk_path {sdk_path} does not look like Sora Unity SDK directory")
+
+    # 既存のファイル（特にメタデータ系）が残ってる可能性があるので
+    # １個１個ファイルをコピーしていく
+    sdk_path = "SoraUnitySdk" if sdk_path is None else sdk_path
+    for file in enum_all_files(sdk_path, sdk_path):
+        dst_base = os.path.join(BASE_DIR, "SoraUnitySdkExamples", "Assets")
+        # このディレクトリだけは全部置き換える
+        if "SoraUnitySdk.bundle" in file:
+            continue
+        srcfile = os.path.join(sdk_path, file)
+        dstfile = os.path.join(dst_base, file)
+        install_file(srcfile, dstfile)
+    # .bundle ディレクトリの置き換え
+    for root, dirs, _ in os.walk(sdk_path):
+        dst_base = os.path.join(BASE_DIR, "SoraUnitySdkExamples", "Assets")
+        for dir in dirs:
+            if dir == "SoraUnitySdk.bundle":
+                bundle_dir = os.path.relpath(os.path.join(root, dir), sdk_path)
+                src_bundle_dir = os.path.join(sdk_path, bundle_dir)
+                dst_bundle_dir = os.path.join(dst_base, bundle_dir)
+                rm_rf(dst_bundle_dir)
+                install_file(src_bundle_dir, dst_bundle_dir)
+
+    if sdk_path is None:
+        rm_rf("SoraUnitySdk.zip")
+        rm_rf("SoraUnitySdk")
+
+
+def main():
+    parser = argparse.ArgumentParser()
+    sp = parser.add_subparsers(dest="command")
+
+    # build コマンド
+    bp = sp.add_parser("build")
+    bp.add_argument("target", choices=AVAILABLE_TARGETS)
+    bp.add_argument("--debug", action="store_true")
+    bp.add_argument("--relwithdebinfo", action="store_true")
+    bp.add_argument("--local-webrtc-build-dir", type=os.path.abspath)
+    bp.add_argument("--local-webrtc-build-args", default="", type=shlex.split)
+    bp.add_argument("--local-sora-cpp-sdk-dir", type=os.path.abspath)
+    bp.add_argument("--local-sora-cpp-sdk-args", default="", type=shlex.split)
+
+    # package コマンド
+    _pp = sp.add_parser("package")
+
+    # install コマンド
+    ip = sp.add_parser("install", help="Install Sora Unity SDK into SoraUnitySdkExamples")
+    # SoraUnitySdkExamples にインストールする Sora Unity SDK のバージョン
+    # 省略した場合は VERSION ファイルのバージョンを使う
+    ip.add_argument("--version")
+    # これを指定している場合、Sora Unity SDK のダウンロードをせず、このディレクトリの内容をコピーする
+    # GitHub Actions からバイナリをダウンロードしてきたものを反映させる時用のフラグ
+    ip.add_argument("--sdk-path")
+
+    # format コマンド
+    fp = sp.add_parser("format")
+    fp.add_argument("--clang-format-path", type=str, default=None)
+
+    args = parser.parse_args()
+
+    if args.command == "build":
+        _build(args)
+    elif args.command == "package":
+        _package()
+    elif args.command == "install":
+        _install(args.version, args.sdk_path)
+    elif args.command == "format":
+        _format(clang_format_path=args.clang_format_path)
+    else:
+        parser.print_help()
 
 
 if __name__ == "__main__":

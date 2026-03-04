@@ -1,6 +1,6 @@
 # Sora Unity SDK
 
-[![libwebrtc](https://img.shields.io/badge/libwebrtc-132.6834-blue.svg)](https://chromium.googlesource.com/external/webrtc/+/branch-heads/6834)
+[![libwebrtc](https://img.shields.io/badge/libwebrtc-144.7559-blue.svg)](https://chromium.googlesource.com/external/webrtc/+/branch-heads/7559)
 [![GitHub tag](https://img.shields.io/github/tag/shiguredo/sora-unity-sdk.svg)](https://github.com/shiguredo/sora-unity-sdk)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Actions Status](https://github.com/shiguredo/sora-unity-sdk/workflows/build/badge.svg)](https://github.com/shiguredo/sora-unity-sdk/actions)
@@ -23,7 +23,13 @@ Please read <https://github.com/shiguredo/oss/blob/master/README.en.md> before u
 
 ## サンプル
 
-[shiguredo/sora\-unity\-sdk\-samples: WebRTC SFU Sora Unity SDK サンプル集](https://github.com/shiguredo/sora-unity-sdk-samples)
+[WebRTC SFU Sora Unity SDK サンプル集](./SoraUnitySdkExamples)
+
+## ソースコードディレクトリ構成
+
+- `src/` : ネイティブプラグイン（Unity 向けラッパー）の SDK 実装です
+- `SoraUnitySdkExamples/` : Unity サンプルプロジェクトです
+- `SoraUnitySdkExamples/Assets/SoraUnitySdk/` : Unity 向けの C# での SDK 実装です
 
 ### サンプル動作例
 
@@ -33,12 +39,12 @@ Please read <https://github.com/shiguredo/oss/blob/master/README.en.md> before u
 
 ## 対応 Unity バージョン
 
+- Unity 6000.3 (LTS)
 - Unity 6000.0 (LTS)
-- Unity 2022.3 (LTS)
 
 ## システム条件
 
-- WebRTC SFU Sora 2024.2.0 以降
+- WebRTC SFU Sora 2025.1.0 以降
 
 ## 対応プラットフォーム
 
@@ -51,6 +57,9 @@ Please read <https://github.com/shiguredo/oss/blob/master/README.en.md> before u
 - Ubuntu 24.04 x86_64
 
 ## 対応機能
+
+> [!CAUTION]
+> AMD AMF はドライバーが不安定なため、現在非推奨です。
 
 - AV1 への対応
 - Windows への対応
@@ -87,14 +96,14 @@ Please read <https://github.com/shiguredo/oss/blob/master/README.en.md> before u
 - Sora サイマルキャストへの対応
 - Sora スポットライトへの対応
 - Sora データチャネルへの対応
-- Sora データチャネルメッセージングへの対応
-  - 実験的機能
+- Sora リアルタイムメッセージングへの対応
+- Sora RPC 機能への対応
 - Apple VideoToolbox
   - H.265 ハードウェアエンコードへの対応
   - H.265 ハードウェアデコードへの対応
   - H.264 ハードウェアエンコードへの対応
   - H.264 ハードウェアデコードへの対応
-- NVIDIA VIDEO CODEC SDK
+- NVIDIA VIDEO CODEC
   - H.265 のハードウェアエンコードへの対応
   - H.265 のハードウェアデコードへの対応
   - H.264 のハードウェアエンコードへの対応
@@ -108,10 +117,25 @@ Please read <https://github.com/shiguredo/oss/blob/master/README.en.md> before u
   - H.264 のハードウェアデコードへの対応
   - AV1 のハードウェアエンコードへの対応
   - AV1 のハードウェアデコードへの対応
+  - VP9 のハードウェアエンコードへの対応
+  - VP9 のハードウェアデコードへの対応
+- AMD AMF
+  - H.265 のハードウェアエンコードへの対応
+  - H.265 のハードウェアデコードへの対応
+  - H.264 のハードウェアエンコードへの対応
+  - H.264 のハードウェアデコードへの対応
+  - AV1 のハードウェアエンコードへの対応
+  - AV1 のハードウェアデコードへの対応
+    - Ubuntu x86_64 ではドライバーがデコードには対応していません
+  - VP9 のハードウェアデコードへの対応
 - ミュート機能
 - iOS, Android 向け音声出力先変更機能
 - マイクやカメラ等のメディアデバイスをつかまないようにする機能
 - 接続確立後のカメラ切り替え機能
+- 音声トラックの個別取得機能
+  - 音声トラック ID 取得機能 (統計情報との紐づけによる利用を想定)
+- 映像トラックの個別取得機能
+  - 映像トラック ID 取得機能 (統計情報との紐づけによる利用を想定)
 
 ## 有償での優先実装
 
@@ -154,10 +178,7 @@ Please read <https://github.com/shiguredo/oss/blob/master/README.en.md> before u
 
 - サイマルキャスト rid 指定対応
 - iOS, Android 以外の音声出力先変更機能
-- 音声トラックの個別取得機能
-  - 音声トラック ID 取得機能 (統計情報との紐づけによる利用を想定)
-- 映像トラックの個別取得機能
-  - 映像トラック ID 取得機能 (統計情報との紐づけによる利用を想定)
+- Android の x86_64 対応
 
 ## ライセンス
 
