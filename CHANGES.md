@@ -11,6 +11,10 @@
 
 ## develop
 
+- [UPDATE] Sora C++ SDK を `2026.2.0-canary.1` に上げる
+  - libwebrtc を `m145.7632.0.0` に上げる
+  - @torikizi
+
 ### misc
 
 - [UPDATE] GitHub Actions のバージョンをアップデートする
