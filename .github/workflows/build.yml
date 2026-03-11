@@ -106,3 +106,4 @@ jobs:
         with:
           status: ${{ job.status }}
           slack_webhook: ${{ secrets.SLACK_WEBHOOK }}
+          slack_channel: sora-unity-sdk
