@@ -11,8 +11,8 @@
 
 ## develop
 
-- [UPDATE] Sora C++ SDK を `2026.2.0-canary.2` に上げる
-  - libwebrtc を `m146.7680.0.0` に上げる
+- [UPDATE] Sora C++ SDK を `2026.2.0-canary.4` に上げる
+  - libwebrtc を `m146.7680.3.1` に上げる
   - @torikizi
 
 ### misc
