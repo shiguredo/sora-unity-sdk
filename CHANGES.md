@@ -11,9 +11,14 @@
 
 ## develop
 
-- [UPDATE] Sora C++ SDK を `2026.2.0-canary.7` に上げる
-  - libwebrtc を `m147.7727.9.0` に上げる
-  - CMAKE_VERSION を `4.3.1` に上げる
+- [UPDATE] Sora C++ SDK を `2026.2.0-canary.10` に上げる
+  - libwebrtc を `m148.7778.4.0` に上げる
+  - CMAKE_VERSION を `4.3.2` に上げる
+  - BOOST_VERSION を `1.91.0` に上げる
+  - macOS ビルドで Boost.Asio の `std::atomic::wait` 利用を無効化する
+    - Boost 1.91.0 では macOS 14.4 以降で Asio の `kqueue_reactor` が `std::atomic::wait` ベースの `atomic_slim_mutex` を利用するようになっており、 Sora C++ SDK はこれを無効化している
+    - Sora Unity SDK 側でも同じように無効化するため `BOOST_ASIO_DISABLE_STD_ATOMIC_WAIT` を定義する
+    - 定義がずれると Boost.Asio の内部実装が食い違い、接続時にクラッシュやハングが発生する可能性がある
   - @torikizi
 
 ### misc

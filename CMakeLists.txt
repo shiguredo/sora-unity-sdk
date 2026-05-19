@@ -196,9 +196,14 @@ elseif (SORA_UNITY_SDK_PACKAGE STREQUAL "macos_x86_64" OR SORA_UNITY_SDK_PACKAGE
   #    "-framework OpenGL"
   #)
 
+  # Boost 1.91.0 では macOS 14.4 以降で Asio の kqueue_reactor が
+  # std::atomic::wait ベースの atomic_slim_mutex を使うようになった。
+  # Sora C++ SDK はこれを無効化しているため、 Sora Unity SDK 側でも同じマクロを定義する。
+  # 定義がずれると Boost.Asio の内部実装が食い違い、接続時にクラッシュやハングが発生する可能性がある。
   target_compile_definitions(SoraUnitySdk
     PRIVATE
       SORA_UNITY_SDK_MACOS
+      BOOST_ASIO_DISABLE_STD_ATOMIC_WAIT
   )
   target_compile_options(SoraUnitySdk PRIVATE "-nostdinc++")
   target_include_directories(SoraUnitySdk PRIVATE ${LIBCXX_INCLUDE_DIR})
