@@ -2,6 +2,9 @@
 #include "sora_version.h"
 
 #include <future>
+#if defined(SORA_UNITY_SDK_MACOS)
+#include <vector>
+#endif
 
 // WebRTC
 #include <api/audio/create_audio_device_module.h>
@@ -50,6 +53,12 @@
 
 namespace sora_unity_sdk {
 
+#if defined(SORA_UNITY_SDK_MACOS)
+namespace {
+std::vector<std::unique_ptr<boost::asio::io_context>> g_deferred_iocs;
+}
+#endif
+
 Sora::Sora(UnityContext* context) : unity_context_(context) {
   ptrid_ = IdPointer::Instance().Register(this);
 #if defined(SORA_UNITY_SDK_ANDROID)
@@ -90,7 +99,17 @@ Sora::~Sora() {
     ioc_->stop();
   }
   signaling_.reset();
+#if defined(SORA_UNITY_SDK_MACOS)
+  // macOS 環境の Unity Editor 限定で io_context の破棄タイミングが
+  // Editor の実行ループと競合してクラッシュする。ビルドバイナリや
+  // 他プラットフォームでは再現しない。破棄を
+  // UnityPluginUnload まで延期することで競合を回避する。
+  if (ioc_) {
+    g_deferred_iocs.push_back(std::move(ioc_));
+  }
+#else
   ioc_.reset();
+#endif
   if (io_thread_) {
     io_thread_->Stop();
     io_thread_.reset();
@@ -1110,5 +1129,11 @@ std::string Sora::GetConnectedSignalingURL() const {
   }
   return signaling_->GetConnectedSignalingURL();
 }
+
+#if defined(SORA_UNITY_SDK_MACOS)
+void ProcessDeferredIocCleanup() {
+  g_deferred_iocs.clear();
+}
+#endif
 
 }  // namespace sora_unity_sdk

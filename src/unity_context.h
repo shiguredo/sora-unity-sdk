@@ -18,6 +18,15 @@
 
 namespace sora_unity_sdk {
 
+#if defined(SORA_UNITY_SDK_MACOS)
+// macOS 環境の Unity Editor のみで発生する問題への対処:
+// - ビルドバイナリでは再現しない
+// - 他のプラットフォーム (Windows / Linux / Android / iOS) では再現しない
+// ~Sora() 内で直接 io_context を破棄すると Editor の実行ループと競合するため、
+// io_context の破棄を UnityPluginUnload まで延期することで回避する。
+void ProcessDeferredIocCleanup();
+#endif
+
 class UnityContext {
   std::mutex mutex_;
   std::unique_ptr<webrtc::FileRotatingLogSink> log_sink_;

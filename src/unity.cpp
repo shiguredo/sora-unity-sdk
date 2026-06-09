@@ -686,6 +686,11 @@ SoraUnitySdk_UnityPluginUnload()
 UnityPluginUnload()
 #endif
 {
+#if defined(SORA_UNITY_SDK_MACOS)
+  // macOS 環境の Unity Editor のみ、io_context の破棄を
+  // ~Sora() から延期してここで実行する。
+  sora_unity_sdk::ProcessDeferredIocCleanup();
+#endif
   sora_unity_sdk::UnityContext::Instance().Shutdown();
 }
 }
