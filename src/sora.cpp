@@ -1016,7 +1016,8 @@ void Sora::OnTrack(
     webrtc::scoped_refptr<webrtc::RtpTransceiverInterface> transceiver) {
   PushEvent([this, transceiver]() {
     auto track = transceiver->receiver()->track();
-    auto connection_id = transceiver->receiver()->stream_ids()[0];
+    auto streams = transceiver->receiver()->streams();
+    auto connection_id = streams.empty() ? "" : streams[0]->id();
     connection_ids_.insert(std::make_pair(track->id(), connection_id));
     if (track->kind() == webrtc::MediaStreamTrackInterface::kVideoKind) {
       auto video_sink_id = renderer_->AddTrack(

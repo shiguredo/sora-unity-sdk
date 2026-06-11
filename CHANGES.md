@@ -11,9 +11,14 @@
 
 ## develop
 
-- [UPDATE] Sora C++ SDK を `2026.2.0-canary.7` に上げる
-  - libwebrtc を `m147.7727.9.0` に上げる
-  - CMAKE_VERSION を `4.3.1` に上げる
+- [UPDATE] Sora C++ SDK を `2026.2.0-canary.14` に上げる
+  - libwebrtc を `m150.7871.0.0` に上げる
+  - BOOST_VERSION を `1.91.0` にアップデート
+  - CMAKE_VERSION を `4.3.2` にアップデート
+  - libwebrtc m150 で `stream_ids()` が削除されたため、`streams()` を使うように修正する
+  - Boost 1.91.0 で Asio の kqueue_reactor が `std::atomic::wait` ベースの mutex に切り替わったことに伴い、macOS と iOS のコンパイル定義に `BOOST_ASIO_DISABLE_STD_ATOMIC_WAIT` を追加する
+    - このマクロを定義しないと webrtc-build 同梱の libc++ との組み合わせで `async_connect` がハングする
+    - Sora C++ SDK 側でも同様の対応が入っており、TU 間で定義を揃えるために Sora Unity SDK 側でも定義が必要
   - @torikizi
 
 ### misc
