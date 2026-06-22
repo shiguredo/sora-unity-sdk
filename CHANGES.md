@@ -20,6 +20,10 @@
     - このマクロを定義しないと webrtc-build 同梱の libc++ との組み合わせで `async_connect` がハングする
     - Sora C++ SDK 側でも同様の対応が入っており、TU 間で定義を揃えるために Sora Unity SDK 側でも定義が必要
   - @torikizi
+- [ADD] パッケージに `SoraAndroidDependencyInjector.cs` を含める
+  - Android ビルド時に `androidx.core:core` を自動注入するためのファイル
+  - `SoraUnitySdkPostProcessor.cs` と同様に `Assets/SoraUnitySdk/Editor/` に配置される
+  - @torikizi
 
 ### misc
 
