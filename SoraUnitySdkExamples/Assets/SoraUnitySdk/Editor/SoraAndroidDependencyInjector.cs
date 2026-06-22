@@ -28,8 +28,8 @@ public class SoraAndroidDependencyInjector : IPostGenerateGradleAndroidProject
         if (content.Contains(dependency))
             return;
 
-        // Unity の mainTemplate.gradle が生成する行を探す
-        string searchPattern = "implementation fileTree(dir: 'libs',";
+        // Unity の mainTemplate.gradle が生成する行全体を置き換える
+        string searchPattern = "implementation fileTree(dir: 'libs', include: ['*.jar'])";
         if (!content.Contains(searchPattern))
         {
             Debug.LogWarning("[SoraAndroidDependencyInjector] Pattern not found in build.gradle");
