@@ -1,4 +1,4 @@
-// Android AAR フォーマットは依存関係のメタデータ（POM）を含まないため、
+// Android AAR フォーマットは依存関係のメタデータ（ POM ）を含まないため、
 // Sora.aar を flatDir 経由で取り込んでも推移的依存が自動解決されない。
 // そのため Sora.aar が必要とする依存をビルド時に build.gradle に注入する。
 //
@@ -18,15 +18,8 @@ public class SoraAndroidDependencyInjector : IPostGenerateGradleAndroidProject
     public void OnPostGenerateGradleAndroidProject(string basePath)
     {
         string gradlePath = Path.Combine(basePath, "build.gradle");
-        if (!File.Exists(gradlePath))
-            return;
-
         string content = File.ReadAllText(gradlePath);
         string dependency = "implementation 'androidx.core:core:1.9.0'";
-
-        // 既に注入済みならスキップ（Unity の再ビルド対策）
-        if (content.Contains(dependency))
-            return;
 
         // Unity の mainTemplate.gradle が生成する行全体を置き換える
         string searchPattern = "implementation fileTree(dir: 'libs', include: ['*.jar'])";
