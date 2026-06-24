@@ -20,14 +20,6 @@
     - このマクロを定義しないと webrtc-build 同梱の libc++ との組み合わせで `async_connect` がハングする
     - Sora C++ SDK 側でも同様の対応が入っており、TU 間で定義を揃えるために Sora Unity SDK 側でも定義が必要
   - @torikizi
-- [ADD] Android ビルド実行時に外部依存を追加する
-  - Sora C++ SDK のアップデートにより、`androidx.core:core` が必要になったが Sora.aar では外部依存情報が含まれないため実行時に依存が見つからずクラッシュする
-  - `SoraAndroidDependencyInjector.cs` にて `androidx.core:core` を追加するようにする
-  - `SoraAndroidDependencyInjector.cs` は Unity の Android ビルド時に実行される
-  - iOS 用の `SoraUnitySdkPostProcessor.cs` と同様に `Assets/SoraUnitySdk/Editor/` に配置される
-  - 参考 : Unity の API `IPostGenerateGradleAndroidProject` について記載された Unity のドキュメント
-    - https://docs.unity3d.com/6000.3/Documentation/ScriptReference/Android.IPostGenerateGradleAndroidProject.html
-  - @torikizi
 
 ### misc
 

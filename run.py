@@ -544,7 +544,6 @@ def _package():
         ("Generated", "SoraConf.cs"),
         ("Generated", "SoraConfInternal.cs"),
         ("Editor", "SoraUnitySdkPostProcessor.cs"),
-        ("Editor", "SoraAndroidDependencyInjector.cs"),
     ]
     for assets_file in assets_files:
         install_file(
