@@ -203,7 +203,6 @@ elseif (SORA_UNITY_SDK_PACKAGE STREQUAL "macos_x86_64" OR SORA_UNITY_SDK_PACKAGE
   target_compile_definitions(SoraUnitySdk
     PRIVATE
       SORA_UNITY_SDK_MACOS
-      BOOST_ASIO_DISABLE_STD_ATOMIC_WAIT
   )
   target_compile_options(SoraUnitySdk PRIVATE "-nostdinc++")
   target_include_directories(SoraUnitySdk PRIVATE ${LIBCXX_INCLUDE_DIR})
@@ -224,7 +223,6 @@ elseif (SORA_UNITY_SDK_PACKAGE STREQUAL "ios")
   target_compile_definitions(SoraUnitySdk
     PRIVATE
       SORA_UNITY_SDK_IOS
-      BOOST_ASIO_DISABLE_STD_ATOMIC_WAIT
   )
   target_compile_options(SoraUnitySdk PRIVATE "-nostdinc++")
   target_include_directories(SoraUnitySdk PRIVATE ${LIBCXX_INCLUDE_DIR})
