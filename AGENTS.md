@@ -15,6 +15,10 @@
 - テストはコメントを重視すること
 - モックやスタブは絶対に利用しないこと
 
+## リポジトリ固有の設定について
+
+- リポジトリ固有の規約・設定がある場合は `CODEBASE.md` を参照すること
+
 ## 機密情報について
 
 - 機密情報を扱うときは `shiguredo-no-secrets` スキルを参照すること
@@ -27,13 +31,12 @@
 
 - issues を作成・管理するときは `shiguredo-issues` スキルを参照すること
 
-## Erlang/OTP
+## 言語について
 
 - Erlang/OTP のコードを書くときは `shiguredo-erlang` スキルを参照すること
-
-## Rust
-
 - Rust のコードを書くときは `shiguredo-rust` スキルを参照すること
+- Python のコードを書くときは `shiguredo-python` スキルを参照すること
+- TypeScript のコードを書くときは `shiguredo-typescript` スキルを参照すること
 
 ## 変更履歴について
 
