@@ -37,15 +37,12 @@ sora-cpp-sdk 2026.2.0 で TLS 検証の信頼ストアが OS のシステム CA 
 - `SoraUnitySdkPostProcessor.cs` の `AddFrameworkToProject` に `Security.framework` を追加する
   - 背景: iOS は `SecTrustEvaluateWithError` による検証委譲のため、iOS アプリのビルドに `Security.framework` の追加が必要になる
   - 独自 CA を使う場合は `Config.CACert` (ca_cert) に PEM を明示指定する（既存機能で対応済み）
-  - 対象バージョン: iOS は iOS 14 以降、macOS は Sonoma 14.x 以降が対象（sora-cpp-sdk 2026.2.0 の仕様）
-  - sora-unity-sdk の iOS ビルドは deployment target 13.0（run.py の `CMAKE_OSX_DEPLOYMENT_TARGET`）のため、iOS 13 端末での TLS 検証の挙動を確認する。iOS 13 で TLS 検証が機能しない場合は対応方針を決定する（別 issue での対応も可）
 
 ## 完了条件
 
 - 全プラットフォーム (windows_x86_64 / macos_arm64 / ubuntu-22.04_x86_64 / ubuntu-24.04_x86_64 / ios / android) でビルドが成功する
 - SoraUnitySdkExamples の iOS ビルドで生成される Xcode プロジェクトに `Security.framework` が追加される
   - CI は `run.py build` によるライブラリビルドのみで `SoraUnitySdkPostProcessor.cs` が実行されないため、Unity での iOS ビルドによる確認が必要
-- iOS 13 端末での TLS 検証の挙動を確認する
 - `CHANGES.md` の develop の [UPDATE] エントリを 2026.2.0 向けに更新する
   - TLS システム CA 化に伴う `Security.framework` の追加を含める
   - TLS 検証の挙動変更と、独自 CA を使う場合は `Config.CACert` (ca_cert) に PEM を指定する旨を含める
@@ -57,5 +54,18 @@ sora-cpp-sdk 2026.2.0 で TLS 検証の信頼ストアが OS のシステム CA 
 2. `SoraUnitySdkPostProcessor.cs` に `Security.framework` を追加する
 3. 全プラットフォームでビルドを検証する
 4. SoraUnitySdkExamples を iOS ビルドし、生成された Xcode プロジェクトに `Security.framework` が含まれることを確認する
-5. iOS 13 端末で TLS 検証の挙動を確認する
-6. `CHANGES.md` の develop の [UPDATE] エントリを 2026.2.0 向けに更新する
+5. `CHANGES.md` の develop の [UPDATE] エントリを 2026.2.0 向けに更新する
+   - 既存の canary.18 エントリを 2026.2.0 向けに書き換える。`streams()` 修正は canary.18 で実施済みのためエントリに残す。記載例:
+
+   ```md
+   - [UPDATE] Sora C++ SDK を `2026.2.0` に上げる
+     - libwebrtc を `m150.7871.3.1` に上げる
+     - BOOST_VERSION を `1.92.0` にアップデート
+     - CMAKE_VERSION を `4.4.2` にアップデート
+     - libwebrtc m150 で `stream_ids()` が削除されたため、 `streams()` を使うように修正する
+     - TLS 検証の信頼ストアを OS のシステム CA に切り替える
+     - iOS の TLS 検証のシステム CA 化に伴い、ビルド時に `Security.framework` を追加する
+     - 独自 CA を使う場合は `Config.CACert` (ca_cert) に PEM を指定する
+     - NVIDIA Pascal 世代以前の GPU サポートが廃止されたため、GTX 10 シリーズではハードウェアエンコーダー / デコーダーが使えなくなる
+     - @torikizi
+   ```
