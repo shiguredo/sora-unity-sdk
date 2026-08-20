@@ -77,4 +77,9 @@ sora-cpp-sdk 2026.2.0 では NVIDIA Pascal 世代以前の GPU サポートが�
 
 ## 解決方法
 
-未着手 (PR 作成後に追記する)
+- ブランチ `feature/update-sora-cpp-sdk-2026.2.1` を `develop` から作成した
+- `DEPS` を次のとおり更新した
+  - `SORA_CPP_SDK_VERSION`: `2026.2.0-canary.18` → `2026.2.1`
+  - `WEBRTC_BUILD_VERSION`: `m150.7871.3.0` → `m150.7871.3.1`
+  - `BOOST_VERSION`: `1.91.0` → `1.92.0`
+  - `CMAKE_VERSION`: `4.3.2` → `4.4.2`
