@@ -57,6 +57,41 @@ sora-cpp-sdk 2026.2.0 では NVIDIA Pascal 世代以前の GPU サポートが�
   - 2026.2.1 で修正されたクラッシュを [UPDATE] エントリ内のサブ項目として追記する
   - 記載内容は後述の「変更履歴」のサンプルのとおり
 
+## 検証バリエーション
+
+- 全ターゲットのビルド (CI)
+  - 確認内容: `python3 run.py build <target>` が全ターゲット (windows_x86_64 / macos_arm64 / ubuntu-22.04_x86_64 / ubuntu-24.04_x86_64 / ios / android) で成功すること
+  - 結果: 成功 (https://github.com/shiguredo/sora-unity-sdk/actions/runs/32321146257)
+- iOS アプリのビルド (Unity)
+  - 確認内容: SoraUnitySdkExamples を Unity で iOS ビルドし、生成される Xcode プロジェクトに `Security.framework` が追加されていること
+  - 結果: 未確認
+- 動作検証 (Unity サンプルでの実接続)
+  - 共通の確認内容: SoraUnitySdkExamples を実行し、Sora サーバーへの接続・通信・切断が正常に動作すること
+    - TLS 検証のシステム CA 化後も、通常の Sora サーバーへの接続ができること
+    - 独自 CA を使う場合は `Config.CACert` (ca_cert) に PEM を指定して接続できること
+    - DataChannel シグナリング利用時の切断でクラッシュしないこと
+  - windows_x86_64
+    - 確認内容: TLS 検証が Windows の証明書ストアを利用して接続できること
+    - 結果: 未確認
+  - macos_arm64
+    - 確認内容: TLS 検証が macOS のシステム CA (Security.framework) を利用して接続できること
+    - 結果: 未確認
+  - ubuntu-22.04_x86_64
+    - 確認内容: TLS 検証が OS のシステム CA を利用して接続できること
+    - 結果: 未確認
+  - ubuntu-24.04_x86_64
+    - 確認内容: TLS 検証が OS のシステム CA を利用して接続できること
+    - 結果: 未確認
+  - ios
+    - 確認内容: 実機で TLS 検証が iOS のシステム CA (Security.framework) を利用して接続できること
+    - 結果: 未確認
+  - android
+    - 確認内容: 実機で TLS 検証が Android のシステム CA を利用して接続できること
+    - 結果: 未確認
+- `CHANGES.md` の内容
+  - 確認内容: develop の [UPDATE] エントリが「変更履歴」のサンプルのとおり更新されていること
+  - 結果: 未確認
+
 ## 変更履歴
 
 `CHANGES.md` の develop の [UPDATE] エントリを次のとおり更新する。`streams()` 修正は canary.18 で実施済みのためエントリに残す。
@@ -83,3 +118,5 @@ sora-cpp-sdk 2026.2.0 では NVIDIA Pascal 世代以前の GPU サポートが�
   - `WEBRTC_BUILD_VERSION`: `m150.7871.3.0` → `m150.7871.3.1`
   - `BOOST_VERSION`: `1.91.0` → `1.92.0`
   - `CMAKE_VERSION`: `4.3.2` → `4.4.2`
+- コミット `0004 DEPS を 2026.2.1 向けに更新する` を作成し、GitHub Actions (`build.yml`) が全ターゲットで成功することを確認した
+  - https://github.com/shiguredo/sora-unity-sdk/actions/runs/32321146257
