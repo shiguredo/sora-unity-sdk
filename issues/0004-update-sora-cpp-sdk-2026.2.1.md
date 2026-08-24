@@ -36,11 +36,12 @@ DEPS の各バージョン更新は値の書き換えのみで、ソースコー
 
 ### TLS 検証のシステム CA 化への対応
 
-sora-cpp-sdk 2026.2.0 で TLS 検証の信頼ストアが OS のシステム CA に切り替わった。sora-unity-sdk 側の変更は次の 1 点のみ。
+sora-cpp-sdk 2026.2.0 で TLS 検証の信頼ストアが OS のシステム CA に切り替わった。当初は iOS アプリのビルドに `Security.framework` の追加が必要と考えていたが、実ビルドの検証で **sora-unity-sdk 側の変更は不要** と確認した。
 
-- `SoraUnitySdkExamples/Assets/SoraUnitySdk/Editor/SoraUnitySdkPostProcessor.cs` の `OnPostprocessBuild` 内で、既存の `AddFrameworkToProject` 呼び出し（`VideoToolbox.framework` / `GLKit.framework` / `Network.framework`）に `Security.framework` を追加する
-  - 背景: iOS は sandbox 制約により `SecTrustEvaluateWithError` に検証を委譲する方式で実装されているため、iOS アプリのビルドに `Security.framework` の追加が必要になる
-  - 独自 CA を使う場合は `Config.CACert` (ca_cert) に PEM を明示指定する（既存機能で対応済み）
+- iOS は sandbox 制約により `SecTrustEvaluateWithError` に検証を委譲する方式で実装されている
+  - ただし Unity の iOS ビルドはプロジェクト生成時に標準のシステムフレームワーク群（`Security.framework` を含む）を自動リンクするため、`SoraUnitySdkPostProcessor.cs` への `Security.framework` 追加は不要
+  - 生成された Xcode プロジェクト (`Unity-iPhone.xcodeproj/project.pbxproj`) の UnityFramework ターゲットの Frameworks phase に `Security.framework` が含まれることを確認した
+- 独自 CA を使う場合は `Config.CACert` (ca_cert) に PEM を明示指定する（既存機能で対応済み）
 
 ### 利用者への影響
 
@@ -51,8 +52,9 @@ sora-cpp-sdk 2026.2.0 では NVIDIA Pascal 世代以前の GPU サポートが�
 - 全プラットフォーム (windows_x86_64 / macos_arm64 / ubuntu-22.04_x86_64 / ubuntu-24.04_x86_64 / ios / android) でビルドが成功する
   - CI (`build.yml`) の `python3 run.py build <target>` が全ターゲットで成功する
   - Ubuntu は 22.04 / 24.04 両方を CI でビルド・検証する（動作検証は 24.04 で代表、詳しくは「検証バリエーション」参照）
-- SoraUnitySdkExamples の iOS ビルドで生成される Xcode プロジェクトに `Security.framework` が追加される
-  - CI は `run.py build` によるライブラリビルドのみで `SoraUnitySdkPostProcessor.cs` が実行されないため、Unity での iOS ビルドによる確認が必要
+- SoraUnitySdkExamples の iOS ビルドで `Security.framework` がリンクされること
+  - Unity の iOS ビルドが既定で `Security.framework` を自動リンクすることを、生成される Xcode プロジェクトで確認する
+  - `SoraUnitySdkPostProcessor.cs` への追加対応は不要
 - `CHANGES.md` の develop の [UPDATE] エントリを 2026.2.1 向けに更新する
   - 既存の `2026.2.0-canary.18` エントリを書き換える
   - 2026.2.1 で修正されたクラッシュを [UPDATE] エントリ内のサブ項目として追記する
@@ -64,29 +66,29 @@ sora-cpp-sdk 2026.2.0 では NVIDIA Pascal 世代以前の GPU サポートが�
   - 確認内容: `python3 run.py build <target>` が全ターゲット (windows_x86_64 / macos_arm64 / ubuntu-22.04_x86_64 / ubuntu-24.04_x86_64 / ios / android) で成功すること
   - 結果: 成功 (https://github.com/shiguredo/sora-unity-sdk/actions/runs/32321146257)
 - iOS アプリのビルド (Unity)
-  - 確認内容: SoraUnitySdkExamples を Unity で iOS ビルドし、生成される Xcode プロジェクトに `Security.framework` が追加されていること
-  - 結果: 未確認
+  - 確認内容: SoraUnitySdkExamples を Unity で iOS ビルドし、生成される Xcode プロジェクトの UnityFramework ターゲットの Frameworks phase に `Security.framework` が含まれること
+  - 結果: 確認済み（Unity の既定で自動リンクされるため、`Security.framework` の追加対応は不要）
+  - 使用バイナリ: https://github.com/shiguredo/sora-unity-sdk/actions/runs/32321146257 の成果物
 - 動作検証 (Unity サンプルでの実接続)
   - 共通の確認内容: SoraUnitySdkExamples を実行し、Sora サーバーへの接続・通信・切断が正常に動作すること
     - TLS 検証のシステム CA 化後も、通常の Sora サーバーへの接続ができること
-    - 独自 CA を使う場合は `Config.CACert` (ca_cert) に PEM を指定して接続できること
     - DataChannel シグナリング利用時の切断でクラッシュしないこと
   - windows_x86_64
     - 確認内容: TLS 検証が Windows の証明書ストアを利用して接続できること
     - 結果: 未確認
   - macos_arm64
     - 確認内容: TLS 検証が macOS のシステム CA (Security.framework) を利用して接続できること
-    - 結果: 未確認
+    - 結果: 確認済み
   - ubuntu (22.04 / 24.04 は 24.04 で代表)
     - 確認内容: TLS 検証が OS のシステム CA を利用して接続できること
     - 結果: 未確認
     - 備考: Ubuntu 22.04 と 24.04 はどちらも同じ信頼ストア (`/etc/ssl/certs/ca-certificates.crt`) を参照するため、24.04 で確認すれば十分とする。22.04 のビルドは CI (`全ターゲットのビルド`) で担保する
   - ios
     - 確認内容: 実機で TLS 検証が iOS のシステム CA (Security.framework) を利用して接続できること
-    - 結果: 未確認
+    - 結果: 確認済み
   - android
     - 確認内容: 実機で TLS 検証が Android のシステム CA を利用して接続できること
-    - 結果: 未確認
+    - 結果: 確認済み
 - `CHANGES.md` の内容
   - 確認内容: develop の [UPDATE] エントリが「変更履歴」のサンプルのとおり更新されていること
   - 結果: 未確認
@@ -102,7 +104,6 @@ sora-cpp-sdk 2026.2.0 では NVIDIA Pascal 世代以前の GPU サポートが�
   - CMAKE_VERSION を `4.4.2` にアップデート
   - libwebrtc m150 で `stream_ids()` が削除されたため、 `streams()` を使うように修正する
   - TLS 検証の信頼ストアを OS のシステム CA に切り替える
-  - iOS の TLS 検証のシステム CA 化に伴い、ビルド時に `Security.framework` を追加する
   - 独自 CA を使う場合は `Config.CACert` (ca_cert) に PEM を指定する
   - NVIDIA Pascal 世代以前の GPU サポートが廃止されたため、GTX 10 シリーズではハードウェアエンコーダー / デコーダーが使えなくなる
   - DataChannel シグナリング利用時の切断で、WebSocket close の完了が DataChannel の close 通知より先に処理されるとクラッシュする問題を修正する
@@ -119,3 +120,6 @@ sora-cpp-sdk 2026.2.0 では NVIDIA Pascal 世代以前の GPU サポートが�
   - `CMAKE_VERSION`: `4.3.2` → `4.4.2`
 - コミット `0004 DEPS を 2026.2.1 向けに更新する` を作成し、GitHub Actions (`build.yml`) が全ターゲットで成功することを確認した
   - https://github.com/shiguredo/sora-unity-sdk/actions/runs/32321146257
+- iOS アプリのビルドに使用したバイナリは https://github.com/shiguredo/sora-unity-sdk/actions/runs/32321146257 の成果物を使用した
+- Unity での iOS ビルドで、生成される Xcode プロジェクトに `Security.framework` が自動リンクされることを確認したため、`Security.framework` を追加する対応は不要とした
+  - `SoraUnitySdkPostProcessor.cs` は変更していない
