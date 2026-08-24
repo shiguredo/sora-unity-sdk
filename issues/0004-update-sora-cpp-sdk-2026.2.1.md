@@ -50,6 +50,7 @@ sora-cpp-sdk 2026.2.0 では NVIDIA Pascal 世代以前の GPU サポートが�
 
 - 全プラットフォーム (windows_x86_64 / macos_arm64 / ubuntu-22.04_x86_64 / ubuntu-24.04_x86_64 / ios / android) でビルドが成功する
   - CI (`build.yml`) の `python3 run.py build <target>` が全ターゲットで成功する
+  - Ubuntu は 22.04 / 24.04 両方を CI でビルド・検証する（動作検証は 24.04 で代表、詳しくは「検証バリエーション」参照）
 - SoraUnitySdkExamples の iOS ビルドで生成される Xcode プロジェクトに `Security.framework` が追加される
   - CI は `run.py build` によるライブラリビルドのみで `SoraUnitySdkPostProcessor.cs` が実行されないため、Unity での iOS ビルドによる確認が必要
 - `CHANGES.md` の develop の [UPDATE] エントリを 2026.2.1 向けに更新する
@@ -76,12 +77,10 @@ sora-cpp-sdk 2026.2.0 では NVIDIA Pascal 世代以前の GPU サポートが�
   - macos_arm64
     - 確認内容: TLS 検証が macOS のシステム CA (Security.framework) を利用して接続できること
     - 結果: 未確認
-  - ubuntu-22.04_x86_64
+  - ubuntu (22.04 / 24.04 は 24.04 で代表)
     - 確認内容: TLS 検証が OS のシステム CA を利用して接続できること
     - 結果: 未確認
-  - ubuntu-24.04_x86_64
-    - 確認内容: TLS 検証が OS のシステム CA を利用して接続できること
-    - 結果: 未確認
+    - 備考: Ubuntu 22.04 と 24.04 はどちらも同じ信頼ストア (`/etc/ssl/certs/ca-certificates.crt`) を参照するため、24.04 で確認すれば十分とする。22.04 のビルドは CI (`全ターゲットのビルド`) で担保する
   - ios
     - 確認内容: 実機で TLS 検証が iOS のシステム CA (Security.framework) を利用して接続できること
     - 結果: 未確認
