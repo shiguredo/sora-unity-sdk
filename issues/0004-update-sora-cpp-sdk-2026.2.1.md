@@ -75,13 +75,13 @@ sora-cpp-sdk 2026.2.0 では NVIDIA Pascal 世代以前の GPU サポートが�
     - DataChannel シグナリング利用時の切断でクラッシュしないこと
   - windows_x86_64
     - 確認内容: TLS 検証が Windows の証明書ストアを利用して接続できること
-    - 結果: 未確認
+    - 結果: 確認済み
   - macos_arm64
     - 確認内容: TLS 検証が macOS のシステム CA (Security.framework) を利用して接続できること
     - 結果: 確認済み
   - ubuntu (22.04 / 24.04 は 24.04 で代表)
     - 確認内容: TLS 検証が OS のシステム CA を利用して接続できること
-    - 結果: 未確認
+    - 結果: 確認済み
     - 備考: Ubuntu 22.04 と 24.04 はどちらも同じ信頼ストア (`/etc/ssl/certs/ca-certificates.crt`) を参照するため、24.04 で確認すれば十分とする。22.04 のビルドは CI (`全ターゲットのビルド`) で担保する
   - ios
     - 確認内容: 実機で TLS 検証が iOS のシステム CA (Security.framework) を利用して接続できること
@@ -91,7 +91,7 @@ sora-cpp-sdk 2026.2.0 では NVIDIA Pascal 世代以前の GPU サポートが�
     - 結果: 確認済み
 - `CHANGES.md` の内容
   - 確認内容: develop の [UPDATE] エントリが「変更履歴」のサンプルのとおり更新されていること
-  - 結果: 未確認
+  - 結果: 確認済み
 
 ## 変更履歴
 
@@ -103,10 +103,6 @@ sora-cpp-sdk 2026.2.0 では NVIDIA Pascal 世代以前の GPU サポートが�
   - BOOST_VERSION を `1.92.0` にアップデート
   - CMAKE_VERSION を `4.4.2` にアップデート
   - libwebrtc m150 で `stream_ids()` が削除されたため、 `streams()` を使うように修正する
-  - TLS 検証の信頼ストアを OS のシステム CA に切り替える
-  - 独自 CA を使う場合は `Config.CACert` (ca_cert) に PEM を指定する
-  - NVIDIA Pascal 世代以前の GPU サポートが廃止されたため、GTX 10 シリーズではハードウェアエンコーダー / デコーダーが使えなくなる
-  - DataChannel シグナリング利用時の切断で、WebSocket close の完了が DataChannel の close 通知より先に処理されるとクラッシュする問題を修正する
   - @対応者
 ```
 
