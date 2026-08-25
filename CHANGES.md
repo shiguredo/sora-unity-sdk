@@ -16,6 +16,7 @@
   - BOOST_VERSION を `1.92.0` にアップデート
   - CMAKE_VERSION を `4.4.2` にアップデート
   - libwebrtc m150 で `stream_ids()` が削除されたため、 `streams()` を使うように修正する
+  - PROTOBUF_VERSION を `25.9` に上げる
   - @torikizi
 
 ### misc
