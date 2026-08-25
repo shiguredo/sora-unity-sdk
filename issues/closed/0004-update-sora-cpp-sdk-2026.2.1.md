@@ -1,0 +1,121 @@
+# Sora C++ SDK を 2026.2.1 に上げる
+
+- Created: 2026-08-17
+- Completed: 2026-08-25
+- Branch: feature/update-sora-cpp-sdk-2026.2.1
+- Polished: 2026-08-19
+
+## 目的
+
+sora-unity-sdk のネイティブ部分は sora-cpp-sdk を利用しており、そのバージョンはリポジトリ直下の `DEPS` ファイルで管理している。sora-cpp-sdk 2026.2.1 が 2026-08-18 にリリースされたため、依存を最新リリースに追従する。
+
+## 現状
+
+`DEPS` は `SORA_CPP_SDK_VERSION=2026.2.0-canary.18` を参照しており、canary.18 から 2026.2.1 までの差分が未反映である。
+
+sora-cpp-sdk 2026.2.1 は 2026.2.0 のパッチリリースであり、追加差分は次の 1 件のみ。
+
+- [FIX] 切断処理のタイマーが解放済みの WebSocket に対して `Cancel()` を呼び SIGSEGV でクラッシュするのを修正する
+  - DataChannel シグナリング利用時の切断で、WebSocket close の完了が DataChannel の close 通知より先に処理されるとクラッシュしていた
+
+## 設計方針
+
+`DEPS` の各バージョンを 2026.2.1 に合わせて更新する。今回の追従で sora-unity-sdk 側のコード変更が必要なのは TLS 検証のシステム CA 化への対応のみである。
+
+- `SORA_CPP_SDK_VERSION`: `2026.2.0-canary.18` → `2026.2.1`
+- `WEBRTC_BUILD_VERSION`: `m150.7871.3.0` → `m150.7871.3.1`
+- `BOOST_VERSION`: `1.91.0` → `1.92.0`
+- `CMAKE_VERSION`: `4.3.2` → `4.4.2`
+
+DEPS の各バージョン更新は値の書き換えのみで、ソースコードへの影響は以下の理由によりない。
+
+- `WEBRTC_BUILD_VERSION` の `m150.7871.3.0` → `m150.7871.3.1` は libwebrtc 本体のコミット (WEBRTC_COMMIT) が同一のため、webrtc ヘッダ API に影響しない
+- `BOOST_VERSION` / `CMAKE_VERSION` の更新は sora-unity-sdk が取得するプリビルドパッケージのバージョン参照のみで、sora-unity-sdk のソースコードには影響しない
+- `SoraClientContext` の ABI 変更 (MediaEngineReference 保持) と `BOOST_ASIO_ENABLE_VERSION_NAMESPACE` の有効化は、いずれも現依存の 2026.2.0-canary.18 に既に含まれており、今回の追従で追加対応は不要である
+- 2026.2.1 の WebSocket クラッシュ修正は sora-cpp-sdk 内部の修正であり、sora-unity-sdk 側のコード変更は不要である（sora-unity-sdk が sora-cpp-sdk のクラッシュ修正を利用できるようになる）
+
+### TLS 検証のシステム CA 化への対応
+
+sora-cpp-sdk 2026.2.0 で TLS 検証の信頼ストアが OS のシステム CA に切り替わった。当初は iOS アプリのビルドに `Security.framework` の追加が必要と考えていたが、実ビルドの検証で **sora-unity-sdk 側の変更は不要** と確認した。
+
+- iOS は sandbox 制約により `SecTrustEvaluateWithError` に検証を委譲する方式で実装されている
+  - ただし Unity の iOS ビルドはプロジェクト生成時に標準のシステムフレームワーク群（`Security.framework` を含む）を自動リンクするため、`SoraUnitySdkPostProcessor.cs` への `Security.framework` 追加は不要
+  - 生成された Xcode プロジェクト (`Unity-iPhone.xcodeproj/project.pbxproj`) の UnityFramework ターゲットの Frameworks phase に `Security.framework` が含まれることを確認した
+- 独自 CA を使う場合は `Config.CACert` (ca_cert) に PEM を明示指定する（既存機能で対応済み）
+
+### 利用者への影響
+
+sora-cpp-sdk 2026.2.0 では NVIDIA Pascal 世代以前の GPU サポートが廃止された。sora-unity-sdk のコード変更は不要だが、`VideoCodecImplementation.NvidiaVideoCodec` を利用する GTX 10 シリーズではハードウェアエンコーダー / デコーダーが使えなくなる。依存追従に伴う利用者への影響として、`CHANGES.md` の [UPDATE] エントリ内で周知する。
+
+## 完了条件
+
+- 全プラットフォーム (windows_x86_64 / macos_arm64 / ubuntu-22.04_x86_64 / ubuntu-24.04_x86_64 / ios / android) でビルドが成功する
+  - CI (`build.yml`) の `python3 run.py build <target>` が全ターゲットで成功する
+  - Ubuntu は 22.04 / 24.04 両方を CI でビルド・検証する（動作検証は 24.04 で代表、詳しくは「検証バリエーション」参照）
+- SoraUnitySdkExamples の iOS ビルドで `Security.framework` がリンクされること
+  - Unity の iOS ビルドが既定で `Security.framework` を自動リンクすることを、生成される Xcode プロジェクトで確認する
+  - `SoraUnitySdkPostProcessor.cs` への追加対応は不要
+- `CHANGES.md` の develop の [UPDATE] エントリを 2026.2.1 向けに更新する
+  - 既存の `2026.2.0-canary.18` エントリを書き換える
+  - 2026.2.1 で修正されたクラッシュを [UPDATE] エントリ内のサブ項目として追記する
+  - 記載内容は後述の「変更履歴」のサンプルのとおり
+
+## 検証バリエーション
+
+- 全ターゲットのビルド (CI)
+  - 確認内容: `python3 run.py build <target>` が全ターゲット (windows_x86_64 / macos_arm64 / ubuntu-22.04_x86_64 / ubuntu-24.04_x86_64 / ios / android) で成功すること
+  - 結果: 成功 (https://github.com/shiguredo/sora-unity-sdk/actions/runs/32321146257)
+- iOS アプリのビルド (Unity)
+  - 確認内容: SoraUnitySdkExamples を Unity で iOS ビルドし、生成される Xcode プロジェクトの UnityFramework ターゲットの Frameworks phase に `Security.framework` が含まれること
+  - 結果: 確認済み（Unity の既定で自動リンクされるため、`Security.framework` の追加対応は不要）
+  - 使用バイナリ: https://github.com/shiguredo/sora-unity-sdk/actions/runs/32321146257 の成果物
+- 動作検証 (Unity サンプルでの実接続)
+  - 共通の確認内容: SoraUnitySdkExamples を実行し、Sora サーバーへの接続・通信・切断が正常に動作すること
+    - TLS 検証のシステム CA 化後も、通常の Sora サーバーへの接続ができること
+    - DataChannel シグナリング利用時の切断でクラッシュしないこと
+  - windows_x86_64
+    - 確認内容: TLS 検証が Windows の証明書ストアを利用して接続できること
+    - 結果: 確認済み
+  - macos_arm64
+    - 確認内容: TLS 検証が macOS のシステム CA (Security.framework) を利用して接続できること
+    - 結果: 確認済み
+  - ubuntu (22.04 / 24.04 は 24.04 で代表)
+    - 確認内容: TLS 検証が OS のシステム CA を利用して接続できること
+    - 結果: 確認済み
+    - 備考: Ubuntu 22.04 と 24.04 はどちらも同じ信頼ストア (`/etc/ssl/certs/ca-certificates.crt`) を参照するため、24.04 で確認すれば十分とする。22.04 のビルドは CI (`全ターゲットのビルド`) で担保する
+  - ios
+    - 確認内容: 実機で TLS 検証が iOS のシステム CA (Security.framework) を利用して接続できること
+    - 結果: 確認済み
+  - android
+    - 確認内容: 実機で TLS 検証が Android のシステム CA を利用して接続できること
+    - 結果: 確認済み
+- `CHANGES.md` の内容
+  - 確認内容: develop の [UPDATE] エントリが「変更履歴」のサンプルのとおり更新されていること
+  - 結果: 確認済み
+
+## 変更履歴
+
+`CHANGES.md` の develop の [UPDATE] エントリを次のとおり更新する。`streams()` 修正は canary.18 で実施済みのためエントリに残す。
+
+```md
+- [UPDATE] Sora C++ SDK を `2026.2.1` に上げる
+  - libwebrtc を `m150.7871.3.1` に上げる
+  - BOOST_VERSION を `1.92.0` にアップデート
+  - CMAKE_VERSION を `4.4.2` にアップデート
+  - libwebrtc m150 で `stream_ids()` が削除されたため、 `streams()` を使うように修正する
+  - @対応者
+```
+
+## 解決方法
+
+- ブランチ `feature/update-sora-cpp-sdk-2026.2.1` を `develop` から作成した
+- `DEPS` を次のとおり更新した
+  - `SORA_CPP_SDK_VERSION`: `2026.2.0-canary.18` → `2026.2.1`
+  - `WEBRTC_BUILD_VERSION`: `m150.7871.3.0` → `m150.7871.3.1`
+  - `BOOST_VERSION`: `1.91.0` → `1.92.0`
+  - `CMAKE_VERSION`: `4.3.2` → `4.4.2`
+- コミット `0004 DEPS を 2026.2.1 向けに更新する` を作成し、GitHub Actions (`build.yml`) が全ターゲットで成功することを確認した
+  - https://github.com/shiguredo/sora-unity-sdk/actions/runs/32321146257
+- 全プラットフォームのアプリのビルドに使用したバイナリは https://github.com/shiguredo/sora-unity-sdk/actions/runs/32321146257 の成果物を使用した
+- Unity での iOS ビルドで、生成される Xcode プロジェクトに `Security.framework` が自動リンクされることを確認したため、`Security.framework` を追加する対応は不要とした
+  - `SoraUnitySdkPostProcessor.cs` は変更していない
