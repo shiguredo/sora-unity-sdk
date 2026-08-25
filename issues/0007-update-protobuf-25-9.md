@@ -39,3 +39,9 @@ Sora Unity SDK のビルドで使用する protobuf の compiler(protoc)を `25.
 2. `python3 run.py build macos_arm64` でビルドと生成コードを確認する
 3. Unity エディタ の `SoraSample.cs` で Sora への実接続を確認する
 4. `CHANGES.md` に `[UPDATE] proto を 25.9 に上げる` を追記する
+
+## 進捗
+
+- `DEPS` の `PROTOBUF_VERSION` を `25.9` に変更した
+- `CHANGES.md` の `## develop` に `[UPDATE] proto を 25.9 に上げる` を追記した
+- 検証ケース（`python3 run.py build macos_arm64` / `python3 run.py package` / Unity エディタでの実接続確認）は未実施
