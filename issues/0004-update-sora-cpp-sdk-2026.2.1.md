@@ -1,7 +1,7 @@
 # Sora C++ SDK を 2026.2.1 に上げる
 
 - Created: 2026-08-17
-- Completed: {YYYY-MM-DD}
+- Completed: 2026-08-25
 - Branch: feature/update-sora-cpp-sdk-2026.2.1
 - Polished: 2026-08-19
 
