@@ -116,6 +116,6 @@ sora-cpp-sdk 2026.2.0 では NVIDIA Pascal 世代以前の GPU サポートが�
   - `CMAKE_VERSION`: `4.3.2` → `4.4.2`
 - コミット `0004 DEPS を 2026.2.1 向けに更新する` を作成し、GitHub Actions (`build.yml`) が全ターゲットで成功することを確認した
   - https://github.com/shiguredo/sora-unity-sdk/actions/runs/32321146257
-- iOS アプリのビルドに使用したバイナリは https://github.com/shiguredo/sora-unity-sdk/actions/runs/32321146257 の成果物を使用した
+- 全プラットフォームのアプリのビルドに使用したバイナリは https://github.com/shiguredo/sora-unity-sdk/actions/runs/32321146257 の成果物を使用した
 - Unity での iOS ビルドで、生成される Xcode プロジェクトに `Security.framework` が自動リンクされることを確認したため、`Security.framework` を追加する対応は不要とした
   - `SoraUnitySdkPostProcessor.cs` は変更していない
