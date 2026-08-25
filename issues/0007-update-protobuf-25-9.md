@@ -1,7 +1,7 @@
 # proto を 25.9 に上げる
 
 - Created: 2026-08-25
-- Completed: {YYYY-MM-DD}
+- Completed: 2026-08-25
 - Branch: feature/update-protobuf-25-9
 - Polished: 2026-08-25
 
@@ -40,11 +40,10 @@ Sora Unity SDK のビルドで使用する protobuf の compiler(protoc)を `25.
 3. Unity エディタ の `SoraSample.cs` で Sora への実接続を確認する
 4. `CHANGES.md` の `## develop` に `[UPDATE] proto を 25.9 に上げる` を Sora C++ SDK エントリのサブ項目として追記する
 
-## 進捗
+### 実施結果
 
 - `DEPS` の `PROTOBUF_VERSION` を `25.9` に変更した
 - `CHANGES.md` の `## develop` に `PROTOBUF_VERSION を 25.9 に上げる` を Sora C++ SDK エントリのサブ項目として追記した
 - push 時の `.github/workflows/build.yml` の CI がパスし、全ターゲットのビルドとパッケージ生成が完了した
   - `python3 run.py build macos_arm64` / `python3 run.py package` に相当する検証は CI (build.yml) で実施済み
-- Unity エディタ(macOS)で `SoraSample.cs` の Sora 実接続確認は実施済み
-  - protoc `25.9` で生成された C# の jsonif コード経由で接続設定 JSON が正しく組み立てられ、Sora へ送信されて接続できた
+- Unity エディタ(macOS)で `SoraSample.cs` の Sora 実接続を確認し、protoc `25.9` で生成された C# の jsonif コード経由で接続設定 JSON が正しく組み立てられ、Sora へ送信されて接続できた
