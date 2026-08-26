@@ -32,6 +32,12 @@ sora-cpp-sdk 2026.2.1 は 2026.2.0 のパッチリリースで、追加差分は
 | `CMAKE_VERSION` | `4.4.2` |
 | `PROTOBUF_VERSION` | `25.9` |
 
+### 検証状況
+
+- macOS (`macos_arm64`): sendrecv / sendrecv + simulcast / DataChannel シグナリング / 独自 CA 指定の接続をすべて確認済み
+- iOS: sendrecv / sendrecv + simulcast を確認済み。なお設定不要（`SoraUnitySdkPostProcessor.cs` への `Security.framework` 追加なし）で動作することを確認済みのため、`Security.framework` は問題なし
+- Android: sendrecv / sendrecv + simulcast を確認済み
+
 ## リリース対象の変更点
 
 master (2026.1.0) からの差分で、2026.2.0 に含まれる変更。
@@ -70,7 +76,7 @@ master (2026.1.0) からの差分で、2026.2.0 に含まれる変更。
   - 結果: PR #192 で確認済み。マージ後の develop で再確認する
 - iOS の `Security.framework` 自動リンク
   - 確認内容: Unity の iOS ビルドで生成される Xcode プロジェクトに `Security.framework` が含まれること（`SoraUnitySdkPostProcessor.cs` への追加なし）
-  - 結果: PR #192 で確認済み
+  - 結果: PR #192 で確認済み。実機の iOS でも設定なし（`SoraUnitySdkPostProcessor.cs` への追加なし）で動作することを確認済み
 
 ### 2. 接続・送受信のリグレッション
 
@@ -80,16 +86,19 @@ master (2026.1.0) からの差分で、2026.2.0 に含まれる変更。
   - 対象プラットフォーム: `macos_arm64` / `windows_x86_64` / `android` / `ios` / `ubuntu-24.04_x86_64`
   - 利用するハードウェアアクセラレータ: NVIDIA Video Codec / Intel VPL（利用可能な実装）
   - 確認内容: Sora サーバーへの TLS 接続、カメラ映像と受信映像の追尾、受信映像ごとの接続 ID の識別が正常に動作すること
+  - 結果: macOS / iOS / Android で確認済み（TLS 接続・カメラ映像と受信映像の追尾・接続 ID の識別が正常に動作することを確認）
 - sendrecv + simulcast で送受信する
   - 対象プラットフォーム: `macos_arm64` / `windows_x86_64` / `android` / `ios` / `ubuntu-24.04_x86_64`
   - 利用するハードウェアアクセラレータ: NVIDIA Video Codec / Intel VPL（利用可能な実装）
   - 確認内容: `Simulcast` / `SimulcastRequestRid` で複数層を受信しても接続 ID が一貫し、受信映像の追尾が正常に動作すること
+  - 結果: macOS / iOS / Android で確認済み（複数層を受信しても接続 ID が一貫し、受信映像の追尾が正常に動作することを確認）
 - sendrecv（DataChannel シグナリング）で送受信して切断する
   - 確認内容: `dataChannelSignaling` を有効にして Sora へ接続・送受信・切断し、WebSocket close 完了と DataChannel close 通知の順序が入れ替わっても SIGSEGV しないこと（sora-cpp-sdk 2026.2.1 のクラッシュ修正の回帰）
-  - 結果: PR #192 で確認済み。マージ後の develop で同一の確認をする
+  - 結果: PR #192 で確認済み。macOS (develop) でも確認済み
 - 独自 CA を指定した接続（プラスアルファ）
+  - 前提: Sora サーバー側（nginx の TLS 証明書）を独自 CA で発行した証明書にし、クライアント側で `Config.CACert` (ca_cert) にその独自 CA の PEM を指定する。サーバー側とクライアント側の両方の設定が揃って初めて検証できる
   - 確認内容: 独自 CA を使う環境で `Config.CACert` (ca_cert) に PEM を明示指定して Sora へ接続できること
-  - 結果: 要確認
+  - 結果: macOS で確認済み（独自 CA 発行の証明書にした Sora サーバーへ `Config.CACert` に PEM を明示指定して接続できることを確認）
 - ハードコード CA への非依存
   - 確認内容: システム CA 化後も従来のハードコード CA (`isrg_root` / `lets_encrypt_r3`) への依存が残っていないこと
 
