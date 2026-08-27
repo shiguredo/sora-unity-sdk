@@ -34,9 +34,16 @@ sora-cpp-sdk 2026.2.1 は 2026.2.0 のパッチリリースで、追加差分は
 
 ### 検証状況
 
+検証はすべて HD (1280x720) / `videoBitRate` 8000 で実施した。
+
+- ビルドバイナリ（`python3 run.py build` の成果物）での送受信を全プラットフォームで実施済み
 - macOS (`macos_arm64`): sendrecv / sendrecv + simulcast / DataChannel シグナリング / 独自 CA 指定の接続をすべて確認済み
 - iOS: sendrecv / sendrecv + simulcast を確認済み。なお設定不要（`SoraUnitySdkPostProcessor.cs` への `Security.framework` 追加なし）で動作することを確認済みのため、`Security.framework` は問題なし
 - Android: sendrecv / sendrecv + simulcast を確認済み
+- Windows (`windows_x86_64`): ビルドバイナリで sendrecv を確認済み
+- Ubuntu 24.04 (`ubuntu-24.04_x86_64`): ビルドバイナリで sendrecv を確認済み
+- Editor: 接続・送受信・切断の動作を確認済み
+- カメラ切り替え（DeviceCamera ⇔ UnityCamera）による Unity Camera の動作を確認済み
 
 ## リリース対象の変更点
 
@@ -86,7 +93,7 @@ master (2026.1.0) からの差分で、2026.2.0 に含まれる変更。
   - 対象プラットフォーム: `macos_arm64` / `windows_x86_64` / `android` / `ios` / `ubuntu-24.04_x86_64`
   - 利用するハードウェアアクセラレータ: NVIDIA Video Codec / Intel VPL（利用可能な実装）
   - 確認内容: Sora サーバーへの TLS 接続、カメラ映像と受信映像の追尾、受信映像ごとの接続 ID の識別が正常に動作すること
-  - 結果: macOS / iOS / Android で確認済み（TLS 接続・カメラ映像と受信映像の追尾・接続 ID の識別が正常に動作することを確認）
+  - 結果: macOS / iOS / Android / Windows / Ubuntu 24.04 で確認済み（TLS 接続・カメラ映像と受信映像の追尾・接続 ID の識別が正常に動作することを確認。HD (1280x720) / `videoBitRate` 8000 で実施）
 - sendrecv + simulcast で送受信する
   - 対象プラットフォーム: `macos_arm64` / `windows_x86_64` / `android` / `ios` / `ubuntu-24.04_x86_64`
   - 利用するハードウェアアクセラレータ: NVIDIA Video Codec / Intel VPL（利用可能な実装）
@@ -95,6 +102,9 @@ master (2026.1.0) からの差分で、2026.2.0 に含まれる変更。
 - sendrecv（DataChannel シグナリング）で送受信して切断する
   - 確認内容: `dataChannelSignaling` を有効にして Sora へ接続・送受信・切断し、WebSocket close 完了と DataChannel close 通知の順序が入れ替わっても SIGSEGV しないこと（sora-cpp-sdk 2026.2.1 のクラッシュ修正の回帰）
   - 結果: PR #192 で確認済み。macOS (develop) でも確認済み
+- カメラ切り替え（Unity Camera）で送受信する
+  - 確認内容: `SoraSample` のカメラ切り替え（DeviceCamera ⇔ UnityCamera）で映像を送信し、Unity Camera の映像が正しく Sora へ送信されること
+  - 結果: Editor で確認済み（DeviceCamera と UnityCamera の切り替えで送受信が正常に動作することを確認。HD (1280x720) / `videoBitRate` 8000 で実施）
 - 独自 CA を指定した接続（プラスアルファ）
   - 前提: Sora サーバー側（nginx の TLS 証明書）を独自 CA で発行した証明書にし、クライアント側で `Config.CACert` (ca_cert) にその独自 CA の PEM を指定する。サーバー側とクライアント側の両方の設定が揃って初めて検証できる
   - 確認内容: 独自 CA を使う環境で `Config.CACert` (ca_cert) に PEM を明示指定して Sora へ接続できること
