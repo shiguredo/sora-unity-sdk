@@ -3,7 +3,7 @@
 - Priority: Critical
 - Created: 2026-08-27
 - Branch: fix/ios-on-disconnect-double-move
-- Polished: {YYYY-MM-DD}
+- Polished: 2026-08-29
 - Milestone: 2026.2.0
 
 ## 目的
@@ -39,20 +39,24 @@ C++ の init capture (`on_disconnect = std::move(on_disconnect)`) は外側の `
 
 ## 設計方針
 
-- `on_disconnect` を lambda にコピーキャプチャに変更し、外側の変数を moved-from にしない
-  - あるいは、`IosAudioInit` の完了後に `DoConnect` を呼ぶ設計 (シリアル化) に変更する
-- 初期化と接続の順序を明確にする
+- `Sora::Connect` 内で `IosAudioInit` の完了を待ってから `DoConnect` を呼ぶ同期化に変更する
   - 現状は `IosAudioInit` の完了を待たずに `DoConnect` を呼んでおり、マイク初期化前に signaling が開始してしまう
-  - コールバック内で `DoConnect` を呼ぶ形にリファクタリングすることで、初期化と接続の順序契約を保証する
+  - `std::promise` / `std::future` の `f.get()` で完了を待つ (src/sora.cpp の `Sora::DoSwitchCamera` 呼び出しと同じ待ち合わせパターン)
+  - `on_disconnect` は `DoConnect` へ 1 回だけムーブする。`IosAudioInit` のコールバック lambda へはムーブしないため、二重ムーブ自体が構造的に起きなくなる
+  - `DoConnect` は従来どおり `Sora::Connect` の呼び出しスレッド (Unity スレッド) 上で実行される。DoConnect 内のキャプチャラ作成は Unity スレッドで行う契約があるため、非同期コールバック内で呼ぶ方式は採らない
+- `IosAudioInit` がエラーを返した場合は `on_disconnect` で `INTERNAL_ERROR` を通知して `return` し、`DoConnect` を呼ばない
+  - エラー時も `DoConnect` を呼ぶと、DoConnect 内のエラー経路で `on_disconnect` が 2 回呼ばれることになるため
+- `IosAudioInit` のコールバックは `this` や `on_disconnect` を捕捉せず、`std::promise` だけを捕捉する
+  - 現状の `[this, on_disconnect = std::move(on_disconnect)]` は、Sora の破棄後にコールバックが到着した場合に use-after-free になる。promise のみの捕捉にすればこの問題は構造的に起きなくなる
+- 初期化中の 2 回目以降の `Connect` は現行どおり `IosAudioInit` をスキップして `DoConnect` を即時呼ぶ
 - `static bool ios_audio_initializing` を `std::atomic<bool>` にする
   - 単純な bool のままだと複数 Sora インスタンスの並列 Connect で race する
-- `IosAudioInit` のコールバックで捕捉する `this` を `weak_ptr<Sora>` (すなわち `weak_from_this()`) 経由に変更する
-  - Sora 破棄後にコールバックが到着した場合に UAF を回避する
 
 ## 完了条件
 
 - iOS で `Connect` を呼び出し、`role` を意図的に不正値にするなど `on_disconnect` を発火させるエラー経路で `std::bad_function_call` が発生しないことを確認する
-- `IosAudioInit` の完了前に `DoConnect` が実行される競合状態が解消されている
-- 複数 Sora インスタンスの並列 `Connect` で `ios_audio_initializing` の書き換え競合が発生しないことをコードレベルで保証する (atomic 化 + weak_ptr 化)
+- `IosAudioInit` を実行する初回の `Connect` で、`IosAudioInit` の完了前に `DoConnect` が実行されないことを確認する (2 回目以降の `Connect` は初期化をスキップして即時 `DoConnect` するため対象外)
+- 複数 Sora インスタンスの並列 `Connect` で `ios_audio_initializing` の書き換え競合が発生しないことをコードレベルで保証する (atomic 化)
+- `IosAudioInit` の完了コールバックが `this` を捕捉せず `std::promise` のみを捕捉することをコードレベルで確認する
 - iOS 実機で `sendonly` / `sendrecv` の主要接続経路 (`unity_audio_input = false`) の疎通確認が取れている
 - `CHANGES.md` の `## develop` に `[FIX] iOS Connect 経路の on_disconnect 二重ムーブによるクラッシュを修正する` を追記する
