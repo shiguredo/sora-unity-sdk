@@ -2,8 +2,8 @@
 
 - Priority: Critical
 - Created: 2026-08-27
-- Branch: fix/metal-texture-leak
-- Polished: {YYYY-MM-DD}
+- Branch: feature/fix-metal-texture-leak
+- Polished: 2026-08-29
 - Milestone: 2026.2.0
 
 ## 目的
@@ -39,11 +39,11 @@ UnityCameraCapturer::MetalImpl::~MetalImpl() {
 }
 ```
 
-- 併せて `MetalImpl` のメンバ初期化子リストも他プラットフォーム実装と揃える (`frame_texture_ = nullptr` などのデフォルト初期化)
-- 中長期的には `-fobjc-arc` を有効化してストロング参照で保持する設計も検討する (別 issue が望ましい)
+- 併せて `MetalImpl` のメンバを `D3D11Impl` / `D3D12Impl` と同様にデフォルト初期化する (`context_ = nullptr` / `camera_texture_ = nullptr` / `frame_texture_ = nullptr` / `width_ = 0` / `height_ = 0`)
 
 ## 完了条件
 
 - `MetalImpl` のデストラクタが宣言・実装されている
+- `MetalImpl` のメンバがデフォルト初期化され、`Init` 未実行のまま破棄されてもデストラクタが安全に動作する
 - macOS と iOS の両方で `Connect` / `SwitchCamera` を繰り返し実行しても MTLTexture の生成数と解放数が一致することを Instruments 等で確認する
 - `CHANGES.md` の `## develop` に `[FIX] macOS / iOS Metal キャプチャの MTLTexture リークを修正する` を追記する
