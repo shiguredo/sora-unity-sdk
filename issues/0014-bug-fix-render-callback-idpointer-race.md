@@ -2,8 +2,8 @@
 
 - Priority: Critical
 - Created: 2026-08-27
-- Branch: fix/render-callback-idpointer-race
-- Polished: {YYYY-MM-DD}
+- Branch: feature/fix-render-callback-idpointer-race
+- Polished: 2026-08-29
 - Milestone: 2026.2.0
 
 ## 目的
@@ -15,11 +15,12 @@ Unity のレンダースレッドから呼ばれる `Sora::RenderCallbackStatic`
 `src/sora.cpp` の `Sora::RenderCallbackStatic` は次のように `IdPointer::Lookup` で自身を検索する:
 
 ```cpp
-void UNITY_INTERFACE_API Sora::RenderCallbackStatic(int event_id) {
-  auto sora = static_cast<Sora*>(IdPointer::Instance().Lookup(event_id));
+void Sora::RenderCallbackStatic(int event_id) {
+  auto sora = (Sora*)IdPointer::Instance().Lookup(event_id);
   if (sora == nullptr) {
     return;
   }
+
   sora->RenderCallback();
 }
 ```
@@ -28,7 +29,10 @@ void UNITY_INTERFACE_API Sora::RenderCallbackStatic(int event_id) {
 
 ```cpp
 Sora::~Sora() {
+  RTC_LOG(LS_INFO) << "Sora object destroy started";
+
   IdPointer::Instance().Unregister(ptrid_);
+
   renderer_.reset();
   ...
 }
@@ -46,10 +50,11 @@ Sora::~Sora() {
   - `Sora` を `enable_shared_from_this` にする (既にそうなっている)
   - `IdPointer::Register` は `void*` ではなく `std::weak_ptr<T>` を保持する
   - `IdPointer::Lookup` は `weak_ptr::lock()` で `shared_ptr` を返し、呼び出し側が保持している間は Sora の寿命が延びる
+- `IdPointer` の API 形状 (テンプレート化 `IdPointer<T>` か個別ラッパーか) は、Sink race を扱う別 issue と共通で設計し、先に実装された側の形状に従う
+  - `UnityRenderer::Sink::TextureUpdateCallback` の変更自体はその別 issue の範囲であり、本 issue では変更しない
+- `Sora::Sora` のコンストラクタ (src/sora.cpp) 内の `Register(this)` は、コンストラクタ内では `shared_from_this()` が使えないため weak_ptr を登録できない。登録を `std::make_shared` 後の `sora_create` (src/unity.cpp) 側へ移し、`shared_ptr` から `weak_ptr` を取得して `Register` する
 - `RenderCallbackStatic` は Lookup で得た `shared_ptr<Sora>` をローカル変数に保持したまま `RenderCallback()` を呼び出す
   - Unity のメインスレッドが同時に `sora_destroy` を実行しても、この shared_ptr が残っている限り `~Sora` は動かない
-- 同じ設計変更を `UnityRenderer::Sink::TextureUpdateCallback` にも適用する (別 issue で扱う Sink race と方針を揃える)
-- `IdPointer` のテンプレート化 (`IdPointer<T>`) または個別ラッパーの導入は、既存の複数用途 (Sora, Sink) との互換性を考慮して設計する
 
 ## 完了条件
 
