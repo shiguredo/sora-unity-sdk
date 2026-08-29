@@ -3,7 +3,7 @@
 - Priority: Critical
 - Created: 2026-08-27
 - Branch: fix/d3d11-texture-leak
-- Polished: {YYYY-MM-DD}
+- Polished: 2026-08-29
 - Milestone: 2026.2.0
 
 ## 目的
@@ -30,7 +30,7 @@ class D3D11Impl : public Impl {
 
 一方 `src/unity_camera_capturer_d3d11.cpp` の `D3D11Impl::Init` では `device->CreateTexture2D(&desc, NULL, &texture)` により参照カウント 1 の `ID3D11Texture2D*` を受け取り `frame_texture_ = texture;` として `void*` に保存している。
 
-同一ヘッダ内の他プラットフォーム実装 `D3D12Impl` / `VulkanImpl` / `OpenglImpl` にはいずれもデストラクタが宣言されており、対応するリソースの解放処理を持っている。D3D11 だけデストラクタが抜けている。
+同一ヘッダ内の他プラットフォーム実装 `D3D12Impl` / `VulkanImpl` / `OpenglImpl` にはいずれもデストラクタが宣言されており、対応するリソースの解放処理を持っている。一方、D3D11 にはデストラクタの宣言・実装がない。
 
 `UnityCameraCapturer` は `~Sora` で `nullptr` 代入されて `capturer_` の scoped_refptr 経由で破棄されるが、`D3D11Impl` のデストラクタがないため `frame_texture_` に保持している ID3D11Texture2D が `Release()` されない。
 
