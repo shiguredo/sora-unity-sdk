@@ -3,7 +3,7 @@
 - Priority: Critical
 - Created: 2026-08-27
 - Branch: fix/unity-renderer-sink-race
-- Polished: {YYYY-MM-DD}
+- Polished: 2026-08-29
 - Milestone: 2026.2.0
 
 ## 目的
@@ -48,14 +48,17 @@ while (updating_) {
   - `Sink` を `enable_shared_from_this` にし、`IdPointer` は `weak_ptr` を保持する
   - `Lookup` は `weak_ptr::lock()` で `shared_ptr` を返し、呼び出し側が保持している間は Sink の寿命が延びる
   - これにより `TextureUpdateCallback` 内で Sink が破棄されない保証を得られる
+- `weak_ptr::lock()` が成功するには Sink を `shared_ptr` で所有している必要があるため、`UnityRenderer::sinks_` の所有権を `std::unique_ptr` から `std::shared_ptr` に変更する
+  - `AddTrack` / `RemoveTrack` / `ReplaceTrack` も shared_ptr ベースに追随させる
+  - コンストラクタ内の `Register(this)` は `shared_from_this()` が使えないため、Sink を `shared_ptr` で生成してから `Register` する形に変更する
 - `IdPointer` の変更は `UnityRenderer::Sink` だけでなく `Sora` の `RenderCallbackStatic` からの Lookup にも同じ問題があるため、両者で一貫した設計にする (別 issue で対応する `RenderCallback` race と方針を揃える)
-- `~Sink` の busy-wait スピンを `std::condition_variable::wait_for` に置き換え、タイムアウト付き待機に変更する
-- `deleting_` / `updating_` は非 atomic な `bool` のままだが、shared_ptr 化により UAF そのものが消えるので atomic 化は必須ではない
+  - API 形状はテンプレート化 `IdPointer<T>` または個別ラッパーをその別 issue と合わせて決め、`Sora` 側の Lookup 呼び出しの変更はその別 issue の範囲とする
+- `~Sink` の busy-wait を `std::condition_variable` ベースに置き換える対応は、別 issue で対応する Sink デストラクタの busy-wait 置き換えに委ねる (本 issue の対象外)
+- `deleting_` / `updating_` は既に `std::atomic<bool>` であり、shared_ptr 化により UAF そのものが消えるため、atomic 化の追加対応は不要
 
 ## 完了条件
 
 - `IdPointer::Lookup` が破棄済み `Sink` を返さないことを設計レベルで保証する (shared_ptr / weak_ptr)
 - `UnityRenderer::Sink::TextureUpdateCallback` の TODO コメントが解消されている
 - Unity 上でトラック追加・削除を高頻度に繰り返すソークテストで SEGV が発生しないことを確認する
-- `~Sink` の待機処理が busy-wait ではなく condition_variable ベースになっている
 - `CHANGES.md` の `## develop` に `[FIX] UnityRenderer::Sink::TextureUpdateCallback の race による SEGV を修正する` を追記する
