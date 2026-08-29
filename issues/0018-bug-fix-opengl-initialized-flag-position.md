@@ -2,8 +2,8 @@
 
 - Priority: Critical
 - Created: 2026-08-27
-- Branch: fix/opengl-initialized-flag-position
-- Polished: {YYYY-MM-DD}
+- Branch: feature/fix-opengl-initialized-flag-position
+- Polished: 2026-08-29
 - Milestone: 2026.2.0
 
 ## 目的
@@ -44,8 +44,10 @@ OpenGL の仕様では `glBindFramebuffer(GL_FRAMEBUFFER, 0)` は「デフォル
 
 - `initialized_ = true` の代入位置を成功パスの最後尾に移動する
   - `glGenFramebuffers` / `glBindFramebuffer` / `glFramebufferTexture2D` がすべて成功してから `initialized_ = true` にする
-- 失敗時は `fbo_ = 0` のまま次回 Capture で再初期化を試みるか、あるいは `fbo_` が 0 の間は Capture 全体をスキップする防御を追加する
-- `fbo_ = 0` を検知した場合 `glBindFramebuffer(GL_FRAMEBUFFER, 0)` を呼ぶのではなく即 nullptr を返すガードを追加する (デフォルト FB へのフォールバックを絶対に許さない)
+  - 初期化失敗時は `initialized_` が false のまま残るため、次回 Capture で自動的に再初期化を試みる
+- 初期化ブロックの後、外側の `glBindFramebuffer(GL_FRAMEBUFFER, fbo_)` の直前に、`fbo_ == 0` を検知したら即 nullptr を返すガードを追加する
+  - デフォルト FB へのフォールバックを絶対に許さない
+  - ガードは初期化ブロックの前に置かないこと (`fbo_` の初期値は 0 のため、初期化自体が実行されなくなる)
 
 ## 完了条件
 
