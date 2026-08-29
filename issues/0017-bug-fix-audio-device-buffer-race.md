@@ -2,13 +2,13 @@
 
 - Priority: Critical
 - Created: 2026-08-27
-- Branch: fix/audio-device-buffer-race
-- Polished: {YYYY-MM-DD}
+- Branch: feature/fix-audio-device-buffer-race
+- Polished: 2026-08-29
 - Milestone: 2026.2.0
 
 ## 目的
 
-`UnityAudioDevice::ProcessAudioData` が Unity スレッドから `device_buffer_->SetRecordedBuffer` を叩いている最中に、worker thread から `Terminate()` が並行して呼ばれると `device_buffer_.reset()` が完了して nullptr デリファレンスによる SEGV になる。フラグに対する memory ordering の保証が欠けているため、正式リリース前に必ず対応する。
+`UnityAudioDevice::ProcessAudioData` が Unity スレッドから `device_buffer_->SetRecordedBuffer` を叩いている最中に、worker thread から `Terminate()` が並行して呼ばれると `device_buffer_.reset()` が完了して nullptr デリファレンスによる SEGV になる。`initialized_` / `is_recording_` は `std::atomic<bool>` だが、フラグ評価と `device_buffer_` の使用は別々の操作であり、評価を通過した直後に `Terminate()` が `device_buffer_.reset()` を実行すると後続の使用が破棄済みメモリを触る。フラグの atomicity だけでは防げないため、正式リリース前に必ず対応する。
 
 ## 現状
 
@@ -44,23 +44,24 @@ virtual int32_t Terminate() override {
 }
 ```
 
-`initialized_` / `is_recording_` / `is_playing_` はいずれも通常の `bool` (または非 atomic の類似型) で、`device_buffer_` は `std::unique_ptr<webrtc::AudioDeviceBuffer>` である。
+`initialized_` / `is_recording_` / `is_playing_` は `std::atomic<bool>` だが、`device_buffer_` は `std::unique_ptr<webrtc::AudioDeviceBuffer>` であり、`ProcessAudioData` の「フラグ評価」と「`device_buffer_` の使用」は別々の操作として行われる。
 
-Unity スレッドの `ProcessAudioData` が `initialized_ && is_recording_` を true と評価した直後、worker thread の `Terminate()` が `initialized_ = false` と `device_buffer_.reset()` を実行して完走すると、`ProcessAudioData` の後続で `device_buffer_->SetRecordedBuffer(...)` を呼ぶ瞬間には既に破棄済みメモリを触ることになる。
-
-memory ordering の保証もなく、フラグ書き込みとバッファリセットの間に明示的な同期が入っていない。
+Unity スレッドの `ProcessAudioData` が `initialized_ && is_recording_` を true と評価した直後、worker thread の `Terminate()` が `initialized_ = false` と `device_buffer_.reset()` を実行して完走すると、`ProcessAudioData` の後続で `device_buffer_->SetRecordedBuffer(...)` を呼ぶ瞬間には既に破棄済みメモリを触ることになる。フラグが atomic でも、評価と使用の間に明示的な同期がないためこの race は防げない。
 
 ## 設計方針
 
-- `device_buffer_` を `std::atomic<std::shared_ptr<webrtc::AudioDeviceBuffer>>` (C++20) または独自の共有ロックで守り、atomic に差し替え可能な形にする
-  - シンプルには `std::shared_ptr` にして、`ProcessAudioData` は shared_ptr をローカルにコピーしてから触る
-- `initialized_` / `is_recording_` / `is_playing_` を `std::atomic<bool>` に変更する
-- `Terminate()` は「フラグを先に false にする → 少し待って ProcessAudioData の in-flight を確認 → device_buffer_.reset()」のような順序で書く
-  - あるいは mutex を導入して `ProcessAudioData` と `Terminate` を直列化する
+- `device_buffer_` を `std::atomic<std::shared_ptr<webrtc::AudioDeviceBuffer>>` に変更し、`ProcessAudioData` は `load()` でローカルにコピーしてから触る
+  - プロジェクトは C++20 (`CMakeLists.txt` の `CXX_STANDARD 20`) のため利用可能
+  - 単なる `std::shared_ptr` の並行 read / write は data race (UB) になるため、非 atomic の `std::shared_ptr` にはしない
+  - `device_buffer_` の全使用箇所 (`HandleAudioData` の `RequestPlayoutData` / `GetPlayoutData`、`InitPlayout` / `InitRecording`、`RegisterAudioCallback` 等) も atomic アクセスに追随させる
+- あるいは mutex を導入して `ProcessAudioData` と `Terminate` を直列化する
+- `Terminate()` は `DoStopPlayout()` でプラウトスレッドを join してから `device_buffer_` を破棄する既存の順序を維持し、破棄そのものを参照カウントまたは直列化で保護する
+  - 「フラグを先に false にする」だけでは既にフラグ評価を通過した `ProcessAudioData` を止められないため、フラグ操作では保護しない
+- `initialized_` / `is_recording_` / `is_playing_` は既に `std::atomic<bool>` であり、変更しない
 - 別 issue で扱う `Sora::ProcessAudio` の `unity_adm_` UAF と方針を揃える
 
 ## 完了条件
 
 - `ProcessAudioData` と `Terminate` の並行実行で SEGV が発生しないことを設計レベルで保証する
-- 録音中に `Sora.Dispose()` を呼び出すテストで nullptr デリファレンスが発生しないことを確認する
+- 録音中に `Sora.Dispose()` を呼び出すシナリオで nullptr デリファレンスが発生しないことを確認する
 - `CHANGES.md` の `## develop` に `[FIX] UnityAudioDevice の device_buffer_ thread race を修正する` を追記する
