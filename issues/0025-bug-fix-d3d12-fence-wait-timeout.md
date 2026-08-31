@@ -2,47 +2,54 @@
 
 - Priority: High
 - Created: 2026-08-27
-- Branch: fix/d3d12-fence-wait-timeout
-- Polished: {YYYY-MM-DD}
+- Branch: feature/fix-d3d12-fence-wait-timeout
+- Polished: 2026-08-31
 - Milestone: 2026.2.0
 
 ## 目的
 
-`UnityCameraCapturer::D3D12Impl::Capture` が `WaitForSingleObject(fence_event_, INFINITE)` を使っているため、GPU device removed などで fence が Signal されないと Unity のレンダースレッドが永久にブロックする。加えて、前フレームの `cmd_list_` が execute 未完了の状態で `cmd_allocator_->Reset()` を呼ぶと D3D12 ランタイム側のエラーでプロセスが abort する。
+`UnityCameraCapturer::D3D12Impl::Capture` が `WaitForSingleObject(fence_event_, INFINITE)` を使っているため、GPU device removed や GPU ハングで fence が Signal されないと Unity のレンダースレッドが永久にブロックし、ユーザーは Unity プロセスを強制終了するしかなくなる。加えて、待機を有限タイムアウト化してタイムアウトでフレームを破棄する経路を導入すると、次の Capture 冒頭で「GPU 実行が完了していないコマンドリストが参照するアロケータ」に対して `cmd_allocator_->Reset()` を呼ぶことになり、D3D12 ランタイムのエラーでプロセスが異常終了する恐れがある。待機と `cmd_allocator_->Reset()` の順序を正しく設計し直す必要がある。
 
 ## 現状
 
-`src/unity_camera_capturer_d3d12.cpp` の `D3D12Impl::Capture` は次のように fence を待機する:
+`src/unity_camera_capturer_d3d12.cpp` の `D3D12Impl::Capture` は、ExecuteCommandLists と `queue_->Signal` の後に次のように fence を待機する:
 
 ```cpp
-WaitForSingleObject(fence_event_, INFINITE);
+if (fence_->GetCompletedValue() < fence_value_) {
+  fence_->SetEventOnCompletion(fence_value_, fence_event_);
+  WaitForSingleObject(fence_event_, INFINITE);
+}
 ```
 
-続けて次回 Capture の準備として `cmd_allocator_->Reset()` を呼ぶ:
+`fence_->GetCompletedValue()` による完了確認と、完了済みなら待機をスキップする最適化は既に実装されているが、待機は `INFINITE` のままである。fence が Signal されるまで `WaitForSingleObject` が戻らない。
 
-```cpp
-cmd_allocator_->Reset();
-```
+次の Capture の冒頭では `cmd_allocator_->Reset()` を呼ぶ。現状は前フレームの fence 待機が `INFINITE` のため、前フレームの execute が完了するまで次の Capture の `cmd_allocator_->Reset()` に到達せず、「GPU 実行が完了していないアロケータの Reset」は発生しない。
 
 問題点:
 
-- `INFINITE` 待機のため、GPU が hang している / device が removed になった場合に Unity レンダースレッドが永久ブロックする
+- `INFINITE` 待機のため、GPU がハングしている / device が removed になった場合に Unity レンダースレッドが永久ブロックする
   - ユーザーは Unity プロセスを強制終了するしかなくなる
-- 前フレームの `cmd_list_` が GPU 側で execute 中に `cmd_allocator_->Reset()` を呼ぶと、D3D12 デバッグレイヤが `ERROR: The command allocator cannot be reset while there are outstanding command lists` を吐いてプロセスを落とす
+- 待機を有限タイムアウト化してタイムアウトでフレームを破棄する経路を導入した場合、次の Capture 冒頭で GPU 実行が完了していないアロケータを Reset する経路が生まれ、D3D12 ランタイムのエラーでプロセスが異常終了する恐れがある
+  - 現行の `INFINITE` 待機では発生しない回帰リスクであり、タイムアウト化と同時に防ぐ必要がある
 
 ## 設計方針
 
-- `WaitForSingleObject` に有限タイムアウトを設定する (例: 5 秒)
-  - タイムアウト時は Capture を中断してエラーを返す (`nullptr`)
-  - タイムアウトが繰り返された場合の警告ログを出す
-- `WaitForSingleObject` の前に `fence_->GetCompletedValue()` で fence の完了状態を確認し、既に完了していれば `WaitForSingleObject` をスキップする
-- `cmd_allocator_->Reset()` は fence 待機成功後にのみ呼ぶ (待機失敗時は skip する)
-- device removed や device lost 状態を検出して `capturer` 全体を停止するフォールバックを検討する
+- Capture 冒頭で、前フレームで Signal した fence 値の完了を有限タイムアウト (5 秒) 付きで待つ
+  - 完了確認には既存の `fence_->GetCompletedValue()` チェックを維持し、完了済みなら `WaitForSingleObject` をスキップする
+  - 初回呼び出し時 (fence_value_ = 0) は待機不要
+  - タイムアウト時は警告ログを出し、`cmd_allocator_->Reset()` 以降を実行せず `nullptr` を返す
+- fence 待機に成功した場合のみ `cmd_allocator_->Reset()` と `cmd_list_->Reset()` を実行する
+- コマンド記録、`cmd_list_->Close()`、`ExecuteCommandLists` の後、`fence_value_++` して `queue_->Signal(fence_, fence_value_)` を実行する
+- `readback_buffer_` を Map する前に、現フレームの fence 値の完了を有限タイムアウト (5 秒) 付きで待つ
+  - タイムアウト時は警告ログを出し、Map 以降を実行せず `nullptr` を返す
+- タイムアウトが繰り返される場合は警告ログを出し続ける (device removed の疑いをユーザーに知らせる)
+- device removed / device lost の検出とキャプチャ全体の停止は本 issue の対象外とし、別 issue で対応する
 
 ## 完了条件
 
-- `WaitForSingleObject` が有限タイムアウトで返る
-- fence が Signal されない状況で Unity レンダースレッドがハングしない
-- 前フレームの `cmd_list_` execute 未完了時に `cmd_allocator_->Reset()` を呼ばない
-- Windows で意図的に GPU 高負荷をかけたシナリオでキャプチャが safely fail することを確認する
+- `WaitForSingleObject` が有限タイムアウト (5 秒) で返る
+- fence が Signal されない状況でも Unity レンダースレッドがハングしない
+- fence 待機に失敗したフレームでは `cmd_allocator_->Reset()` 以降が実行されず、GPU 実行が完了していないアロケータが Reset されない
+- 待機失敗時は `nullptr` を返し、`readback_buffer_` の Map / 読み出しを行わない
+- device removed 相当の GPU ハングを意図的に再現したシナリオで、レンダースレッドが有限時間で復帰し、以後の Capture がクラッシュしないことを確認する
 - `CHANGES.md` の `## develop` に `[FIX] D3D12 fence 待機を有限タイムアウト付きに変更する` を追記する
