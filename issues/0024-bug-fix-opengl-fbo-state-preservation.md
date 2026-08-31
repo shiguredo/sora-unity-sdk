@@ -2,13 +2,13 @@
 
 - Priority: High
 - Created: 2026-08-27
-- Branch: fix/opengl-fbo-state-preservation
-- Polished: {YYYY-MM-DD}
+- Branch: feature/fix-opengl-fbo-state-preservation
+- Polished: 2026-08-31
 - Milestone: 2026.2.0
 
 ## 目的
 
-`UnityCameraCapturer::OpenglImpl::Capture` は Unity 側の現在の FBO バインディングを保存せず、`glReadPixels` 後の復元もしない。加えて `glFramebufferTexture2D` の直後に `glCheckFramebufferStatus` による完全性チェックも行っていない。Unity の描画ターゲットが本キャプチャ用 FBO のまま残る恐れがあり、完全性を欠く FBO からの読み出しで未初期化データが送信される。
+`UnityCameraCapturer::OpenglImpl::Capture` は Unity 側の現在の FBO バインディングを保存せず、`glReadPixels` 後の復元もしない。加えて `glFramebufferTexture2D` の直後に `glCheckFramebufferStatus` による完全性チェックも行っていない。Unity の描画ターゲットが本キャプチャ用 FBO のまま残る恐れがあり、不完全な FBO からの読み出しがドライバ依存の挙動で行われる。
 
 ## 現状
 
@@ -32,20 +32,26 @@ GL_ERRCHECK("glReadPixels");
 
 Unity 側の描画ターゲットが本キャプチャ用 FBO のまま残ると、直後のフレーム描画が本 FBO に書き込まれ Unity 側のバックバッファが破壊される可能性がある。
 
-`glCheckFramebufferStatus` を省いているため、depth / stencil 無しで作成された texture や、GLES 2 で texture-completeness を満たさないケースで `glReadPixels` が `GL_INVALID_FRAMEBUFFER_OPERATION` を返し、`buf` は未初期化のまま libyuv に渡されて未定義データが Sora に送信される。
+`glCheckFramebufferStatus` を省いているため、不完全な FBO からの `glReadPixels` の挙動はドライバ依存になる。GL エラーを返す実装では `GL_ERRCHECK` が `nullptr` を返してフレームを送信しないが、エラーを返さずに読み出しが成功したように振る舞う実装では、正しくない映像が Sora に送信される。なお `buf` は `new uint8_t[width_ * height_ * 4]()` でゼロ初期化されており、`glReadPixels` が失敗しても未初期化データが送信されることはない。
 
 ## 設計方針
 
 - Bind 前に現在の FBO を `glGetIntegerv(GL_FRAMEBUFFER_BINDING, &prev_fbo);` で保存する
-- `glReadPixels` 後に `glBindFramebuffer(GL_FRAMEBUFFER, prev_fbo);` で復元する
-- 初期化時に `glCheckFramebufferStatus(GL_FRAMEBUFFER)` を実行し、`GL_FRAMEBUFFER_COMPLETE` 以外であれば初期化失敗として `fbo_` を破棄する
-- 前 issue の initialized_ フラグ位置修正と併せて、完全性チェック失敗時のフラグ状態も考慮する
-- 未初期化バッファのゼロクリアは `new uint8_t[width_ * height_ * 4]()` (末尾の `()`) で行っているため OK だが、`glReadPixels` が失敗した場合の扱いを明示する
+- 正常系・GL エラーによる早期 return・完全性チェック失敗のすべてのパスで、`glReadPixels` の後に `glBindFramebuffer(GL_FRAMEBUFFER, prev_fbo);` による復元が必ず実行されるようにする
+  - 既存の `GL_ERRCHECK` マクロはエラー発生時に即 `return` するため、復元処理が早期 return パスでも実行される実装にする
+- 初期化ブロック内で `glFramebufferTexture2D` の直後に `glCheckFramebufferStatus(GL_FRAMEBUFFER)` を実行し、`GL_FRAMEBUFFER_COMPLETE` 以外の場合は次のように処理する
+  - `prev_fbo` へ復元してから `fbo_` を破棄する (バインド中の FBO を破棄するとバインディングはデフォルトフレームバッファ 0 に戻るため、先に復元する)
+  - `initialized_` は false のまま残し、`nullptr` を返す
+- 本 issue は issue 0018 (OpenGL initialized_ フラグ位置修正) の修正が反映済みであることを前提とする
+  - 0018 の修正により `initialized_ = true` は成功パスの最後に移動しているため、完全性チェック失敗時は `initialized_` が false のまま残り、次回 Capture で再初期化を試みる
+- `glReadPixels` 失敗時の扱いは既存の `GL_ERRCHECK` を維持する
+  - GL エラー時は `nullptr` を返してフレームを送信しない
+  - `buf` はゼロ初期化済みのため、仮にエラーを検出できなくても未初期化データが送信されることはない
 
 ## 完了条件
 
-- OpenGL キャプチャで Unity 側の FBO バインディングが復元される
-- FBO 完全性チェックが初期化時に行われ、不完全な場合は fbo_ が破棄される
-- `glReadPixels` が失敗した場合の扱いが明示され、未初期化データが Sora に送信されない
+- OpenGL キャプチャで Unity 側の FBO バインディングが全リターンパスで復元される
+- FBO 完全性チェックが初期化時に行われ、不完全な場合は `fbo_` が破棄され、次回 Capture で再初期化が試みられる
+- 不完全な FBO に対して `glReadPixels` が実行されず、誤った映像が Sora に送信されない
 - Ubuntu / Android 実機で回帰動作確認する
 - `CHANGES.md` の `## develop` に `[FIX] OpenGL キャプチャで FBO 状態の保存/復元と完全性チェックを追加する` を追記する
