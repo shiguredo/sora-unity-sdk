@@ -2,6 +2,7 @@
 
 - Priority: High
 - Created: 2026-08-27
+- Completed: 2026-09-01
 - Branch: fix/device-list-adm-terminate
 - Polished: {YYYY-MM-DD}
 - Milestone: 2026.2.0
@@ -31,3 +32,18 @@
 - デバイス列挙を N 回繰り返しても COM オブジェクトのハンドル数が線形に増えない
 - Windows と macOS で列挙 100 回連続実行後にリソース使用量が安定していることを確認する
 - `CHANGES.md` の `## develop` に `[FIX]` を追記する
+
+## 解決方法
+
+コード変更は行わず closed にした。issue の前提 (Terminate を呼ばずに破棄するとリークする) が、DEPS が固定する libwebrtc m150 (branch-heads/7871) の一次ソースと矛盾していたため、修正の必要性が成立しない。
+
+一次ソースでの照合結果:
+
+- Windows の `webrtc::CreateWindowsCoreAudioAudioDeviceModule` が返す実クラスは `webrtc_win::WindowsAudioDeviceModule` であり (issue の記述にある `WindowsCoreAudioAudioDeviceModule` というクラスは存在しない)、そのデストラクタは `Terminate()` を明示的に呼ぶ (`modules/audio_device/win/audio_device_module_win.cc` の `~WindowsAudioDeviceModule`)
+- issue の記述と逆に、汎用実装 `AudioDeviceModuleImpl::~AudioDeviceModuleImpl` はログ出力のみで `Terminate()` を呼ばない (`modules/audio_device/audio_device_impl.cc`)
+- 列挙に使う `IMMDeviceEnumerator` は `CreateDeviceEnumeratorInternal` が呼び出しごとにローカルの `ComPtr` (RAII) として生成し、スコープ終了で解放される (`modules/audio_device/win/core_audio_utility_win.cc`)。列挙の繰り返しで溜まる構造ではない
+- macOS の `CreateAudioDeviceModule` (kPlatformDefaultAudio) 経路も `AudioDeviceMac` のデストラクタで後始末が行われる
+
+以上より、`device_list.cpp` の ADM は破棄時にリソースが解放され、ハンドルリークは発生しない。明示的な `adm->Terminate()` の追加は冪等で無害だが、完了条件の「ハンドル数が線形に増えない」「リソース使用量が安定」は修正前に既に満たされており、バグ修正 issue としての根拠が成立しないため対応不要とした。
+
+備考: polish-issue のレビューで本件が処理不能指摘 (issue の前提が一次資料と矛盾) として確定したため、`Polished:` は更新していない。
