@@ -4,7 +4,7 @@
 - Created: 2026-06-08
 - Model: Composer 2.5
 - Branch: feature/add-h265-video-codec-params
-- Polished: 2026-06-08
+- Polished: 2026-09-10
 
 ## 目的
 
@@ -34,7 +34,7 @@ Sora Unity SDK に H.265 映像コーデックパラメーター指定を追加�
 - 未指定時は `""` のまま。`src/sora.cpp` 側で `.empty()` なら parse しない（既存と同じ）
 - 無効 JSON の場合は `RTC_LOG(LS_WARNING)` を出して設定をスキップし、connect 自体は続行する（既存と同じ）
 - H.265 の JSON キーは H.264 と異なる。例: H.264 は `{"profile_level_id":"42e01f"}`、H.265 は `{"level_id":93}` 等
-- `b_frame` は対応しない
+- `b_frame` は Sora サーバー側の設定 `h265_b_frame` が有効な場合にのみ指定でき、既定のサーバー設定では `{"b_frame": true}` はエラーになる。SDK 側は JSON をそのまま渡すため特別な扱いはせず、本対応の検証対象とはしない
 - 変更対象:
   - `proto/sora_conf_internal.proto` に `string video_h265_params = 253;` を追加
   - `src/sora.cpp` に H.264 と同型の parse / 代入を追加
@@ -56,5 +56,5 @@ Sora Unity SDK に H.265 映像コーデックパラメーター指定を追加�
 2. `python3 run.py build <target>` で Generated / native ヘッダを再生成する
 3. `Sora.cs` に `VideoH265Params` と `Connect()` マッピングを追加する
 4. `src/sora.cpp` に H.264 と同型の `video_h265_params` parse ブロックを追加する
-5. `VideoCodecType = H265` と検証用 JSON を設定して接続し、接続設定 JSON に `video_h265_params` が含まれ、Sora への connect で反映されることを確認する
+5. `VideoCodecType.H265` と検証用 JSON を設定して接続し、接続設定 JSON（proto の `ConnectConfig`）に `video_h265_params` が含まれ、Sora への connect メッセージの `video` オブジェクト内 `h265_params` に反映されることを確認する。なお Sora サーバー側で `signaling_h265_params` が有効である必要がある（既存の `video_h264_params` 等と同様）
 6. `CHANGES.md` に `[ADD]` を追記する
