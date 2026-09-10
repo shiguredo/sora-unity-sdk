@@ -2,6 +2,7 @@
 
 - Priority: High
 - Created: 2026-08-27
+- Completed: 2026-09-10
 - Branch: update/changes-develop-missing-entries
 - Polished: {YYYY-MM-DD}
 - Milestone: 2026.2.0
@@ -37,3 +38,19 @@
 - `## develop` セクションに `SoraAndroidDependencyInjector` 削除の `[CHANGE]` が記載されている
 - `### misc` に `BOOST_ASIO_DISABLE_STD_ATOMIC_WAIT` 削除の `[UPDATE]` が記載されている
 - 直近 30 コミット全てが `## develop` セクションのいずれかの項目でカバーされている
+
+## 解決方法
+
+コード変更は行わず closed にした。報告された「漏れている変更履歴」（`SoraAndroidDependencyInjector` 削除と `BOOST_ASIO_DISABLE_STD_ATOMIC_WAIT` 削除のエントリ欠落）は、git 履歴の実ファイル照合では存在しないため。
+
+git 履歴での照合結果（いずれも `2026.1.0` リリース（2026-02-18、`4d06fee`）以降、未リリースの develop のみで完結している）:
+
+- `SoraAndroidDependencyInjector` は `8ba27ce`（2026-06-22）で `## develop` に `[ADD]` エントリ付きで追加され、`ecd76ab`（2026-06-24）で削除された。この削除コミットは `CHANGES.md` から該当 `[ADD]` エントリも同時に削除しており、`## develop` は追加前の状態へ戻っている
+- `BOOST_ASIO_DISABLE_STD_ATOMIC_WAIT` は `f422393`（2026-06-11、canary.14）の `[UPDATE]` エントリの子項目として追加され、`beefe9d`（2026-06-25）で子項目ごと削除された。`b7343dc`（2026-06-25）はコメント・全角半角の書式修正のみ
+- 両変更ともリリース済みバージョンへは一切含まれていない（`CHANGES.md` に `## 2026.2.0` セクションは存在せず、`2026.2.0` タグも無い。最新リリースは `2026.1.0`）
+
+したがって、`shiguredo-changelog` 規約の「派生元ブランチとの最終的な差分のみを記載する」「開発ブランチ内の中間状態の修正は記載しない」に従えば、最終差分にはどちらの変更も現れず、エントリを追記すべき箇所は無い。issue の設計方針どおりに `[CHANGE]` / `[UPDATE]` を追記すると、むしろ規約違反の記述を `CHANGES.md` へ持ち込むことになる。`8274a9b`（不要なガードの整理）も未リリースファイルの内部整理であり、記録対象外である。
+
+補足: 完了条件「直近 30 コミット全てが `## develop` セクションのいずれかの項目でカバーされている」は、直近のコミットの大部分が issue 管理コミット（issue ファイル・SEQUENCE のみの変更）であり、`shiguredo-changelog` の「`.md` ファイルの変更は変更履歴に反映しない」で記録対象外となるため、そのままでは検証できない基準である。
+
+備考: polish-issue のレビューで本件が処理不能指摘（報告された問題の不存在。git 履歴の実ファイル照合で確定）となったため、`Polished:` は更新していない。
