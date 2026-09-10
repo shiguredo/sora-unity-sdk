@@ -47,3 +47,14 @@ Sora 側で video orientation RTP 拡張が有効なときのみ再現し、デ�
 3. 必要なら `src/unity_camera_capturer.cpp` も修正する
 4. Android 実機で縦画面 / 横向き / 拡張無効時の回帰確認を行う
 5. `CHANGES.md` に `[FIX]` を追記する
+
+## pending にした理由
+
+2026-09-10 に pending にする。
+
+- 本 issue は Sora 側で `rtp_hdrext_video_orientation = true` を設定したときのみ再現する。Sora のデフォルトは `false` であり、既定の運用では利用者に影響しない。
+- `rtp_hdrext_video_orientation = true` で向きがずれる根本原因は解明できていない。設計方針に書いた `VideoFrame.rotation()` の描画反映は、原因レイヤーを特定できていない段階の仮説であり、そのまま実装しても解消する保証がない。
+- 原因調査は Sora / sora-cpp-sdk 側で別途実施する方針となり、Unity SDK 側だけで対応方針を確定できない。外部依存の調査待ちである。
+- `rtp_hdrext_video_orientation` は Sora がデフォルト `false` とし、有効化にはサポートへの問い合わせが必要な非デフォルト設定である。既定の利用者への影響がなく、優先度も下がる。
+
+対応を再開するときは reopened にしてから、送信 / 受信 / セルフビューのどこで向きがずれるかを特定し、原因レイヤーに応じた対応方針を決める。
