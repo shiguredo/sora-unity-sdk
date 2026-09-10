@@ -3,7 +3,7 @@
 - Priority: High
 - Created: 2026-08-27
 - Branch: update/expand-nullable-enable
-- Polished: {YYYY-MM-DD}
+- Polished: 2026-09-10
 - Milestone: 2026.2.0
 
 ## 目的
@@ -21,9 +21,10 @@ CHANGES.md 2025.3.0 で `Sora.cs` に `#nullable enable` を導入したが、�
 
 ## 設計方針
 
-- `SoraSample.cs` と `SoraUnitySdkPostProcessor.cs` の先頭に `#nullable enable` を追加する
-- コンパイラ警告が出る箇所を Nullable 属性で明示的に整理する
-- `AudioTrackSinkAdapter` などの中途半端な nullable 状態はコードコメントで意図を明記する
+- 変更対象は `SoraSample.cs` と `SoraUnitySdkPostProcessor.cs` の 2 ファイルのみとし、先頭に `#nullable enable` を追加する
+- 既に `#nullable enable` が入っている `Sora.cs` は変更しない（`AudioTrackSinkAdapter` など Sora.cs 内の既存実装は本 issue の対象外）
+- コンパイラ警告が出る箇所は nullable 型への見直しで解消する（例: `SoraSample.cs` の `DumpDeviceInfo` への null 許容戻り値の受け渡し、`ConnectionInfo.audioTrackSink` の未初期化フィールド）
+- null に対する扱いを型で表現できない箇所（例: `SoraSample.cs` の `OnAddTrack` で `SenderAudioTrackSink` を `AudioTrackSink` にキャストする箇所、Unity インスペクター用のフィールド）は、null チェックの追加または null にならない理由をコードコメントで明記する
 - サンプルの利用者が Nullable 対応の書き方の参考にできる状態にする
 
 ## 完了条件
