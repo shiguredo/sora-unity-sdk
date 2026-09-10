@@ -3,7 +3,7 @@
 - Priority: High
 - Created: 2026-08-27
 - Branch: fmt/translate-sample-log-messages
-- Polished: {YYYY-MM-DD}
+- Polished: 2026-09-10
 - Milestone: 2026.2.0
 
 ## 目的
@@ -14,25 +14,29 @@
 
 `SoraSample.cs` に次のような日本語ログが残っている。
 
-- `Debug.LogError("シグナリング URL が設定されていません")`
-- `Debug.LogError("チャンネル ID が設定されていません")`
-- `Debug.Log("RPC メッセージの種類が選択されていません")`
-- `Debug.LogErrorFormat("RPC timeoutMillis の形式が不正です: ...")`
+- `Debug.LogError("シグナリング URL が設定されていません")`（`OnClickStart` 内）
+- `Debug.LogError("チャンネル ID が設定されていません")`（`OnClickStart` 内）
+- `Debug.Log("RPC メッセージの種類が選択されていません")`（`OnClickSendRpc` 内）
+- `Debug.LogErrorFormat("RPC timeoutMillis の形式が不正です: ...")`（`RequestRpcWithInspectorSettings` 内）
+- `Debug.LogFormat("OnChangeRoute : " + (audioOutputHelper.IsHandsfree() ? "ハンズフリー OFF" : "ハンズフリー ON"))`（`OnChangeRoute` 内）
 
 同時に、サンプル内には次のような英語コメントが残っており、こちらは AGENTS.md の「コメントは全て日本語にすること」規約に違反している。
 
-- `// Start is called before the first frame update`
-- `// Update is called once per frame`
+- `// Start is called before the first frame update`（`Start` メソッドの直前）
+- `// Update is called once per frame`（`Update` メソッドの直前）
 
 ## 設計方針
 
-- 日本語ログを英語に置き換える（Debug.LogError / Debug.Log / Debug.LogErrorFormat の全メッセージ）
-- 英語コメントを日本語に置き換える
+- 日本語ログを英語に置き換える（Debug.Log / Debug.LogError / Debug.LogFormat / Debug.LogErrorFormat の全メッセージ）
+- 英語の説明コメントを日本語に置き換える
 - 変数名や識別子は変更しない
-- 意味を保ちつつ簡潔な英語ログにする（例: `Signaling URL is not set` / `Channel ID is not set` / `RPC message kind is not selected` / `Invalid RPC timeoutMillis format`）
+- UI の表示文字列（例: ボタンラベルの「ハンズフリー ON / OFF」）とコメントアウトされたコードは対象外とする
+  - コメントアウトされたコード（`AudioTrackSink.OnData` 内の旧デバッグログ、`OnCapturerFrame` 内のサンプルコード）は翻訳しない
+  - `OnCapturerFrame` のサンプルコードの整理は別 issue で行う
+- 意味を保ちつつ簡潔な英語ログにする（例: `Signaling URL is not set` / `Channel ID is not set` / `RPC message kind is not selected` / `Invalid RPC timeoutMillis format` / `OnChangeRoute: handsfree ON/OFF`）
 
 ## 完了条件
 
-- `SoraSample.cs` の Debug.Log 系がすべて英語になっている
-- `SoraSample.cs` の `//` コメントがすべて日本語になっている
-- AGENTS.md の「ログ英語 / コメント日本語」規約に完全準拠している
+- `SoraSample.cs` の Debug.Log 系の実行時ログがすべて英語になっている
+- `SoraSample.cs` の説明コメントがすべて日本語になっている
+- AGENTS.md の「ログ英語 / コメント日本語」規約に準拠している
