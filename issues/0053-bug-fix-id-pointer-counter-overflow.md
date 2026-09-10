@@ -2,8 +2,8 @@
 
 - Priority: Medium
 - Created: 2026-08-27
-- Branch: fix/id-pointer-counter-overflow
-- Polished: {YYYY-MM-DD}
+- Branch: feature/fix-id-pointer-counter-overflow
+- Polished: 2026-09-10
 
 ## 目的
 
@@ -19,10 +19,12 @@
 
 ## 設計方針
 
-- `Register` 内で `counter_` が加算後に 0 になった場合はスキップして 1 から再開する
-- あるいは `counter_` を加算する前に 0 と比較して、0 なら 1 に補正する
-- 既存の `map_` に既に含まれている ID とも衝突しないよう、`while (map_.count(counter_) != 0) counter_++;` のような防御も併せて入れる
-- 単一 mutex で `Register` は既にシリアライズされているため、追加のロック機構は不要
+- `Register` は次の 1 本のループで使用可能な ID を探し、登録後に `counter_++` する
+  - `counter_ == 0`（無効 ID のセンチネル値）または `map_` に既に存在する ID である間、`counter_++` を繰り返す
+  - `counter_` が `UINT_MAX` から 0 に戻った周回後も、0 を飛ばし、まだ `map_` に残っている生存 ID を再利用しない
+- `map_` の ID が全て埋まるにはメモリ上で 2^32 個の生存オブジェクトが必要で非現実的なため、ループが無限に続くケースは考慮しない
+- 単一 `mutex_` で `Register` は既にシリアライズされているため、追加のロック機構は不要
+- `IdPointer` は 0011 と 0014 で std::shared_ptr / std::weak_ptr の弱参照ベースの API 形状へ再設計される予定であり、本 issue の変更は `IdPointer::Register` の実装内に留め、再設計後はその形状（テンプレート化 `IdPointer<T>` 等）に合わせて防御を引き継ぐ
 
 ## 完了条件
 
