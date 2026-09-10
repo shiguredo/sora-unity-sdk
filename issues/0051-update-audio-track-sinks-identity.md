@@ -1,31 +1,32 @@
-# Sora.cs の audioTrackSinks Dictionary の識別方法を安全にする
+# AudioTrack.AddSink / RemoveSink に同一 IAudioTrackSink インスタンスの指定を明文化する
 
 - Priority: Medium
 - Created: 2026-08-27
-- Branch: update/audio-track-sinks-identity
-- Polished: {YYYY-MM-DD}
+- Branch: feature/update-audio-track-sinks-identity
+- Polished: 2026-09-10
 
 ## 目的
 
-`SoraUnitySdkExamples/Assets/SoraUnitySdk/Sora.cs` の `audioTrackSinks` Dictionary が `IAudioTrackSink` 参照をキーに使っているため、ユーザーが `AudioTrack.RemoveSink` に同一データを持つ別インスタンスを渡すと除去されず、ネイティブ側 sink がリークする問題を解消する。
+`SoraUnitySdkExamples/Assets/SoraUnitySdk/Sora.cs` の `AudioTrack.AddSink` / `AudioTrack.RemoveSink` は、`audioTrackSinks` Dictionary のキーに `IAudioTrackSink` インスタンスそのものを使う。ユーザーが `AddSink` 時と異なるインスタンス（同一データを持つ別インスタンスでも）を `RemoveSink` に渡すと該当エントリが見つからず除去されないため、ネイティブ側 sink が `Sora.Dispose()` まで残る。この誤用を防ぐため、両メソッドに同一の `IAudioTrackSink` インスタンスを渡す必要があることを docstring で明文化する。
 
 ## 現状
 
 `Sora.cs` の `audioTrackSinks` は `Dictionary<IAudioTrackSink, AudioTrackSinkAdapter>` として宣言されており、`AudioTrack.AddSink` / `AudioTrack.RemoveSink` のキーとして `IAudioTrackSink` 参照そのものを利用している。
 
-`Dictionary` の等価比較は参照比較になるため、`AddSink` 時と `RemoveSink` 時で異なるインスタンスを渡した場合、`RemoveSink` は該当エントリを見つけられずネイティブ側 `AudioTrackSinkImpl` が破棄されない。ドキュメントには「同一参照でのみ RemoveSink できる」旨の記述がない。
+`Dictionary<,>` のキー比較は既定では `EqualityComparer<T>.Default` によるため、`IAudioTrackSink` の実装が `Equals` / `GetHashCode` をオーバーライドしない限り参照比較になる。そのため `AddSink` 時と `RemoveSink` 時で異なるインスタンスを渡した場合、`RemoveSink` は該当エントリを見つけられず、ネイティブ側 `AudioTrackSinkImpl` は破棄されない。この場合に破棄されるのは、`Sora.Dispose()` が `audioTrackSinks` の全エントリを破棄するときだけである。`AudioTrack.AddSink` / `AudioTrack.RemoveSink` には現在 docstring がなく、ドキュメントには「同一参照でのみ RemoveSink できる」旨の記述がない。
 
 ## 設計方針
 
 以下のいずれかで解決する。
 
-- 設計方針 A: 参照 API を維持しつつ、ドキュメントに「同一 `IAudioTrackSink` インスタンスを AddSink と RemoveSink で渡すこと」を明記する。docstring と CHANGES.md で明示する。
+- 設計方針 A: 参照 API を維持しつつ、`AudioTrack.AddSink` / `AudioTrack.RemoveSink` の docstring に「`AddSink` と `RemoveSink` には同一の `IAudioTrackSink` インスタンスを渡すこと」を明記する。`CHANGES.md` にも補足を追記する。
 - 設計方針 B: 内部で `IAudioTrackSink` を識別する ID を発行し、`AddSink` は ID を返す、`RemoveSink` は ID で受け取る API に変更する。既存 API と非互換になるので `CHANGE` 扱い。
 
-設計方針 A を先に採用し、B は次期メジャーで検討する。
+A は誤用の防止（利用者への明示）であり、誤った呼び出し自体を構造的に防ぐものではない。構造的な解決は B だが、まず A を採用して制約を明文化し、B は次期メジャーで検討する。
 
 ## 完了条件
 
-- `AudioTrack.AddSink` / `AudioTrack.RemoveSink` の docstring に「同一 `IAudioTrackSink` インスタンスを渡す必要がある」旨が明記されている
-- 別インスタンスを渡した場合の挙動（除去されずリークする）が docstring に明示されている
-- `CHANGES.md` の `## develop` に該当記述が追加されている
+- `AudioTrack.AddSink` / `AudioTrack.RemoveSink` の docstring に、次の 2 点が明記されている
+  - 同一の `IAudioTrackSink` インスタンスを `AddSink` と `RemoveSink` で渡す必要があること
+  - 別インスタンスを渡した場合は除去されず、`Sora.Dispose()` までネイティブ側 sink が解放されないこと
+- `CHANGES.md` の `## develop` に `[UPDATE]` で該当記述が追加されている
