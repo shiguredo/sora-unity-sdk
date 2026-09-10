@@ -3,7 +3,7 @@
 - Priority: Medium
 - Created: 2026-08-27
 - Branch: fmt/on-remove-track-find
-- Polished: {YYYY-MM-DD}
+- Polished: 2026-09-10
 
 ## 目的
 
