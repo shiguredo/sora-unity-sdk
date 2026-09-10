@@ -3,7 +3,7 @@
 - Priority: Low
 - Created: 2026-08-27
 - Branch: fmt/remove-sora-h-dead-code
-- Polished: {YYYY-MM-DD}
+- Polished: 2026-09-10
 
 ## 目的
 
@@ -20,8 +20,9 @@
 - `~Sora` 内の `capturer_sink_ = nullptr;`
 - `webrtc::TaskQueueFactory* task_queue_factory_` メンバ
   - コンストラクタ初期化子にも `= nullptr` 初期化にも入っておらず、参照する箇所も無い
-  - CHANGES.md 2025.2.0 で `task_queue_factory` を削除して `env` に置き換えた際の取り残しに見える
-- 未使用 include: `#include <thread>` / `#include <api/task_queue/task_queue_factory.h>` / `#include <media/engine/webrtc_media_engine.h>`
+  - git 履歴で確認した限り、2022 年の「Sora C++ SDK 化」で追加されて以降、`src/sora.cpp` / `src/unity.cpp` のどこからも一度も参照されていない
+- 未使用 include: `#include <thread>` / `#include <media/engine/webrtc_media_engine.h>`
+- 削除とともに不要になる include: `#include <api/task_queue/task_queue_factory.h>`（`task_queue_factory_` の型定義にのみ使用されている）
 
 `src/converter.cpp` の `#include <sora/vpl_session.h>` も `VplSession` の未使用で残骸となっている。
 
@@ -34,7 +35,7 @@
 ## 完了条件
 
 - `src/sora.h` から `struct CapturerSink` / `capturer_sink_` / `task_queue_factory_` が消えている
-- `src/sora.h` から未使用 include 3 件が消えている
+- `src/sora.h` から削除対象の include 3 件が消えている
 - `src/sora.cpp` の `~Sora` から `capturer_sink_ = nullptr;` が消えている
 - `src/converter.cpp` から `#include <sora/vpl_session.h>` が消えている
 - Windows / macOS / iOS / Android / Ubuntu の全ターゲットでビルドが通る
