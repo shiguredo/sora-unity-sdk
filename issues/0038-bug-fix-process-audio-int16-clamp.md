@@ -2,8 +2,8 @@
 
 - Priority: High
 - Created: 2026-08-27
-- Branch: fix/process-audio-int16-clamp
-- Polished: {YYYY-MM-DD}
+- Branch: feature/fix-process-audio-int16-clamp
+- Polished: 2026-09-10
 - Milestone: 2026.2.0
 
 ## 目的
@@ -18,16 +18,16 @@
 
 問題点:
 
-- Unity のオーディオリスナーは `[-1, 1]` を超えるサンプルを返し得る（AudioMixer 増幅、Reverb、Distortion 等）
-- `[INT16_MIN, INT16_MAX]` を超える float から int16 への暗黙変換は C++ 規格上未規定
+- 入力は `SoraSample.cs` の `AudioRenderer.Render` で取得した Unity の出力音声であり、AudioMixer の増幅や Reverb、Distortion 等のエフェクトを経由すると `[-1, 1]` を超える値を含み得る
+- `[INT16_MIN, INT16_MAX]` を超える float から int16 への暗黙変換は C++ 規格上未定義動作になる
 - 結果として Opus 経路にノイズやクリッピングとして伝播する
 - 現在の `push_back(...)` は `#pragma warning(suppress : 4244)` で MSVC の変換警告を抑制しているだけで、実挙動は保証されていない
 
 ## 設計方針
 
-- スケール後の値を `[SHRT_MIN, SHRT_MAX]` に `std::clamp` する
-- あるいは `[-1.0f, 1.0f]` に clamp した後にスケールし、明示的な `static_cast<int16_t>` を挟む
-- `#pragma warning(suppress : 4244)` を削除し、正しい変換にする
+- スケール後の値を `[SHRT_MIN, SHRT_MAX]` に `std::clamp` で丸め、明示的な `static_cast<int16_t>` で変換する
+- あるいは入力を `[-1.0f, 1.0f]` に `std::clamp` してからスケールし、同様に明示的な `static_cast<int16_t>` で変換する
+- どちらの場合も `#pragma warning(suppress : 4244)` を削除し、正しい変換にする
 
 ## 完了条件
 
