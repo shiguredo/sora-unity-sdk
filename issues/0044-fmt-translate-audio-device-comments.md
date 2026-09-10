@@ -1,9 +1,9 @@
-# unity_audio_device.h の英語コメントを日本語に翻訳する
+# unity_audio_device.h と unity_camera_capturer_d3d12.cpp の英語コメントを日本語に翻訳する
 
 - Priority: High
 - Created: 2026-08-27
 - Branch: fmt/translate-audio-device-comments
-- Polished: {YYYY-MM-DD}
+- Polished: 2026-09-10
 - Milestone: 2026.2.0
 
 ## 目的
@@ -38,13 +38,14 @@
 
 ## 設計方針
 
-- webrtc の interface 由来の英語セクションヘッダをすべて日本語に翻訳する
+- `src/unity_audio_device.h` の英語の説明コメント（webrtc の interface 由来のセクションヘッダと、`ProcessAudioData` 内の 48kHz 制約を説明するコメントなど）をすべて日本語に翻訳する
+- コメントアウトされたデバッグログ（`//RTC_LOG(...)` など）と旧実装メモ（`//*audioLayer = ...` など）の削除は別 issue のスコープであり、本 issue では翻訳しない
 - コメント記号の直後にスペースを入れるスタイルに揃える
 - 訳文は原文の意味を保ちつつ日本語として自然な表現にする
 - 単純翻訳が難しい webrtc 用語（例: AudioTransport / mixer initialization）はカタカナや原語のまま残し、意味を補足する
 
 ## 完了条件
 
-- `src/unity_audio_device.h` に英語コメントが残っていない
+- `src/unity_audio_device.h` の英語の説明コメントがすべて日本語に置き換わっている（コメントアウトされたデバッグログ・旧実装メモの削除は別 issue の対象）
 - `src/unity_camera_capturer_d3d12.cpp` 先頭のコメントが日本語である
-- AGENTS.md の「コメントは全て日本語にすること」に反する箇所が該当ファイル内に残っていない
+- AGENTS.md の「コメントは全て日本語にすること」に反する説明コメントが該当ファイル内に残っていない
