@@ -2,8 +2,8 @@
 
 - Priority: Medium
 - Created: 2026-08-27
-- Branch: fix/run-py-format-patterns
-- Polished: {YYYY-MM-DD}
+- Branch: feature/fix-run-py-format-patterns
+- Polished: 2026-09-10
 
 ## 目的
 
