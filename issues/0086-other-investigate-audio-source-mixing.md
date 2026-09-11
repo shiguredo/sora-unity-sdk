@@ -3,7 +3,7 @@
 - Created: 2026-09-11
 - Completed: {YYYY-MM-DD}
 - Branch: feature/debug-audio-source-mixing
-- Polished: {YYYY-MM-DD}
+- Polished: 2026-09-11
 
 ## 目的
 
@@ -32,5 +32,3 @@
 - 実現可能な場合、ミックスの場所（アプリ側 / SDK 側）、必要なサンプルレートとチャンネル、iOS / Android の制約が整理されていること。
 - SDK の機能追加が必要か、ドキュメント・サンプルの整備で足りるかの方針が決まっていること。
 - ドキュメント・サンプルの整備が必要な場合は、それを扱う issue が別途作成されていること。
-
-## 解決方法
