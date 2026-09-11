@@ -1,42 +1,47 @@
-# buildbase.py の dead 関数と hololens2 分岐を掃除する
+# buildbase.py の未使用関数と hololens2 分岐を削除する
 
 - Priority: Low
 - Created: 2026-08-27
 - Branch: fmt/cleanup-buildbase-dead-code
-- Polished: {YYYY-MM-DD}
+- Polished: 2026-09-11
 
 ## 目的
 
-`buildbase.py` に大量に残っている未使用の `install_*` 関数と `hololens2` 分岐を整理する。テンプレート由来のファイルとして残す方針か、Sora Unity SDK 用に最小化する方針かを含めて立ち位置を明確にする。
+`buildbase.py` には Sora Unity SDK から参照されない `install_*` 関数群と `hololens2` 分岐が大量に残っている。これを削除して、ビルドスクリプトを Sora Unity SDK 用に最小化する。
 
 ## 現状
 
-`buildbase.py` には `install_amf` を含む多数の `install_*` 関数が定義されているが、Sora Unity SDK 内から呼ばれていない。`grep` で確認できる範囲では以下が未使用となっている。
+`buildbase.py` はビルドスクリプトの共有テンプレート (https://github.com/melpon/buildbase) をコピーしたファイルであり、ファイル冒頭のコメントにもその旨と取り込み方法 (`curl -LO https://raw.githubusercontent.com/melpon/buildbase/master/buildbase.py`) が明記されている。このテンプレートは sora-cpp-sdk など複数プロジェクトで共有されており、`install_amf` や `install_vpl` のように sora-cpp-sdk が実際に使う関数も含まれている。Sora Unity SDK では `run.py` が `from buildbase import` で必要な関数だけを参照しており、それ以外はテンプレート由来のまま未使用で残っている。
+
+`grep` で確認できる範囲では、以下は Sora Unity SDK 内 (`run.py` / `canary.py` / `.github/workflows/build.yml`) から一切呼び出されていない。なお `run.py` には同名の `get_build_platform` 関数があるが、これは `buildbase.py` のものとは無関係の別実装である。
 
 - `install_amf` / `install_sdl2` / `install_sdl3` / `install_cli11`
-- `install_cuda_windows` / `install_vpl` / `install_blend2d`
+- `install_cuda_windows` / `install_vpl` / `install_blend2d` / `install_blend2d_official` / `_build_blend2d`
 - `install_openh264` / `install_yaml` / `install_catch2`
 - `install_grpc` / `install_ggrpc` / `install_spdlog`
 - `install_boringssl` / `install_opus` / `install_nasm` / `install_ninja`
 - `install_vswhere` / `install_mbedtls` / `install_libjpeg_turbo`
 - `install_libyuv` / `install_aom` / `install_rootfs`
+- `install_android_sdk_cmdline_tools` / `install_android_sdk_platform_tools`
 - `build_and_install_boost`
-- `PlatformTarget` / `Platform` クラス
+- `replace_vcproj_static_runtime` / `copytree` / `clone_and_checkout` / `git_get_url_and_revision` / `apply_patch` / `apply_patch_text`
+- `PlatformTarget` / `Platform` クラス、`get_windows_osver` / `get_macos_osver` / `get_build_platform` / `get_webrtc_platform` / `add_sora_arguments` / `add_webrtc_build_arguments`
+- パッチ定数 `BOOST_PATCH_SUPPORT_14_4` / `GRPC_PATCH_NO_EXECUTABLE` / `BORINGSSL_PATCH_NO_BSSL`
+- 未使用 import となる `winreg` (`platform.system() == 'Windows'` の分岐)
 
-さらに Windows target の許可リストに `hololens2` を並べた分岐が `buildbase.py` に残っている。README では HoloLens 2 サポート終了を明記しているのに、受け入れ側だけが生きている状態。
+`Platform` / `PlatformTarget` クラスは `run.py` から一切参照されておらず、`run.py` は自前の `get_build_platform` / `AVAILABLE_TARGETS` / `BUILD_PLATFORM` でターゲットを判定している。よって `Platform` クラスの Windows 許可リスト (`x86_64` / `arm64` / `hololens2`) にある `hololens2` 分岐も dead である。README には HoloLens 2 のサポート終了が明記されており、ビルドターゲット (`build.yml` の matrix: `windows_x86_64` / `macos_arm64` / `ios` / `ubuntu-22.04_x86_64` / `ubuntu-24.04_x86_64` / `android`) にも `hololens2` は存在しない。
 
 ## 設計方針
 
-- `buildbase.py` の立ち位置を明確化する
-  - 立ち位置 A: sora-cpp-sdk 由来のテンプレートとして扱い、CI で `curl` などで最新に上書きするフローに切り替える
-  - 立ち位置 B: Sora Unity SDK 用に完全に最小化し、必要な関数だけ残す
-- どちらの立ち位置でも `hololens2` 分岐は Sora Unity SDK 側では削除して構わない
-- 立ち位置 B を採用する場合、`run.py` から実際に呼ばれる関数だけを残し、未使用関数を全削除する
-- CHANGES.md には方針変更を記録する
+- 立ち位置は「Sora Unity SDK 用に完全に最小化する」とし、テンプレートをそのまま保持する共有フローにはしない
+  - CI で最新テンプレートに上書きするフローは、テンプレート側の変更でビルド内容が勝手に変わって再現性が悪く、ローカルビルドと CI の乖離も生むため採用しない
+  - テンプレート側の更新を取り込みたい場合は、手動で差分を適用する
+- `run.py` から直接 import されている関数と、それらが間接的に呼ぶ関数・定数だけを残し、残りをすべて削除する
+- `run.py` / `canary.py` は変更しない
+- `hololens2` 分岐は先に dead となっている `Platform` / `PlatformTarget` クラスごと削除する
 
 ## 完了条件
 
-- `buildbase.py` の立ち位置がどちらかに決まっている
-- 未使用の `install_*` 関数群と `hololens2` 分岐が整理されている
-- `run.py` からの呼び出しに回帰が無く、全ターゲットでビルドが通る
-- `CHANGES.md` の `## develop` に該当記述を追記する
+- `buildbase.py` から未使用関数群と `hololens2` 分岐が削除され、`run.py` が直接・間接に使う関数だけが残っている
+- `build.yml` の matrix に列挙された全ターゲットでビルドが通り、`run.py` からの呼び出しに回帰が無い
+- `CHANGES.md` の `## develop` の `### misc` に、未使用関数の削除を `[UPDATE]` で追記する
