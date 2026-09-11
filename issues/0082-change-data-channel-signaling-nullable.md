@@ -3,14 +3,14 @@
 - Created: 2026-09-10
 - Completed: {YYYY-MM-DD}
 - Branch: feature/change-data-channel-signaling-nullable
-- Polished: {YYYY-MM-DD}
+- Polished: 2026-09-11
 - Reporter: @miosakuma
 
 ## 目的
 
 `Sora.Config` から `EnableDataChannelSignaling` と `EnableIgnoreDisconnectWebsocket` を削除し、`DataChannelSignaling` と `IgnoreDisconnectWebsocket` を `bool?` に変更する。未設定の場合は送信せず、`true` / `false` を指定した場合はその値を明示的に送信する。
 
-有効・無効を切り替えるフラグと実際の値の 2 つで管理する現状の方式では、`false` を明示指定しても `data_channel_signaling` / `ignore_disconnect_websocket` が送信されない。Simulcast や Spotlight と同じ「未設定なら送信しない」方式に統一し、フラグの二重管理をなくす。
+有効・無効を切り替えるフラグと実際の値の 2 つで管理する現状の方式では、値に `false` を設定するだけでは `data_channel_signaling` / `ignore_disconnect_websocket` が送信されず、明示的な `false` を送るには Enable フラグを `true` にした上で値を `false` にする矛盾した組み合わせが必要になる。Simulcast や Spotlight と同じ「未設定なら送信しない」方式に統一し、フラグの二重管理をなくす。
 
 ## 現状
 
@@ -19,7 +19,7 @@
 - `EnableDataChannelSignaling` と `DataChannelSignaling`
 - `EnableIgnoreDisconnectWebsocket` と `IgnoreDisconnectWebsocket`
 
-`Sora.Connect` は `EnableDataChannelSignaling` が `true` のときだけ `cc.SetDataChannelSignaling` を、`EnableIgnoreDisconnectWebsocket` が `true` のときだけ `cc.SetIgnoreDisconnectWebsocket` を呼んでいる。このため値を `false` にしても未指定扱いとなり、サーバー側の判断で DataChannel に切り替えられる可能性がある。
+`Sora.Connect` は `EnableDataChannelSignaling` が `true` のときだけ `cc.SetDataChannelSignaling` を、`EnableIgnoreDisconnectWebsocket` が `true` のときだけ `cc.SetIgnoreDisconnectWebsocket` を呼んでいる。このため値に `false` を設定しても Enable フラグが `false` のままでは未指定扱いとなり、サーバー側の判断で DataChannel に切り替えられる可能性がある。なお `SoraSample.cs`（後述）は Enable フラグと値に同じ値を設定しているため、`false` のときは常に未指定扱いになる。
 
 `proto/sora_conf_internal.proto` の `data_channel_signaling` と `ignore_disconnect_websocket` は `optional bool` であり、`SetDataChannelSignaling` / `SetIgnoreDisconnectWebsocket` を呼び出したときだけ送信される。
 
