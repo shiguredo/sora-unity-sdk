@@ -3,7 +3,7 @@
 - Created: 2026-09-10
 - Completed: {YYYY-MM-DD}
 - Branch: feature/change-align-sample-bitrate-options-with-sora-devtools
-- Polished: {YYYY-MM-DD}
+- Polished: 2026-09-11
 
 ## 目的
 
@@ -11,7 +11,7 @@ Sora Unity SDK のサンプルではビットレートの選択肢が用意さ�
 
 ## 現状
 
-`SoraUnitySdkExamples/Assets/SoraSample.cs` には `public int videoBitRate = 0;` があるだけで、Sora DevTools のような選択肢はなく、Unity Inspector で任意の整数を入力する運用になっている。`SoraSample.cs` には音声ビットレートのフィールド自体がなく、`Sora.cs` の `SoraAudioOption.AudioBitRate` はサンプルから設定されていない。そのため Unity サンプルでは音声ビットレートを指定できない。
+`SoraUnitySdkExamples/Assets/SoraSample.cs` には `public int videoBitRate = 0;` があるだけで、Sora DevTools のような選択肢はなく、Unity Inspector で任意の整数を入力する運用になっている。`SoraSample.cs` には音声ビットレートのフィールド自体がなく、`SoraUnitySdkExamples/Assets/SoraUnitySdk/Sora.cs` の `Sora.Config.AudioBitRate` はサンプルから設定されていない。そのため Unity サンプルでは音声ビットレートを指定できない。
 
 シーンの `videoBitRate` は `multi_sendrecv.unity`、`multi_sendonly.unity`、`multi_recvonly.unity` のいずれも `0` のままで、ビットレート未指定の状態になっている。
 
