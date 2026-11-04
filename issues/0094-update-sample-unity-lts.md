@@ -3,7 +3,7 @@
 - Created: 2026-11-04
 - Completed: {YYYY-MM-DD}
 - Branch: feature/update-sample-unity-lts
-- Polished: {YYYY-MM-DD}
+- Polished: 2026-11-04
 
 ## 目的
 
@@ -17,8 +17,13 @@ Unity のパッチ更新に伴う確認として、Unity と直接連携する�
 
 - `SoraUnitySdkExamples/ProjectSettings/ProjectVersion.txt` の
   `m_EditorVersion` は `6000.3.0f1`
+- `SoraUnitySdkExamples/ProjectSettings/EditorBuildSettings.asset` の
+  Scenes In Build は空であり、macOS Player をビルドするには
+  `multi_sendrecv.unity` を追加する必要がある
 - `README.md` と `SoraUnitySdkExamples/README.md` は
   Unity 6000.3 / 6000.0 の両系列を対応対象としている
+- `CHANGES.md` の `## develop` には、サンプルプロジェクトの
+  Unity バージョン更新のエントリがない
 - `src/sora.cpp` の `Sora::CreateVideoCapturer()` と
   `Sora::CreateADM()` は、通常のデバイスカメラ取得と音声入出力を
   Sora C++ SDK 側へ委譲している
@@ -39,9 +44,13 @@ Unity のパッチ更新に伴う確認として、Unity と直接連携する�
 - `ProjectVersion.txt` の `m_EditorVersion` と
   `m_EditorVersionWithRevision` を更新し、Unity が生成する変更は
   更新に必要なものだけを反映する
-- 6.0 系の確認には検証用プロジェクトを用意し、
-  同じ SDK とサンプルを使用する
+- 6.0 系の確認には、既存の `SoraUnitySdkExamples` を複製した
+  一時プロジェクトを用意し、同じ SDK とサンプルを使用する。
+  リポジトリには 6.0 用プロジェクトを追加しない
 - SDK 本体、依存ライブラリ、描画設定の変更は前提としない
+- macOS Player のビルドでは、`SoraUnitySdkExamples/ProjectSettings/EditorBuildSettings.asset`
+  の Scenes In Build に `Assets/Scenes/multi_sendrecv.unity` を追加する。
+  この変更はサンプルプロジェクトに含める
 - 更新に伴ってコードやプラットフォーム固有設定の修正が必要になった場合は、
   その変更箇所に対応する検証を追加する
 
@@ -106,4 +115,6 @@ Unity 経由の音声入出力は、この環境でのみ追加確認する。
 - 上記 3 組み合わせの検証と、6.3 系 Editor での
   Unity 経由の音声入出力の確認が完了している
 - 更新に起因する問題が解消され、使用したパッチ番号と結果が記録されている
+- `CHANGES.md` の `## develop` の `### misc` に、
+  更新後の Unity バージョンを記載した `[UPDATE]` エントリを追記する
 - README とサンプルの README で Unity 6.0 の対応が維持されている
