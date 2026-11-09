@@ -21,6 +21,11 @@
 
 ### misc
 
+- [UPDATE] サンプルプロジェクトの Unity を `6000.3.28f1` に上げる
+  - @miosakuma
+- [UPDATE] サンプルプロジェクトから Unity 6.0 で提供されない未使用の組み込みモジュール参照を削除する
+  - `com.unity.modules.adaptiveperformance` と `com.unity.modules.vectorgraphics` を削除する
+  - @miosakuma
 - [UPDATE] GitHub Actions のバージョンをアップデートする
   - actions/checkout@v6 にアップデート
   - actions/cache@v5 にアップデート
