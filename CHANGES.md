@@ -21,6 +21,8 @@
 
 ### misc
 
+- [UPDATE] サンプルプロジェクトの Unity を `6000.3.28f1` に上げる
+  - @miosakuma
 - [UPDATE] GitHub Actions のバージョンをアップデートする
   - actions/checkout@v6 にアップデート
   - actions/cache@v5 にアップデート
